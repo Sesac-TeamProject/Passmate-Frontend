@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { ReviewPage } from "@/features/teacher/review/review-page";
 
 export default function Page() {
-  return <PagePlaceholder path="/teacher/sessions/[sessionId]/review" />;
+  return <ReviewPage />;
 }

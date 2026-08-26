@@ -18,6 +18,15 @@ export type QuestionSet = {
   summary: string;
   questionCount: number;
   tile: { label: string; tone: TileTone };
+  /** 유형별 문항 수 (W-08 상세 칩) */
+  composition: { type: QuestionType; count: number }[];
+  totalPoints: number;
+  /** 예상 소요(분) */
+  minutes: number;
+  /** 사용 이력. 없으면 미사용 */
+  usage?: { count: number; lastUsed: string };
+  /** 문항 미리보기 (앞 몇 개) */
+  preview: string[];
 };
 
 export type PastSession = {
@@ -123,6 +132,18 @@ export const QUESTION_SETS: QuestionSet[] = [
     summary: "객관식 5 · 서술형 3 · 8문항",
     questionCount: 8,
     tile: { label: "Sp", tone: "mint" },
+    composition: [
+      { type: "multiple", count: 5 },
+      { type: "essay", count: 3 },
+    ],
+    totalPoints: 800,
+    minutes: 20,
+    usage: { count: 2, lastUsed: "8/22" },
+    preview: [
+      "@Transactional 기본 전파 속성",
+      "영속성 컨텍스트 설명 (서술형)",
+      "Bean 기본 스코프 (OX)",
+    ],
   },
   {
     id: "qs-2",
@@ -130,6 +151,14 @@ export const QUESTION_SETS: QuestionSet[] = [
     summary: "객관식 8 · OX 2 · 10문항",
     questionCount: 10,
     tile: { label: "J", tone: "blue" },
+    composition: [
+      { type: "multiple", count: 8 },
+      { type: "ox", count: 2 },
+    ],
+    totalPoints: 1000,
+    minutes: 15,
+    usage: { count: 1, lastUsed: "8/20" },
+    preview: ["N+1 문제의 원인", "지연 로딩 기본 대상", "영속성 전이 CASCADE"],
   },
   {
     id: "qs-3",
@@ -137,6 +166,22 @@ export const QUESTION_SETS: QuestionSet[] = [
     summary: "객관식 10 · 10문항",
     questionCount: 10,
     tile: { label: "CS", tone: "orange" },
+    composition: [{ type: "multiple", count: 10 }],
+    totalPoints: 1000,
+    minutes: 12,
+    usage: { count: 3, lastUsed: "8/17" },
+    preview: ["프로세스와 스레드 차이", "TCP 3-way handshake", "HTTP 상태 코드 4xx"],
+  },
+  {
+    id: "qs-4",
+    title: "네트워크 면접 대비",
+    summary: "서술형 6 · 6문항",
+    questionCount: 6,
+    tile: { label: "네", tone: "gray" },
+    composition: [{ type: "essay", count: 6 }],
+    totalPoints: 600,
+    minutes: 30,
+    preview: ["HTTPS 동작 원리", "TCP vs UDP", "CORS 동작 과정"],
   },
 ];
 
