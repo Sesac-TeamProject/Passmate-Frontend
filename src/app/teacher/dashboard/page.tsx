@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { TeacherDashboard } from "@/features/teacher/dashboard/teacher-dashboard";
 
 export default function Page() {
-  return <PagePlaceholder path="/teacher/dashboard" />;
+  return <TeacherDashboard />;
 }

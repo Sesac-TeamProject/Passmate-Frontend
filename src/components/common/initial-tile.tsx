@@ -1,0 +1,32 @@
+import { cn } from "@/lib/utils";
+
+export type TileTone = "mint" | "blue" | "orange";
+
+const TONE_CLASS: Record<TileTone, string> = {
+  mint: "bg-muted text-mint-dark",
+  blue: "bg-[#deedff] text-[#0e61d9]",
+  orange: "bg-[#fdefde] text-[#bf3f0c]",
+};
+
+type Props = {
+  /** 타일 안에 들어갈 1~2글자. 예: "P", "Sp", "CS" */
+  label: string;
+  tone?: TileTone;
+  className?: string;
+};
+
+/** 44px 정사각 이니셜 타일. 통계 카드·문제 세트 카드 등 목록 항목의 아이콘 자리. */
+export function InitialTile({ label, tone = "mint", className }: Props) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "flex size-11 shrink-0 items-center justify-center rounded-[14px] text-base font-black",
+        TONE_CLASS[tone],
+        className,
+      )}
+    >
+      {label}
+    </span>
+  );
+}
