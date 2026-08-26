@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { LivePage } from "@/features/teacher/live/live-page";
 
 export default function Page() {
-  return <PagePlaceholder path="/teacher/rooms/[code]/live" />;
+  return <LivePage />;
 }
