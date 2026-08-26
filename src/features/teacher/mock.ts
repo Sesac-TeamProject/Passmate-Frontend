@@ -57,6 +57,47 @@ export type LiveQuestion = {
   submitted: number;
 };
 
+/** 문항 결과 (W-06) */
+export type QuestionResult = {
+  correct: ChoiceKey;
+  distribution: { key: ChoiceKey; text: string; count: number }[];
+  /** 정답률(%) */
+  accuracy: number;
+  /** 지난 문항 대비 정답률 변동(%p) */
+  accuracyDelta: number;
+  ranking: { rank: number; studentId: string; score: number; change: number }[];
+};
+
+/** 세션 리포트 (W-07) */
+export type ReportQuestion = {
+  id: string;
+  index: number;
+  title: string;
+  type: QuestionType;
+  /** 객관식·OX 정답률(%) */
+  accuracy?: number;
+  /** 서술형 AI 분석 건수 */
+  aiCount?: number;
+};
+
+export type AnswerFinding = { tone: "good" | "lack" | "tip"; text: string };
+
+export type EssayAnswer = {
+  studentId: string;
+  text: string;
+  findings: AnswerFinding[];
+};
+
+export type SessionReport = {
+  id: string;
+  title: string;
+  dateLabel: string;
+  stats: { accuracy: number; students: number; questions: number; aiAnalyses: number };
+  questions: ReportQuestion[];
+  /** 문항 id → 서술형 답변 목록 */
+  essayAnswers: Record<string, EssayAnswer[]>;
+};
+
 export type QuestionType = "multiple" | "essay" | "ox";
 
 export type Question = {
@@ -209,4 +250,62 @@ export const LIVE_QUESTION: LiveQuestion = {
   seconds: 30,
   remaining: 23,
   submitted: 4,
+};
+
+export const QUESTION_RESULT: QuestionResult = {
+  correct: "A",
+  distribution: [
+    { key: "A", text: "REQUIRED", count: 4 },
+    { key: "B", text: "REQUIRES_NEW", count: 1 },
+    { key: "C", text: "SUPPORTS", count: 1 },
+    { key: "D", text: "NESTED", count: 0 },
+  ],
+  accuracy: 67,
+  accuracyDelta: 12,
+  ranking: [
+    { rank: 1, studentId: "s1", score: 1240, change: 0 },
+    { rank: 2, studentId: "s2", score: 1100, change: 1 },
+    { rank: 3, studentId: "s5", score: 980, change: -1 },
+    { rank: 4, studentId: "s3", score: 870, change: 2 },
+    { rank: 5, studentId: "s4", score: 760, change: -1 },
+  ],
+};
+
+export const SESSION_REPORT: SessionReport = {
+  id: "1",
+  title: "8월 4주차 Spring 스터디",
+  dateLabel: "8/22 (금) 진행",
+  stats: { accuracy: 71, students: 6, questions: 8, aiAnalyses: 18 },
+  questions: [
+    { id: "q1", index: 1, title: "DI 컨테이너 개념", type: "multiple", accuracy: 100 },
+    { id: "q2", index: 2, title: "@Transactional 전파", type: "multiple", accuracy: 67 },
+    { id: "q3", index: 3, title: "JPA 영속성 컨텍스트", type: "essay", aiCount: 6 },
+    { id: "q4", index: 4, title: "AOP 프록시 방식", type: "multiple", accuracy: 50 },
+    { id: "q5", index: 5, title: "Bean 기본 스코프", type: "ox", accuracy: 83 },
+    { id: "q6", index: 6, title: "N+1 문제", type: "essay", aiCount: 6 },
+    { id: "q7", index: 7, title: "지연 로딩 기본 대상", type: "multiple", accuracy: 67 },
+    { id: "q8", index: 8, title: "Security 필터 체인", type: "essay", aiCount: 6 },
+  ],
+  essayAnswers: {
+    q3: [
+      {
+        studentId: "s1",
+        text: "영속성 컨텍스트는 엔티티를 관리하는 공간으로, 1차 캐시를 통해 같은 트랜잭션 안에서 동일 엔티티 조회를 보장하고…",
+        findings: [
+          { tone: "good", text: "핵심 포함 — 1차 캐시, 동일성 보장" },
+          { tone: "lack", text: "부족 — 쓰기 지연·변경 감지 미언급" },
+          { tone: "tip", text: "제안 — flush 시점을 예시와 함께 보강" },
+        ],
+      },
+      {
+        studentId: "s2",
+        text: "엔티티 매니저가 관리하는 영속 상태의 엔티티 집합입니다. 변경 감지로 update 쿼리가 자동 생성됩니다.",
+        findings: [
+          { tone: "good", text: "핵심 포함 — 변경 감지" },
+          { tone: "lack", text: "부족 — 1차 캐시·동일성 보장 미언급" },
+          { tone: "tip", text: "제안 — 트랜잭션 범위와 함께 설명" },
+        ],
+      },
+    ],
+  },
 };

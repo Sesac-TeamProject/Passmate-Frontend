@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { ResultPage } from "@/features/teacher/live/result-page";
 
 export default function Page() {
-  return <PagePlaceholder path="/teacher/rooms/[code]/result" />;
+  return <ResultPage />;
 }
