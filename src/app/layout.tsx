@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import { Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
-import { SiteHeader } from "@/components/layout/site-header";
+
+const notoSansKr = Noto_Sans_KR({
+  subsets: ["latin"],
+  weight: "variable",
+  variable: "--font-noto-sans-kr",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "PassMate",
@@ -9,11 +16,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className="h-full antialiased">
-      <body className="flex min-h-full flex-col bg-background text-foreground">
-        <SiteHeader />
-        {children}
-      </body>
+    <html lang="ko" className={`h-full antialiased ${notoSansKr.variable}`}>
+      <body className="flex min-h-full flex-col bg-background text-foreground">{children}</body>
     </html>
   );
 }

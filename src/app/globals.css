@@ -45,46 +45,96 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* --- 디자인 시스템 v5 (design/student-teacher.pen "v5 컬러 토큰") --- */
+  /* 잉크 */
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-disabled: var(--ink-disabled);
+  /* 포인트 — 민트 하나 */
+  --color-mint: var(--mint);
+  --color-mint-dark: var(--mint-dark);
+  --color-mint-tint: var(--mint-tint);
+  --color-mint-bg: var(--mint-bg);
+  /* 옐로 — 마스코트 패시·타이머 링 전용 */
+  --color-yellow: var(--yellow);
+  /* 선택지 A~D (배경 / 잉크) */
+  --color-choice-a: var(--choice-a);
+  --color-choice-a-foreground: var(--choice-a-foreground);
+  --color-choice-b: var(--choice-b);
+  --color-choice-b-foreground: var(--choice-b-foreground);
+  --color-choice-c: var(--choice-c);
+  --color-choice-c-foreground: var(--choice-c-foreground);
+  --color-choice-d: var(--choice-d);
+  --color-choice-d-foreground: var(--choice-d-foreground);
+  /* 포디움 */
+  --color-podium-gold: var(--podium-gold);
+  --color-podium-silver: var(--podium-silver);
+  --color-podium-bronze: var(--podium-bronze);
 }
 
 :root {
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", Pretendard, "Noto Sans KR",
-    sans-serif;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+    var(--font-noto-sans-kr), ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo",
+    Pretendard, "Noto Sans KR", sans-serif;
+
+  /* v5 원본 토큰 */
+  --ink: #1b1f24;
+  --ink-secondary: #6b7280;
+  --ink-disabled: #a0a6b0;
+  --mint: #17b884;
+  --mint-dark: #0e8a63;
+  --mint-tint: #d6f3e6;
+  --mint-bg: #eaf8f1;
+  --yellow: #ffb020;
+  --choice-a: #f7adb1;
+  --choice-a-foreground: #7c1f26;
+  --choice-b: #aac6f6;
+  --choice-b-foreground: #173872;
+  --choice-c: #f7dba1;
+  --choice-c-foreground: #6e4c06;
+  --choice-d: #a9dec3;
+  --choice-d-foreground: #14523b;
+  --podium-gold: #f4d488;
+  --podium-silver: #dde0e7;
+  --podium-bronze: #e5c6ac;
+
+  /* shadcn 변수 → v5 매핑 */
+  --background: #f6f6f7; /* bg/page-web */
+  --foreground: var(--ink);
+  --card: #ffffff; /* surface/card */
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--mint);
+  --primary-foreground: #ffffff;
+  --secondary: var(--mint-tint);
+  --secondary-foreground: var(--mint-dark);
+  --muted: #f3f4f6; /* surface/input */
+  --muted-foreground: var(--ink-secondary);
+  --accent: var(--mint-bg);
+  --accent-foreground: var(--mint-dark);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: #e5e7eb; /* line */
+  --input: #e5e7eb;
+  --ring: var(--mint);
+  --chart-1: var(--mint);
+  --chart-2: var(--mint-dark);
+  --chart-3: var(--choice-b);
+  --chart-4: var(--choice-c);
+  --chart-5: var(--choice-a);
+  --radius: 1rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--mint);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f4f6;
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: var(--mint);
 }
 
+/* 다크 모드는 디자인에 없다. shadcn 기본값을 유지한다. */
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
