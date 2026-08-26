@@ -28,6 +28,16 @@ export type PastSession = {
   averageScore: number;
 };
 
+export type QuestionType = "multiple" | "essay" | "ox";
+
+export type Question = {
+  id: string;
+  type: QuestionType;
+  prompt: string;
+  points: number;
+  seconds: number;
+};
+
 export const TEACHER: Teacher = { name: "이한결", initial: "한" };
 
 export const DASHBOARD_STATS: DashboardStat[] = [
@@ -63,4 +73,75 @@ export const QUESTION_SETS: QuestionSet[] = [
 export const PAST_SESSIONS: PastSession[] = [
   { id: "1", date: "8/22", title: "8월 4주차 Spring 스터디", participants: 6, averageScore: 72 },
   { id: "2", date: "8/20", title: "CS 모의면접 3회차", participants: 5, averageScore: 68 },
+];
+
+/** 에디터에서 검토 중인 세트 (W-03) */
+export const DRAFT_SET = {
+  id: "qs-1",
+  title: "Spring 기술면접",
+  condition: {
+    topic: "Spring, JPA 트랜잭션",
+    composition: "객관식 5 · 서술형 3",
+    level: "중급",
+    count: 8,
+  },
+};
+
+export const DRAFT_QUESTIONS: Question[] = [
+  {
+    id: "q1",
+    type: "multiple",
+    prompt: "@Transactional의 기본 전파 속성은?",
+    points: 100,
+    seconds: 30,
+  },
+  {
+    id: "q2",
+    type: "essay",
+    prompt: "JPA 영속성 컨텍스트의 1차 캐시 동작을 설명하세요.",
+    points: 100,
+    seconds: 120,
+  },
+  {
+    id: "q3",
+    type: "ox",
+    prompt: "Spring Bean의 기본 스코프는 prototype이다.",
+    points: 100,
+    seconds: 20,
+  },
+  {
+    id: "q4",
+    type: "multiple",
+    prompt: "Spring AOP가 기본으로 사용하는 프록시 방식은?",
+    points: 100,
+    seconds: 30,
+  },
+  {
+    id: "q5",
+    type: "multiple",
+    prompt: "@Autowired 주입 방식 중 권장되는 것은?",
+    points: 100,
+    seconds: 30,
+  },
+  {
+    id: "q6",
+    type: "essay",
+    prompt: "N+1 문제가 발생하는 원인과 해결 방법을 설명하세요.",
+    points: 100,
+    seconds: 120,
+  },
+  {
+    id: "q7",
+    type: "multiple",
+    prompt: "JPA에서 지연 로딩(LAZY)의 기본 대상은?",
+    points: 100,
+    seconds: 30,
+  },
+  {
+    id: "q8",
+    type: "essay",
+    prompt: "Spring Security 필터 체인의 동작 순서를 설명하세요.",
+    points: 100,
+    seconds: 120,
+  },
 ];

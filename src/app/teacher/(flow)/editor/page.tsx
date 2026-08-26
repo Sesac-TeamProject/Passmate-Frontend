@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { EditorPage } from "@/features/teacher/editor/editor-page";
 
 export default function Page() {
-  return <PagePlaceholder path="/teacher/editor" />;
+  return <EditorPage />;
 }
