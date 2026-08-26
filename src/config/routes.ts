@@ -116,31 +116,52 @@ export const ROUTES: readonly RouteMeta[] = [
   },
   // 관리자
   {
-    path: "/admin/settlements",
-    sample: "/admin/settlements",
-    title: "정산 관리",
-    description: "정산 대기·완료·보류 관리",
+    path: "/admin/dashboard",
+    sample: "/admin/dashboard",
+    title: "대시보드",
+    description: "서비스 전체 이용 현황과 주요 지표",
     role: "admin",
   },
   {
-    path: "/admin/refunds",
-    sample: "/admin/refunds",
-    title: "환불 처리",
-    description: "결제 환불 요청 처리",
+    path: "/admin/users",
+    sample: "/admin/users",
+    title: "사용자 관리",
+    description: "전체 사용자 · 선생님 / 학생 구분 및 계정 관리",
+    role: "admin",
+  },
+  {
+    path: "/admin/rooms",
+    sample: "/admin/rooms",
+    title: "방 · 문제 관리",
+    description: "진행 중인 방과 AI 생성 문제 검수",
+    role: "admin",
+  },
+  {
+    path: "/admin/reports",
+    sample: "/admin/reports",
+    title: "신고 · 제재 관리",
+    description: "접수된 신고 처리와 계정 제재 이력",
+    role: "admin",
+  },
+  {
+    path: "/admin/payments",
+    sample: "/admin/payments",
+    title: "결제 · 정산",
+    description: "유료 방 결제 현황과 선생님 정산",
     role: "admin",
   },
   {
     path: "/admin/branded",
     sample: "/admin/branded",
-    title: "브랜디드 퀴즈",
-    description: "기업 브랜디드 퀴즈 등록·노출 관리",
+    title: "광고 · 브랜디드 퀴즈",
+    description: "광고 캠페인 집행과 기업 브랜디드 퀴즈 운영",
     role: "admin",
   },
 ];
 
 export const REDIRECTS: readonly { from: string; to: string }[] = [
   { from: "/teacher", to: "/teacher/dashboard" },
-  { from: "/admin", to: "/admin/settlements" },
+  { from: "/admin", to: "/admin/dashboard" },
 ];
 
 export function getRoute(path: string): RouteMeta {
