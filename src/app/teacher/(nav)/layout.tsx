@@ -1,7 +1,7 @@
 import { RoleSidebar } from "@/components/layout/role-sidebar";
 import { TEACHER } from "@/features/teacher/mock";
 
-export default function TeacherLayout({ children }: LayoutProps<"/teacher">) {
+export default function TeacherLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1">
       <RoleSidebar role="teacher" user={TEACHER} />

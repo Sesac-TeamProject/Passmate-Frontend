@@ -8,9 +8,9 @@ import { WelcomeBanner } from "./welcome-banner";
 export function TeacherDashboard() {
   return (
     <main className="flex flex-col gap-6 px-9 py-7">
-      <WelcomeBanner name={TEACHER.name.slice(1)} createHref="/teacher/editor" />
+      <WelcomeBanner name={TEACHER.name.slice(1)} createHref="/teacher/rooms/new" />
       <StatCards stats={DASHBOARD_STATS} />
-      <QuestionSetCards sets={QUESTION_SETS} allHref="/teacher/editor" />
+      <QuestionSetCards sets={QUESTION_SETS} allHref="/teacher/sets" />
       <RecentSessions
         sessions={PAST_SESSIONS}
         allHref="/teacher/sessions/1/review"

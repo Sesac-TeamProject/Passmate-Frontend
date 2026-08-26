@@ -15,6 +15,7 @@ export type QuestionSet = {
   title: string;
   /** "객관식 5 · 서술형 3 · 8문항" 형태의 요약 */
   summary: string;
+  questionCount: number;
   tile: { label: string; tone: TileTone };
 };
 
@@ -40,18 +41,21 @@ export const QUESTION_SETS: QuestionSet[] = [
     id: "qs-1",
     title: "Spring 기술면접",
     summary: "객관식 5 · 서술형 3 · 8문항",
+    questionCount: 8,
     tile: { label: "Sp", tone: "mint" },
   },
   {
     id: "qs-2",
     title: "JPA 심화",
     summary: "객관식 8 · OX 2 · 10문항",
+    questionCount: 10,
     tile: { label: "J", tone: "blue" },
   },
   {
     id: "qs-3",
     title: "CS 기초 다지기",
     summary: "객관식 10 · 10문항",
+    questionCount: 10,
     tile: { label: "CS", tone: "orange" },
   },
 ];

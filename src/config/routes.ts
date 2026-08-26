@@ -80,6 +80,20 @@ export const ROUTES: readonly RouteMeta[] = [
     role: "teacher",
   },
   {
+    path: "/teacher/sets",
+    sample: "/teacher/sets",
+    title: "문제 세트",
+    description: "내 문제 세트 목록·재활용, 우측 패널 미리보기",
+    role: "teacher",
+  },
+  {
+    path: "/teacher/rooms/new",
+    sample: "/teacher/rooms/new",
+    title: "방 설정",
+    description: "방 이름·문제 세트 선택, 6자리 PIN 발급 (방 만들기 1/3)",
+    role: "teacher",
+  },
+  {
     path: "/teacher/editor",
     sample: "/teacher/editor",
     title: "문제 에디터",
@@ -98,6 +112,13 @@ export const ROUTES: readonly RouteMeta[] = [
     sample: "/teacher/rooms/DEMO01/live",
     title: "진행 화면",
     description: "문항·타이머·제출 현황·랭킹, PTT 음성 힌트 버튼",
+    role: "teacher",
+  },
+  {
+    path: "/teacher/rooms/[code]/result",
+    sample: "/teacher/rooms/DEMO01/result",
+    title: "문항 결과",
+    description: "문항별 정답·선택 분포·랭킹 변동 (프로젝터 투사 가정)",
     role: "teacher",
   },
   {
@@ -142,6 +163,19 @@ export const REDIRECTS: readonly { from: string; to: string }[] = [
   { from: "/teacher", to: "/teacher/dashboard" },
   { from: "/admin", to: "/admin/settlements" },
 ];
+
+/** 선생님·관리자 사이드바에 노출할 항목. 순서대로 그린다. label을 생략하면 라우트 title을 쓴다. */
+export const SIDEBAR_NAV: Record<"teacher" | "admin", readonly { path: string; label?: string }[]> =
+  {
+    teacher: [
+      { path: "/teacher/dashboard" },
+      { path: "/teacher/sets" },
+      { path: "/teacher/sessions/[sessionId]/review", label: "지난 세션" },
+      { path: "/teacher/revenue" },
+      { path: "/me", label: "마이페이지" },
+    ],
+    admin: [{ path: "/admin/settlements" }, { path: "/admin/refunds" }, { path: "/admin/branded" }],
+  };
 
 export function getRoute(path: string): RouteMeta {
   const route = ROUTES.find((r) => r.path === path);

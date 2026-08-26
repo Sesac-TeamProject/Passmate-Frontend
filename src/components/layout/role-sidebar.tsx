@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/common/brand-logo";
-import { ROLE_LABEL, routesByRole, type Role } from "@/config/routes";
+import { getRoute, ROLE_LABEL, SIDEBAR_NAV } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  role: Role;
+  role: keyof typeof SIDEBAR_NAV;
   /** 하단 프로필. 데이터 연동 전까지는 레이아웃에서 목업을 넘긴다. */
   user: { name: string; initial: string };
 };
 
-/** 선생님·관리자 레이아웃 좌측 내비게이션(디자인 W-01 사이드바). routes.ts에서 해당 역할 라우트를 읽어 그린다. */
+/** 선생님·관리자 레이아웃 좌측 내비게이션(디자인 W-01 사이드바). routes.ts의 SIDEBAR_NAV를 읽어 그린다. */
 export function RoleSidebar({ role, user }: Props) {
   const pathname = usePathname();
 
@@ -20,7 +20,8 @@ export function RoleSidebar({ role, user }: Props) {
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col gap-1 border-r bg-sidebar px-3.5 pt-6 pb-5">
       <BrandLogo className="mb-5 pl-2.5" />
       <nav className="flex flex-col gap-1">
-        {routesByRole(role).map((r) => {
+        {SIDEBAR_NAV[role].map((item) => {
+          const r = getRoute(item.path);
           const active = isActive(pathname, r.path);
           return (
             <Link
@@ -34,7 +35,7 @@ export function RoleSidebar({ role, user }: Props) {
                   : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
               )}
             >
-              {r.title}
+              {item.label ?? r.title}
             </Link>
           );
         })}
