@@ -1,8 +1,9 @@
 // 데이터 연동 전 화면 확인용 목업. API 클라이언트가 들어오면 이 파일의 타입만 남기고 교체한다.
 import type { TileTone } from "@/components/common/initial-tile";
 import type { AvatarKey } from "@/components/common/student-avatar";
+import type { SidebarUser } from "@/components/layout/role-sidebar";
 
-export type Teacher = { name: string; initial: string };
+export type Teacher = SidebarUser;
 
 export type DashboardStat = {
   id: "rooms" | "sessions" | "students";
@@ -49,6 +50,9 @@ export type LiveRoom = {
 };
 
 export type ChoiceKey = "A" | "B" | "C" | "D";
+
+/** 학생 화면에서 재생 중인 음성 힌트 (P-Web) */
+export type VoiceHint = { positionSec: number; durationSec: number };
 
 export type Choice = { key: ChoiceKey; text: string };
 
@@ -117,7 +121,12 @@ export type Question = {
   seconds: number;
 };
 
-export const TEACHER: Teacher = { name: "이한결", initial: "한" };
+export const TEACHER: Teacher = {
+  name: "이한결",
+  initial: "한",
+  roleLabel: "선생님",
+  tone: "peach",
+};
 
 export const DASHBOARD_STATS: DashboardStat[] = [
   { id: "rooms", label: "개설한 방", value: "12개", tile: { label: "P", tone: "mint" } },

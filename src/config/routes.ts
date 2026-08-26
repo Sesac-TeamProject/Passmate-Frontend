@@ -164,18 +164,24 @@ export const REDIRECTS: readonly { from: string; to: string }[] = [
   { from: "/admin", to: "/admin/settlements" },
 ];
 
-/** 선생님·관리자 사이드바에 노출할 항목. 순서대로 그린다. label을 생략하면 라우트 title을 쓴다. */
-export const SIDEBAR_NAV: Record<"teacher" | "admin", readonly { path: string; label?: string }[]> =
-  {
-    teacher: [
-      { path: "/teacher/dashboard" },
-      { path: "/teacher/sets" },
-      { path: "/teacher/sessions/[sessionId]/review", label: "지난 세션" },
-      { path: "/teacher/revenue" },
-      { path: "/me", label: "마이페이지" },
-    ],
-    admin: [{ path: "/admin/settlements" }, { path: "/admin/refunds" }, { path: "/admin/branded" }],
-  };
+const TEACHER_NAV = [
+  { path: "/teacher/dashboard" },
+  { path: "/teacher/sets" },
+  { path: "/teacher/sessions/[sessionId]/review", label: "지난 세션" },
+  { path: "/teacher/revenue" },
+  { path: "/me", label: "마이페이지" },
+] as const;
+
+/** 사이드바에 노출할 항목. 순서대로 그린다. label을 생략하면 라우트 title을 쓴다. */
+export const SIDEBAR_NAV: Record<
+  "teacher" | "member" | "admin",
+  readonly { path: string; label?: string }[]
+> = {
+  teacher: TEACHER_NAV,
+  /** 회원 마이페이지(C-02)는 선생님과 같은 내비를 쓴다 (디자인 기준) */
+  member: TEACHER_NAV,
+  admin: [{ path: "/admin/settlements" }, { path: "/admin/refunds" }, { path: "/admin/branded" }],
+};
 
 export function getRoute(path: string): RouteMeta {
   const route = ROUTES.find((r) => r.path === path);
