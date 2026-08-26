@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { SetsPage } from "@/features/teacher/sets/sets-page";
 
 export default function Page() {
-  return <PagePlaceholder path="/teacher/sets" />;
+  return <SetsPage />;
 }

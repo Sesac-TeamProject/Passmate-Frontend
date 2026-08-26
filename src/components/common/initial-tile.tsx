@@ -1,11 +1,12 @@
 import { cn } from "@/lib/utils";
 
-export type TileTone = "mint" | "blue" | "orange";
+export type TileTone = "mint" | "blue" | "orange" | "gray";
 
 const TONE_CLASS: Record<TileTone, string> = {
   mint: "bg-muted text-mint-dark",
   blue: "bg-[#deedff] text-[#0e61d9]",
   orange: "bg-[#fdefde] text-[#bf3f0c]",
+  gray: "bg-muted text-[#73727c]",
 };
 
 type Props = {
