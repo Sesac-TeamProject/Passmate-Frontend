@@ -1,5 +1,7 @@
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 import { AdminCard, AdminCardHead } from "../components/admin-card";
+import { TYPE } from "../components/typography";
 import { USER_COMPOSITION } from "../mock";
 
 const DOT = ["/admin/legend-teacher.svg", "/admin/legend-student.svg"];
@@ -18,18 +20,18 @@ export function UserCompositionCard() {
           <div
             key={s.label}
             style={{ flexGrow: s.count }}
-            className={"h-[34px] min-w-px " + FILL[i] + " " + ROUND[i]}
+            className={cn("h-[34px] min-w-px", FILL[i], ROUND[i])}
           />
         ))}
       </div>
       {segments.map((s, i) => (
         <div key={s.label} className="flex w-full items-center gap-[9px]">
           <Image src={DOT[i]} alt="" width={9} height={9} className="size-[9px] shrink-0" />
-          <p className="text-[12px] leading-[1.25] font-medium text-[#1b1733]">{s.label}</p>
-          <p className="ml-1 text-[12px] leading-[1.25] font-bold text-[#1b1733]">
+          <p className={cn("text-[#1b1733]", TYPE.labelLg)}>{s.label}</p>
+          <p className={cn("ml-1 text-[#1b1733]", TYPE.labelLg)}>
             {s.count.toLocaleString("ko-KR")}
           </p>
-          <p className="text-[11px] leading-[1.25] text-[#6e6a85]">{s.ratio}</p>
+          <p className={cn("text-[#6e6a85]", TYPE.labelMd)}>{s.ratio}</p>
         </div>
       ))}
     </AdminCard>

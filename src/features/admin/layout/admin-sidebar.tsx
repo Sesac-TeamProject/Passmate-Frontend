@@ -10,6 +10,15 @@ import { routesByRole } from "@/config/routes";
 const OPERATOR = { name: "이한결", role: "운영 관리자" };
 
 /**
+ * 사이드바에 쓰는 짧은 라벨. 시안(A-01~A-06)이 라우트 제목보다 짧게 쓴다.
+ * routes.ts는 화면 제목의 단일 출처라 그대로 두고, 표시 라벨만 여기서 덮는다.
+ */
+const NAV_LABEL: Record<string, string> = {
+  "/admin/reports": "신고 · 제재",
+  "/admin/branded": "광고 · 브랜디드",
+};
+
+/**
  * 관리자 전용 좌측 내비게이션 (A-01~A-06 공통).
  * 항목은 routes.ts의 admin 라우트에서만 읽는다.
  * 선생님·회원용 RoleSidebar는 라이트 테마라 여기서는 쓰지 않는다.
@@ -50,7 +59,7 @@ export function AdminSidebar() {
                 height={6}
                 className="size-[6px] shrink-0"
               />
-              {route.title}
+              {NAV_LABEL[route.path] ?? route.title}
             </Link>
           );
         })}

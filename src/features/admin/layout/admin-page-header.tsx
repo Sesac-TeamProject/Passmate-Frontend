@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { getRoute } from "@/config/routes";
+import { TYPE } from "../components/typography";
 
 type Props = {
   /** routes.ts에 등록된 path. 예: "/admin/dashboard" */
@@ -9,7 +11,10 @@ type Props = {
   date?: string;
 };
 
-/** 관리자 화면 상단바. 제목·설명은 routes.ts에서 읽는다. */
+/**
+ * 관리자 화면 상단바. 제목·설명은 routes.ts에서 읽는다.
+ * 활자는 A-02 시안의 타입 토큰(heading-md / label-md / label-lg)을 따른다.
+ */
 export function AdminPageHeader({
   path,
   searchPlaceholder = "검색 (사용자 · 방 코드 · 문제 ID)",
@@ -19,20 +24,26 @@ export function AdminPageHeader({
   return (
     <header className="flex w-full shrink-0 items-center gap-3 border-b border-[#e5e7eb] bg-white px-7 py-[18px]">
       <div className="flex flex-col gap-[2px]">
-        <h1 className="text-[19px] leading-[1.25] font-black text-[#1b1733]">{route.title}</h1>
-        <p className="text-[11.5px] leading-[1.3] text-[#6e6a85]">{route.description}</p>
+        <h1 className={cn("text-[#1b1733]", TYPE.headingMd)}>{route.title}</h1>
+        <p className={cn("text-[#6e6a85]", TYPE.labelMd)}>{route.description}</p>
       </div>
-      <div className="ml-2 flex flex-1 items-center gap-3">
-        <input
-          type="search"
-          placeholder={searchPlaceholder}
-          aria-label={searchPlaceholder}
-          className="w-full max-w-[320px] rounded-[8px] border border-[#e5e7eb] bg-[#f3f4f6] px-3 py-2 text-[11.5px] leading-[1.2] text-[#1b1733] placeholder:text-[#6e6a85] focus-visible:ring-2 focus-visible:ring-[#17b884] focus-visible:outline-none"
-        />
-        <span className="shrink-0 rounded-[6px] bg-[#f3f4f6] px-2 py-[3px] text-[10px] leading-[1.2] font-bold text-[#0e8a63]">
-          {date}
-        </span>
-      </div>
+      <input
+        type="search"
+        placeholder={searchPlaceholder}
+        aria-label={searchPlaceholder}
+        className={cn(
+          "ml-1 w-[300px] rounded-[8px] border border-[#e5e7eb] bg-[#f3f4f6] px-3 py-2 text-[#1b1733] placeholder:text-[#6e6a85] focus-visible:ring-2 focus-visible:ring-[#17b884] focus-visible:outline-none",
+          TYPE.labelMd,
+        )}
+      />
+      <span
+        className={cn(
+          "shrink-0 rounded-[6px] bg-[#f3f4f6] px-2 py-[3px] text-[#0e8a63]",
+          TYPE.labelLg,
+        )}
+      >
+        {date}
+      </span>
     </header>
   );
 }

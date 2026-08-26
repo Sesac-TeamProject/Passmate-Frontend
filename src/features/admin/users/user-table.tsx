@@ -3,15 +3,16 @@ import { StatChip } from "../components/stat-chip";
 import { TYPE } from "../components/typography";
 import { ROLE_CHIP, type AdminUser } from "../mock";
 
-const COLS = [
-  { key: "user", label: "사용자", width: "w-[260px]" },
-  { key: "role", label: "역할", width: "w-[90px]" },
-  { key: "joined", label: "가입일", width: "w-[100px]" },
-  { key: "sessions", label: "참여 세션", width: "w-[90px]" },
-  { key: "reputation", label: "명성", width: "w-[90px]" },
-  { key: "status", label: "상태", width: "w-[100px]" },
-  { key: "actions", label: "관리", width: "flex-1 min-w-[90px]" },
-] as const;
+/**
+ * 시안(admin/A-02, table 노드 167:1310) 기준.
+ * 사용자 열만 260px 고정, 나머지 6열은 남는 폭을 균등 분배.
+ * 데이터 셀은 시안대로 가운데 정렬(items-center justify-center)한다.
+ * 시안의 헤더 셀은 좌측이지만 그러면 열이 어긋나 보여 헤더도 가운데로 맞췄다.
+ */
+const NAME_COL = "flex w-[260px] shrink-0 justify-center px-3";
+const FLEX_COL = "flex min-w-0 flex-1 justify-center px-2";
+
+const HEADERS = ["역할", "가입일", "참여 세션", "명성", "상태", "관리"] as const;
 
 const EMPTY = "—";
 
@@ -29,14 +30,18 @@ export function UserTable({ users }: Props) {
 
   return (
     <div className="w-full overflow-x-auto">
-      <div className="min-w-[860px]">
+      <div className="min-w-[820px]">
         <div className="flex w-full items-center border-b border-[#e5e7eb] pt-2 pb-[9px]">
-          {COLS.map((c) => (
-            <p key={c.key} className={cn(c.width, "text-[#6e6a85]", TYPE.labelLg)}>
-              {c.label}
-            </p>
+          <div className={NAME_COL}>
+            <p className={cn("text-[#6e6a85]", TYPE.labelLg)}>사용자</p>
+          </div>
+          {HEADERS.map((h) => (
+            <div key={h} className={FLEX_COL}>
+              <p className={cn("text-[#6e6a85]", TYPE.labelLg)}>{h}</p>
+            </div>
           ))}
         </div>
+
         {users.map((u, i) => (
           <div
             key={u.name}
@@ -45,26 +50,30 @@ export function UserTable({ users }: Props) {
               i % 2 === 1 && "bg-[#f3f4f6]",
             )}
           >
-            <div className={cn(COLS[0].width, "pr-3")}>
+            <div className={NAME_COL}>
               <p className={cn("truncate text-[#1b1733]", TYPE.labelLg)}>
                 {u.name}
                 {u.email ? <span className="ml-2">{u.email}</span> : null}
               </p>
             </div>
-            <div className={COLS[1].width}>
+            <div className={FLEX_COL}>
               <StatChip tone={ROLE_CHIP[u.role].tone}>{ROLE_CHIP[u.role].label}</StatChip>
             </div>
-            <p className={cn(COLS[2].width, "text-[#6e6a85]", TYPE.labelMd)}>
-              {u.joinedAt ?? EMPTY}
-            </p>
-            <p className={cn(COLS[3].width, "text-[#6e6a85]", TYPE.labelMd)}>{u.sessions}</p>
-            <p className={cn(COLS[4].width, "text-[#6e6a85]", TYPE.labelMd)}>
-              {u.reputation ?? EMPTY}
-            </p>
-            <div className={COLS[5].width}>
+            <div className={FLEX_COL}>
+              <p className={cn("text-[#6e6a85]", TYPE.labelMd)}>{u.joinedAt ?? EMPTY}</p>
+            </div>
+            <div className={FLEX_COL}>
+              <p className={cn("text-[#6e6a85]", TYPE.labelMd)}>{u.sessions}</p>
+            </div>
+            <div className={FLEX_COL}>
+              <p className={cn("text-[#6e6a85]", TYPE.labelMd)}>{u.reputation ?? EMPTY}</p>
+            </div>
+            <div className={FLEX_COL}>
               <StatChip tone={u.status.tone}>{u.status.label}</StatChip>
             </div>
-            <p className={cn(COLS[6].width, "text-[#6e6a85]", TYPE.labelMd)}>{u.actions}</p>
+            <div className={FLEX_COL}>
+              <p className={cn("text-[#6e6a85]", TYPE.labelMd)}>{u.actions}</p>
+            </div>
           </div>
         ))}
       </div>

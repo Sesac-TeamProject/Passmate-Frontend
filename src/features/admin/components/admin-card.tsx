@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { TYPE } from "./typography";
 
 type CardProps = {
   children: React.ReactNode;
@@ -30,8 +31,8 @@ type HeadProps = {
 export function AdminCardHead({ title, hint, children }: HeadProps) {
   return (
     <div className="flex w-full items-center gap-2">
-      <h2 className="text-sm leading-[1.3] font-bold text-[#1b1733]">{title}</h2>
-      {hint ? <p className="text-[11px] leading-[1.3] text-[#6e6a85]">{hint}</p> : null}
+      <h2 className={cn("text-[#1b1733]", TYPE.labelLg)}>{title}</h2>
+      {hint ? <p className={cn("text-[#6e6a85]", TYPE.labelMd)}>{hint}</p> : null}
       {children ? <div className="ml-auto">{children}</div> : null}
     </div>
   );

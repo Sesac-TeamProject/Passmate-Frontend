@@ -13,11 +13,11 @@ export function AdminDashboard() {
       <AdminPageHeader path="/admin/dashboard" />
       <div className="flex flex-1 flex-col gap-[14px] px-7 pt-4 pb-[10px]">
         <KpiRow />
-        <div className="flex w-full flex-col gap-[14px] xl:flex-row xl:items-start">
+        <div className="flex w-full items-stretch gap-[14px]">
           <DailySessionsCard />
           <RecentActivityCard />
         </div>
-        <div className="flex w-full flex-col gap-[14px] xl:flex-row xl:items-start">
+        <div className="flex w-full items-start gap-[14px]">
           <UserCompositionCard />
           <PopularTopicsCard />
           <SystemStatusCard />
