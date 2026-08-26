@@ -1,5 +1,6 @@
 // 데이터 연동 전 화면 확인용 목업. API 클라이언트가 들어오면 이 파일의 타입만 남기고 교체한다.
 import type { TileTone } from "@/components/common/initial-tile";
+import type { AvatarKey } from "@/components/common/student-avatar";
 
 export type Teacher = { name: string; initial: string };
 
@@ -26,6 +27,34 @@ export type PastSession = {
   title: string;
   participants: number;
   averageScore: number;
+};
+
+export type Student = { id: string; name: string; avatar: AvatarKey };
+
+export type LiveRoom = {
+  code: string;
+  /** 6자리 참여 PIN */
+  pin: string;
+  title: string;
+  students: Student[];
+};
+
+export type ChoiceKey = "A" | "B" | "C" | "D";
+
+export type Choice = { key: ChoiceKey; text: string };
+
+/** 진행 중인 문항 (W-05) */
+export type LiveQuestion = {
+  index: number;
+  total: number;
+  type: QuestionType;
+  prompt: string;
+  choices: Choice[];
+  /** 제한 시간(초) */
+  seconds: number;
+  /** 남은 시간(초) — 목업 초기값 */
+  remaining: number;
+  submitted: number;
 };
 
 export type QuestionType = "multiple" | "essay" | "ox";
@@ -145,3 +174,39 @@ export const DRAFT_QUESTIONS: Question[] = [
     seconds: 120,
   },
 ];
+
+/** 대기실·진행 중인 방 (W-04~W-06) */
+export const LIVE_ROOM: LiveRoom = {
+  code: "DEMO01",
+  pin: "482913",
+  title: "8월 4주차 Spring 스터디",
+  students: [
+    { id: "s1", name: "준영", avatar: "cat" },
+    { id: "s2", name: "혜림", avatar: "rabbit" },
+    { id: "s3", name: "승혁", avatar: "dog" },
+    { id: "s4", name: "희표", avatar: "bear" },
+    { id: "s5", name: "민지", avatar: "fox" },
+    { id: "s6", name: "도윤", avatar: "penguin" },
+  ],
+};
+
+/** "482913" → "482 913" */
+export function formatPin(pin: string): string {
+  return `${pin.slice(0, 3)} ${pin.slice(3)}`;
+}
+
+export const LIVE_QUESTION: LiveQuestion = {
+  index: 2,
+  total: 8,
+  type: "multiple",
+  prompt: "@Transactional의 기본 전파(propagation) 속성은 무엇인가?",
+  choices: [
+    { key: "A", text: "REQUIRED" },
+    { key: "B", text: "REQUIRES_NEW" },
+    { key: "C", text: "SUPPORTS" },
+    { key: "D", text: "NESTED" },
+  ],
+  seconds: 30,
+  remaining: 23,
+  submitted: 4,
+};
