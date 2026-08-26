@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { PlayPage } from "@/features/student/play/play-page";
 
 export default function Page() {
-  return <PagePlaceholder path="/play/[code]" />;
+  return <PlayPage />;
 }
