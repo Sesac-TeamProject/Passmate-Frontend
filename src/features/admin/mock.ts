@@ -83,3 +83,115 @@ export const SYSTEM_STATUS: readonly SystemStatus[] = [
   { name: "Redis 랭킹", metric: "메모리 61%", label: "정상", tone: "mint" },
   { name: "스토리지 (음성 힌트)", metric: "용량 92%", label: "점검 필요", tone: "red" },
 ];
+
+/* ── A-02 사용자 관리 ─────────────────────────────────────────── */
+
+export type UserRole = "teacher" | "student";
+
+export type AdminUser = {
+  name: string;
+  /** 게스트는 이메일이 없다. */
+  email?: string;
+  role: UserRole;
+  /** 게스트는 가입일이 없다. */
+  joinedAt?: string;
+  sessions: string;
+  /** 선생님만 등급이 있다. */
+  reputation?: string;
+  status: { label: string; tone: Tone };
+  /** 행 우측 관리 문구. 제재 중이면 해제가 앞에 온다. */
+  actions: string;
+};
+
+export const ROLE_CHIP: Record<UserRole, { label: string; tone: Tone }> = {
+  teacher: { label: "선생님", tone: "neutral" },
+  student: { label: "학생", tone: "blue" },
+};
+
+export const ADMIN_USERS: readonly AdminUser[] = [
+  {
+    name: "박세라",
+    email: "serah@bootcamp.kr",
+    role: "teacher",
+    joinedAt: "2026-03-12",
+    sessions: "128회",
+    reputation: "Lv.4",
+    status: { label: "정상", tone: "mint" },
+    actions: "상세 · 정지",
+  },
+  {
+    name: "김준영",
+    email: "jy.kim@gmail.com",
+    role: "student",
+    joinedAt: "2026-05-02",
+    sessions: "64회",
+    status: { label: "정상", tone: "mint" },
+    actions: "상세 · 정지",
+  },
+  {
+    name: "이도현",
+    email: "dohyun@naver.com",
+    role: "student",
+    joinedAt: "2026-06-18",
+    sessions: "12회",
+    status: { label: "경고 2", tone: "amber" },
+    actions: "상세 · 정지",
+  },
+  {
+    name: "정민지",
+    email: "minji@kakao.com",
+    role: "teacher",
+    joinedAt: "2026-01-08",
+    sessions: "241회",
+    reputation: "Lv.5",
+    status: { label: "정상", tone: "mint" },
+    actions: "상세 · 정지",
+  },
+  {
+    name: "(게스트) 하늘",
+    role: "student",
+    sessions: "1회",
+    status: { label: "게스트", tone: "muted" },
+    actions: "기록 없음",
+  },
+  {
+    name: "최승혁",
+    email: "seung@daum.net",
+    role: "student",
+    joinedAt: "2026-07-30",
+    sessions: "8회",
+    status: { label: "제재 7일", tone: "red" },
+    actions: "해제 · 상세",
+  },
+  {
+    name: "홍희표",
+    email: "heepyo@gmail.com",
+    role: "teacher",
+    joinedAt: "2026-02-21",
+    sessions: "96회",
+    reputation: "Lv.3",
+    status: { label: "정상", tone: "mint" },
+    actions: "상세 · 정지",
+  },
+  {
+    name: "전혜림",
+    email: "hyerim@gmail.com",
+    role: "student",
+    joinedAt: "2026-08-01",
+    sessions: "3회",
+    status: { label: "정상", tone: "mint" },
+    actions: "상세 · 정지",
+  },
+];
+
+export type UserFilter = "all" | "teacher" | "student" | "sanctioned";
+
+/** 상단 필터 pill. count는 서비스 전체 기준이라 표시된 행 수와 다르다. */
+export const USER_FILTERS: readonly { key: UserFilter; label: string; count: string }[] = [
+  { key: "all", label: "전체", count: "12,480" },
+  { key: "teacher", label: "선생님", count: "2,140" },
+  { key: "student", label: "학생", count: "10,340" },
+  { key: "sanctioned", label: "제재 중", count: "34" },
+];
+
+export const USER_TOTAL_LABEL = "12,480명 중 8명 표시";

@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { UsersPage } from "@/features/admin/users/users-page";
 
 export default function Page() {
-  return <PagePlaceholder path="/admin/users" />;
+  return <UsersPage />;
 }
