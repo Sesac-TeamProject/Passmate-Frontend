@@ -6,7 +6,7 @@ import { CHOICE_CLASS } from "./choice-letter";
 import { Podium } from "./podium";
 import { ProjectorShell } from "./projector-shell";
 
-/** W-06 문항 결과 (프로젝터 · 모각작 스타일) — 정답 공개, 랭킹 TOP 5, 응답 분포 */
+/** W-06 문항 결과 (프로젝터 · 민트 톤 G7rpdd) — 정답 공개, 랭킹 TOP 5, 응답 분포 */
 export function ResultPage() {
   const q = LIVE_QUESTION;
   const r = QUESTION_RESULT;
@@ -19,8 +19,9 @@ export function ResultPage() {
 
   return (
     <ProjectorShell
+      tone="mint"
       top={
-        <header className="flex items-center justify-between border-b px-10 pt-[22px] pb-4">
+        <header className="flex items-center justify-between px-10 pt-[22px] pb-4">
           <span className="text-heading-lg text-[#0f3d2e]">
             Q{q.index} / {q.total} · 결과
           </span>
