@@ -1,6 +1,6 @@
 "use client";
 
-import { GraduationCap, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { routesByRole } from "@/config/routes";
@@ -36,12 +36,12 @@ export function AdminSidebar() {
   return (
     <aside className="flex w-[236px] shrink-0 flex-col gap-[6px] bg-sidebar px-4 pt-[22px] pb-5">
       <div className="flex shrink-0 items-center gap-2 pb-[18px] pl-[10px]">
-        {/* 정식 로고가 나오기 전까지의 임시 브랜드 마크 */}
+        {/* 시안(v5) 브랜드 마크: 민트 원 + "P". 정식 로고가 나오면 교체 */}
         <span
           aria-hidden
-          className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+          className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary text-[12px] leading-none font-black text-primary-foreground"
         >
-          <GraduationCap className="size-[13px]" strokeWidth={2.25} />
+          P
         </span>
         <p className="text-[15px] leading-[1.2] font-black text-sidebar-foreground">패스메이트</p>
         <span className="rounded-[6px] bg-sidebar-accent px-2 py-[3px] text-[10px] leading-[1.2] font-bold text-sidebar-accent-foreground">

@@ -1,19 +1,10 @@
 import type { AdminUserSummary } from "@/lib/types/dto";
-import { cn } from "@/lib/utils";
+import { AdminTable, type AdminTableColumn } from "../components/admin-table";
 import { StatChip } from "../components/stat-chip";
 import type { Tone } from "../components/tone";
 
-/**
- * 시안(admin/A-02, table 노드 167:1310) 기준.
- * 사용자 열만 260px 고정, 나머지 6열은 남는 폭을 균등 분배.
- * 데이터 셀은 시안대로 가운데 정렬(items-center justify-center)한다.
- * 시안의 헤더 셀은 좌측이지만 그러면 열이 어긋나 보여 헤더도 가운데로 맞췄다.
- */
-const NAME_COL = "flex w-[260px] shrink-0 justify-center px-3";
-const FLEX_COL = "flex min-w-0 flex-1 justify-center px-2";
-
-const HEADERS = ["역할", "가입일", "참여 세션", "명성", "상태", "관리"] as const;
-
+/** 시안(admin/A-02, table 노드 167:1310) 기준: 사용자 열만 260px 고정, 나머지 6열 균등. */
+const NAME_COL_W = 260;
 const EMPTY = "—";
 
 const ROLE_CHIP: Record<AdminUserSummary["role"], { label: string; tone: Tone }> = {
@@ -21,75 +12,68 @@ const ROLE_CHIP: Record<AdminUserSummary["role"], { label: string; tone: Tone }>
   STUDENT: { label: "학생", tone: "info" },
 };
 
+const COLUMNS: AdminTableColumn<AdminUserSummary>[] = [
+  {
+    key: "name",
+    header: "사용자",
+    width: NAME_COL_W,
+    render: (u) => (
+      <p className="truncate text-label-lg text-foreground">
+        {displayName(u)}
+        {u.email ? <span className="ml-2">{u.email}</span> : null}
+      </p>
+    ),
+  },
+  {
+    key: "role",
+    header: "역할",
+    render: (u) => <StatChip tone={ROLE_CHIP[u.role].tone}>{ROLE_CHIP[u.role].label}</StatChip>,
+  },
+  {
+    key: "joinedAt",
+    header: "가입일",
+    render: (u) => <p className="text-label-md text-muted-foreground">{u.joinedAt ?? EMPTY}</p>,
+  },
+  {
+    key: "sessions",
+    header: "참여 세션",
+    render: (u) => <p className="text-label-md text-muted-foreground">{u.sessionCount}회</p>,
+  },
+  {
+    key: "hostLevel",
+    header: "명성",
+    render: (u) => (
+      <p className="text-label-md text-muted-foreground">
+        {u.hostLevel === null ? EMPTY : `Lv.${u.hostLevel}`}
+      </p>
+    ),
+  },
+  {
+    key: "status",
+    header: "상태",
+    render: (u) => {
+      const chip = statusChip(u);
+      return <StatChip tone={chip.tone}>{chip.label}</StatChip>;
+    },
+  },
+  {
+    key: "actions",
+    header: "관리",
+    render: (u) => <p className="text-label-md text-muted-foreground">{actionLabel(u)}</p>,
+  },
+];
+
 type Props = { users: AdminUserSummary[] };
 
-/** 사용자 목록 표. 짝수 행에 옅은 배경을 깐다. */
+/** 사용자 목록 표. */
 export function UserTable({ users }: Props) {
-  if (users.length === 0) {
-    return (
-      <p className="w-full py-10 text-center text-label-md text-muted-foreground">
-        조건에 맞는 사용자가 없습니다.
-      </p>
-    );
-  }
-
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="min-w-[820px]">
-        <div className="flex w-full items-center border-b border-border pt-2 pb-[9px]">
-          <div className={NAME_COL}>
-            <p className="text-label-lg text-muted-foreground">사용자</p>
-          </div>
-          {HEADERS.map((h) => (
-            <div key={h} className={FLEX_COL}>
-              <p className="text-label-lg text-muted-foreground">{h}</p>
-            </div>
-          ))}
-        </div>
-
-        {users.map((u, i) => {
-          const status = statusChip(u);
-          const role = ROLE_CHIP[u.role];
-
-          return (
-            <div
-              key={u.id}
-              className={cn(
-                "flex w-full items-center border-b border-border py-[11px]",
-                i % 2 === 1 && "bg-muted",
-              )}
-            >
-              <div className={NAME_COL}>
-                <p className="truncate text-label-lg text-foreground">
-                  {displayName(u)}
-                  {u.email ? <span className="ml-2">{u.email}</span> : null}
-                </p>
-              </div>
-              <div className={FLEX_COL}>
-                <StatChip tone={role.tone}>{role.label}</StatChip>
-              </div>
-              <div className={FLEX_COL}>
-                <p className="text-label-md text-muted-foreground">{u.joinedAt ?? EMPTY}</p>
-              </div>
-              <div className={FLEX_COL}>
-                <p className="text-label-md text-muted-foreground">{u.sessionCount}회</p>
-              </div>
-              <div className={FLEX_COL}>
-                <p className="text-label-md text-muted-foreground">
-                  {u.hostLevel === null ? EMPTY : `Lv.${u.hostLevel}`}
-                </p>
-              </div>
-              <div className={FLEX_COL}>
-                <StatChip tone={status.tone}>{status.label}</StatChip>
-              </div>
-              <div className={FLEX_COL}>
-                <p className="text-label-md text-muted-foreground">{actionLabel(u)}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <AdminTable
+      columns={COLUMNS}
+      rows={users}
+      rowKey={(u) => u.id}
+      emptyMessage="조건에 맞는 사용자가 없습니다."
+    />
   );
 }
 

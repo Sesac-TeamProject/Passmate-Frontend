@@ -1,5 +1,7 @@
 import type {
   AdminDashboardResponse,
+  AdminReviewQueueResponse,
+  AdminRoomsResponse,
   AdminUserFilter,
   AdminUserSummary,
   AdminUsersResponse,
@@ -191,4 +193,111 @@ export function mockAdminUsers(filterParam: string | null): AdminUsersResponse {
   const items = USERS.filter((u) => matchesFilter(u, filter));
 
   return { total: COUNTS[filter], counts: COUNTS, items };
+}
+
+/* ── A-03 방 · 문제 관리 (시안 admin/A-03 167:1462) ───── */
+
+export function mockAdminRooms(): AdminRoomsResponse {
+  return {
+    summary: { live: 27, waiting: 9, endedToday: 280 },
+    items: [
+      {
+        pin: "482913",
+        title: "8월 4주차 Spring 스터디",
+        hostName: "박세라",
+        participantCount: 6,
+        kind: "FREE",
+        entryFeeKrw: null,
+        status: "RUNNING",
+      },
+      {
+        pin: "771204",
+        title: "정보처리기사 실전 모의",
+        hostName: "정민지",
+        participantCount: 24,
+        kind: "PAID",
+        entryFeeKrw: 10000,
+        status: "RUNNING",
+      },
+      {
+        pin: "305668",
+        title: "네트워크 기초 점검",
+        hostName: "홍희표",
+        participantCount: 12,
+        kind: "FREE",
+        entryFeeKrw: null,
+        status: "WAITING",
+      },
+      {
+        pin: "119847",
+        title: "A사 채용 브랜디드 퀴즈",
+        hostName: "플랫폼 운영",
+        participantCount: 86,
+        kind: "BRANDED",
+        entryFeeKrw: null,
+        status: "RUNNING",
+      },
+      {
+        pin: "620035",
+        title: "자료구조 오답 복습",
+        hostName: "박세라",
+        participantCount: 9,
+        kind: "FREE",
+        entryFeeKrw: null,
+        status: "FINISHED",
+      },
+    ],
+  };
+}
+
+export function mockAdminReviewQueue(): AdminReviewQueueResponse {
+  return {
+    items: [
+      {
+        id: "Q-24817",
+        prompt: "@Transactional의 기본 전파 속성은?",
+        format: "MULTIPLE_CHOICE",
+        difficulty: "MEDIUM",
+        correctRatePct: 67,
+        reportCount: 0,
+        reviewStatus: "OK",
+      },
+      {
+        id: "Q-24902",
+        prompt: "다음 중 TCP 특징이 아닌 것은?",
+        format: "MULTIPLE_CHOICE",
+        difficulty: "EASY",
+        correctRatePct: 96,
+        reportCount: 0,
+        reviewStatus: "TOO_EASY",
+      },
+      {
+        id: "Q-25011",
+        prompt: "JPA N+1 문제를 설명하시오",
+        format: "ESSAY",
+        difficulty: "HARD",
+        correctRatePct: null,
+        reportCount: 1,
+        reviewStatus: "PENDING",
+      },
+      {
+        id: "Q-25044",
+        prompt: "보기 중복 오류 의심 문항",
+        format: "MULTIPLE_CHOICE",
+        difficulty: "MEDIUM",
+        correctRatePct: 12,
+        reportCount: 5,
+        reviewStatus: "REJECT_NEEDED",
+      },
+      {
+        id: "Q-25102",
+        prompt: "React 렌더링 최적화 방법은?",
+        format: "ESSAY",
+        difficulty: "MEDIUM",
+        correctRatePct: null,
+        reportCount: 0,
+        reviewStatus: "OK",
+      },
+    ],
+  };
 }

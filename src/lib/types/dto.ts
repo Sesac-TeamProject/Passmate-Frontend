@@ -117,3 +117,56 @@ export type AdminUsersResponse = {
   counts: Record<AdminUserFilter, number>;
   items: AdminUserSummary[];
 };
+
+/* ── A-03 방 · 문제 관리 ─────────────────────────────── */
+
+/** GET /admin/rooms */
+export type AdminRoomsResponse = {
+  summary: AdminRoomSummaryCounts;
+  items: AdminRoomSummary[];
+};
+
+export type AdminRoomSummaryCounts = {
+  live: number;
+  waiting: number;
+  endedToday: number;
+};
+
+export type RoomKind = "FREE" | "PAID" | "BRANDED";
+
+export type RoomStatus = "WAITING" | "RUNNING" | "FINISHED";
+
+export type AdminRoomSummary = {
+  pin: string;
+  title: string;
+  /** 브랜디드 방은 "플랫폼 운영" 같은 운영 주체 이름 */
+  hostName: string;
+  participantCount: number;
+  kind: RoomKind;
+  /** 유료 방의 참가비(원). 무료·브랜디드는 null */
+  entryFeeKrw: number | null;
+  status: RoomStatus;
+};
+
+/** GET /admin/questions/review-queue — AI 생성 문항 중 신고 누적·정답률 이상 */
+export type AdminReviewQueueResponse = {
+  items: AdminReviewQuestion[];
+};
+
+export type QuestionFormat = "MULTIPLE_CHOICE" | "ESSAY";
+
+export type QuestionDifficulty = "EASY" | "MEDIUM" | "HARD";
+
+export type QuestionReviewStatus = "OK" | "TOO_EASY" | "PENDING" | "REJECT_NEEDED";
+
+export type AdminReviewQuestion = {
+  /** 표시용 문제 ID. 예: Q-24817 */
+  id: string;
+  prompt: string;
+  format: QuestionFormat;
+  difficulty: QuestionDifficulty;
+  /** 정답률(%). 서술형처럼 산출 불가면 null */
+  correctRatePct: number | null;
+  reportCount: number;
+  reviewStatus: QuestionReviewStatus;
+};
