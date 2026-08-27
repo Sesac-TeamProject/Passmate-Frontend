@@ -39,7 +39,7 @@ export const PROFILE: Profile = {
   progress: 60,
 };
 
-export type AchievementBadgeKind = "flag" | "number" | "paws" | "empty" | "ring";
+export type AchievementBadgeKind = "flag" | "number" | "paws" | "ring" | "drop" | "won" | "empty";
 
 export type Achievement = {
   id: string;
@@ -47,6 +47,8 @@ export type Achievement = {
   /** number·ring 뱃지에 찍히는 숫자 */
   label?: string;
   title: string;
+  /** 아직 획득하지 못한 뱃지 — opacity 0.3으로 그린다 */
+  locked?: boolean;
 };
 
 /** 개설한 방(host) 실적 */
@@ -66,10 +68,14 @@ export const HOST_RECORD: HostRecord = {
     locked: 3,
     items: [
       { id: "first-room", kind: "flag", title: "첫 방 개설" },
-      { id: "rooms-10", kind: "number", label: "10", title: "방 운영 10회" },
+      { id: "rooms-10", kind: "number", label: "10", title: "방 10회 운영" },
       { id: "students-100", kind: "paws", title: "학생 100명" },
-      { id: "rating-4", kind: "empty", title: "평균 별점 4.0" },
-      { id: "students-50-room", kind: "ring", label: "50", title: "한 방에 50명" },
+      // TODO(디자인): 시안 뱃지 시트에서 "평가 4.5+"·"AI 세트 50개"는 아이콘이 비어 있다
+      { id: "rating-4.5", kind: "empty", title: "평가 4.5+", locked: true },
+      { id: "reviews-50", kind: "ring", label: "50", title: "평가 50개 받기" },
+      { id: "streak-30", kind: "drop", title: "30일 연속 활동", locked: true },
+      { id: "paid-first", kind: "won", title: "유료 방 첫 개설" },
+      { id: "ai-sets-50", kind: "empty", title: "AI 세트 50개", locked: true },
     ],
   },
   openRooms: 2,

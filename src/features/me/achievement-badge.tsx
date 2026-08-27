@@ -1,13 +1,17 @@
 import type { Achievement } from "@/features/me/mock";
+import { cn } from "@/lib/utils";
 
 type Props = { badge: Achievement };
 
-/** 40px 업적 뱃지 (디자인 AchievementBadge). 종류별 아이콘은 인라인 SVG. */
+/** 56px 업적 뱃지 (디자인 AchievementBadge, r16 · 테두리 2px mint-line). 잠긴 뱃지는 opacity 0.3. */
 export function AchievementBadge({ badge }: Props) {
   return (
     <span
       title={badge.title}
-      className="flex size-10 shrink-0 items-center justify-center rounded-[11px] border border-[#bfebd8] bg-mint-bg"
+      className={cn(
+        "flex size-14 shrink-0 items-center justify-center rounded-2xl border-2 border-mint-line bg-mint-bg",
+        badge.locked && "opacity-30",
+      )}
     >
       <BadgeGlyph badge={badge} />
     </span>
@@ -18,37 +22,49 @@ function BadgeGlyph({ badge }: Props) {
   switch (badge.kind) {
     case "flag":
       return (
-        <svg aria-hidden width="40" height="40" viewBox="0 0 40 40">
-          <rect x="11" y="6" width="4" height="28" rx="2" fill="#0e8a63" />
-          <polygon points="15,7 31,7 27,13 31,19 15,19" fill="#0e8a63" />
+        <svg aria-hidden width="56" height="56" viewBox="0 0 56 56" fill="var(--mint-dark)">
+          <rect x="17" y="12" width="4" height="32" rx="2" />
+          <path d="M21 13h22l-4 7 4 7H21z" />
         </svg>
       );
     case "number":
-      return <span className="text-heading-lg text-mint-dark">{badge.label}</span>;
+    case "won":
+      return (
+        <span className="text-heading-lg text-mint-dark">
+          {badge.kind === "won" ? "₩" : badge.label}
+        </span>
+      );
     case "paws":
       return (
-        <svg aria-hidden width="40" height="40" viewBox="0 0 40 40" fill="#5ccfa0">
-          <circle cx="14" cy="14" r="5" />
-          <circle cx="26" cy="14" r="5" />
-          <rect x="7" y="22" width="14" height="11" rx="5.5" />
-          <rect x="19" y="22" width="14" height="11" rx="5.5" />
+        <svg aria-hidden width="56" height="56" viewBox="0 0 56 56" fill="var(--mint-soft)">
+          <circle cx="20" cy="20" r="6" />
+          <circle cx="37" cy="20" r="6" />
+          <rect x="11" y="28" width="18" height="14" rx="7" />
+          <rect x="28" y="28" width="18" height="14" rx="7" />
+        </svg>
+      );
+    case "drop":
+      return (
+        <svg aria-hidden width="56" height="56" viewBox="0 0 56 56" fill="var(--mint-soft)">
+          <polygon points="28,8 36,24 20,24" />
+          <ellipse cx="28" cy="29" rx="12" ry="15" />
         </svg>
       );
     case "ring":
       return (
-        <span className="relative flex size-10 items-center justify-center">
-          <svg aria-hidden width="40" height="40" viewBox="0 0 40 40" className="absolute inset-0">
-            <circle cx="20" cy="20" r="15" fill="none" stroke="#bfebd8" strokeWidth="5" />
+        <span className="relative flex size-14 items-center justify-center">
+          <svg aria-hidden width="56" height="56" viewBox="0 0 56 56" className="absolute inset-0">
+            <circle cx="28" cy="28" r="17" fill="none" stroke="var(--mint-line)" strokeWidth="5" />
             <circle
-              cx="20"
-              cy="20"
-              r="15"
+              cx="28"
+              cy="28"
+              r="17"
               fill="none"
-              stroke="#0e8a63"
+              stroke="var(--mint-dark)"
               strokeWidth="5"
-              strokeDasharray="84.8 9.4"
-              strokeDashoffset="-4.7"
-              transform="rotate(-90 20 20)"
+              strokeDasharray="96.1 10.7"
+              strokeDashoffset="-5.3"
+              transform="rotate(-90 28 28)"
             />
           </svg>
           <span className="relative text-label-lg text-mint-dark">{badge.label}</span>

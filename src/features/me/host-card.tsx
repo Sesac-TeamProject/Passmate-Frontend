@@ -23,7 +23,7 @@ export function HostCard({ profile, host }: Props) {
       </header>
 
       <div className="flex items-center gap-3">
-        <LevelEmblem size={48} />
+        <LevelEmblem level={profile.level} size={48} />
         <div className="flex flex-col gap-0.5">
           <span className="text-label-lg text-ink">
             Lv.{profile.level} {profile.levelTitle} — {profile.levelPerk}
@@ -61,7 +61,6 @@ export function HostCard({ profile, host }: Props) {
         {host.badges.items.map((b) => (
           <AchievementBadge key={b.id} badge={b} />
         ))}
-        <span className="text-label-md text-ink-disabled">+{host.badges.locked} 잠김</span>
       </div>
 
       <div className="h-px bg-border" />

@@ -13,7 +13,7 @@ export function ReputationRow({ level, title, minLevel }: Props) {
   return (
     <div className="flex w-full items-center gap-2.5">
       <span className="flex shrink-0 items-center gap-1 rounded-full bg-mint-tint py-1 pr-2.5 pl-[5px]">
-        <LevelEmblem size={14} />
+        <LevelEmblem level={level} size={14} />
         <span className="text-label-lg text-mint-deep">
           Lv.{level} {title}
         </span>

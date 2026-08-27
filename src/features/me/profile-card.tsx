@@ -13,7 +13,7 @@ export function ProfileCard({ profile, host, learning }: Props) {
         <div className="flex items-center gap-2">
           <h2 className="text-heading-md text-ink">{profile.name}</h2>
           <span className="flex items-center gap-1 rounded-full bg-mint-tint py-1 pr-2.5 pl-[5px] text-label-lg text-mint-deep">
-            <LevelEmblem size={14} />
+            <LevelEmblem level={profile.level} size={14} />
             Lv.{profile.level} {profile.levelTitle}
           </span>
         </div>
