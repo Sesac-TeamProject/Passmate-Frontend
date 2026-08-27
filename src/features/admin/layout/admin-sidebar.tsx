@@ -1,5 +1,6 @@
 "use client";
 
+import { UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -76,7 +77,7 @@ export function AdminSidebar() {
 
       {profile ? (
         <div className="flex w-full shrink-0 items-center gap-[9px] pt-3 pl-[10px]">
-          <Image src="/admin/avatar.svg" alt="" width={26} height={26} className="size-[26px]" />
+          <UserRound aria-hidden className="size-[26px] shrink-0 text-primary" strokeWidth={2} />
           <div className="flex flex-col gap-px">
             <p className="text-[12px] leading-[1.2] font-bold text-sidebar-foreground">
               {profile.name}
