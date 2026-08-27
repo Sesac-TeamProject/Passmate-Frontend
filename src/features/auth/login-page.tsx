@@ -1,72 +1,128 @@
 import Link from "next/link";
-import type { ChoiceKey } from "@/features/host/mock";
-import { CHOICE_CLASS } from "@/features/host/live/choice-letter";
-import { cn } from "@/lib/utils";
+import type { FormEvent } from "react";
+import { BrandLogo } from "@/components/common/brand-logo";
+import { FieldInput, FormField } from "@/components/common/form-field";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
-const KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
+export type LoginValues = {
+  email: string;
+  password: string;
+  remember: boolean;
+};
 
-/** C-01 로그인 (웹·앱 공통) — 좌측 브랜드 패널 + 우측 시작하기 카드 */
-export function LoginPage() {
+type Props = {
+  values: LoginValues;
+  onChange: (next: LoginValues) => void;
+  onSubmit: () => void;
+  pending?: boolean;
+};
+
+/** C-01 v2 로그인 (웹) — 가운데 카드형. 렌더 전용, 상태는 app/(bare)/login/page.tsx가 소유 */
+export function LoginPage({ values, onChange, onSubmit, pending = false }: Props) {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit();
+  };
+
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-[620px] shrink-0 flex-col gap-7 bg-mint-bg px-16 pt-[88px] pb-16">
-        <div className="flex gap-3" aria-hidden>
-          {KEYS.map((k) => (
-            <span
-              key={k}
-              className={cn(
-                "flex size-[46px] items-center justify-center rounded-[14px] text-heading-md",
-                CHOICE_CLASS[k].solid,
-              )}
-            >
-              {k}
-            </span>
-          ))}
-        </div>
-        <h1 className="text-display-lg whitespace-pre-line text-mint-ink">
-          {"선생님이 방을 열고,\nAI가 문제를 만들고,\n모두가 실전처럼 풉니다."}
-        </h1>
-        <p className="text-heading-sm text-mint-ink">방 코드 하나로 시작하는 실전형 학습 룸</p>
-        <div className="mt-auto flex items-center gap-2.5">
-          <span className="flex size-8 items-center justify-center rounded-[10px] bg-mint text-heading-sm text-white">
-            P
-          </span>
-          <span className="text-heading-md text-mint-ink">패스메이트</span>
-        </div>
-      </aside>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-5 bg-background">
+      <p className="text-body-md text-muted-foreground">혼자 시작한 공부, 함께하는 합격까지.</p>
 
-      <main className="flex flex-1 items-center justify-center p-8">
-        <section className="flex w-[420px] flex-col items-center rounded-[28px] border bg-card px-10 pt-10 pb-9">
-          <h2 className="text-display-sm text-ink">시작하기</h2>
-          <p className="pt-2 text-body-md text-muted-foreground">선생님·학생 공용 계정이에요</p>
-          <button
-            type="button"
-            className="mt-8 flex h-[54px] w-full items-center justify-center gap-2.5 rounded-2xl border bg-card text-heading-sm text-ink transition-colors hover:bg-muted"
-          >
-            <span
-              aria-hidden
-              className="flex size-6 items-center justify-center rounded-full border text-label-lg text-muted-foreground"
-            >
-              G
-            </span>
-            Google로 계속하기
-          </button>
-          <div className="flex w-full items-center gap-3 py-[22px] text-label-md text-muted-foreground">
-            <hr className="flex-1 border-muted" />
-            또는
-            <hr className="flex-1 border-muted" />
-          </div>
-          <Link
-            href="/join"
-            className="flex h-[54px] w-full items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark"
-          >
-            PIN으로 게스트 입장
-          </Link>
-          <p className="pt-3.5 text-label-md text-muted-foreground">
-            게스트 기록은 세션이 끝나면 사라져요
+      <form
+        onSubmit={handleSubmit}
+        className="flex w-[420px] flex-col gap-6 rounded-[20px] border bg-card p-10"
+      >
+        <BrandLogo size="lg" />
+
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-heading-lg text-ink">로그인</h1>
+          <p className="text-body-md text-muted-foreground">
+            선생님 · 학생 모두 같은 계정으로 시작해요
           </p>
-        </section>
-      </main>
-    </div>
+        </div>
+
+        <FormField label="이메일" htmlFor="login-email">
+          <FieldInput
+            id="login-email"
+            type="email"
+            name="email"
+            autoComplete="email"
+            placeholder="이메일 주소"
+            value={values.email}
+            onChange={(e) => onChange({ ...values, email: e.target.value })}
+            disabled={pending}
+          />
+        </FormField>
+
+        <FormField label="비밀번호" htmlFor="login-password">
+          <FieldInput
+            id="login-password"
+            type="password"
+            name="password"
+            autoComplete="current-password"
+            placeholder="비밀번호"
+            value={values.password}
+            onChange={(e) => onChange({ ...values, password: e.target.value })}
+            disabled={pending}
+          />
+        </FormField>
+
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 text-body-md text-muted-foreground">
+            <Checkbox
+              className="size-[18px] rounded-[4px] bg-card"
+              checked={values.remember}
+              onCheckedChange={(checked) => onChange({ ...values, remember: checked })}
+              disabled={pending}
+            />
+            로그인 유지
+          </label>
+          {/* TODO: 비밀번호 찾기 라우트 없음 (routes.ts 등록 후 연결) */}
+          <Link href="#" className="text-label-lg text-mint">
+            비밀번호 찾기
+          </Link>
+        </div>
+
+        <Button type="submit" size="xl" className="w-full" disabled={pending}>
+          로그인
+        </Button>
+
+        <div className="flex items-center gap-3">
+          <span aria-hidden className="h-px flex-1 bg-border" />
+          <span className="text-label-md text-ink-disabled">또는</span>
+          <span aria-hidden className="h-px flex-1 bg-border" />
+        </div>
+
+        {/* TODO(API): Google OAuth 계약 없음 */}
+        <Button
+          type="button"
+          variant="outline"
+          size="xl"
+          className="w-full gap-2 bg-card"
+          disabled={pending}
+        >
+          <span aria-hidden className="text-label-lg text-blue">
+            G
+          </span>
+          <span className="text-label-lg text-foreground">Google로 계속하기</span>
+        </Button>
+
+        <p className="flex items-center justify-center gap-1">
+          <span className="text-body-md text-muted-foreground">계정이 없나요?</span>
+          {/* TODO: 회원가입 라우트 없음 (routes.ts 등록 후 연결) */}
+          <Link href="#" className="text-label-lg text-mint">
+            회원가입
+          </Link>
+        </p>
+      </form>
+
+      <p className="flex items-center gap-1">
+        <span className="text-body-md text-muted-foreground">방 코드만 있다면</span>
+        <Link href="/join" className="text-label-lg text-mint">
+          PIN으로 게스트 입장 →
+        </Link>
+      </p>
+    </main>
   );
 }
