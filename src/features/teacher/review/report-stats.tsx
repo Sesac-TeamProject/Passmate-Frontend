@@ -27,13 +27,13 @@ export function ReportStats({ stats }: Props) {
         >
           <span
             aria-hidden
-            className={`flex size-[38px] shrink-0 items-center justify-center rounded-xl text-sm font-black ${TILE[it.key]}`}
+            className={`flex size-[38px] shrink-0 items-center justify-center rounded-xl text-label-lg ${TILE[it.key]}`}
           >
             {it.value.charAt(0)}
           </span>
           <div className="flex flex-col gap-px">
-            <span className="text-[11px] font-medium text-muted-foreground">{it.label}</span>
-            <span className="text-[19px] font-black text-ink">{it.value}</span>
+            <span className="text-label-lg text-muted-foreground">{it.label}</span>
+            <span className="text-heading-md text-ink">{it.value}</span>
           </div>
         </div>
       ))}

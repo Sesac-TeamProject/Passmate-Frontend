@@ -10,12 +10,12 @@ export function ReviewPage() {
     <main className="flex min-h-screen flex-col gap-4 px-8 py-[26px]">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-0.5">
-          <h1 className="text-[22px] font-black text-ink">{report.title}</h1>
-          <p className="text-[13px] text-[#73727c]">{report.dateLabel} · 세션 리포트</p>
+          <h1 className="text-heading-lg text-ink">{report.title}</h1>
+          <p className="text-body-md text-muted-foreground">{report.dateLabel} · 세션 리포트</p>
         </div>
         <button
           type="button"
-          className="flex h-10 items-center rounded-[14px] bg-card px-[18px] text-[13px] font-bold text-mint-dark transition-colors hover:bg-mint-tint"
+          className="flex h-10 items-center rounded-[14px] bg-card px-[18px] text-label-lg text-mint-dark transition-colors hover:bg-mint-tint"
         >
           내보내기
         </button>

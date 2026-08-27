@@ -350,6 +350,42 @@ export const SESSION_REPORT: SessionReport = {
           { tone: "tip", text: "제안 — 트랜잭션 범위와 함께 설명" },
         ],
       },
+      {
+        studentId: "s3",
+        text: "JPA가 엔티티를 저장하는 환경입니다. persist 하면 영속 상태가 되고 commit 시점에 DB에 반영됩니다.",
+        findings: [
+          { tone: "good", text: "핵심 포함 — 영속 상태, 쓰기 지연" },
+          { tone: "lack", text: "부족 — 1차 캐시·변경 감지 미언급" },
+          { tone: "tip", text: "제안 — 준영속·삭제 상태까지 생명주기로 정리" },
+        ],
+      },
+      {
+        studentId: "s4",
+        text: "엔티티를 캐싱해서 같은 id로 조회하면 DB에 다시 가지 않고 캐시에서 돌려줍니다.",
+        findings: [
+          { tone: "good", text: "핵심 포함 — 1차 캐시" },
+          { tone: "lack", text: "부족 — 동일성 보장·변경 감지 미언급" },
+          { tone: "tip", text: "제안 — 캐시 범위가 트랜잭션 단위임을 명시" },
+        ],
+      },
+      {
+        studentId: "s5",
+        text: "영속성 컨텍스트는 트랜잭션 안에서 엔티티 변경을 추적해 flush 시점에 update 쿼리를 만들어 줍니다.",
+        findings: [
+          { tone: "good", text: "핵심 포함 — 변경 감지, flush" },
+          { tone: "lack", text: "부족 — 1차 캐시·동일성 보장 미언급" },
+          { tone: "tip", text: "제안 — 스냅샷 비교 원리를 한 줄 추가" },
+        ],
+      },
+      {
+        studentId: "s6",
+        text: "엔티티 매니저 안에 있는 저장소로, 여기에 들어간 엔티티만 JPA가 관리합니다.",
+        findings: [
+          { tone: "good", text: "핵심 포함 — 관리 대상 범위" },
+          { tone: "lack", text: "부족 — 1차 캐시·쓰기 지연·변경 감지 미언급" },
+          { tone: "tip", text: "제안 — 영속성 컨텍스트가 주는 이점을 예시로 보강" },
+        ],
+      },
     ],
   },
 };

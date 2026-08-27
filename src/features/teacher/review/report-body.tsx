@@ -30,7 +30,7 @@ export function ReportBody({ report, students }: Props) {
             aria-selected={tab === t}
             onClick={() => setTab(t)}
             className={cn(
-              "rounded-full px-[18px] py-[9px] text-[13px] font-black transition-colors",
+              "rounded-full px-[18px] py-[9px] text-label-lg transition-colors",
               tab === t
                 ? "bg-mint-tint text-mint-dark"
                 : "bg-card text-muted-foreground hover:bg-muted",
@@ -61,7 +61,7 @@ export function ReportBody({ report, students }: Props) {
           />
         </div>
       ) : (
-        <div className="flex flex-1 items-center justify-center rounded-[20px] border border-dashed text-sm text-muted-foreground">
+        <div className="flex flex-1 items-center justify-center rounded-[20px] border border-dashed text-body-md text-muted-foreground">
           {tab} 탭은 데이터 연동 시 구현
         </div>
       )}
@@ -83,22 +83,19 @@ function QuestionRow({
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={cn(
-        "flex w-full items-center gap-3 rounded-2xl border bg-card px-[18px] py-[15px] text-left transition-colors hover:border-mint",
-        selected && "border-mint",
-      )}
+      className="flex w-full items-center gap-3 rounded-2xl border bg-card px-[18px] py-[15px] text-left transition-colors hover:border-mint"
     >
       <span
         className={cn(
-          "flex h-7 w-9 shrink-0 items-center justify-center rounded-[10px] text-xs font-black text-mint-dark",
+          "flex h-7 w-9 shrink-0 items-center justify-center rounded-[10px] text-label-lg text-mint-dark",
           selected ? "bg-mint-tint" : "bg-muted",
         )}
       >
         Q{q.index}
       </span>
-      <span className="flex-1 truncate text-sm font-bold text-ink">{q.title}</span>
+      <span className="flex-1 truncate text-label-lg text-ink">{q.title}</span>
       {q.type === "essay" ? (
-        <span className="text-xs font-black text-mint-dark">AI 분석 {q.aiCount}건</span>
+        <span className="text-label-lg text-mint-dark">AI 분석 {q.aiCount}건</span>
       ) : (
         <>
           <span
@@ -108,9 +105,7 @@ function QuestionRow({
             )}
             style={{ width: `${((q.accuracy ?? 0) / 100) * 110}px` }}
           />
-          <span className="w-10 text-right text-xs font-black text-muted-foreground">
-            {q.accuracy}%
-          </span>
+          <span className="text-label-lg text-muted-foreground">{q.accuracy}%</span>
         </>
       )}
       <span className="sr-only">{QUESTION_TYPE_LABEL[q.type]}</span>
