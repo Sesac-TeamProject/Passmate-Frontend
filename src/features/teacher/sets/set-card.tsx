@@ -21,18 +21,14 @@ export function SetCard({ set, selected, onSelect }: Props) {
         selected && "border-mint",
       )}
     >
-      <InitialTile
-        label={set.tile.label}
-        tone={set.tile.tone}
-        className="size-10 rounded-xl text-[15px]"
-      />
-      <span className="text-base font-black text-ink">{set.title}</span>
-      <span className="text-xs text-muted-foreground">{set.summary}</span>
+      <InitialTile label={set.tile.label} tone={set.tile.tone} className="size-10 rounded-xl" />
+      <span className="text-heading-sm text-ink">{set.title}</span>
+      <span className="text-label-md text-muted-foreground">{set.summary}</span>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] text-[#7f7e88]">
+        <span className="text-label-md text-muted-foreground">
           {set.usage ? `${set.usage.count}회 사용 · ${set.usage.lastUsed}` : "미사용"}
         </span>
-        <div className="flex gap-2.5 text-xs font-black text-mint-dark">
+        <div className="flex gap-2.5 text-label-lg text-mint-dark">
           <button type="button" className="hover:underline" onClick={(e) => e.stopPropagation()}>
             복제
           </button>

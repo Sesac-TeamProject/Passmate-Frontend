@@ -15,10 +15,10 @@ export function SetsPage() {
     <div className="flex min-h-screen">
       <main className="flex flex-1 flex-col gap-[18px] py-7 pr-6 pl-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-black text-ink">문제 세트</h1>
+          <h1 className="text-heading-lg text-ink">문제 세트</h1>
           <Link
             href="/teacher/editor"
-            className="flex h-[46px] items-center rounded-[14px] bg-mint-tint px-5 text-sm font-black text-mint-dark transition-colors hover:bg-mint hover:text-white"
+            className="flex h-[46px] items-center rounded-[14px] bg-mint-tint px-5 text-label-lg text-mint-dark transition-colors hover:bg-mint hover:text-white"
           >
             + 새 세트
           </Link>
