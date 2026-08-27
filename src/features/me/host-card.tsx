@@ -66,11 +66,11 @@ export function HostCard({ profile, host }: Props) {
 
       <div className="h-px bg-border" />
 
-      <Link href="/teacher/dashboard" className="flex items-center justify-between">
+      <Link href="/host/dashboard" className="flex items-center justify-between">
         <span className="text-label-lg text-ink">지금 열려 있는 방</span>
         <span className="text-label-md text-mint-dark">{host.openRooms}개 ›</span>
       </Link>
-      <Link href="/teacher/revenue" className="flex items-center justify-between">
+      <Link href="/host/revenue" className="flex items-center justify-between">
         <span className="text-label-lg text-ink">정산</span>
         <span className="text-label-md text-mint-dark">
           이번 달 ₩{host.settlementThisMonth.toLocaleString()} ›
@@ -79,13 +79,13 @@ export function HostCard({ profile, host }: Props) {
 
       <div className="flex gap-2.5">
         <Link
-          href="/teacher/rooms/new"
+          href="/host/rooms/new"
           className="flex items-center justify-center rounded-xl bg-mint px-5 py-3 text-label-lg text-white transition-colors hover:bg-mint-dark"
         >
           방 만들기
         </Link>
         <Link
-          href="/teacher/sets"
+          href="/host/sets"
           className="flex items-center justify-center rounded-xl bg-mint-bg px-5 py-3 text-label-lg text-mint-dark transition-colors hover:bg-mint-tint"
         >
           문제 세트 관리

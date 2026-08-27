@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/layout/site-header";
-import { ROLE_LABEL, ROUTES, type Role } from "@/config/routes";
+import { AREA_LABEL, ROUTES, type Area } from "@/config/routes";
 
-const ROLE_ORDER: Role[] = ["public", "student", "teacher", "admin"];
+const AREA_ORDER: Area[] = ["public", "play", "host", "member", "admin"];
 
 export default function Home() {
   return (
@@ -15,11 +15,11 @@ export default function Home() {
             깡통 단계 사이트맵. 각 화면은 <code>src/config/routes.ts</code>에서 관리한다.
           </p>
         </div>
-        {ROLE_ORDER.map((role) => (
-          <section key={role} className="flex flex-col gap-2">
-            <h2 className="text-heading-sm text-ink">{ROLE_LABEL[role]}</h2>
+        {AREA_ORDER.map((area) => (
+          <section key={area} className="flex flex-col gap-2">
+            <h2 className="text-heading-sm text-ink">{AREA_LABEL[area]}</h2>
             <ul className="divide-y rounded-lg border">
-              {ROUTES.filter((r) => r.role === role).map((r) => (
+              {ROUTES.filter((r) => r.area === area).map((r) => (
                 <li key={r.path}>
                   <Link href={r.sample} className="flex flex-col gap-0.5 px-4 py-3 hover:bg-muted">
                     <span className="text-label-lg text-ink">{r.title}</span>

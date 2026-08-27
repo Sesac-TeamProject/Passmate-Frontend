@@ -3,7 +3,7 @@
 import { UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { routesByRole } from "@/config/routes";
+import { routesByArea } from "@/config/routes";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type { UserRole } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const profile = useAuthStore((s) => s.profile);
 
-  const items = routesByRole("admin");
+  const items = routesByArea("admin");
 
   return (
     <aside className="flex w-[236px] shrink-0 flex-col gap-[6px] bg-sidebar px-4 pt-[22px] pb-5">

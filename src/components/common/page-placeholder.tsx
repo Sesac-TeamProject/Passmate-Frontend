@@ -1,8 +1,8 @@
 import { Badge } from "@/components/ui/badge";
-import { getRoute, ROLE_LABEL } from "@/config/routes";
+import { getRoute, AREA_LABEL } from "@/config/routes";
 
 type Props = {
-  /** routes.ts에 등록된 path. 예: "/teacher/dashboard" */
+  /** routes.ts에 등록된 path. 예: "/host/dashboard" */
   path: string;
 };
 
@@ -12,7 +12,7 @@ export function PagePlaceholder({ path }: Props) {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-8">
       <div>
-        <Badge variant="outline">{ROLE_LABEL[route.role]}</Badge>
+        <Badge variant="outline">{AREA_LABEL[route.area]}</Badge>
       </div>
       <h1 className="text-heading-lg text-ink">{route.title}</h1>
       <p className="text-body-md text-muted-foreground">{route.description}</p>

@@ -1,4 +1,8 @@
-export type Role = "public" | "student" | "teacher" | "admin";
+/**
+ * 화면 구역. 권한·신분이 아니다 — 계정에 역할이 없고 한 회원이 방을 열기도(host) 들어가기도(play) 한다.
+ * public: 로그인 없이 · play: 방 참여(회원·게스트) · host: 방 개설·운영 · member: 회원 전용 · admin: 관리자
+ */
+export type Area = "public" | "play" | "host" | "member" | "admin";
 
 export type RouteMeta = {
   /** app 폴더 기준 URL 패턴. 예: /play/[code] */
@@ -9,13 +13,14 @@ export type RouteMeta = {
   title: string;
   /** 화면 설명 (기획서 §7) */
   description: string;
-  role: Role;
+  area: Area;
 };
 
-export const ROLE_LABEL: Record<Role, string> = {
+export const AREA_LABEL: Record<Area, string> = {
   public: "공통",
-  student: "학생",
-  teacher: "선생님",
+  play: "참여 (학생·게스트)",
+  host: "개설·운영 (호스트)",
+  member: "회원",
   admin: "관리자",
 };
 
@@ -26,14 +31,14 @@ export const ROUTES: readonly RouteMeta[] = [
     sample: "/login",
     title: "로그인·프로필",
     description: "OAuth 로그인 (선생님·학생 공용)",
-    role: "public",
+    area: "public",
   },
   {
     path: "/rooms",
     sample: "/rooms",
     title: "공개 방 목록",
     description: "공개 설정된 방 탐색·입장, Lv.4+ 선생님 방 상단 노출",
-    role: "public",
+    area: "public",
   },
   {
     path: "/me",
@@ -41,100 +46,100 @@ export const ROUTES: readonly RouteMeta[] = [
     title: "마이페이지",
     description:
       "프로필·명성, 개설한 방(운영 통계·뱃지·정산)과 참여한 방(학습 기록) 한눈에 — 회원 전용",
-    role: "public",
+    area: "member",
   },
-  // 학생
+  // 방 참여
   {
     path: "/join",
     sample: "/join",
     title: "입장",
     description: "PIN 입력·QR 스캔, 닉네임 설정",
-    role: "student",
+    area: "play",
   },
   {
     path: "/play/[code]",
     sample: "/play/DEMO01",
     title: "풀이",
     description: "문항·선택지·서술 입력, 타이머, 제출, 음성 힌트 수신 배너·재생",
-    role: "student",
+    area: "play",
   },
   {
     path: "/result/[sessionId]",
     sample: "/result/1",
     title: "결과·리포트",
     description: "점수·랭킹, 문제별 피드백, 취약점 리포트, 세션 별점·코멘트, 게스트 가입 유도",
-    role: "student",
+    area: "play",
   },
   {
     path: "/pay/[code]",
     sample: "/pay/DEMO01",
     title: "유료 방 결제",
     description: "참가비 확인·결제·실패 안내 (회원 전용, 게스트는 로그인 유도)",
-    role: "student",
+    area: "play",
   },
-  // 선생님
+  // 방 개설·운영
   {
-    path: "/teacher/dashboard",
-    sample: "/teacher/dashboard",
+    path: "/host/dashboard",
+    sample: "/host/dashboard",
     title: "대시보드",
     description: "내 방·문제 세트·지난 세션 목록",
-    role: "teacher",
+    area: "host",
   },
   {
-    path: "/teacher/sets",
-    sample: "/teacher/sets",
+    path: "/host/sets",
+    sample: "/host/sets",
     title: "문제 세트",
     description: "내 문제 세트 목록·재활용, 우측 패널 미리보기",
-    role: "teacher",
+    area: "host",
   },
   {
-    path: "/teacher/rooms/new",
-    sample: "/teacher/rooms/new",
+    path: "/host/rooms/new",
+    sample: "/host/rooms/new",
     title: "방 설정",
     description: "방 이름·문제 세트 선택, 6자리 PIN 발급 (방 만들기 1/3)",
-    role: "teacher",
+    area: "host",
   },
   {
-    path: "/teacher/editor",
-    sample: "/teacher/editor",
+    path: "/host/editor",
+    sample: "/host/editor",
     title: "문제 에디터",
     description: "AI 생성 조건 입력, 생성 결과 검토·수정, 직접 출제",
-    role: "teacher",
+    area: "host",
   },
   {
-    path: "/teacher/rooms/[code]/lobby",
-    sample: "/teacher/rooms/DEMO01/lobby",
+    path: "/host/rooms/[code]/lobby",
+    sample: "/host/rooms/DEMO01/lobby",
     title: "대기실",
     description: "PIN/QR 표시, 학생 목록 (프로젝터 투사 가정)",
-    role: "teacher",
+    area: "host",
   },
   {
-    path: "/teacher/rooms/[code]/live",
-    sample: "/teacher/rooms/DEMO01/live",
+    path: "/host/rooms/[code]/live",
+    sample: "/host/rooms/DEMO01/live",
     title: "진행 화면",
     description: "문항·타이머·제출 현황·랭킹, PTT 음성 힌트 버튼",
-    role: "teacher",
+    area: "host",
   },
   {
-    path: "/teacher/rooms/[code]/result",
-    sample: "/teacher/rooms/DEMO01/result",
+    path: "/host/rooms/[code]/result",
+    sample: "/host/rooms/DEMO01/result",
     title: "문항 결과",
     description: "문항별 정답·선택 분포·랭킹 변동 (프로젝터 투사 가정)",
-    role: "teacher",
+    area: "host",
   },
   {
-    path: "/teacher/sessions/[sessionId]/review",
-    sample: "/teacher/sessions/1/review",
+    path: "/host/sessions/[sessionId]/review",
+    sample: "/host/sessions/1/review",
     title: "첨삭·리포트",
     description: "답변별 AI 분석 확인, 코멘트·점수 입력, 통계",
-    role: "teacher",
+    area: "host",
   },
   {
-    path: "/teacher/revenue",
-    sample: "/teacher/revenue",
+    path: "/host/revenue",
+    sample: "/host/revenue",
     title: "수익·정산 내역",
     description: "유료 방 수익 적립·정산 내역, 내 등급·평가 현황 (Lv.3+)",
-    role: "teacher",
+    area: "host",
   },
   // 관리자
   {
@@ -142,67 +147,67 @@ export const ROUTES: readonly RouteMeta[] = [
     sample: "/admin/dashboard",
     title: "대시보드",
     description: "서비스 전체 이용 현황과 주요 지표",
-    role: "admin",
+    area: "admin",
   },
   {
     path: "/admin/users",
     sample: "/admin/users",
     title: "사용자 관리",
     description: "전체 사용자 · 선생님 / 학생 구분 및 계정 관리",
-    role: "admin",
+    area: "admin",
   },
   {
     path: "/admin/rooms",
     sample: "/admin/rooms",
     title: "방 · 문제 관리",
     description: "진행 중인 방과 AI 생성 문제 검수",
-    role: "admin",
+    area: "admin",
   },
   {
     path: "/admin/reports",
     sample: "/admin/reports",
     title: "신고 · 제재 관리",
     description: "접수된 신고 처리와 계정 제재 이력",
-    role: "admin",
+    area: "admin",
   },
   {
     path: "/admin/payments",
     sample: "/admin/payments",
     title: "결제 · 정산",
     description: "유료 방 결제 현황과 선생님 정산",
-    role: "admin",
+    area: "admin",
   },
   {
     path: "/admin/branded",
     sample: "/admin/branded",
     title: "광고 · 브랜디드 퀴즈",
     description: "광고 캠페인 집행과 기업 브랜디드 퀴즈 운영",
-    role: "admin",
+    area: "admin",
   },
 ];
 
 export const REDIRECTS: readonly { from: string; to: string }[] = [
-  { from: "/teacher", to: "/teacher/dashboard" },
+  { from: "/host", to: "/host/dashboard" },
   { from: "/admin", to: "/admin/dashboard" },
 ];
 
 /** 회원 공통 내비 4개 (디자인 W-01·C-02 v2 사이드바). 수익·정산은 마이페이지 안의 "정산" 링크로 진입한다. */
 const MEMBER_NAV = [
-  { path: "/teacher/dashboard" },
-  { path: "/teacher/sets" },
-  { path: "/teacher/sessions/[sessionId]/review", label: "지난 세션" },
+  { path: "/host/dashboard" },
+  { path: "/host/sets" },
+  { path: "/host/sessions/[sessionId]/review", label: "지난 세션" },
   { path: "/me" },
 ] as const;
 
 /** 사이드바에 노출할 항목. 순서대로 그린다. label을 생략하면 라우트 title을 쓴다. */
 export const SIDEBAR_NAV: Record<
-  "teacher" | "member" | "admin",
+  "host" | "member" | "admin",
   readonly { path: string; label?: string }[]
 > = {
-  /** 계정은 하나 — 선생님 화면과 마이페이지가 같은 내비를 쓴다 */
-  teacher: MEMBER_NAV,
+  /** 계정은 하나 — 호스트 화면과 마이페이지가 같은 내비를 쓴다 */
+  host: MEMBER_NAV,
   member: MEMBER_NAV,
-  /** 관리자는 features/admin/layout/admin-sidebar.tsx가 routesByRole("admin")로 직접 그린다. 여기는 참고용 */
+  /** 관리자는 features/admin/layout/admin-sidebar.tsx가 routesByArea("admin")로 직접 그린다. 여기는 참고용 */
   admin: [
     { path: "/admin/dashboard" },
     { path: "/admin/users" },
@@ -221,6 +226,6 @@ export function getRoute(path: string): RouteMeta {
   return route;
 }
 
-export function routesByRole(role: Role): RouteMeta[] {
-  return ROUTES.filter((r) => r.role === role);
+export function routesByArea(area: Area): RouteMeta[] {
+  return ROUTES.filter((r) => r.area === area);
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import type { ChoiceKey } from "@/features/teacher/mock";
-import { CHOICE_CLASS } from "@/features/teacher/live/choice-letter";
+import type { ChoiceKey } from "@/features/host/mock";
+import { CHOICE_CLASS } from "@/features/host/live/choice-letter";
 import { cn } from "@/lib/utils";
 
 const KEYS: ChoiceKey[] = ["A", "B", "C", "D"];

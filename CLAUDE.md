@@ -30,7 +30,7 @@ Next.js 16(App Router, TS) + Tailwind v4 + shadcn/ui + TanStack Query + Zustand.
 
 - 라우트 메타(경로·제목·설명·역할)는 `src/config/routes.ts` 한 곳에만. 랜딩·사이드바·검증 스크립트가 여기서 읽는다.
 - `src/components/ui`는 shadcn 생성물만. 공용 컴포넌트는 `components/common`, 역할별 도메인은 `src/features/<role>`.
-- 학생·공통 화면은 최상위 URL(`/join`, `/login`), 선생님은 `/teacher/*`, 관리자는 `/admin/*`.
+- 계정에 역할 없음(한 회원이 방 개설·참여 모두). URL은 구역 기준: 참여·공통은 최상위(`/join`, `/play/[code]`, `/login`, `/me`), 방 개설·운영은 `/host/*`, 관리자는 `/admin/*`. `routes.ts`의 `area`는 권한이 아니라 화면 구역이다.
 
 ## 라우트 추가
 
