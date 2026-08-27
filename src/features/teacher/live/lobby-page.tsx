@@ -3,16 +3,17 @@ import { formatPin, LIVE_ROOM } from "@/features/teacher/mock";
 import { ProjectorShell } from "./projector-shell";
 import { StudentChip } from "./student-chip";
 
-/** W-04 대기실 (프로젝터 · 모각작 스타일) — PIN/QR 표시, 입장한 학생 목록 */
+/** W-04 대기실 (프로젝터 · 기본형) — 민트 배경, PIN/QR 표시, 입장한 학생 목록 */
 export function LobbyPage() {
   const room = LIVE_ROOM;
   const pin = formatPin(room.pin);
 
   return (
     <ProjectorShell
+      tone="mint"
       mascot
       top={
-        <header className="flex h-[60px] shrink-0 items-center justify-center gap-2 border-b bg-card text-heading-sm">
+        <header className="flex h-[60px] shrink-0 items-center justify-center gap-2 text-heading-sm">
           <span className="text-[#3f6b5b]">passmate.app 에 접속해서</span>
           <span className="text-[#0f3d2e]">PIN {pin}</span>
           <span className="text-[#3f6b5b]">을 입력하세요</span>

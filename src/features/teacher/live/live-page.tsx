@@ -7,15 +7,16 @@ import { ChoiceLetter } from "./choice-letter";
 import { Countdown } from "./countdown";
 import { ProjectorShell } from "./projector-shell";
 
-/** W-05 진행 (프로젝터 · 모각작 스타일) — 문항·선택지·타이머·제출 현황·PTT */
+/** W-05 진행 (프로젝터 · 기본형) — 민트 배경, 문항·선택지·타이머·제출 현황·PTT */
 export function LivePage() {
   const q = LIVE_QUESTION;
   const room = LIVE_ROOM;
 
   return (
     <ProjectorShell
+      tone="mint"
       top={
-        <header className="flex items-center justify-between border-b px-10 pt-[22px] pb-2.5">
+        <header className="flex items-center justify-between px-10 pt-[22px] pb-2.5">
           <div className="flex items-center gap-3">
             <span className="text-heading-lg text-[#0f3d2e]">
               Q{q.index} / {q.total}
