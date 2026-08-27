@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/layout/site-header";
 import { AREA_LABEL, ROUTES, type Area } from "@/config/routes";
 
-const AREA_ORDER: Area[] = ["public", "play", "host", "member", "admin"];
+const AREA_ORDER: Area[] = ["public", "participant", "host", "member", "admin"];
 
 export default function Home() {
   return (

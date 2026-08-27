@@ -1,8 +1,8 @@
 /**
- * 화면 구역. 권한·신분이 아니다 — 계정에 역할이 없고 한 회원이 방을 열기도(host) 들어가기도(play) 한다.
- * public: 로그인 없이 · play: 방 참여(회원·게스트) · host: 방 개설·운영 · member: 회원 전용 · admin: 관리자
+ * 화면 구역. 권한·신분이 아니다 — 계정에 역할이 없고 한 회원이 방을 열기도(host) 들어가기도(participant) 한다.
+ * public: 로그인 없이 · participant: 방 참여(회원·게스트) · host: 방 개설·운영 · member: 회원 전용 · admin: 관리자
  */
-export type Area = "public" | "play" | "host" | "member" | "admin";
+export type Area = "public" | "participant" | "host" | "member" | "admin";
 
 export type RouteMeta = {
   /** app 폴더 기준 URL 패턴. 예: /play/[code] */
@@ -18,7 +18,7 @@ export type RouteMeta = {
 
 export const AREA_LABEL: Record<Area, string> = {
   public: "공통",
-  play: "참여 (학생·게스트)",
+  participant: "참여 (학생·게스트)",
   host: "개설·운영 (호스트)",
   member: "회원",
   admin: "관리자",
@@ -54,28 +54,28 @@ export const ROUTES: readonly RouteMeta[] = [
     sample: "/join",
     title: "입장",
     description: "PIN 입력·QR 스캔, 닉네임 설정",
-    area: "play",
+    area: "participant",
   },
   {
     path: "/play/[code]",
     sample: "/play/DEMO01",
     title: "풀이",
     description: "문항·선택지·서술 입력, 타이머, 제출, 음성 힌트 수신 배너·재생",
-    area: "play",
+    area: "participant",
   },
   {
     path: "/result/[sessionId]",
     sample: "/result/1",
     title: "결과·리포트",
     description: "점수·랭킹, 문제별 피드백, 취약점 리포트, 세션 별점·코멘트, 게스트 가입 유도",
-    area: "play",
+    area: "participant",
   },
   {
     path: "/pay/[code]",
     sample: "/pay/DEMO01",
     title: "유료 방 결제",
     description: "참가비 확인·결제·실패 안내 (회원 전용, 게스트는 로그인 유도)",
-    area: "play",
+    area: "participant",
   },
   // 방 개설·운영
   {

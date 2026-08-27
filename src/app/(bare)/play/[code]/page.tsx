@@ -1,4 +1,4 @@
-import { PlayPage } from "@/features/play/play/play-page";
+import { PlayPage } from "@/features/participant/play/play-page";
 
 export default function Page() {
   return <PlayPage />;

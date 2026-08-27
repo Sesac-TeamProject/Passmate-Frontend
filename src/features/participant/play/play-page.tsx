@@ -1,4 +1,4 @@
-import { VOICE_HINT } from "@/features/play/mock";
+import { VOICE_HINT } from "@/features/participant/mock";
 import { LIVE_QUESTION } from "@/features/host/mock";
 import { HintBanner } from "./hint-banner";
 import { PlayCard } from "./play-card";
