@@ -1,6 +1,5 @@
 // 데이터 연동 전 화면 확인용 목업 (W-11 유료 방 결제 — 코인 충전 → 차감).
 import type { AvatarKey } from "@/components/common/student-avatar";
-import { PROFILE } from "@/features/me/mock";
 
 export type PaidRoom = {
   code: string;
@@ -25,11 +24,12 @@ export const PAID_ROOM: PaidRoom = {
   title: "Spring 실전 모의고사 4주차",
   topic: "백엔드",
   composition: "객관식 6 + 서술형 2",
+  // 시안 W-11 방 정보 카드의 호스트 — 로그인 회원(이한결)이 아니라 다른 선생님
   host: {
-    name: PROFILE.name,
-    avatar: PROFILE.avatar,
-    level: PROFILE.level,
-    levelTitle: PROFILE.levelTitle,
+    name: "김민지",
+    avatar: "fox",
+    level: 3,
+    levelTitle: "검증된 운영자",
   },
   rating: 4.5,
   students: 312,

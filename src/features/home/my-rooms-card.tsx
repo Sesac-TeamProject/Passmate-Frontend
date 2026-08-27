@@ -49,7 +49,7 @@ export function MyRoomsCard({ rooms, onCreate }: Props) {
           key={room.code}
           leading={
             room.status === "live" ? (
-              <StatusChip tone="live">진행 중</StatusChip>
+              <StatusChip tone="topic">진행 중</StatusChip>
             ) : (
               <StatusChip tone="ended">종료</StatusChip>
             )

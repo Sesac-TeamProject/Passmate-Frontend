@@ -68,7 +68,7 @@ export function NewRoomDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="flex w-[560px] max-w-[560px] flex-col gap-5 rounded-[20px] bg-card p-7 text-body-md shadow-[0_16px_35px] ring-0 shadow-black/18"
+        className="flex w-[560px] max-w-[560px] flex-col gap-5 rounded-[20px] bg-card p-7 text-body-md shadow-[0_16px_35px] ring-0 shadow-black/18 sm:max-w-[560px]"
       >
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex items-center justify-between">

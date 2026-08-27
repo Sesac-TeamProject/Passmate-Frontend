@@ -20,7 +20,12 @@ export function ActiveSessionCard({ session }: Props) {
           선생님 · PIN {formatPin(session.pin)} · 나갔다 와도 내 답은 그대로 남아 있어요
         </p>
       </div>
-      <Button size="xl" className="h-11 px-5" render={<Link href={`/play/${session.code}`} />}>
+      <Button
+        size="xl"
+        className="h-11 px-5"
+        nativeButton={false}
+        render={<Link href={`/play/${session.code}`} />}
+      >
         다시 들어가기
       </Button>
     </section>

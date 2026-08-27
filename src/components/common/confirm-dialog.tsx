@@ -33,7 +33,7 @@ export function ConfirmDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="flex w-[420px] max-w-[420px] flex-col gap-2 rounded-[20px] bg-card p-7 text-body-md ring-0"
+        className="flex w-[420px] max-w-[420px] flex-col gap-2 rounded-[20px] bg-card p-7 text-body-md ring-0 sm:max-w-[420px]"
       >
         <DialogTitle className="text-heading-md text-foreground">{title}</DialogTitle>
         {description && (

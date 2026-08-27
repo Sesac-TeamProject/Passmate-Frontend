@@ -64,6 +64,7 @@ export function WithdrawPage({
           variant="outline"
           size="xl"
           className="bg-card text-foreground"
+          nativeButton={false}
           render={<Link href="/me" />}
         >
           취소

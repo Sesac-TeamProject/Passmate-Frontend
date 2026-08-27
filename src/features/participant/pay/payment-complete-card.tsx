@@ -52,6 +52,7 @@ export function PaymentCompleteCard({ receipt }: Props) {
       <Button
         size="xl"
         className="h-[52px] w-full rounded-[14px]"
+        nativeButton={false}
         render={<Link href={`/play/${receipt.roomCode}`} />}
       >
         대기실로 입장하기
