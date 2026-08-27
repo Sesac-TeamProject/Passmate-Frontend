@@ -38,14 +38,14 @@ function BadgeGlyph({ badge }: Props) {
       return (
         <span className="relative flex size-10 items-center justify-center">
           <svg aria-hidden width="40" height="40" viewBox="0 0 40 40" className="absolute inset-0">
-            <circle cx="20" cy="20" r="15" fill="none" stroke="#bfebd8" strokeWidth="4" />
+            <circle cx="20" cy="20" r="15" fill="none" stroke="#bfebd8" strokeWidth="5" />
             <circle
               cx="20"
               cy="20"
               r="15"
               fill="none"
               stroke="#0e8a63"
-              strokeWidth="4"
+              strokeWidth="5"
               strokeDasharray="84.8 9.4"
               strokeDashoffset="-4.7"
               transform="rotate(-90 20 20)"

@@ -62,7 +62,7 @@ export function RoleSidebar({ nav, user }: Props) {
         >
           {user.initial}
         </span>
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-px">
           <span className="text-label-lg text-ink">{user.name}</span>
           <span className="text-label-md text-muted-foreground">{user.roleLabel}</span>
         </div>
