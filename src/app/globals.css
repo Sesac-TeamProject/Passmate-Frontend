@@ -7,6 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -26,6 +27,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -34,6 +36,14 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -184,12 +194,53 @@
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: #e5e7eb;
   --sidebar-ring: var(--mint);
+
+  /* --- 관리자 화면(feature/admin) 공용 시맨틱 토큰. 값은 v5와 같은 팔레트 --- */
+  --canvas: #f6f6f7; /* 관리자 페이지 바탕 (= bg/page-web) */
+  --primary-strong: var(--mint-dark);
+  --primary-soft: var(--mint-tint);
+  --success: #12805a;
+  --success-soft: #e4f5ee;
+  --info: #2455c4;
+  --info-soft: #e7eefd;
+  --warning: #b4780a;
+  --warning-soft: #fdf2dc;
+  --destructive-soft: #fbeaeb;
+}
+
+/*
+ * 관리자 시안 팔레트 (design/admin.pen, A-01~A-06). /admin 레이아웃 루트의 `.theme-admin`에서만 적용한다.
+ * 학생·선생님 화면은 v5 토큰(흰 사이드바·#f6f6f7 배경)을, 관리자 화면은 어두운 사이드바·흰 배경을 쓰므로
+ * 같은 시맨틱 이름을 스코프로 나눠 두 디자인이 서로를 덮지 않게 한다.
+ */
+.theme-admin {
+  --background: #ffffff;
+  --foreground: #1b1733;
+  --card-foreground: #1b1733;
+  --popover-foreground: #1b1733;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #1b1733;
+  --muted-foreground: #6e6a85;
+  --accent: #f3f4f6;
+  --accent-foreground: #1b1733;
+  --destructive: #c43a43;
+  --chart-2: var(--mint-tint);
+  --chart-3: var(--info);
+  --chart-4: var(--warning);
+  --chart-5: var(--destructive);
+  --sidebar: #221e38;
+  --sidebar-foreground: #ffffff;
+  --sidebar-accent: #332c52;
+  /* 시안은 #0e8a63이지만 어두운 배경 위 대비가 낮아 밝은 민트로 올렸다 */
+  --sidebar-accent-foreground: var(--mint);
+  --sidebar-border: #332c52;
 }
 
 /* 다크 모드는 디자인에 없다. shadcn 기본값을 유지한다. */
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
+  --canvas: oklch(0.145 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);

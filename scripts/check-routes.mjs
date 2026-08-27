@@ -1,18 +1,25 @@
 // 빌드된 앱(pnpm build 선행)을 임시 포트로 띄우고 routes.ts의 모든 라우트를 검사한다.
 // 사용: pnpm build && pnpm check:routes
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import { ROUTES, REDIRECTS } from "../src/config/routes.ts";
 
 const PORT = process.env.PORT ?? "3100";
 const BASE = `http://localhost:${PORT}`;
+const IS_WINDOWS = process.platform === "win32";
 
-const server = spawn("pnpm", ["exec", "next", "start", "-p", PORT], {
+// pnpm이 PATH에 없어도 돌아가도록 next 바이너리를 node로 직접 띄운다.
+const NEXT_BIN = createRequire(import.meta.url).resolve("next/dist/bin/next");
+
+const server = spawn(process.execPath, [NEXT_BIN, "start", "-p", PORT], {
   stdio: "ignore",
-  detached: true,
+  // Windows는 프로세스 그룹 kill(-pid)이 없어 detached 없이 직접 kill 한다.
+  detached: !IS_WINDOWS,
 });
 const stop = () => {
   try {
-    process.kill(-server.pid, "SIGTERM");
+    if (IS_WINDOWS) server.kill();
+    else process.kill(-server.pid, "SIGTERM");
   } catch {}
 };
 process.on("exit", stop);
