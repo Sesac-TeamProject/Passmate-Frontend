@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Noto_Sans_KR } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const notoSansKr = Noto_Sans_KR({
-  subsets: ["latin"],
-  weight: "variable",
-  variable: "--font-noto-sans-kr",
+/** 디자인 시스템 v5 글꼴 — Pretendard Variable (pretendard 패키지, 가변 45~920) */
+const pretendard = localFont({
+  src: "../../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
+  weight: "45 920",
+  variable: "--font-pretendard",
   display: "swap",
 });
 
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={`h-full antialiased ${notoSansKr.variable}`}>
+    <html lang="ko" className={`h-full antialiased ${pretendard.variable}`}>
       <body className="flex min-h-full flex-col bg-background text-foreground">{children}</body>
     </html>
   );
