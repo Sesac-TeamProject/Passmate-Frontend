@@ -7,6 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -26,6 +27,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -34,6 +36,14 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -45,55 +55,96 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /*
+   * 타입 토큰 — 피그마 컴포넌트 설명의 값. 자간은 모두 -2%.
+   * `text-display-sm` 처럼 한 클래스로 크기·행간·굵기·자간이 함께 적용된다.
+   */
+  --text-display-sm: 28px;
+  --text-display-sm--line-height: 1.2;
+  --text-display-sm--font-weight: 700;
+  --text-display-sm--letter-spacing: -0.02em;
+  --text-heading-md: 20px;
+  --text-heading-md--line-height: 1.2;
+  --text-heading-md--font-weight: 700;
+  --text-heading-md--letter-spacing: -0.02em;
+  --text-heading-sm: 16px;
+  --text-heading-sm--line-height: 1.2;
+  --text-heading-sm--font-weight: 600;
+  --text-heading-sm--letter-spacing: -0.02em;
+  --text-label-lg: 14px;
+  --text-label-lg--line-height: 1.4;
+  --text-label-lg--font-weight: 500;
+  --text-label-lg--letter-spacing: -0.02em;
+  --text-label-md: 12px;
+  --text-label-md--line-height: 1.4;
+  --text-label-md--font-weight: 400;
+  --text-label-md--letter-spacing: -0.02em;
 }
 
+/*
+ * 색 토큰 — hex는 여기에만 둔다 (규칙 문서 §11). 컴포넌트는 시맨틱 클래스만 쓴다.
+ * 값은 관리자 시안(admin/A-01·A-02) 팔레트이며, 이름은 KMP PassmateColors와 의미 단위로 맞춘다.
+ */
 :root {
   --font-sans:
     "Pretendard Variable", Pretendard, ui-sans-serif, system-ui, -apple-system,
     "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: #ffffff;
+  --foreground: #1b1733;
+  --canvas: #f6f6f7;
+  --card: #ffffff;
+  --card-foreground: #1b1733;
+  --popover: #ffffff;
+  --popover-foreground: #1b1733;
+  --primary: #17b884;
+  --primary-foreground: #ffffff;
+  --primary-strong: #0e8a63;
+  --primary-soft: #d6f3e6;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #1b1733;
+  --muted: #f3f4f6;
+  --muted-foreground: #6e6a85;
+  --accent: #f3f4f6;
+  --accent-foreground: #1b1733;
+  --success: #12805a;
+  --success-soft: #e4f5ee;
+  --info: #2455c4;
+  --info-soft: #e7eefd;
+  --warning: #b4780a;
+  --warning-soft: #fdf2dc;
+  --destructive: #c43a43;
+  --destructive-soft: #fbeaeb;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #17b884;
+  --chart-1: #17b884;
+  --chart-2: #d6f3e6;
+  --chart-3: #2455c4;
+  --chart-4: #b4780a;
+  --chart-5: #c43a43;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #221e38;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #17b884;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #332c52;
+  --sidebar-accent-foreground: #0e8a63;
+  --sidebar-border: #332c52;
+  --sidebar-ring: #17b884;
 }
 
+/* 다크 테마는 아직 디자인이 없다. shadcn 기본값을 유지하고 추가 토큰만 라이트 값을 재사용한다. */
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
+  --canvas: oklch(0.145 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: #17b884;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -103,20 +154,15 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --ring: #17b884;
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #17b884;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: #17b884;
 }
 
 @layer base {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/site-header";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 export const metadata: Metadata = {
   title: "PassMate",
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
 const PRETENDARD_CSS =
   "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css";
 
+/** 정적 셸(서버 컴포넌트). 데이터·상태는 전부 클라이언트 트리에서 다룬다 (설계 문서 §7). */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className="h-full antialiased">
@@ -23,8 +25,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <link rel="stylesheet" href={PRETENDARD_CSS} />
       </head>
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <SiteHeader />
-        {children}
+        <QueryProvider>
+          <SiteHeader />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

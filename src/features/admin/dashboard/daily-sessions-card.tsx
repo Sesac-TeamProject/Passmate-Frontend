@@ -1,7 +1,8 @@
+import { formatShortDate } from "@/lib/format";
+import type { DailySessionCount } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
-import { AdminCard, AdminCardHead } from "../components/admin-card";
-import { TYPE } from "../components/typography";
-import { DAILY_SESSIONS, SESSION_AXIS } from "../mock";
+import { AdminCard } from "../components/admin-card";
+import { AdminCardHead } from "../components/admin-card-head";
 
 /**
  * 시안(admin/A-01, plot 노드 167:1095) 기준.
@@ -17,35 +18,54 @@ const BAR_GAP = 9;
 const BASELINE = 312;
 const TOP_LINE = 18;
 const PLOT_H = BASELINE - TOP_LINE;
-const MAX = SESSION_AXIS[0];
+const X_LABEL_TOP = 317;
+const TICK_COUNT = 5;
+const TICK_ROUND = 10;
+
+type Props = { sessions: DailySessionCount[] };
 
 /** 최근 14일 일별 세션 수 막대 차트. 마지막 날만 강조하고 값을 표기한다. */
-export function DailySessionsCard() {
-  const last = DAILY_SESSIONS[DAILY_SESSIONS.length - 1];
+export function DailySessionsCard({ sessions }: Props) {
+  const first = sessions[0];
+  const last = sessions[sessions.length - 1];
+  const ticks = axisTicks(sessions);
+  const max = ticks[0];
+
+  if (!first || !last) {
+    return (
+      <AdminCard className="min-w-0 flex-1">
+        <AdminCardHead title="일별 세션 수" hint="최근 14일" />
+        <p className="w-full py-10 text-center text-label-md text-muted-foreground">
+          집계된 세션이 없습니다.
+        </p>
+      </AdminCard>
+    );
+  }
 
   return (
     <AdminCard className="min-w-0 flex-1">
       <AdminCardHead title="일별 세션 수" hint="최근 14일" />
       <figure className="w-full overflow-x-auto">
         <figcaption className="sr-only">
-          최근 14일 일별 세션 수. 최고 {last.date} {last.count}건.
+          최근 14일 일별 세션 수. 최근 {formatShortDate(last.date)} {last.count}건.
         </figcaption>
         <div className="relative h-[336px] min-w-[560px]">
-          {SESSION_AXIS.map((v, i) => {
-            const y = TOP_LINE + (i * PLOT_H) / (SESSION_AXIS.length - 1);
+          {ticks.map((tick, i) => {
+            const y = TOP_LINE + (i * PLOT_H) / (ticks.length - 1);
+
             return (
-              <div key={v}>
+              <div key={tick}>
                 <div
                   aria-hidden
-                  className="absolute right-0 h-px bg-[#f3f4f6]"
+                  className="absolute right-0 h-px bg-muted"
                   style={{ left: AXIS_W, top: y }}
                 />
                 <span
                   aria-hidden
-                  className={cn("absolute text-[#6e6a85]", TYPE.labelMd)}
+                  className="absolute text-label-md text-muted-foreground"
                   style={{ left: 6, top: y - 10 }}
                 >
-                  {v}
+                  {tick}
                 </span>
               </div>
             );
@@ -55,25 +75,21 @@ export function DailySessionsCard() {
             className="absolute right-0 flex items-end"
             style={{ left: BAR_X0, top: TOP_LINE, height: PLOT_H, gap: BAR_GAP }}
           >
-            {DAILY_SESSIONS.map((d, i) => {
-              const isLast = i === DAILY_SESSIONS.length - 1;
+            {sessions.map((d, i) => {
+              const isLast = i === sessions.length - 1;
+
               return (
                 <div
                   key={d.date}
-                  title={d.date + " · " + d.count + "건"}
-                  style={{ height: (d.count / MAX) * 100 + "%" }}
+                  title={`${formatShortDate(d.date)} · ${d.count}건`}
+                  style={{ height: `${(d.count / max) * 100}%` }}
                   className={cn(
                     "relative min-w-0 flex-1 rounded-t-[4px]",
-                    isLast ? "bg-[#17b884]" : "bg-[#d6f3e6]",
+                    isLast ? "bg-primary" : "bg-primary-soft",
                   )}
                 >
                   {isLast ? (
-                    <span
-                      className={cn(
-                        "absolute -top-[24px] left-1/2 -translate-x-1/2 whitespace-nowrap text-[#0e8a63]",
-                        TYPE.labelLg,
-                      )}
-                    >
+                    <span className="absolute -top-[24px] left-1/2 -translate-x-1/2 text-label-lg whitespace-nowrap text-primary-strong">
                       {d.count}
                     </span>
                   ) : null}
@@ -84,14 +100,25 @@ export function DailySessionsCard() {
 
           <div
             aria-hidden
-            className={cn("absolute right-0 flex justify-between text-[#6e6a85]", TYPE.labelMd)}
-            style={{ left: BAR_X0, top: 317 }}
+            className="absolute right-0 flex justify-between text-label-md text-muted-foreground"
+            style={{ left: BAR_X0, top: X_LABEL_TOP }}
           >
-            <span>{DAILY_SESSIONS[0].date}</span>
-            <span>{last.date}</span>
+            <span>{formatShortDate(first.date)}</span>
+            <span>{formatShortDate(last.date)}</span>
           </div>
         </div>
       </figure>
     </AdminCard>
   );
+}
+
+/** 최댓값을 10 단위로 올림해 눈금 5개를 만든다. 위에서 아래 순서. 예: 338 → [360, 270, 180, 90, 0] */
+function axisTicks(sessions: DailySessionCount[]): number[] {
+  const maxCount = Math.max(0, ...sessions.map((s) => s.count));
+  const step = Math.max(
+    TICK_ROUND,
+    Math.ceil(maxCount / (TICK_COUNT - 1) / TICK_ROUND) * TICK_ROUND,
+  );
+
+  return Array.from({ length: TICK_COUNT }, (_, i) => step * (TICK_COUNT - 1 - i));
 }

@@ -1,39 +1,60 @@
-import Image from "next/image";
+import { formatNumber, formatPct } from "@/lib/format";
+import type { UserComposition } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
-import { AdminCard, AdminCardHead } from "../components/admin-card";
-import { TYPE } from "../components/typography";
-import { USER_COMPOSITION } from "../mock";
+import { AdminCard } from "../components/admin-card";
+import { AdminCardHead } from "../components/admin-card-head";
 
-const DOT = ["/admin/legend-teacher.svg", "/admin/legend-student.svg"];
-const FILL = ["bg-[#17b884]", "bg-[#d6f3e6]"];
-const ROUND = ["rounded-l-[8px]", "rounded-r-[8px]"];
+type Props = { composition: UserComposition };
 
 /** 선생님·학생 비율 누적 막대 + 범례. */
-export function UserCompositionCard() {
-  const { total, segments } = USER_COMPOSITION;
+export function UserCompositionCard({ composition }: Props) {
+  const total = composition.teachers + composition.students;
+  const totalLabel = `전체 ${formatNumber(total)}명`;
+  const segments = toSegments(composition, total);
 
   return (
     <AdminCard className="min-w-0 flex-1">
-      <AdminCardHead title="사용자 구성" hint={total} />
-      <div className="flex w-full gap-[2px]" role="img" aria-label={"사용자 구성. " + total}>
-        {segments.map((s, i) => (
+      <AdminCardHead title="사용자 구성" hint={totalLabel} />
+      <div className="flex w-full gap-[2px]" role="img" aria-label={`사용자 구성. ${totalLabel}`}>
+        {segments.map((s) => (
           <div
             key={s.label}
             style={{ flexGrow: s.count }}
-            className={cn("h-[34px] min-w-px", FILL[i], ROUND[i])}
+            className={cn("h-[34px] min-w-px", s.fill, s.round)}
           />
         ))}
       </div>
-      {segments.map((s, i) => (
+      {segments.map((s) => (
         <div key={s.label} className="flex w-full items-center gap-[9px]">
-          <Image src={DOT[i]} alt="" width={9} height={9} className="size-[9px] shrink-0" />
-          <p className={cn("text-[#1b1733]", TYPE.labelLg)}>{s.label}</p>
-          <p className={cn("ml-1 text-[#1b1733]", TYPE.labelLg)}>
-            {s.count.toLocaleString("ko-KR")}
-          </p>
-          <p className={cn("text-[#6e6a85]", TYPE.labelMd)}>{s.ratio}</p>
+          <span aria-hidden className={cn("size-[9px] shrink-0 rounded-full", s.fill)} />
+          <p className="text-label-lg text-foreground">{s.label}</p>
+          <p className="ml-1 text-label-lg text-foreground">{formatNumber(s.count)}</p>
+          <p className="text-label-md text-muted-foreground">{s.ratio}</p>
         </div>
       ))}
     </AdminCard>
   );
+}
+
+type Segment = { label: string; count: number; ratio: string; fill: string; round: string };
+
+function toSegments(c: UserComposition, total: number): Segment[] {
+  const ratio = (count: number) => formatPct(total === 0 ? 0 : (count / total) * 100);
+
+  return [
+    {
+      label: "선생님",
+      count: c.teachers,
+      ratio: ratio(c.teachers),
+      fill: "bg-primary",
+      round: "rounded-l-[8px]",
+    },
+    {
+      label: "학생",
+      count: c.students,
+      ratio: ratio(c.students),
+      fill: "bg-primary-soft",
+      round: "rounded-r-[8px]",
+    },
+  ];
 }

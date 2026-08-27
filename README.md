@@ -17,12 +17,19 @@ pnpm dev           # http://localhost:3000
 | `pnpm build` / `pnpm start`         | 프로덕션 빌드 / 실행                              |
 | `pnpm lint`                         | ESLint                                            |
 | `pnpm format` / `pnpm format:check` | Prettier                                          |
+| `pnpm test`                         | Vitest 단위 테스트 (`lib/api` 등)                 |
 | `pnpm check:routes`                 | 빌드 후 모든 라우트 응답 검증 (`pnpm build` 선행) |
+
+`.env.example`을 `.env.local`로 복사해 `NEXT_PUBLIC_API_BASE_URL`을 채운다. 비워 두면 `src/lib/mocks`의 목 응답으로 동작한다 (백엔드 없이 화면 확인용, 운영자 계정으로 자동 로그인).
 
 ## 기술 스택
 
-Next.js 16 (App Router, TypeScript) · Tailwind CSS v4 · shadcn/ui · pnpm
-(상태관리 Zustand + TanStack Query는 데이터 연동 시점에 추가)
+Next.js 16 (App Router, TypeScript) · Tailwind CSS v4 · shadcn/ui · TanStack Query · Zustand · Vitest · pnpm
+
+## 설계 문서
+
+- [Passmate_Web_아키텍처_설계.md](Passmate_Web_아키텍처_설계.md) — 3층 구조·상태 분류·인증·실시간 설계
+- [Passmate_Web_코드_패턴_규칙.md](Passmate_Web_코드_패턴_규칙.md) — 코드 레벨 규칙 (레이어 경계, 네이밍, 에러 처리, page/View 2단 구성)
 
 ## 브랜치 규칙
 
@@ -42,14 +49,22 @@ src/
 ├─ components/
 │  ├─ ui/            shadcn 생성물만
 │  ├─ layout/        헤더·사이드바
-│  └─ common/        역할 무관 공용 컴포넌트
-├─ features/         역할별 도메인 컴포넌트 (student / teacher / admin)
+│  ├─ common/        역할 무관 공용 컴포넌트 (RequireAuth, ScreenLoading, ScreenError …)
+│  └─ providers/     QueryProvider
+├─ features/         역할별 도메인 컴포넌트 (student / teacher / admin) — `*-view.tsx`는 렌더 전용
 ├─ config/routes.ts  라우트 메타 단일 소스 (경로·제목·설명·역할)
-├─ lib/              유틸 (shadcn cn 등)
-└─ types/            공용 타입
+└─ lib/
+   ├─ api/           전송 층: client.ts(fetch 래퍼·401 refresh·AppError) + 기능별 api 함수
+   ├─ types/         계약 1:1 DTO(dto.ts), AppError
+   ├─ queries/       TanStack Query 훅 (서버 상태)
+   ├─ stores/        Zustand (auth-store …)
+   ├─ mocks/         목 응답 (NEXT_PUBLIC_API_BASE_URL 미설정 시)
+   └─ format.ts, token-storage.ts, env.ts, utils.ts
 design/              .pen 디자인 파일 (design/README.md 참고)
 scripts/             check-routes.mjs
 ```
+
+데이터 흐름은 한 방향이다: `page`(컨테이너) → `lib/queries`·`lib/stores` → `lib/api`. 컴포넌트에서 `fetch`를 직접 부르지 않는다.
 
 ## 라우트
 
@@ -68,9 +83,12 @@ scripts/             check-routes.mjs
 | 선생님 | `/teacher/rooms/[code]/live`           | 진행 화면                |
 | 선생님 | `/teacher/sessions/[sessionId]/review` | 첨삭·리포트              |
 | 선생님 | `/teacher/revenue`                     | 수익·정산 내역           |
-| 관리자 | `/admin/settlements`                   | 정산 관리                |
-| 관리자 | `/admin/refunds`                       | 환불 처리                |
-| 관리자 | `/admin/branded`                       | 브랜디드 퀴즈            |
+| 관리자 | `/admin/dashboard`                     | 대시보드 (A-01)          |
+| 관리자 | `/admin/users`                         | 사용자 관리 (A-02)       |
+| 관리자 | `/admin/rooms`                         | 방 · 문제 관리 (A-03)    |
+| 관리자 | `/admin/reports`                       | 신고 · 제재 관리 (A-04)  |
+| 관리자 | `/admin/payments`                      | 결제 · 정산 (A-05)       |
+| 관리자 | `/admin/branded`                       | 광고 · 브랜디드 (A-06)   |
 
 `/`는 위 라우트 전체 링크 목록(사이트맵). `/teacher`, `/admin`은 각각 첫 화면으로 redirect.
 
