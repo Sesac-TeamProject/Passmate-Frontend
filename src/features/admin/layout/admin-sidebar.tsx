@@ -77,7 +77,12 @@ export function AdminSidebar() {
 
       {profile ? (
         <div className="flex w-full shrink-0 items-center gap-[9px] pt-3 pl-[10px]">
-          <UserRound aria-hidden className="size-[26px] shrink-0 text-primary" strokeWidth={2} />
+          <span
+            aria-hidden
+            className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+          >
+            <UserRound className="size-[15px]" strokeWidth={2.25} />
+          </span>
           <div className="flex flex-col gap-px">
             <p className="text-[12px] leading-[1.2] font-bold text-sidebar-foreground">
               {profile.name}
