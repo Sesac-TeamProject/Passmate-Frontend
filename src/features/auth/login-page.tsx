@@ -26,7 +26,7 @@ export function LoginPage({ values, onChange, onSubmit, pending = false }: Props
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-5 bg-background">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-5 bg-background py-16">
       <p className="text-body-md text-muted-foreground">혼자 시작한 공부, 함께하는 합격까지.</p>
 
       <form

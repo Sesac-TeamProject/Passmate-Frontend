@@ -44,7 +44,7 @@ export function JoinForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className={cn("flex w-full flex-col", variant === "home" ? "gap-3" : "gap-5", className)}
+      className={cn("flex w-full flex-col", variant === "home" ? "gap-2.5" : "gap-5", className)}
     >
       <PinInput
         value={values.pin}
@@ -72,7 +72,9 @@ export function JoinForm({
           value={values.avatar}
           onChange={(avatar) => onChange({ ...values, avatar })}
           size={variant === "home" ? 40 : 36}
+          layout={variant === "home" ? "row" : "grid"}
           disabled={pending}
+          className={variant === "home" ? "self-center" : undefined}
         />
         <p className="text-label-md text-muted-foreground">
           대기실·결과 화면에서 이 캐릭터로 보여요 (닉네임과 함께)

@@ -50,6 +50,8 @@ export function StudentAvatar({ avatar, size = 30, className }: Props) {
       width={size}
       height={size}
       className={cn("shrink-0 rounded-full", className)}
+      // 132px PNG 12종 — 최적화 파이프라인을 거치면 개발 모드에서 늦게 떠서 원본을 그대로 쓴다
+      unoptimized
     />
   );
 }

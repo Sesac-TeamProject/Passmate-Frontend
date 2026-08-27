@@ -11,20 +11,32 @@ type Props = {
   onChange: (next: AvatarKey) => void;
   /** 아바타 렌더 크기(px). 홈 40 · 게스트 입장 36 */
   size?: number;
+  /** row: 시안대로 한 줄 12개(gap 18, 폭 673 — 부모보다 넓어도 가운데 정렬로 넘침 허용) · grid: 6×2 */
+  layout?: "row" | "grid";
   disabled?: boolean;
   className?: string;
 };
 
 /**
- * 내 캐릭터 고르기 — 12종 아바타를 6×2로 감싼다 (시안은 한 줄 12개라 카드 폭을 넘쳐 wrap으로 처리).
+ * 내 캐릭터 고르기 — 12종 아바타. 홈은 시안대로 한 줄(row), 게스트 입장 카드(380px)는 6×2(grid).
  * 선택은 감싸는 버튼의 mint 링 + 2px 흰 간격.
  */
-export function AvatarPicker({ value, onChange, size = 40, disabled, className }: Props) {
+export function AvatarPicker({
+  value,
+  onChange,
+  size = 40,
+  layout = "grid",
+  disabled,
+  className,
+}: Props) {
   return (
     <div
       role="radiogroup"
       aria-label="내 캐릭터"
-      className={cn("grid grid-cols-6 gap-x-4 gap-y-2", className)}
+      className={cn(
+        layout === "row" ? "flex w-max gap-[18px]" : "grid grid-cols-6 gap-x-4 gap-y-2",
+        className,
+      )}
     >
       {AVATAR_KEYS.map((key) => {
         const selected = key === value;
