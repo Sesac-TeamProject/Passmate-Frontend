@@ -118,6 +118,18 @@ export type Question = {
   seconds: number;
 };
 
+/** 방 설정 (W-02 v2) — 유료 방 옵션·정산 미리보기·명성 조건 */
+export type RoomSetup = {
+  /** 참가비 기본값(원, 1인당) */
+  defaultFee: number;
+  /** 선생님 정산 비율 (0~1). 비율은 확정 전 예시 (§13.5) */
+  teacherShare: number;
+  /** 유료 방 개설에 필요한 최소 명성 레벨 */
+  paidMinLevel: number;
+  /** 현재 로그인한 선생님의 명성 */
+  reputation: { level: number; title: string };
+};
+
 export const DASHBOARD_STATS: DashboardStat[] = [
   { id: "rooms", label: "개설한 방", value: "12개", tile: { label: "P", tone: "mint" } },
   { id: "sessions", label: "진행한 세션", value: "8회", tile: { label: "S", tone: "blue" } },
@@ -188,6 +200,14 @@ export const PAST_SESSIONS: PastSession[] = [
   { id: "1", date: "8/22", title: "8월 4주차 Spring 스터디", participants: 6, averageScore: 72 },
   { id: "2", date: "8/20", title: "CS 모의면접 3회차", participants: 5, averageScore: 68 },
 ];
+
+/** 방 설정 기본값 (W-02 v2). 참가비 10,000원 → 선생님 8,000 · 플랫폼 2,000 */
+export const ROOM_SETUP: RoomSetup = {
+  defaultFee: 10000,
+  teacherShare: 0.8,
+  paidMinLevel: 3,
+  reputation: { level: 3, title: "검증된 운영자" },
+};
 
 /** 에디터에서 검토 중인 세트 (W-03) */
 export const DRAFT_SET = {
