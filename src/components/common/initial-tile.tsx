@@ -6,7 +6,7 @@ const TONE_CLASS: Record<TileTone, string> = {
   mint: "bg-muted text-mint-dark",
   blue: "bg-[#deedff] text-[#0e61d9]",
   orange: "bg-[#fdefde] text-[#bf3f0c]",
-  gray: "bg-muted text-[#73727c]",
+  gray: "bg-muted text-muted-foreground",
 };
 
 type Props = {
@@ -22,7 +22,7 @@ export function InitialTile({ label, tone = "mint", className }: Props) {
     <span
       aria-hidden
       className={cn(
-        "flex size-11 shrink-0 items-center justify-center rounded-[14px] text-base font-black",
+        "flex size-11 shrink-0 items-center justify-center rounded-[14px] text-heading-sm",
         TONE_CLASS[tone],
         className,
       )}

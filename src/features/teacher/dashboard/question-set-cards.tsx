@@ -18,8 +18,8 @@ export function QuestionSetCards({ sets, allHref }: Props) {
           >
             <InitialTile label={qs.tile.label} tone={qs.tile.tone} />
             <div className="flex flex-col gap-[3px]">
-              <span className="text-base font-black text-ink">{qs.title}</span>
-              <span className="text-xs text-muted-foreground">{qs.summary}</span>
+              <span className="text-heading-sm text-ink">{qs.title}</span>
+              <span className="text-label-md text-muted-foreground">{qs.summary}</span>
             </div>
           </Link>
         ))}

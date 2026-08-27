@@ -13,8 +13,8 @@ export function StatCards({ stats }: Props) {
         >
           <InitialTile label={s.tile.label} tone={s.tile.tone} />
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
-            <span className="text-2xl font-black text-ink">{s.value}</span>
+            <span className="text-label-lg text-muted-foreground">{s.label}</span>
+            <span className="text-heading-lg text-ink">{s.value}</span>
           </div>
         </div>
       ))}
