@@ -14,10 +14,10 @@ export function PagePlaceholder({ path }: Props) {
       <div>
         <Badge variant="outline">{ROLE_LABEL[route.role]}</Badge>
       </div>
-      <h1 className="text-2xl font-bold">{route.title}</h1>
-      <p className="text-muted-foreground">{route.description}</p>
-      <p className="font-mono text-xs text-muted-foreground">{route.path}</p>
-      <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
+      <h1 className="text-heading-lg text-ink">{route.title}</h1>
+      <p className="text-body-md text-muted-foreground">{route.description}</p>
+      <p className="font-mono text-label-md text-muted-foreground">{route.path}</p>
+      <div className="rounded-lg border border-dashed p-10 text-center text-body-md text-muted-foreground">
         구현 예정
       </div>
     </main>
