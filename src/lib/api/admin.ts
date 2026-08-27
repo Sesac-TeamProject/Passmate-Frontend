@@ -1,11 +1,27 @@
 import type {
   AdminDashboardResponse,
+  AdminReportsResponse,
   AdminReviewQueueResponse,
   AdminRoomsResponse,
+  AdminSanctionsResponse,
   AdminUserFilter,
   AdminUsersResponse,
 } from "@/lib/types/dto";
 import { request } from "./client";
+
+const SANCTION_HISTORY_DAYS = 30;
+
+/** GET /admin/reports — A-04 신고 KPI + 신고 목록 */
+export function getAdminReports(): Promise<AdminReportsResponse> {
+  return request<AdminReportsResponse>("/admin/reports");
+}
+
+/** GET /admin/sanctions?days=30 — A-04 최근 30일 제재 이력 */
+export function getAdminSanctions(): Promise<AdminSanctionsResponse> {
+  return request<AdminSanctionsResponse>("/admin/sanctions", {
+    query: { days: SANCTION_HISTORY_DAYS },
+  });
+}
 
 /** GET /admin/rooms — A-03 방 목록 (진행 중·대기·오늘 종료) */
 export function getAdminRooms(): Promise<AdminRoomsResponse> {

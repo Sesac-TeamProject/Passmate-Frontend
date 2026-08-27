@@ -1,5 +1,12 @@
 import { AppError } from "@/lib/types/app-error";
-import { mockAdminDashboard, mockAdminReviewQueue, mockAdminRooms, mockAdminUsers } from "./admin";
+import {
+  mockAdminDashboard,
+  mockAdminReports,
+  mockAdminReviewQueue,
+  mockAdminRooms,
+  mockAdminSanctions,
+  mockAdminUsers,
+} from "./admin";
 import { MOCK_ME, MOCK_TOKENS } from "./auth";
 
 /**
@@ -18,6 +25,8 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /admin/users": (url) => mockAdminUsers(url.searchParams.get("filter")),
   "GET /admin/rooms": () => mockAdminRooms(),
   "GET /admin/questions/review-queue": () => mockAdminReviewQueue(),
+  "GET /admin/reports": () => mockAdminReports(),
+  "GET /admin/sanctions": () => mockAdminSanctions(),
 };
 
 function delay(ms: number): Promise<void> {

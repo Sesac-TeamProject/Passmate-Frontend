@@ -1,6 +1,6 @@
 import { formatDeltaPct, formatKrw, formatNumber } from "@/lib/format";
 import type { AdminDashboardKpis } from "@/lib/types/dto";
-import { StatChip } from "../components/stat-chip";
+import { KpiCard, type KpiItem } from "../components/kpi-card";
 import type { Tone } from "../components/tone";
 
 type Props = { kpis: AdminDashboardKpis };
@@ -11,21 +11,12 @@ export function KpiRow({ kpis }: Props) {
 
   return (
     <div className="flex w-full items-start gap-[14px]">
-      {items.map((kpi) => (
-        <div
-          key={kpi.label}
-          className="flex min-w-0 flex-1 flex-col items-start gap-[6px] rounded-[14px] border border-border bg-card px-[18px] py-[14px]"
-        >
-          <p className="text-label-lg whitespace-nowrap text-muted-foreground">{kpi.label}</p>
-          <p className="text-display-sm whitespace-nowrap text-foreground">{kpi.value}</p>
-          <StatChip tone={kpi.tone}>{kpi.chip}</StatChip>
-        </div>
+      {items.map((item) => (
+        <KpiCard key={item.label} item={item} />
       ))}
     </div>
   );
 }
-
-type KpiItem = { label: string; value: string; chip: string; tone: Tone };
 
 function deltaTone(pct: number): Tone {
   if (pct < 0) return "danger";

@@ -170,3 +170,67 @@ export type AdminReviewQuestion = {
   reportCount: number;
   reviewStatus: QuestionReviewStatus;
 };
+
+/* ── A-04 신고 · 제재 관리 ───────────────────────────── */
+
+/** GET /admin/reports */
+export type AdminReportsResponse = {
+  kpis: AdminReportKpis;
+  /** 최근 접수순 */
+  items: AdminReport[];
+};
+
+export type AdminReportKpis = {
+  pendingReports: number;
+  receivedToday: number;
+  /** 전일 대비 접수 증감(건). 음수면 감소 */
+  receivedTodayDelta: number;
+  sanctionedAccounts: number;
+  /** 제재 중 계정 가운데 7일 정지 수 */
+  suspended7dCount: number;
+  avgHandlingHours: number;
+  /** 전주 대비 평균 처리 시간 증감(시간). 음수면 빨라짐 */
+  avgHandlingDeltaHours: number;
+};
+
+export type ReportTargetKind = "STUDENT" | "TEACHER" | "GUEST" | "QUESTION" | "ROOM";
+
+export type ReportType = "NICKNAME" | "QUESTION_ERROR" | "PAID_ROOM" | "OPERATION" | "SPAM";
+
+export type ReportStatus = "PENDING" | "REVIEWING" | "RESOLVED";
+
+export type AdminReport = {
+  /** 표시용 신고 ID. 예: R-1042 */
+  id: string;
+  target: { kind: ReportTargetKind; label: string };
+  type: ReportType;
+  reason: string;
+  /** 익명 신고는 null */
+  reporterName: string | null;
+  /** ISO 8601 */
+  receivedAt: string;
+  status: ReportStatus;
+};
+
+/** GET /admin/sanctions?days=30 */
+export type AdminSanctionsResponse = {
+  items: AdminSanction[];
+};
+
+export type SanctionType =
+  "ACCOUNT_SUSPENDED" | "JOIN_RESTRICTED" | "WARNING" | "AUTHORING_RESTRICTED";
+
+export type SanctionStatus = "ACTIVE" | "WARNING_KEPT" | "LIFTED";
+
+export type AdminSanction = {
+  id: number;
+  /** 계정 표시명. 게스트는 "익명 게스트 #8821" 형태 */
+  accountLabel: string;
+  type: SanctionType;
+  reason: string;
+  /** 제재 기간(시간). 경고처럼 기간이 없으면 null */
+  durationHours: number | null;
+  /** YYYY-MM-DD */
+  executedAt: string;
+  status: SanctionStatus;
+};

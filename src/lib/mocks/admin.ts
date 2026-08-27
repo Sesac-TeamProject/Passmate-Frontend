@@ -1,7 +1,9 @@
 import type {
   AdminDashboardResponse,
+  AdminReportsResponse,
   AdminReviewQueueResponse,
   AdminRoomsResponse,
+  AdminSanctionsResponse,
   AdminUserFilter,
   AdminUserSummary,
   AdminUsersResponse,
@@ -297,6 +299,124 @@ export function mockAdminReviewQueue(): AdminReviewQueueResponse {
         correctRatePct: null,
         reportCount: 0,
         reviewStatus: "OK",
+      },
+    ],
+  };
+}
+
+/* ── A-04 신고 · 제재 관리 (시안 admin/A-04 167:1697) ──── */
+
+const HOUR_MIN = 60;
+const DAY_MIN = 24 * HOUR_MIN;
+
+export function mockAdminReports(): AdminReportsResponse {
+  return {
+    kpis: {
+      pendingReports: 8,
+      receivedToday: 14,
+      receivedTodayDelta: 3,
+      sanctionedAccounts: 34,
+      suspended7dCount: 12,
+      avgHandlingHours: 2.4,
+      avgHandlingDeltaHours: -0.6,
+    },
+    items: [
+      {
+        id: "R-1042",
+        target: { kind: "STUDENT", label: "최승혁" },
+        type: "NICKNAME",
+        reason: "욕설이 포함된 닉네임으로 입장",
+        reporterName: "박세라",
+        receivedAt: minutesAgo(11),
+        status: "PENDING",
+      },
+      {
+        id: "R-1041",
+        target: { kind: "QUESTION", label: "Q-25044" },
+        type: "QUESTION_ERROR",
+        reason: "정답 보기가 2개로 보임",
+        reporterName: "김준영",
+        receivedAt: minutesAgo(38),
+        status: "REVIEWING",
+      },
+      {
+        id: "R-1040",
+        target: { kind: "ROOM", label: "771204" },
+        type: "PAID_ROOM",
+        reason: "결제했는데 방이 시작되지 않음",
+        reporterName: "이도현",
+        receivedAt: minutesAgo(HOUR_MIN),
+        status: "PENDING",
+      },
+      {
+        id: "R-1039",
+        target: { kind: "TEACHER", label: "정민지" },
+        type: "OPERATION",
+        reason: "세션 중 부적절한 음성 힌트",
+        reporterName: null,
+        receivedAt: minutesAgo(3 * HOUR_MIN),
+        status: "REVIEWING",
+      },
+      {
+        id: "R-1038",
+        target: { kind: "GUEST", label: "하늘" },
+        type: "SPAM",
+        reason: "서술형 답변에 반복 문자 입력",
+        reporterName: "홍희표",
+        receivedAt: minutesAgo(5 * HOUR_MIN),
+        status: "RESOLVED",
+      },
+      {
+        id: "R-1037",
+        target: { kind: "QUESTION", label: "Q-24902" },
+        type: "QUESTION_ERROR",
+        reason: "난이도 표기가 실제와 다름",
+        reporterName: "전혜림",
+        receivedAt: minutesAgo(DAY_MIN + 2 * HOUR_MIN),
+        status: "RESOLVED",
+      },
+    ],
+  };
+}
+
+export function mockAdminSanctions(): AdminSanctionsResponse {
+  return {
+    items: [
+      {
+        id: 1,
+        accountLabel: "최승혁",
+        type: "ACCOUNT_SUSPENDED",
+        reason: "반복 신고 3회 누적",
+        durationHours: 7 * 24,
+        executedAt: "2026-08-22",
+        status: "ACTIVE",
+      },
+      {
+        id: 2,
+        accountLabel: "익명 게스트 #8821",
+        type: "JOIN_RESTRICTED",
+        reason: "도배성 답변 제출",
+        durationHours: 24,
+        executedAt: "2026-08-24",
+        status: "ACTIVE",
+      },
+      {
+        id: 3,
+        accountLabel: "이도현",
+        type: "WARNING",
+        reason: "부적절 닉네임 2회",
+        durationHours: null,
+        executedAt: "2026-08-19",
+        status: "WARNING_KEPT",
+      },
+      {
+        id: 4,
+        accountLabel: "김태윤",
+        type: "AUTHORING_RESTRICTED",
+        reason: "저품질 문제 반복 등록",
+        durationHours: 14 * 24,
+        executedAt: "2026-08-11",
+        status: "LIFTED",
       },
     ],
   };

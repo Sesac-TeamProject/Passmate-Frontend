@@ -40,12 +40,25 @@ export function formatIsoDate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-/** ISO 시각 → "방금 전" / "N분 전" / "N시간 전" / "N일 전" */
+/** ISO 시각 → "방금 전" / "N분 전" / "N시간 전" / "어제" / "N일 전" */
 export function formatRelativeTime(iso: string, nowMs: number): string {
   const diff = Math.max(0, nowMs - new Date(iso).getTime());
+  const days = Math.floor(diff / DAY_MS);
 
   if (diff < MINUTE_MS) return "방금 전";
   if (diff < HOUR_MS) return `${Math.floor(diff / MINUTE_MS)}분 전`;
   if (diff < DAY_MS) return `${Math.floor(diff / HOUR_MS)}시간 전`;
-  return `${Math.floor(diff / DAY_MS)}일 전`;
+  if (days === 1) return "어제";
+  return `${days}일 전`;
+}
+
+/** 시간 단위 기간 → "24시간" / "7일". 하루를 넘고 일 단위로 떨어지면 일로 표기 */
+export function formatDurationHours(hours: number): string {
+  if (hours > 24 && hours % 24 === 0) return `${hours / 24}일`;
+  return `${hours}시간`;
+}
+
+/** 시간(소수) → "2.4시간" */
+export function formatHours(hours: number): string {
+  return `${hours.toFixed(1)}시간`;
 }
