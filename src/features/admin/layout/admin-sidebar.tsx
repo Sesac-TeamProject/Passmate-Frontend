@@ -39,12 +39,12 @@ export function AdminSidebar() {
         {/* 시안(v5) 브랜드 마크: 민트 원 + "P". 정식 로고가 나오면 교체 */}
         <span
           aria-hidden
-          className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary text-[12px] leading-none font-black text-primary-foreground"
+          className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary text-label-lg text-primary-foreground"
         >
           P
         </span>
-        <p className="text-[15px] leading-[1.2] font-black text-sidebar-foreground">패스메이트</p>
-        <span className="rounded-[6px] bg-sidebar-accent px-2 py-[3px] text-[10px] leading-[1.2] font-bold text-sidebar-accent-foreground">
+        <p className="text-heading-sm text-sidebar-foreground">패스메이트</p>
+        <span className="rounded-[6px] bg-sidebar-accent px-2 py-[3px] text-label-md text-sidebar-accent-foreground">
           ADMIN
         </span>
       </div>
@@ -59,10 +59,10 @@ export function AdminSidebar() {
               href={route.sample}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex w-full items-center gap-[10px] rounded-[9px] px-3 py-[9px] text-[12.5px] leading-[1.3]",
+                "flex w-full items-center gap-[10px] rounded-[9px] px-3 py-[9px] text-label-lg",
                 isActive
-                  ? "bg-sidebar-primary font-bold text-sidebar-primary-foreground"
-                  : "font-medium text-sidebar-foreground/80 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground",
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground",
               )}
             >
               <span
@@ -89,12 +89,8 @@ export function AdminSidebar() {
             <UserRound className="size-[15px]" strokeWidth={2.25} />
           </span>
           <div className="flex flex-col gap-px">
-            <p className="text-[12px] leading-[1.2] font-bold text-sidebar-foreground">
-              {profile.name}
-            </p>
-            <p className="text-[10px] leading-[1.2] text-sidebar-foreground/50">
-              {ROLE_LABEL[profile.role]}
-            </p>
+            <p className="text-label-lg text-sidebar-foreground">{profile.name}</p>
+            <p className="text-label-md text-sidebar-foreground/50">{ROLE_LABEL[profile.role]}</p>
           </div>
         </div>
       ) : null}
