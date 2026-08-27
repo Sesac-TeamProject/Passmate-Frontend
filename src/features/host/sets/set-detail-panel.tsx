@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 const CHIP: Record<QuestionSet["composition"][number]["type"], string> = {
   multiple: "bg-muted text-mint-dark",
-  essay: "bg-[#deedff] text-[#0e61d9]",
-  ox: "bg-[#fdefde] text-[#bf3f0c]",
+  essay: "bg-blue-soft text-blue",
+  ox: "bg-orange-soft text-orange",
 };
 
 /** W-08 우측 패널 — 선택한 세트 요약·문항 미리보기·재활용 액션 */

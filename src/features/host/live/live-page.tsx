@@ -18,7 +18,7 @@ export function LivePage() {
       top={
         <header className="flex items-center justify-between px-10 pt-[22px] pb-2.5">
           <div className="flex items-center gap-3">
-            <span className="text-heading-lg text-[#0f3d2e]">
+            <span className="text-heading-lg text-mint-ink">
               Q{q.index} / {q.total}
             </span>
             <span className="rounded-full bg-mint-tint px-3 py-[5px] text-label-lg text-mint-dark">
@@ -40,8 +40,8 @@ export function LivePage() {
       bottom={
         <>
           <p className="flex items-center gap-2">
-            <span className="text-heading-sm text-[#3f6b5b]">제출</span>
-            <span className="text-heading-md text-[#0f3d2e]">
+            <span className="text-heading-sm text-mint-ink-secondary">제출</span>
+            <span className="text-heading-md text-mint-ink">
               {q.submitted} / {room.students.length}
             </span>
           </p>
@@ -55,7 +55,7 @@ export function LivePage() {
           <div className="flex items-center gap-2.5 justify-self-end">
             <button
               type="button"
-              className="flex h-[46px] items-center rounded-xl border-[1.5px] px-[18px] text-label-lg text-[#0f3d2e] transition-colors hover:bg-muted"
+              className="flex h-[46px] items-center rounded-xl border-[1.5px] px-[18px] text-label-lg text-mint-ink transition-colors hover:bg-muted"
             >
               바로 마감
             </button>

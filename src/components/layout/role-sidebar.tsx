@@ -15,7 +15,7 @@ export type SidebarUser = {
 };
 
 const AVATAR_TONE = {
-  peach: "bg-[#f8c6a4] text-[#7a3a11]",
+  peach: "bg-avatar-peach text-avatar-peach-foreground",
   blue: "bg-choice-b text-choice-b-foreground",
 } as const;
 

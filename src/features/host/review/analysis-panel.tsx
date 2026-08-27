@@ -11,7 +11,7 @@ type Props = {
   students: { id: string; name: string }[];
 };
 
-const DOT = { good: "bg-[#4cc687]", lack: "bg-[#f3b440]", tip: "bg-[#82828b]" } as const;
+const DOT = { good: "bg-mint-light", lack: "bg-yellow", tip: "bg-muted-foreground" } as const;
 
 /** W-07 우측 패널 — 서술형 답변별 AI 분석 확인, 코멘트 입력 */
 export function AnalysisPanel({ question, answers, students }: Props) {

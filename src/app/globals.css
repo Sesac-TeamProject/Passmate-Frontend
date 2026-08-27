@@ -83,6 +83,32 @@
   --color-podium-gold: var(--podium-gold);
   --color-podium-silver: var(--podium-silver);
   --color-podium-bronze: var(--podium-bronze);
+  --color-podium-gold-foreground: var(--podium-gold-foreground);
+  --color-podium-silver-foreground: var(--podium-silver-foreground);
+  --color-podium-bronze-foreground: var(--podium-bronze-foreground);
+
+  /* --- v6 시안 확장 토큰 (v5 시트에는 없지만 웹 v6 화면·뱃지 시트에서 반복되는 색) --- */
+  /* 민트 배경(mint-bg) 위 잉크 — 배너·프로젝터 헤더·하단 바 */
+  --color-mint-ink: var(--mint-ink);
+  --color-mint-ink-secondary: var(--mint-ink-secondary);
+  /* 민트 확장 — 엠블럼·업적 뱃지·명성 칩·리포트 막대 */
+  --color-mint-deep: var(--mint-deep);
+  --color-mint-light: var(--mint-light);
+  --color-mint-soft: var(--mint-soft);
+  --color-mint-line: var(--mint-line);
+  /* 긍정/부정 수치 — 정답 배지·랭킹 ▲▼·승급 조건 충족/미충족 */
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  /* 골드 — Lv.5 엠블럼 림·왕관 */
+  --color-gold: var(--gold);
+  /* 타일·칩 보조 색 — 서술형(파랑)·OX/유료(주황) */
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-orange: var(--orange);
+  --color-orange-soft: var(--orange-soft);
+  /* 이니셜 아바타 peach (사이드바 프로필·순위 원) */
+  --color-avatar-peach: var(--avatar-peach);
+  --color-avatar-peach-foreground: var(--avatar-peach-foreground);
 }
 
 /* --- 타이포그래피 v5 (design/student-teacher.pen "Typography — 10 styles") ---
@@ -160,6 +186,26 @@
   --podium-gold: #f4d488;
   --podium-silver: #dde0e7;
   --podium-bronze: #e5c6ac;
+  --podium-gold-foreground: #845f0f;
+  --podium-silver-foreground: #495160;
+  --podium-bronze-foreground: #804b28;
+
+  /* v6 확장 토큰 */
+  --mint-ink: #0f3d2e;
+  --mint-ink-secondary: #3f6b5b;
+  --mint-deep: #0b6b4c;
+  --mint-light: #4cc687;
+  --mint-soft: #5ccfa0;
+  --mint-line: #bfebd8;
+  --positive: #338158;
+  --negative: #e03131;
+  --gold: #f2c94c;
+  --blue: #0e61d9;
+  --blue-soft: #deedff;
+  --orange: #bf3f0c;
+  --orange-soft: #fdefde;
+  --avatar-peach: #f8c6a4;
+  --avatar-peach-foreground: #7a3a11;
 
   /* shadcn 변수 → v5 매핑 */
   --background: #f6f6f7; /* bg/page-web */

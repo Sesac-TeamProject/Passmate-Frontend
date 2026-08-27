@@ -99,10 +99,7 @@ function QuestionRow({
       ) : (
         <>
           <span
-            className={cn(
-              "h-2.5 rounded",
-              (q.accuracy ?? 0) >= 80 ? "bg-[#4cc687]" : "bg-[#f3b440]",
-            )}
+            className={cn("h-2.5 rounded", (q.accuracy ?? 0) >= 80 ? "bg-mint-light" : "bg-yellow")}
             style={{ width: `${((q.accuracy ?? 0) / 100) * 110}px` }}
           />
           <span className="text-label-lg text-muted-foreground">{q.accuracy}%</span>
