@@ -14,10 +14,10 @@ export function QuestionList({ initial }: Props) {
   return (
     <section className="flex min-w-0 flex-1 flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-black text-ink">
+        <h2 className="text-heading-sm text-ink">
           문항 {questions.length} · 총 배점 {totalPoints}
         </h2>
-        <p className="text-xs text-[#73727c]">검토를 마쳐야 세트를 확정할 수 있어요</p>
+        <p className="text-label-md text-muted-foreground">검토를 마쳐야 세트를 확정할 수 있어요</p>
       </div>
       <ol className="flex flex-col gap-3">
         {questions.map((q, i) => (
@@ -25,25 +25,25 @@ export function QuestionList({ initial }: Props) {
             key={q.id}
             className="flex items-center gap-3.5 rounded-[18px] border bg-card px-5 py-[17px]"
           >
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-muted text-[13px] font-black text-mint-dark">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-muted text-label-lg text-mint-dark">
               {i + 1}
             </span>
             <QuestionTypeChip type={q.type} />
-            <p className="min-w-0 flex-1 truncate text-sm font-bold text-ink">{q.prompt}</p>
-            <span className="shrink-0 text-xs text-muted-foreground">
+            <p className="min-w-0 flex-1 truncate text-label-lg text-ink">{q.prompt}</p>
+            <span className="shrink-0 text-label-md text-muted-foreground">
               {q.points}점 · {q.seconds}초
             </span>
-            <div className="flex shrink-0 gap-3 text-xs">
-              <button type="button" className="font-black text-mint-dark hover:underline">
+            <div className="flex shrink-0 gap-3 text-label-lg">
+              <button type="button" className="text-mint-dark hover:underline">
                 수정
               </button>
-              <button type="button" className="font-black text-mint-dark hover:underline">
+              <button type="button" className="text-mint-dark hover:underline">
                 재생성
               </button>
               <button
                 type="button"
                 onClick={() => setQuestions((qs) => qs.filter((x) => x.id !== q.id))}
-                className="font-bold text-[#7f7e88] hover:underline"
+                className="text-muted-foreground hover:underline"
               >
                 삭제
               </button>

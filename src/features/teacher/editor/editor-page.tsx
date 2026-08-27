@@ -15,13 +15,13 @@ export function EditorPage() {
       >
         <button
           type="button"
-          className="flex h-[42px] items-center rounded-[14px] border-2 bg-card px-[18px] text-[13px] font-bold text-mint-dark transition-colors hover:bg-muted"
+          className="flex h-[42px] items-center rounded-[14px] border-2 bg-card px-[18px] text-label-lg text-mint-dark transition-colors hover:bg-muted"
         >
           미리보기
         </button>
         <Link
           href="/teacher/rooms/DEMO01/lobby"
-          className="flex h-[42px] items-center rounded-[14px] bg-mint-tint px-5 text-[13px] font-black text-mint-dark transition-colors hover:bg-mint hover:text-white"
+          className="flex h-[42px] items-center rounded-[14px] bg-mint-tint px-5 text-label-lg text-mint-dark transition-colors hover:bg-mint hover:text-white"
         >
           세트 확정 → 대기실
         </Link>

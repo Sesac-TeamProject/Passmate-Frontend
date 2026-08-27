@@ -15,12 +15,12 @@ export function FlowTopBar({ backHref, title, badge, children }: Props) {
   return (
     <header className="flex h-[68px] shrink-0 items-center justify-between border-b bg-card px-8">
       <div className="flex items-center gap-3">
-        <Link href={backHref} aria-label="뒤로" className="font-bold text-muted-foreground">
+        <Link href={backHref} aria-label="뒤로" className="text-heading-sm text-muted-foreground">
           ←
         </Link>
-        <h1 className="text-base font-black text-ink">{title}</h1>
+        <h1 className="text-heading-sm text-ink">{title}</h1>
         {badge && (
-          <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-black text-[#73727c]">
+          <span className="rounded-full bg-muted px-2.5 py-1 text-label-lg text-muted-foreground">
             {badge}
           </span>
         )}

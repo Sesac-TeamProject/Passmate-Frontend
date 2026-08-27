@@ -14,13 +14,13 @@ export function StepPills({ current }: Props) {
             key={s.step}
             aria-current={active ? "step" : undefined}
             className={cn(
-              "flex items-center gap-1.5 rounded-full py-1.5 pr-3.5 pl-2.5 text-[13px] font-bold",
-              active ? "bg-mint-tint text-mint-dark" : "bg-muted text-[#73727c]",
+              "flex items-center gap-1.5 rounded-full py-1.5 pr-3.5 pl-2.5 text-label-lg",
+              active ? "bg-mint-tint text-mint-dark" : "bg-muted text-muted-foreground",
             )}
           >
             <span
               className={cn(
-                "flex size-5 items-center justify-center rounded-full bg-card text-[11px] font-black",
+                "flex size-5 items-center justify-center rounded-full bg-card text-label-lg",
                 active ? "text-mint-dark" : "text-muted-foreground",
               )}
             >
