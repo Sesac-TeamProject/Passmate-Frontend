@@ -294,3 +294,70 @@ export type AdminSettlement = {
   bankAccount: { bank: string; maskedNumber: string } | null;
   status: SettlementStatus;
 };
+
+/* ── A-06 광고 · 브랜디드 퀴즈 ──────────────────────── */
+
+/** GET /admin/ad-campaigns */
+export type AdminAdCampaignsResponse = {
+  kpis: AdminAdKpis;
+  items: AdCampaign[];
+};
+
+export type AdminAdKpis = {
+  activeCampaigns: number;
+  /** 이번 주 신규 캠페인 수 */
+  newCampaigns: number;
+  monthlyAdRevenueKrw: number;
+  monthlyAdRevenueDeltaPct: number;
+  /** 학생 배분액 합계 */
+  studentShareKrw: number;
+  /** 학생 배분율(%). 예: 30 */
+  studentShareRatePct: number;
+  /** 배분 지급일 YYYY-MM-DD */
+  payoutDate: string;
+  brandedQuizCount: number;
+  /** 브랜디드 퀴즈 계약액 합계 */
+  brandedContractKrw: number;
+};
+
+export type AdPlacement = "RESULT_BOTTOM" | "LOBBY_BANNER" | "REPORT_BOTTOM" | "HOME_CARD";
+
+export type AdCampaignStatus = "RUNNING" | "PENDING_REVIEW" | "ENDED";
+
+export type AdCampaign = {
+  id: number;
+  name: string;
+  advertiser: string;
+  placement: AdPlacement;
+  /** 집행 전이면 null */
+  impressions: number | null;
+  /** 클릭률(%). 집행 전이면 null */
+  clickRatePct: number | null;
+  /** YYYY-MM-DD */
+  startsOn: string;
+  /** YYYY-MM-DD */
+  endsOn: string;
+  status: AdCampaignStatus;
+};
+
+/** GET /admin/branded-quizzes */
+export type AdminBrandedQuizzesResponse = {
+  items: BrandedQuiz[];
+};
+
+export type BrandedQuizPurpose = "RECRUITING" | "BRANDING" | "TRAINING";
+
+export type BrandedQuizStatus = "LIVE" | "IN_PRODUCTION" | "ENDED";
+
+export type BrandedQuiz = {
+  id: number;
+  name: string;
+  company: string;
+  purpose: BrandedQuizPurpose;
+  /** 운영 전이면 null */
+  participantCount: number | null;
+  /** 완주율(%). 운영 전이면 null */
+  completionRatePct: number | null;
+  contractKrw: number;
+  status: BrandedQuizStatus;
+};

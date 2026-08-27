@@ -19,6 +19,11 @@ export function formatKrwInline(value: number): string {
   return `₩${formatNumber(value)}`;
 }
 
+/** YYYY-MM-DD → "08-01" (기간 표기) */
+export function formatMonthDay(isoDate: string): string {
+  return isoDate.slice(5);
+}
+
 /** YYYY-MM-DD → "9월 5일" */
 export function formatKoreanDate(isoDate: string): string {
   const [, month, day] = isoDate.split("-").map(Number);

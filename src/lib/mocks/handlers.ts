@@ -1,5 +1,7 @@
 import { AppError } from "@/lib/types/app-error";
 import {
+  mockAdminAdCampaigns,
+  mockAdminBrandedQuizzes,
   mockAdminDashboard,
   mockAdminPayments,
   mockAdminReports,
@@ -31,6 +33,8 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /admin/sanctions": () => mockAdminSanctions(),
   "GET /admin/payments": () => mockAdminPayments(),
   "GET /admin/settlements/pending": () => mockAdminSettlements(),
+  "GET /admin/ad-campaigns": () => mockAdminAdCampaigns(),
+  "GET /admin/branded-quizzes": () => mockAdminBrandedQuizzes(),
 };
 
 function delay(ms: number): Promise<void> {

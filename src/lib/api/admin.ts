@@ -1,4 +1,6 @@
 import type {
+  AdminAdCampaignsResponse,
+  AdminBrandedQuizzesResponse,
   AdminDashboardResponse,
   AdminPaymentsResponse,
   AdminReportsResponse,
@@ -10,6 +12,16 @@ import type {
   AdminUsersResponse,
 } from "@/lib/types/dto";
 import { request } from "./client";
+
+/** GET /admin/ad-campaigns — A-06 광고 KPI + 캠페인 목록 */
+export function getAdminAdCampaigns(): Promise<AdminAdCampaignsResponse> {
+  return request<AdminAdCampaignsResponse>("/admin/ad-campaigns");
+}
+
+/** GET /admin/branded-quizzes — A-06 기업 브랜디드 퀴즈 */
+export function getAdminBrandedQuizzes(): Promise<AdminBrandedQuizzesResponse> {
+  return request<AdminBrandedQuizzesResponse>("/admin/branded-quizzes");
+}
 
 /** GET /admin/payments — A-05 결제 KPI + 유료 방 결제 내역 */
 export function getAdminPayments(): Promise<AdminPaymentsResponse> {

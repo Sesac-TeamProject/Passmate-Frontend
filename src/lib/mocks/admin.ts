@@ -1,4 +1,6 @@
 import type {
+  AdminAdCampaignsResponse,
+  AdminBrandedQuizzesResponse,
   AdminDashboardResponse,
   AdminPaymentsResponse,
   AdminReportsResponse,
@@ -529,6 +531,128 @@ export function mockAdminSettlements(): AdminSettlementsResponse {
         payoutKrw: 390400,
         bankAccount: null,
         status: "ACCOUNT_MISSING",
+      },
+    ],
+  };
+}
+
+/* ── A-06 광고 · 브랜디드 퀴즈 (시안 admin/A-06 167:2199) ── */
+
+export function mockAdminAdCampaigns(): AdminAdCampaignsResponse {
+  return {
+    kpis: {
+      activeCampaigns: 6,
+      newCampaigns: 2,
+      monthlyAdRevenueKrw: 2140000,
+      monthlyAdRevenueDeltaPct: 9.4,
+      studentShareKrw: 642000,
+      studentShareRatePct: 30,
+      payoutDate: PAYOUT_DATE,
+      brandedQuizCount: 4,
+      brandedContractKrw: 12000000,
+    },
+    items: [
+      {
+        id: 1,
+        name: "에듀테크 인강 여름특강",
+        advertiser: "A러닝",
+        placement: "RESULT_BOTTOM",
+        impressions: 412800,
+        clickRatePct: 2.4,
+        startsOn: "2026-08-01",
+        endsOn: "2026-08-31",
+        status: "RUNNING",
+      },
+      {
+        id: 2,
+        name: "개발자 채용 박람회",
+        advertiser: "B커리어",
+        placement: "LOBBY_BANNER",
+        impressions: 286400,
+        clickRatePct: 3.1,
+        startsOn: "2026-08-10",
+        endsOn: "2026-09-10",
+        status: "RUNNING",
+      },
+      {
+        id: 3,
+        name: "자격증 교재 프로모션",
+        advertiser: "C출판",
+        placement: "REPORT_BOTTOM",
+        impressions: 198200,
+        clickRatePct: 1.8,
+        startsOn: "2026-08-15",
+        endsOn: "2026-08-29",
+        status: "RUNNING",
+      },
+      {
+        id: 4,
+        name: "노트북 신학기 할인",
+        advertiser: "D전자",
+        placement: "HOME_CARD",
+        impressions: null,
+        clickRatePct: null,
+        startsOn: "2026-09-01",
+        endsOn: "2026-09-30",
+        status: "PENDING_REVIEW",
+      },
+      {
+        id: 5,
+        name: "코딩 부트캠프 모집",
+        advertiser: "E캠프",
+        placement: "RESULT_BOTTOM",
+        impressions: 520100,
+        clickRatePct: 2.9,
+        startsOn: "2026-07-01",
+        endsOn: "2026-07-31",
+        status: "ENDED",
+      },
+    ],
+  };
+}
+
+export function mockAdminBrandedQuizzes(): AdminBrandedQuizzesResponse {
+  return {
+    items: [
+      {
+        id: 1,
+        name: "A사 채용 직무 이해도 퀴즈",
+        company: "A사",
+        purpose: "RECRUITING",
+        participantCount: 2840,
+        completionRatePct: 78,
+        contractKrw: 5000000,
+        status: "LIVE",
+      },
+      {
+        id: 2,
+        name: "B브랜드 서비스 알기",
+        company: "B사",
+        purpose: "BRANDING",
+        participantCount: 1206,
+        completionRatePct: 64,
+        contractKrw: 3000000,
+        status: "LIVE",
+      },
+      {
+        id: 3,
+        name: "C사 신입 인성면접 체험",
+        company: "C사",
+        purpose: "RECRUITING",
+        participantCount: null,
+        completionRatePct: null,
+        contractKrw: 2500000,
+        status: "IN_PRODUCTION",
+      },
+      {
+        id: 4,
+        name: "D사 사내 보안 교육",
+        company: "D사",
+        purpose: "TRAINING",
+        participantCount: 480,
+        completionRatePct: 92,
+        contractKrw: 1500000,
+        status: "ENDED",
       },
     ],
   };
