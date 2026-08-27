@@ -2,7 +2,7 @@ import { ACCOUNT } from "@/features/me/mock";
 import { DASHBOARD_STATS, PAST_SESSIONS, QUESTION_SETS } from "@/features/host/mock";
 import { QuestionSetCards } from "./question-set-cards";
 import { RecentSessions } from "./recent-sessions";
-import { StatCards } from "./stat-cards";
+import { StatCards } from "@/components/common/stat-cards";
 import { WelcomeBanner } from "./welcome-banner";
 
 /** W-01 대시보드. 목업 데이터를 조립해 렌더한다. */

@@ -1,4 +1,4 @@
-import { LevelEmblem } from "@/features/me/level-emblem";
+import { ReputationBadge } from "@/components/common/reputation-badge";
 
 type Props = {
   level: number;
@@ -12,12 +12,7 @@ export function ReputationRow({ level, title, minLevel }: Props) {
   const eligible = level >= minLevel;
   return (
     <div className="flex w-full items-center gap-2.5">
-      <span className="flex shrink-0 items-center gap-1 rounded-full bg-mint-tint py-1 pr-2.5 pl-[5px]">
-        <LevelEmblem level={level} size={14} />
-        <span className="text-label-lg text-mint-deep">
-          Lv.{level} {title}
-        </span>
-      </span>
+      <ReputationBadge level={level} title={title} />
       <p className="min-w-0 flex-1 text-label-lg text-positive">
         {eligible
           ? `유료 방 개설 가능 — Lv.${minLevel} 이상 조건 충족. Lv.${minLevel - 1} 이하는 이 옵션이 잠겨 있어요`
