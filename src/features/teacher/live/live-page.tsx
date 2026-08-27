@@ -35,7 +35,8 @@ export function LivePage() {
           </ol>
         </header>
       }
-      bottomClassName="py-[18px]"
+      /* 3열 그리드: PTT 버튼을 좌우 요소 폭과 무관하게 화면 정중앙에 */
+      bottomClassName="grid grid-cols-[1fr_auto_1fr] py-[18px]"
       bottom={
         <>
           <p className="flex items-center gap-2">
@@ -51,7 +52,7 @@ export function LivePage() {
             <Mic className="size-4 text-mint" />
             길게 눌러 힌트 말하기
           </button>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 justify-self-end">
             <button
               type="button"
               className="flex h-[46px] items-center rounded-xl border-[1.5px] px-[18px] text-label-lg text-[#0f3d2e] transition-colors hover:bg-muted"
