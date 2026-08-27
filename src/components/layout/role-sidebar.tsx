@@ -25,7 +25,7 @@ type Props = {
   user: SidebarUser;
 };
 
-/** 선생님·관리자 레이아웃 좌측 내비게이션(디자인 W-01 사이드바). routes.ts의 SIDEBAR_NAV를 읽어 그린다. */
+/** 회원·관리자 레이아웃 좌측 내비게이션(디자인 W-01·C-02 v2 사이드바). routes.ts의 SIDEBAR_NAV를 읽어 그린다. */
 export function RoleSidebar({ nav, user }: Props) {
   const pathname = usePathname();
 
@@ -42,7 +42,7 @@ export function RoleSidebar({ nav, user }: Props) {
               href={r.sample}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "rounded-[14px] px-3.5 py-[11px] text-sm font-bold transition-colors",
+                "rounded-[14px] px-3.5 py-[11px] text-label-lg transition-colors",
                 active
                   ? "bg-sidebar-primary text-sidebar-primary-foreground"
                   : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -56,15 +56,15 @@ export function RoleSidebar({ nav, user }: Props) {
       <div className="mt-auto flex items-center gap-2.5 pl-2.5">
         <span
           className={cn(
-            "flex size-8 items-center justify-center rounded-full text-[13px] font-black",
+            "flex size-8 items-center justify-center rounded-full text-label-lg",
             AVATAR_TONE[user.tone ?? "peach"],
           )}
         >
           {user.initial}
         </span>
         <div className="flex flex-col">
-          <span className="text-[13px] font-bold text-ink">{user.name}</span>
-          <span className="text-[11px] text-muted-foreground">{user.roleLabel}</span>
+          <span className="text-label-lg text-ink">{user.name}</span>
+          <span className="text-label-md text-muted-foreground">{user.roleLabel}</span>
         </div>
       </div>
     </aside>

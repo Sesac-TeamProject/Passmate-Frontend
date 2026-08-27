@@ -10,10 +10,10 @@ type Props = {
 export function BrandLogo({ href = "/", className }: Props) {
   return (
     <Link href={href} className={cn("inline-flex items-center gap-2.5", className)}>
-      <span className="flex size-8 items-center justify-center rounded-[10px] bg-mint-tint text-[15px] font-black text-mint-dark">
+      <span className="flex size-8 items-center justify-center rounded-[10px] bg-mint-tint text-heading-sm text-mint-dark">
         P
       </span>
-      <span className="text-lg font-black text-ink">패스메이트</span>
+      <span className="text-heading-md text-ink">패스메이트</span>
     </Link>
   );
 }

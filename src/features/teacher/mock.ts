@@ -1,9 +1,6 @@
 // 데이터 연동 전 화면 확인용 목업. API 클라이언트가 들어오면 이 파일의 타입만 남기고 교체한다.
 import type { TileTone } from "@/components/common/initial-tile";
 import type { AvatarKey } from "@/components/common/student-avatar";
-import type { SidebarUser } from "@/components/layout/role-sidebar";
-
-export type Teacher = SidebarUser;
 
 export type DashboardStat = {
   id: "rooms" | "sessions" | "students";
@@ -119,13 +116,6 @@ export type Question = {
   prompt: string;
   points: number;
   seconds: number;
-};
-
-export const TEACHER: Teacher = {
-  name: "이한결",
-  initial: "한",
-  roleLabel: "선생님",
-  tone: "peach",
 };
 
 export const DASHBOARD_STATS: DashboardStat[] = [

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LEARNING_RECORD, MEMBER } from "@/features/student/mock";
+import { ACCOUNT, LEARNING_RECORD } from "@/features/me/mock";
 import { cn } from "@/lib/utils";
 
 const RANK_TONE = (rank: number) =>
@@ -30,7 +30,7 @@ export function LearningRecordPage() {
 
   return (
     <main className="flex flex-col gap-5 px-9 py-7">
-      <h1 className="text-2xl font-black text-ink">{MEMBER.name} 님의 학습 기록</h1>
+      <h1 className="text-2xl font-black text-ink">{ACCOUNT.name} 님의 학습 기록</h1>
 
       <div className="grid grid-cols-3 gap-3.5">
         {stats.map((s) => (

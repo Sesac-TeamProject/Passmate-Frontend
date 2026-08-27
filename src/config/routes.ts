@@ -38,8 +38,9 @@ export const ROUTES: readonly RouteMeta[] = [
   {
     path: "/me",
     sample: "/me",
-    title: "마이페이지 (학습 기록)",
-    description: "참여 세션 목록, 문제별 결과·피드백, 누적 리포트 — 회원 전용",
+    title: "마이페이지",
+    description:
+      "프로필·명성, 개설한 방(운영 통계·뱃지·정산)과 참여한 방(학습 기록) 한눈에 — 회원 전용",
     role: "public",
   },
   // 학생
@@ -164,12 +165,12 @@ export const REDIRECTS: readonly { from: string; to: string }[] = [
   { from: "/admin", to: "/admin/settlements" },
 ];
 
-const TEACHER_NAV = [
+/** 회원 공통 내비 4개 (디자인 W-01·C-02 v2 사이드바). 수익·정산은 마이페이지 안의 "정산" 링크로 진입한다. */
+const MEMBER_NAV = [
   { path: "/teacher/dashboard" },
   { path: "/teacher/sets" },
   { path: "/teacher/sessions/[sessionId]/review", label: "지난 세션" },
-  { path: "/teacher/revenue" },
-  { path: "/me", label: "마이페이지" },
+  { path: "/me" },
 ] as const;
 
 /** 사이드바에 노출할 항목. 순서대로 그린다. label을 생략하면 라우트 title을 쓴다. */
@@ -177,9 +178,9 @@ export const SIDEBAR_NAV: Record<
   "teacher" | "member" | "admin",
   readonly { path: string; label?: string }[]
 > = {
-  teacher: TEACHER_NAV,
-  /** 회원 마이페이지(C-02)는 선생님과 같은 내비를 쓴다 (디자인 기준) */
-  member: TEACHER_NAV,
+  /** 계정은 하나 — 선생님 화면과 마이페이지가 같은 내비를 쓴다 */
+  teacher: MEMBER_NAV,
+  member: MEMBER_NAV,
   admin: [{ path: "/admin/settlements" }, { path: "/admin/refunds" }, { path: "/admin/branded" }],
 };
 

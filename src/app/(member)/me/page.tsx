@@ -1,4 +1,4 @@
-import { LearningRecordPage } from "@/features/student/me/learning-record-page";
+import { LearningRecordPage } from "@/features/me/learning-record-page";
 
 export default function Page() {
   return <LearningRecordPage />;
