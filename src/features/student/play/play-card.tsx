@@ -27,10 +27,10 @@ export function PlayCard({ question: q, resultHref, banner }: Props) {
   return (
     <>
       <div className="flex h-10 items-center justify-between">
-        <span className="text-sm font-black text-[#73727c]">
+        <span className="text-label-lg text-muted-foreground">
           Q{q.index} / {q.total} · {QUESTION_TYPE_LABEL[q.type]}
         </span>
-        <span className="rounded-full bg-[#f3b440] px-3 py-[5px] text-sm font-black text-ink tabular-nums">
+        <span className="rounded-full bg-yellow px-3 py-[5px] text-label-lg text-ink tabular-nums">
           {mmss(remaining)}
         </span>
       </div>
@@ -38,7 +38,7 @@ export function PlayCard({ question: q, resultHref, banner }: Props) {
       {banner}
 
       <section className="flex flex-col gap-3.5 rounded-[24px] border bg-card px-8 pt-7 pb-6">
-        <h1 className="text-[17px] leading-[1.45] font-black text-ink">{q.prompt}</h1>
+        <h1 className="text-heading-sm text-ink">{q.prompt}</h1>
         <ol className="flex flex-col gap-3.5">
           {q.choices.map((c) => {
             const active = selected === c.key;
@@ -49,13 +49,13 @@ export function PlayCard({ question: q, resultHref, banner }: Props) {
                   aria-pressed={active}
                   onClick={() => setSelected(c.key)}
                   className={cn(
-                    "flex h-12 w-full items-center gap-3 rounded-xl px-3.5 text-sm font-black transition-colors",
+                    "flex h-12 w-full items-center gap-3 rounded-xl px-3.5 text-label-lg transition-colors",
                     active ? "bg-mint text-white" : "bg-muted text-ink hover:bg-mint-bg",
                   )}
                 >
                   <span
                     className={cn(
-                      "flex size-[26px] shrink-0 items-center justify-center rounded-lg text-xs font-black",
+                      "flex size-[26px] shrink-0 items-center justify-center rounded-lg text-label-lg",
                       active ? "bg-card text-mint-dark" : CHOICE_CLASS[c.key].solid,
                     )}
                   >
@@ -72,7 +72,7 @@ export function PlayCard({ question: q, resultHref, banner }: Props) {
           type="button"
           disabled={!selected}
           onClick={() => router.push(resultHref)}
-          className="flex h-[50px] items-center justify-center rounded-[14px] bg-mint text-[15px] font-black text-white transition-colors hover:bg-mint-dark disabled:opacity-50"
+          className="flex h-[50px] items-center justify-center rounded-[14px] bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark disabled:opacity-50"
         >
           제출하기
         </button>
