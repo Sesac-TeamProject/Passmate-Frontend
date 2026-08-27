@@ -28,7 +28,7 @@ export function GeneratePanel({ initial }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex w-[340px] shrink-0 flex-col gap-3.5 self-start rounded-[24px] border bg-card p-[26px]"
+      className="flex w-[340px] shrink-0 flex-col gap-3.5 self-start rounded-3xl border bg-card p-[26px]"
     >
       <h2 className="text-heading-md text-ink">AI로 문제 만들기</h2>
 

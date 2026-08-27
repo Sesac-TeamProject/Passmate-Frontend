@@ -37,7 +37,7 @@ export function PlayCard({ question: q, resultHref, banner }: Props) {
 
       {banner}
 
-      <section className="flex flex-col gap-3.5 rounded-[24px] border bg-card px-8 pt-7 pb-6">
+      <section className="flex flex-col gap-3.5 rounded-3xl border bg-card px-8 pt-7 pb-6">
         <h1 className="text-heading-sm text-ink">{q.prompt}</h1>
         <ol className="flex flex-col gap-3.5">
           {q.choices.map((c) => {
