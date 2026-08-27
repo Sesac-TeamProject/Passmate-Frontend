@@ -234,3 +234,63 @@ export type AdminSanction = {
   executedAt: string;
   status: SanctionStatus;
 };
+
+/* ── A-05 결제 · 정산 ────────────────────────────────── */
+
+/** GET /admin/payments */
+export type AdminPaymentsResponse = {
+  kpis: AdminPaymentKpis;
+  /** 최근 결제순 */
+  items: AdminPayment[];
+};
+
+export type AdminPaymentKpis = {
+  monthlyPaymentKrw: number;
+  /** 전월 대비 증감률(%) */
+  monthlyPaymentDeltaPct: number;
+  platformFeeKrw: number;
+  /** 플랫폼 수수료율(%). 예: 20 */
+  platformFeeRatePct: number;
+  platformFeeDeltaPct: number;
+  /** 이번 정산일에 지급 예정인 선생님 정산 합계 */
+  teacherPayoutKrw: number;
+  /** 정산 지급일 YYYY-MM-DD */
+  payoutDate: string;
+  refundKrw: number;
+  refundCount: number;
+};
+
+export type PaymentStatus = "COMPLETED" | "REFUNDED" | "PENDING";
+
+export type AdminPayment = {
+  /** 표시용 결제 ID. 예: P-2841 */
+  id: string;
+  roomTitle: string;
+  teacherName: string;
+  studentName: string;
+  amountKrw: number;
+  teacherShareKrw: number;
+  platformFeeKrw: number;
+  status: PaymentStatus;
+};
+
+/** GET /admin/settlements/pending — 다음 정산일 지급 대기 선생님 */
+export type AdminSettlementsResponse = {
+  /** 일괄 지급일 YYYY-MM-DD */
+  payoutDate: string;
+  items: AdminSettlement[];
+};
+
+export type SettlementStatus = "CONFIRMED" | "ACCOUNT_MISSING";
+
+export type AdminSettlement = {
+  teacherId: number;
+  teacherName: string;
+  hostLevel: number;
+  paidRoomCount: number;
+  paymentCount: number;
+  payoutKrw: number;
+  /** 미등록이면 null. 계좌번호는 서버가 마스킹해서 준다 */
+  bankAccount: { bank: string; maskedNumber: string } | null;
+  status: SettlementStatus;
+};

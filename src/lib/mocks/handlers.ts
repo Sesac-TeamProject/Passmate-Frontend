@@ -1,10 +1,12 @@
 import { AppError } from "@/lib/types/app-error";
 import {
   mockAdminDashboard,
+  mockAdminPayments,
   mockAdminReports,
   mockAdminReviewQueue,
   mockAdminRooms,
   mockAdminSanctions,
+  mockAdminSettlements,
   mockAdminUsers,
 } from "./admin";
 import { MOCK_ME, MOCK_TOKENS } from "./auth";
@@ -27,6 +29,8 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /admin/questions/review-queue": () => mockAdminReviewQueue(),
   "GET /admin/reports": () => mockAdminReports(),
   "GET /admin/sanctions": () => mockAdminSanctions(),
+  "GET /admin/payments": () => mockAdminPayments(),
+  "GET /admin/settlements/pending": () => mockAdminSettlements(),
 };
 
 function delay(ms: number): Promise<void> {

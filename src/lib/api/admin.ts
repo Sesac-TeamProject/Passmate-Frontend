@@ -1,13 +1,25 @@
 import type {
   AdminDashboardResponse,
+  AdminPaymentsResponse,
   AdminReportsResponse,
   AdminReviewQueueResponse,
   AdminRoomsResponse,
   AdminSanctionsResponse,
+  AdminSettlementsResponse,
   AdminUserFilter,
   AdminUsersResponse,
 } from "@/lib/types/dto";
 import { request } from "./client";
+
+/** GET /admin/payments — A-05 결제 KPI + 유료 방 결제 내역 */
+export function getAdminPayments(): Promise<AdminPaymentsResponse> {
+  return request<AdminPaymentsResponse>("/admin/payments");
+}
+
+/** GET /admin/settlements/pending — A-05 정산 대기 선생님 */
+export function getAdminSettlements(): Promise<AdminSettlementsResponse> {
+  return request<AdminSettlementsResponse>("/admin/settlements/pending");
+}
 
 const SANCTION_HISTORY_DAYS = 30;
 

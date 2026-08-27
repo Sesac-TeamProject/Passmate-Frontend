@@ -9,9 +9,20 @@ export function formatNumber(value: number): string {
   return value.toLocaleString(LOCALE);
 }
 
-/** 예: 4820000 → "₩ 4,820,000" */
+/** 예: 4820000 → "₩ 4,820,000" (KPI·정산액처럼 큰 금액 표기) */
 export function formatKrw(value: number): string {
   return `₩ ${formatNumber(value)}`;
+}
+
+/** 예: 10000 → "₩10,000" (표 안의 금액 표기, 공백 없음) */
+export function formatKrwInline(value: number): string {
+  return `₩${formatNumber(value)}`;
+}
+
+/** YYYY-MM-DD → "9월 5일" */
+export function formatKoreanDate(isoDate: string): string {
+  const [, month, day] = isoDate.split("-").map(Number);
+  return `${month}월 ${day}일`;
 }
 
 /** 예: 4.2 → "▲ 4.2%", -1.5 → "▼ 1.5%", 0 → "0%" */

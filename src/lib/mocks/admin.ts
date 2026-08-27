@@ -1,9 +1,11 @@
 import type {
   AdminDashboardResponse,
+  AdminPaymentsResponse,
   AdminReportsResponse,
   AdminReviewQueueResponse,
   AdminRoomsResponse,
   AdminSanctionsResponse,
+  AdminSettlementsResponse,
   AdminUserFilter,
   AdminUserSummary,
   AdminUsersResponse,
@@ -417,6 +419,116 @@ export function mockAdminSanctions(): AdminSanctionsResponse {
         durationHours: 14 * 24,
         executedAt: "2026-08-11",
         status: "LIFTED",
+      },
+    ],
+  };
+}
+
+/* ── A-05 결제 · 정산 (시안 admin/A-05 167:1956) ──────── */
+
+const PAYOUT_DATE = "2026-09-05";
+
+export function mockAdminPayments(): AdminPaymentsResponse {
+  return {
+    kpis: {
+      monthlyPaymentKrw: 4820000,
+      monthlyPaymentDeltaPct: 12.6,
+      platformFeeKrw: 964000,
+      platformFeeRatePct: 20,
+      platformFeeDeltaPct: 12.6,
+      teacherPayoutKrw: 3856000,
+      payoutDate: PAYOUT_DATE,
+      refundKrw: 120000,
+      refundCount: 3,
+    },
+    items: [
+      {
+        id: "P-2841",
+        roomTitle: "정보처리기사 실전 모의",
+        teacherName: "정민지",
+        studentName: "김준영",
+        amountKrw: 10000,
+        teacherShareKrw: 8000,
+        platformFeeKrw: 2000,
+        status: "COMPLETED",
+      },
+      {
+        id: "P-2840",
+        roomTitle: "정보처리기사 실전 모의",
+        teacherName: "정민지",
+        studentName: "이도현",
+        amountKrw: 10000,
+        teacherShareKrw: 8000,
+        platformFeeKrw: 2000,
+        status: "COMPLETED",
+      },
+      {
+        id: "P-2839",
+        roomTitle: "백엔드 면접 집중반",
+        teacherName: "박세라",
+        studentName: "최승혁",
+        amountKrw: 15000,
+        teacherShareKrw: 12000,
+        platformFeeKrw: 3000,
+        status: "REFUNDED",
+      },
+      {
+        id: "P-2838",
+        roomTitle: "백엔드 면접 집중반",
+        teacherName: "박세라",
+        studentName: "하늘",
+        amountKrw: 15000,
+        teacherShareKrw: 12000,
+        platformFeeKrw: 3000,
+        status: "COMPLETED",
+      },
+      {
+        id: "P-2837",
+        roomTitle: "네트워크 심화",
+        teacherName: "홍희표",
+        studentName: "전혜림",
+        amountKrw: 8000,
+        teacherShareKrw: 6400,
+        platformFeeKrw: 1600,
+        status: "PENDING",
+      },
+    ],
+  };
+}
+
+export function mockAdminSettlements(): AdminSettlementsResponse {
+  return {
+    payoutDate: PAYOUT_DATE,
+    items: [
+      {
+        teacherId: 4,
+        teacherName: "정민지",
+        hostLevel: 5,
+        paidRoomCount: 12,
+        paymentCount: 184,
+        payoutKrw: 1472000,
+        bankAccount: { bank: "국민", maskedNumber: "***-**-4821" },
+        status: "CONFIRMED",
+      },
+      {
+        teacherId: 1,
+        teacherName: "박세라",
+        hostLevel: 4,
+        paidRoomCount: 8,
+        paymentCount: 126,
+        payoutKrw: 1008000,
+        bankAccount: { bank: "신한", maskedNumber: "***-***-2210" },
+        status: "CONFIRMED",
+      },
+      {
+        teacherId: 7,
+        teacherName: "홍희표",
+        hostLevel: 3,
+        paidRoomCount: 4,
+        paymentCount: 61,
+        payoutKrw: 390400,
+        bankAccount: null,
+        status: "ACCOUNT_MISSING",
       },
     ],
   };
