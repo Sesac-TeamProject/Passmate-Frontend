@@ -65,11 +65,11 @@ export function HostCard({ profile, host }: Props) {
 
       <div className="h-px bg-border" />
 
-      <Link href="/host/dashboard" className="flex items-center justify-between">
+      <Link href="/host/rooms" className="flex items-center justify-between">
         <span className="text-label-lg text-ink">지금 열려 있는 방</span>
         <span className="text-label-md text-mint-dark">{host.openRooms}개 ›</span>
       </Link>
-      <Link href="/host/revenue" className="flex items-center justify-between">
+      <Link href="/me/settlement" className="flex items-center justify-between">
         <span className="text-label-lg text-ink">정산</span>
         <span className="text-label-md text-mint-dark">
           이번 달 ₩{host.settlementThisMonth.toLocaleString()} ›

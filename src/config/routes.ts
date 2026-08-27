@@ -29,8 +29,8 @@ export const ROUTES: readonly RouteMeta[] = [
   {
     path: "/login",
     sample: "/login",
-    title: "로그인·프로필",
-    description: "OAuth 로그인 (선생님·학생 공용)",
+    title: "로그인",
+    description: "이메일·Google 로그인, 회원가입·비밀번호 찾기, PIN 게스트 입장 링크",
     area: "public",
   },
   {
@@ -41,19 +41,110 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "public",
   },
   {
+    path: "/home",
+    sample: "/home",
+    title: "홈",
+    description: "PIN 입장, 인기 방 캐러셀, 최근 참여한 방·내가 만든 방 요약, + 새 방 만들기 모달",
+    area: "member",
+  },
+  {
     path: "/me",
     sample: "/me",
     title: "마이페이지",
     description:
-      "프로필·명성, 개설한 방(운영 통계·뱃지·정산)과 참여한 방(학습 기록) 한눈에 — 회원 전용",
+      "내 정보 관리 — 계정 · 코인 · 결제 · 정산 계좌 · 알림 · 로그아웃 · 탈퇴 (회원 전용)",
+    area: "member",
+  },
+  {
+    path: "/me/joined",
+    sample: "/me/joined",
+    title: "참여한 방",
+    description: "참여 기록·통계·보완할 주제, 진행 중인 방 다시 들어가기, 세션별 리포트",
+    area: "member",
+  },
+  {
+    path: "/me/settlement",
+    sample: "/me/settlement",
+    title: "정산",
+    description: "유료 방 참가비 정산 내역·지급 상태·정산 계좌 (Lv.3+ 유료 방 개설자)",
+    area: "member",
+  },
+  {
+    path: "/me/account",
+    sample: "/me/account",
+    title: "계정 정보 변경",
+    description: "프로필 캐릭터·닉네임 변경 (이메일은 로그인 ID라 변경 불가)",
+    area: "member",
+  },
+  {
+    path: "/me/password",
+    sample: "/me/password",
+    title: "비밀번호 변경",
+    description: "현재 비밀번호 확인 후 새 비밀번호 설정",
+    area: "member",
+  },
+  {
+    path: "/me/settlement-account",
+    sample: "/me/settlement-account",
+    title: "정산 계좌 등록",
+    description: "은행·계좌번호·예금주 등록 및 변경",
+    area: "member",
+  },
+  {
+    path: "/me/character",
+    sample: "/me/character",
+    title: "내 캐릭터 변경",
+    description: "대기실·결과 화면에 닉네임과 함께 보이는 캐릭터 12종 중 선택",
+    area: "member",
+  },
+  {
+    path: "/me/coins",
+    sample: "/me/coins",
+    title: "코인 내역",
+    description: "보유 코인, 충전·사용 내역 (전체 / 충전 / 사용 필터)",
+    area: "member",
+  },
+  {
+    path: "/me/coins/charge",
+    sample: "/me/coins/charge",
+    title: "코인 충전",
+    description: "충전 금액·결제 수단 선택 → 포트원 결제창 (1 C = ₩1)",
+    area: "member",
+  },
+  {
+    path: "/me/coins/charge/complete",
+    sample: "/me/coins/charge/complete",
+    title: "코인 충전 완료",
+    description: "충전 결과·잔액 확인",
+    area: "member",
+  },
+  {
+    path: "/me/payment-methods",
+    sample: "/me/payment-methods",
+    title: "결제 수단 관리",
+    description: "연결된 간편결제·카드 목록, 기본 수단 변경·삭제·추가",
+    area: "member",
+  },
+  {
+    path: "/me/notifications",
+    sample: "/me/notifications",
+    title: "알림 설정",
+    description: "세션 시작·별점 요청·정산 완료·마케팅 알림 토글",
+    area: "member",
+  },
+  {
+    path: "/me/withdraw",
+    sample: "/me/withdraw",
+    title: "회원 탈퇴",
+    description: "삭제되는 항목 안내·확인 후 탈퇴",
     area: "member",
   },
   // 방 참여
   {
     path: "/join",
     sample: "/join",
-    title: "입장",
-    description: "PIN 입력·QR 스캔, 닉네임 설정",
+    title: "게스트 입장",
+    description: "로그인 없이 PIN·닉네임·캐릭터를 정하고 입장",
     area: "participant",
   },
   {
@@ -74,15 +165,16 @@ export const ROUTES: readonly RouteMeta[] = [
     path: "/pay/[code]",
     sample: "/pay/DEMO01",
     title: "유료 방 결제",
-    description: "참가비 확인·결제·실패 안내 (회원 전용, 게스트는 로그인 유도)",
+    description:
+      "방 정보·참가자 정보 확인, 코인 잔액 확인 → 부족분 포트원 충전 → 코인 차감, 결제 완료 후 대기실 입장 (회원 전용)",
     area: "participant",
   },
   // 방 개설·운영
   {
-    path: "/host/dashboard",
-    sample: "/host/dashboard",
-    title: "대시보드",
-    description: "내 방·문제 세트·지난 세션 목록",
+    path: "/host/rooms",
+    sample: "/host/rooms",
+    title: "내가 만든 방",
+    description: "명성 등급·승급 조건, 진행 중 방(진행 화면 열기)·종료된 방(상세 리포트) 목록",
     area: "host",
   },
   {
@@ -130,15 +222,9 @@ export const ROUTES: readonly RouteMeta[] = [
   {
     path: "/host/sessions/[sessionId]/review",
     sample: "/host/sessions/1/review",
-    title: "첨삭·리포트",
-    description: "답변별 AI 분석 확인, 코멘트·점수 입력, 통계",
-    area: "host",
-  },
-  {
-    path: "/host/revenue",
-    sample: "/host/revenue",
-    title: "수익·정산 내역",
-    description: "유료 방 수익 적립·정산 내역, 내 등급·평가 현황 (Lv.3+)",
+    title: "방 리포트",
+    description:
+      "종료된 방의 통계·문항별 결과, 서술형 AI 분석 확인·코멘트 (내가 만든 방 › 상세 보기)",
     area: "host",
   },
   // 관리자
@@ -187,15 +273,18 @@ export const ROUTES: readonly RouteMeta[] = [
 ];
 
 export const REDIRECTS: readonly { from: string; to: string }[] = [
-  { from: "/host", to: "/host/dashboard" },
+  { from: "/host", to: "/home" },
+  { from: "/host/dashboard", to: "/home" },
+  { from: "/host/revenue", to: "/me/settlement" },
   { from: "/admin", to: "/admin/dashboard" },
 ];
 
-/** 회원 공통 내비 4개 (디자인 W-01·C-02 v2 사이드바). 수익·정산은 마이페이지 안의 "정산" 링크로 진입한다. */
+/** 회원 공통 내비 5개 (디자인 웹 v6 사이드바: 홈 / 내가 만든 방 / 참여한 방 / 문제 세트 / 마이페이지). 정산·설정은 마이페이지 안에서 진입한다. */
 const MEMBER_NAV = [
-  { path: "/host/dashboard" },
+  { path: "/home" },
+  { path: "/host/rooms" },
+  { path: "/me/joined" },
   { path: "/host/sets" },
-  { path: "/host/sessions/[sessionId]/review", label: "지난 세션" },
   { path: "/me" },
 ] as const;
 

@@ -5,10 +5,10 @@ import type { SidebarUser } from "@/components/layout/role-sidebar";
 
 /** 로그인한 회원. 선생님·회원 레이아웃의 사이드바 프로필이 모두 이 계정을 쓴다. */
 export const ACCOUNT: SidebarUser = {
-  name: "김민지",
-  initial: "민",
+  name: "이한결",
+  initial: "한",
   roleLabel: "회원",
-  tone: "blue",
+  tone: "peach",
 };
 
 /** 프로필 카드 — 명성(레벨)은 방 운영 실적으로 오른다 */
