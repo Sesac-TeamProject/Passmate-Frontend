@@ -1,11 +1,11 @@
 import { StudentAvatar } from "@/components/common/student-avatar";
 import { ReputationBadge } from "@/components/common/reputation-badge";
-import type { HostRecord, LearningRecord, Profile } from "@/features/me/mock";
+import type { Profile } from "@/features/me/mock";
 
-type Props = { profile: Profile; host: HostRecord; learning: LearningRecord };
+type Props = { profile: Profile; joinedRooms: number; hostedRooms: number };
 
-/** 프로필 카드 — 한 계정의 두 역할(개설·참여) 요약 */
-export function ProfileCard({ profile, host, learning }: Props) {
+/** C-02 v3 프로필 카드 — 아바타 64 · 이름+명성 뱃지 · 이메일/가입월 · 우측 방 개수 한 줄 */
+export function ProfileCard({ profile, joinedRooms, hostedRooms }: Props) {
   return (
     <section className="flex items-center gap-5 rounded-2xl border bg-card p-5">
       <StudentAvatar avatar={profile.avatar} size={64} />
@@ -19,15 +19,9 @@ export function ProfileCard({ profile, host, learning }: Props) {
         </span>
       </div>
       <div className="flex-1" />
-      <div className="flex shrink-0 flex-col items-end gap-1 text-label-md text-muted-foreground">
-        <span>
-          참여한 방 {learning.stats.sessions} · 정답률 {learning.stats.accuracy}% · 평균{" "}
-          {learning.stats.averageRank}위
-        </span>
-        <span>
-          개설한 방 {host.stats.rooms} · 별점 {host.stats.rating} · 학생 {host.stats.students}명
-        </span>
-      </div>
+      <span className="shrink-0 text-label-md text-muted-foreground">
+        참여한 방 {joinedRooms} · 내가 만든 방 {hostedRooms}
+      </span>
     </section>
   );
 }
