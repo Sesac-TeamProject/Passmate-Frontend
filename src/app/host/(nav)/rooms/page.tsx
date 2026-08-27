@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { MyRoomsPage } from "@/features/host/my-rooms/my-rooms-page";
 
 export default function Page() {
-  return <PagePlaceholder path="/host/rooms" />;
+  return <MyRoomsPage />;
 }

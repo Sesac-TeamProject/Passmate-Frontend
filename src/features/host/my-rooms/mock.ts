@@ -101,6 +101,8 @@ export type PromotionRule = {
   /** 현재 값 표기. 예: "24 / 40", "✓ 4.6" */
   value: string;
   met: boolean;
+  /** 충족 값 색 — 기본 positive. 시안(voPdY)은 마지막 행 "✓ 12회"만 mint-dark */
+  tone?: "positive" | "mint";
 };
 
 /** W-09 Lv.4 승급 조건 카드 */
@@ -110,7 +112,7 @@ export const PROMOTION: { targetLevel: number; rules: PromotionRule[]; note: str
     { label: "방 운영 횟수 40회 이상", value: "24 / 40", met: false },
     { label: "총 학생 400명 이상", value: "312 / 400", met: false },
     { label: "평균 별점 4.0 이상 (유지 조건)", value: "✓ 4.6", met: true },
-    { label: "최근 30일 활동 4회 이상 (유지 조건)", value: "✓ 12회", met: true },
+    { label: "최근 30일 활동 4회 이상 (유지 조건)", value: "✓ 12회", met: true, tone: "mint" },
   ],
   note: "하락 규칙 — Lv.4·5는 최근 30일 활동(4회·5회) 또는 평균 별점 4.0이 유지 조건 아래로 내려가면 한 단계 하락. Lv.3까지는 한 번 달성하면 하락 없음.",
 };

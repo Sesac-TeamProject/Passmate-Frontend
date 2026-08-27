@@ -2,7 +2,7 @@ import { LIVE_ROOM, SESSION_REPORT } from "@/features/host/mock";
 import { ReportBody } from "./report-body";
 import { ReportStats } from "./report-stats";
 
-/** W-07 세션 리포트 (첨삭·리포트) */
+/** W-07 방 리포트 — 내가 만든 방 › 종료 카드 › "상세 보기". 방 하나 = 세션 하나라 부제는 시안대로 "세션 리포트" */
 export function ReviewPage() {
   const report = SESSION_REPORT;
 
