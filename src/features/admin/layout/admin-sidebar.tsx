@@ -56,7 +56,7 @@ export function AdminSidebar() {
                 "flex w-full items-center gap-[10px] rounded-[9px] px-3 py-[9px] text-[12.5px] leading-[1.3]",
                 isActive
                   ? "bg-sidebar-primary font-bold text-sidebar-primary-foreground"
-                  : "font-medium text-primary-strong hover:bg-sidebar-foreground/5",
+                  : "font-medium text-sidebar-foreground/80 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground",
               )}
             >
               <span

@@ -129,7 +129,8 @@
   --sidebar-primary: #17b884;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #332c52;
-  --sidebar-accent-foreground: #0e8a63;
+  /* 시안은 #0e8a63이지만 어두운 배경 위 대비가 낮아 밝은 민트로 올렸다 */
+  --sidebar-accent-foreground: #17b884;
   --sidebar-border: #332c52;
   --sidebar-ring: #17b884;
 }
