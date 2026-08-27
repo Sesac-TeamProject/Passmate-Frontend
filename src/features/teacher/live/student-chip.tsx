@@ -6,7 +6,7 @@ export function StudentChip({ student }: { student: Student }) {
   return (
     <button
       type="button"
-      className="flex items-center gap-2 rounded-full border bg-card py-[7px] pr-[18px] pl-2 text-[15px] font-black text-ink transition-colors hover:border-mint"
+      className="flex items-center gap-2 rounded-full border bg-card py-[7px] pr-[18px] pl-2 text-heading-sm text-ink transition-colors hover:border-mint"
     >
       <StudentAvatar avatar={student.avatar} size={30} />
       {student.name}
