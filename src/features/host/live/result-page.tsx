@@ -6,7 +6,7 @@ import { CHOICE_CLASS } from "./choice-letter";
 import { Podium } from "./podium";
 import { ProjectorShell } from "./projector-shell";
 
-/** W-06 문항 결과 (프로젝터 · 모각작 스타일) — 정답 공개, 랭킹 TOP 5, 응답 분포 */
+/** W-06 문항 결과 (프로젝터 · 민트 톤 G7rpdd) — 정답 공개, 랭킹 TOP 5, 응답 분포 */
 export function ResultPage() {
   const q = LIVE_QUESTION;
   const r = QUESTION_RESULT;
@@ -19,13 +19,14 @@ export function ResultPage() {
 
   return (
     <ProjectorShell
+      tone="mint"
       top={
-        <header className="flex items-center justify-between border-b px-10 pt-[22px] pb-4">
-          <span className="text-heading-lg text-[#0f3d2e]">
+        <header className="flex items-center justify-between px-10 pt-[22px] pb-4">
+          <span className="text-heading-lg text-mint-ink">
             Q{q.index} / {q.total} · 결과
           </span>
-          <span className="flex items-center gap-2.5 rounded-[14px] bg-[#338158] py-2.5 pr-5 pl-[18px] text-heading-sm text-white">
-            <span className="flex size-[26px] items-center justify-center rounded-lg bg-card text-label-lg text-[#338158]">
+          <span className="flex items-center gap-2.5 rounded-[14px] bg-positive py-2.5 pr-5 pl-[18px] text-heading-sm text-white">
+            <span className="flex size-[26px] items-center justify-center rounded-lg bg-card text-label-lg text-positive">
               {r.correct}
             </span>
             정답 · {correct.text}
@@ -35,7 +36,7 @@ export function ResultPage() {
       bottomClassName="py-[18px]"
       bottom={
         <>
-          <p className="text-label-lg text-[#3f6b5b]">
+          <p className="text-label-lg text-mint-ink-secondary">
             마지막 문항이 끝나면 최종 결과와 리포트가 열려요
           </p>
           <Link
@@ -116,7 +117,7 @@ export function ResultPage() {
             );
           })}
           <p className="flex items-center gap-1.5 pt-1 text-label-lg text-muted-foreground">
-            <span className="flex size-[22px] items-center justify-center rounded-full bg-[#fdf3de] text-[#916616]">
+            <span className="flex size-[22px] items-center justify-center rounded-full bg-warning-soft text-warning">
               {r.accuracyDelta >= 0 ? "↑" : "↓"}
             </span>
             정답률 {r.accuracy}% — 지난 문항보다 {Math.abs(r.accuracyDelta)}%p{" "}
@@ -133,7 +134,7 @@ function RankChange({ change }: { change: number }) {
   if (change === 0) return <span className="w-7 text-label-lg text-muted-foreground">–</span>;
   const up = change > 0;
   return (
-    <span className={clsx("w-7 text-label-lg", up ? "text-[#338158]" : "text-[#e03131]")}>
+    <span className={clsx("w-7 text-label-lg", up ? "text-positive" : "text-negative")}>
       {up ? "▲" : "▼"}
       {Math.abs(change)}
     </span>

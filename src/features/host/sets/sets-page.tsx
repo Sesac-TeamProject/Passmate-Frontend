@@ -23,7 +23,7 @@ export function SetsPage() {
             + 새 세트
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-[18px]">
           {QUESTION_SETS.map((s) => (
             <SetCard
               key={s.id}

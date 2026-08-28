@@ -90,7 +90,7 @@ scripts/             check-routes.mjs
 | 관리자 | `/admin/payments`                      | 결제 · 정산 (A-05)       |
 | 관리자 | `/admin/branded`                       | 광고 · 브랜디드 (A-06)   |
 
-`/`는 위 라우트 전체 링크 목록(사이트맵). `/teacher`, `/admin`은 각각 첫 화면으로 redirect.
+`/`는 랜딩(L-01). `/dev`는 위 라우트 전체 링크 목록(개발용 사이트맵). `/host`, `/admin`은 각각 첫 화면으로 redirect.
 
 ### 라우트 추가 절차
 
@@ -100,9 +100,9 @@ scripts/             check-routes.mjs
 
 ## 담당 분배
 
-| 담당 | 이름   | 범위                                                                                                      |
-| ---- | ------ | --------------------------------------------------------------------------------------------------------- |
-| A    | (미정) | `(public)`, `(student)`, `teacher/`, `features/student`, `features/teacher`, `design/student-teacher.pen` |
-| B    | (미정) | `admin/`, `features/admin`, `design/admin.pen`                                                            |
+| 담당 | 이름   | 범위                                                                                                   |
+| ---- | ------ | ------------------------------------------------------------------------------------------------------ |
+| A    | (미정) | `(public)`, `(student)`, `teacher/`, `features/student`, `features/teacher`, `design/design.pen`(공용) |
+| B    | (미정) | `admin/`, `features/admin`                                                                             |
 
 `components/`, `config/`, `lib/` 등 공용 영역을 고칠 땐 상대에게 먼저 알린다.

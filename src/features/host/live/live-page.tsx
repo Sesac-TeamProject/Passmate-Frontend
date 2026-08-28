@@ -7,8 +7,13 @@ import { ChoiceLetter } from "./choice-letter";
 import { Countdown } from "./countdown";
 import { ProjectorShell } from "./projector-shell";
 
+type Props = {
+  /** 타이머를 시안 숫자에서 멈춘다 — 랜딩 목업용 */
+  frozen?: boolean;
+};
+
 /** W-05 진행 (프로젝터 · 기본형) — 민트 배경, 문항·선택지·타이머·제출 현황·PTT */
-export function LivePage() {
+export function LivePage({ frozen = false }: Props = {}) {
   const q = LIVE_QUESTION;
   const room = LIVE_ROOM;
 
@@ -18,7 +23,7 @@ export function LivePage() {
       top={
         <header className="flex items-center justify-between px-10 pt-[22px] pb-2.5">
           <div className="flex items-center gap-3">
-            <span className="text-heading-lg text-[#0f3d2e]">
+            <span className="text-heading-lg text-mint-ink">
               Q{q.index} / {q.total}
             </span>
             <span className="rounded-full bg-mint-tint px-3 py-[5px] text-label-lg text-mint-dark">
@@ -40,8 +45,8 @@ export function LivePage() {
       bottom={
         <>
           <p className="flex items-center gap-2">
-            <span className="text-heading-sm text-[#3f6b5b]">제출</span>
-            <span className="text-heading-md text-[#0f3d2e]">
+            <span className="text-heading-sm text-mint-ink-secondary">제출</span>
+            <span className="text-heading-md text-mint-ink">
               {q.submitted} / {room.students.length}
             </span>
           </p>
@@ -55,7 +60,7 @@ export function LivePage() {
           <div className="flex items-center gap-2.5 justify-self-end">
             <button
               type="button"
-              className="flex h-[46px] items-center rounded-xl border-[1.5px] px-[18px] text-label-lg text-[#0f3d2e] transition-colors hover:bg-muted"
+              className="flex h-[46px] items-center rounded-xl border-[1.5px] px-[18px] text-label-lg text-mint-ink transition-colors hover:bg-muted"
             >
               바로 마감
             </button>
@@ -72,7 +77,11 @@ export function LivePage() {
       <div className="flex flex-1 items-center">
         <section className="relative flex w-[1080px] flex-col gap-7 rounded-[28px] border bg-card px-14 pt-16 pb-11">
           <div className="absolute -top-[38px] left-1/2 flex size-[76px] -translate-x-1/2 items-center justify-center rounded-full border-[7px] border-yellow bg-card">
-            <Countdown from={q.remaining} className="text-display-sm text-mint-dark" />
+            <Countdown
+              from={q.remaining}
+              paused={frozen}
+              className="text-display-sm text-mint-dark"
+            />
           </div>
           <h1 className="text-center text-display-md text-ink">{q.prompt}</h1>
           <ol className="grid grid-cols-2 gap-3.5">

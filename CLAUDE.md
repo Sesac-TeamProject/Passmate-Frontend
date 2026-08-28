@@ -42,7 +42,7 @@ Next.js 16(App Router, TS) + Tailwind v4 + shadcn/ui + TanStack Query + Zustand.
 
 ## 디자인
 
-- `.pen` 파일은 `design/`에 담당별 분리(`student-teacher.pen`, `admin.pen`). 같은 파일 동시 수정 금지 (머지 불가).
+- `.pen` 파일은 `design/design.pen` 하나(구 `student-teacher.pen`). 암호화 포맷이라 머지 불가 — 같은 파일 동시 수정 금지, 수정 전 팀원과 조율.
 - Pencil MCP 사용 전 Pencil 데스크톱 앱이 실행 중이어야 한다.
 
 ## 아직 넣지 않은 것

@@ -7,7 +7,7 @@ import { StepPills } from "./step-pills";
 export function NewRoomPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      <FlowTopBar backHref="/host/dashboard" title="새 방 만들기">
+      <FlowTopBar backHref="/home" title="새 방 만들기">
         <StepPills current={1} />
       </FlowTopBar>
       <main className="flex flex-1 items-start justify-center pt-9 pb-10">

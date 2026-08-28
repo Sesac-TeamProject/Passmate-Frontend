@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-/** design/student-teacher.pen "학생 아바타 — Avatar 세트"에서 내보낸 12종. public/avatars/<key>.png */
+/** design/design.pen "학생 아바타 — Avatar 세트"에서 내보낸 12종. public/avatars/<key>.png */
 export const AVATAR_KEYS = [
   "cat",
   "dog",
@@ -50,6 +50,8 @@ export function StudentAvatar({ avatar, size = 30, className }: Props) {
       width={size}
       height={size}
       className={cn("shrink-0 rounded-full", className)}
+      // 132px PNG 12종 — 최적화 파이프라인을 거치면 개발 모드에서 늦게 떠서 원본을 그대로 쓴다
+      unoptimized
     />
   );
 }

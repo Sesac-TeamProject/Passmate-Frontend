@@ -44,7 +44,7 @@ export function RequireAuth({ role, children }: Props) {
   if (!hasRole) {
     return (
       <ScreenError message={new AppError("PermissionDenied").message}>
-        <Button variant="outline" render={<Link href={HOME_PATH} />}>
+        <Button variant="outline" nativeButton={false} render={<Link href={HOME_PATH} />}>
           홈으로
         </Button>
       </ScreenError>

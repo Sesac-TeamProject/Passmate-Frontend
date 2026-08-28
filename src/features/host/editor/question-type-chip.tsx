@@ -9,8 +9,8 @@ export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
 
 const CHIP_CLASS: Record<QuestionType, string> = {
   multiple: "bg-muted text-mint-dark",
-  essay: "bg-[#deedff] text-[#0e61d9]",
-  ox: "bg-[#fdefde] text-[#bf3f0c]",
+  essay: "bg-blue-soft text-blue",
+  ox: "bg-orange-soft text-orange",
 };
 
 /** 문항 유형 알약 칩 (객관식·서술형·OX) */

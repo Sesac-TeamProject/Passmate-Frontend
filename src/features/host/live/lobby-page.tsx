@@ -14,14 +14,16 @@ export function LobbyPage() {
       mascot
       top={
         <header className="flex h-[60px] shrink-0 items-center justify-center gap-2 text-heading-sm">
-          <span className="text-[#3f6b5b]">passmate.app 에 접속해서</span>
-          <span className="text-[#0f3d2e]">PIN {pin}</span>
-          <span className="text-[#3f6b5b]">을 입력하세요</span>
+          <span className="text-mint-ink-secondary">passmate.app 에 접속해서</span>
+          <span className="text-mint-ink">PIN {pin}</span>
+          <span className="text-mint-ink-secondary">을 입력하세요</span>
         </header>
       }
       bottom={
         <>
-          <p className="text-label-lg text-[#3f6b5b]">학생 이름을 누르면 내보낼 수 있어요</p>
+          <p className="text-label-lg text-mint-ink-secondary">
+            학생 이름을 누르면 내보낼 수 있어요
+          </p>
           <Link
             href={`/host/rooms/${room.code}/live`}
             className="flex h-14 w-[190px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark"
@@ -31,7 +33,7 @@ export function LobbyPage() {
         </>
       }
     >
-      <h1 className="pt-11 text-heading-lg text-[#0f3d2e]">{room.title}</h1>
+      <h1 className="pt-11 text-heading-lg text-mint-ink">{room.title}</h1>
 
       <div className="flex items-center gap-7 pt-7">
         <div className="flex flex-col items-center gap-0.5 rounded-[28px] border bg-card px-16 pt-[26px] pb-[30px]">
@@ -46,7 +48,7 @@ export function LobbyPage() {
       </div>
 
       <section className="flex flex-col items-center gap-3.5 pt-10">
-        <h2 className="text-heading-sm text-[#0f3d2e]">학생 {room.students.length}명이 함께해요</h2>
+        <h2 className="text-heading-sm text-mint-ink">학생 {room.students.length}명이 함께해요</h2>
         <ul className="flex flex-wrap items-center justify-center gap-2.5">
           {room.students.map((s) => (
             <li key={s.id}>

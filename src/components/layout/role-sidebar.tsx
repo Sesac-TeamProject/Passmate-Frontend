@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/common/brand-logo";
-import { getRoute, SIDEBAR_NAV } from "@/config/routes";
+import { getRoute, matchRoute, SIDEBAR_NAV } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
 export type SidebarUser = {
@@ -15,7 +15,7 @@ export type SidebarUser = {
 };
 
 const AVATAR_TONE = {
-  peach: "bg-[#f8c6a4] text-[#7a3a11]",
+  peach: "bg-avatar-peach text-avatar-peach-foreground",
   blue: "bg-choice-b text-choice-b-foreground",
 } as const;
 
@@ -23,11 +23,21 @@ type Props = {
   nav: keyof typeof SIDEBAR_NAV;
   /** 하단 프로필. 데이터 연동 전까지는 레이아웃에서 목업을 넘긴다. */
   user: SidebarUser;
+  /** 현재 URL 대신 강제로 활성 표시할 내비 path — 랜딩 목업처럼 라우트 밖에서 그릴 때 */
+  activePath?: string;
 };
 
-/** 회원·관리자 레이아웃 좌측 내비게이션(디자인 W-01·C-02 v2 사이드바). routes.ts의 SIDEBAR_NAV를 읽어 그린다. */
-export function RoleSidebar({ nav, user }: Props) {
+/** 회원 레이아웃 좌측 내비게이션(디자인 웹 v6 사이드바 — 홈/내가 만든 방/참여한 방/문제 세트/마이페이지). routes.ts의 SIDEBAR_NAV를 읽어 그린다. */
+export function RoleSidebar({ nav, user, activePath: forcedActivePath }: Props) {
   const pathname = usePathname();
+  // 내비에 없는 화면(유료 방 결제 등)은 routes.ts의 nav 지정을 따른다
+  const activePath =
+    forcedActivePath ??
+    findActivePath(
+      pathname,
+      SIDEBAR_NAV[nav].map((item) => item.path),
+    ) ??
+    matchRoute(pathname)?.nav;
 
   return (
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col gap-1 border-r bg-sidebar px-3.5 pt-6 pb-5">
@@ -35,7 +45,7 @@ export function RoleSidebar({ nav, user }: Props) {
       <nav className="flex flex-col gap-1">
         {SIDEBAR_NAV[nav].map((item) => {
           const r = getRoute(item.path);
-          const active = isActive(pathname, r.path);
+          const active = r.path === activePath;
           return (
             <Link
               key={r.path}
@@ -45,7 +55,7 @@ export function RoleSidebar({ nav, user }: Props) {
                 "rounded-[14px] px-3.5 py-[11px] text-label-lg transition-colors",
                 active
                   ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
               )}
             >
               {item.label ?? r.title}
@@ -71,8 +81,16 @@ export function RoleSidebar({ nav, user }: Props) {
   );
 }
 
-/** 동적 세그먼트([code] 등)를 가진 path 패턴과 실제 pathname을 대조한다. */
-function isActive(pathname: string, pattern: string): boolean {
-  const re = new RegExp("^" + pattern.replace(/\[[^\]]+\]/g, "[^/]+") + "$");
-  return re.test(pathname);
+/**
+ * 현재 pathname에 해당하는 내비 항목의 path. 정확히 일치하는 항목이 없으면 하위 경로(prefix)로 가장 긴 항목을 고른다
+ * — /me/account 는 "마이페이지"(/me), /me/joined 는 자기 항목이 활성. 동적 세그먼트([code] 등)는 아무 값이나 허용.
+ */
+function findActivePath(pathname: string, patterns: readonly string[]): string | undefined {
+  const toRegExp = (pattern: string, tail: string) =>
+    new RegExp("^" + pattern.replace(/\[[^\]]+\]/g, "[^/]+") + tail);
+  const exact = patterns.find((p) => toRegExp(p, "$").test(pathname));
+  if (exact) return exact;
+  return patterns
+    .filter((p) => toRegExp(p, "/").test(pathname))
+    .sort((a, b) => b.length - a.length)[0];
 }

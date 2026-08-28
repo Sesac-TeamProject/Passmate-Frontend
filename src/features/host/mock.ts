@@ -1,13 +1,10 @@
 // 데이터 연동 전 화면 확인용 목업. API 클라이언트가 들어오면 이 파일의 타입만 남기고 교체한다.
 import type { TileTone } from "@/components/common/initial-tile";
+import type { StatItem } from "@/components/common/stat-cards";
 import type { AvatarKey } from "@/components/common/student-avatar";
 
-export type DashboardStat = {
-  id: "rooms" | "sessions" | "students";
-  label: string;
-  value: string;
-  tile: { label: string; tone: TileTone };
-};
+/** @deprecated 공용 StatItem을 쓴다 (components/common/stat-cards) */
+export type DashboardStat = StatItem;
 
 export type QuestionSet = {
   id: string;

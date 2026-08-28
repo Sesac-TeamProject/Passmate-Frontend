@@ -3,9 +3,9 @@ import type { SessionReport } from "@/features/host/mock";
 type Props = { stats: SessionReport["stats"] };
 
 const TILE = {
-  accuracy: "bg-[#e2f4ea] text-[#26774d]",
-  students: "bg-[#deedff] text-[#0e61d9]",
-  questions: "bg-[#fdefde] text-[#bf3f0c]",
+  accuracy: "bg-success-soft text-success",
+  students: "bg-blue-soft text-blue",
+  questions: "bg-orange-soft text-orange",
   aiAnalyses: "bg-muted text-mint-dark",
 } as const;
 
