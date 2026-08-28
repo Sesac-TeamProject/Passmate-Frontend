@@ -17,8 +17,8 @@ import {
 } from "./content";
 import { FaqList } from "./faq-list";
 
-/** 시안 폭 1440 안의 콘텐츠 폭 1200 */
-const INNER = "mx-auto w-full max-w-[1200px] px-6";
+/** 시안 폭 1440 안의 콘텐츠 폭 1200 (좌우 여백 120). 패딩 24를 더해 1248 이상에서 콘텐츠가 정확히 1200이 되게 한다 */
+const INNER = "mx-auto w-full max-w-[1248px] px-6";
 
 /** 랜딩 전용 버튼 — r14. 시안 nav [12,22] · 히어로/CTA [16,28] (공용 Button size=xl(h48·r12)과 규격이 달라 따로 둔다) */
 const BUTTON = {
@@ -87,7 +87,7 @@ function Hero() {
     <section className="bg-card py-16">
       <div className={cn(INNER, "flex items-center gap-10")}>
         <div className="flex w-[560px] shrink-0 flex-col gap-7">
-          <h1 className="text-display-xl whitespace-pre-line text-ink">
+          <h1 className="text-display-2xl whitespace-pre-line text-ink">
             {"혼자 시작한 공부,\n함께하는 합격까지."}
           </h1>
           <p className="text-body-lg whitespace-pre-line text-muted-foreground">
@@ -250,7 +250,7 @@ function Cta() {
   return (
     <section className="bg-mint py-24">
       <div className={cn(INNER, "flex flex-col items-center gap-6 text-center")}>
-        <h2 className="text-display-lg text-white">오늘 수업부터 실전처럼</h2>
+        <h2 className="text-display-xl text-white">오늘 수업부터 실전처럼</h2>
         <p className="text-body-lg text-mint-tint">
           문제 세트 하나면 5분 안에 첫 방이 열려요. 카드 없이, 무료로.
         </p>
