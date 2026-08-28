@@ -36,15 +36,18 @@ export const STEPS = [
   },
 ] as const;
 
+export type MockupKey = "editor" | "live" | "report";
+
 export type Feature = {
   id: string;
   eyebrow: string;
   title: string;
   body: string;
   bullets: readonly string[];
-  /** public/landing/<shot>.png — 시안의 미니 화면(W-03·W-05·W-07)을 2x로 내보낸 것 */
-  shot: string;
-  shotAlt: string;
+  /** 오른쪽/왼쪽에 넣을 실제 화면 (W-03 에디터 · W-05 진행 · W-07 리포트) */
+  mockup: MockupKey;
+  /** 목업 접근성 설명 */
+  mockupLabel: string;
   /** 목업을 왼쪽에 두는 행 */
   reverse?: boolean;
 };
@@ -60,8 +63,8 @@ export const FEATURES: readonly Feature[] = [
       "난이도 · 문항 수 조절",
       "세트로 저장해 다음 방에서 재활용",
     ],
-    shot: "feature-editor",
-    shotAlt: "문제 에디터 — AI로 문제 만들기 화면",
+    mockup: "editor",
+    mockupLabel: "문제 에디터 — AI로 문제 만들기 화면",
   },
   {
     id: "student",
@@ -69,8 +72,8 @@ export const FEATURES: readonly Feature[] = [
     title: "시험장처럼,\n그런데 다 같이",
     body: "프로젝터에는 문제와 타이머, 학생 폰에는 답안지. 문항이 끝날 때마다 정답률과 랭킹이 바로 떠서 수업이 늘어지지 않아요.",
     bullets: ["타이머 링 · 실시간 랭킹", "학생은 회원가입 없이 PIN 입장", "끊겨도 자동 재접속"],
-    shot: "feature-live",
-    shotAlt: "진행 화면 — 문항과 타이머가 뜬 프로젝터 화면",
+    mockup: "live",
+    mockupLabel: "진행 화면 — 문항과 타이머가 뜬 프로젝터 화면",
     reverse: true,
   },
   {
@@ -83,8 +86,8 @@ export const FEATURES: readonly Feature[] = [
       "서술형 AI 첨삭 + 선생님 코멘트",
       "참여 기록과 뱃지로 남는 성장",
     ],
-    shot: "feature-report",
-    shotAlt: "방 리포트 — 문항별 정답률과 서술형 AI 분석 화면",
+    mockup: "report",
+    mockupLabel: "방 리포트 — 문항별 정답률과 서술형 AI 분석 화면",
   },
 ];
 

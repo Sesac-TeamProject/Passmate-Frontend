@@ -23,17 +23,21 @@ type Props = {
   nav: keyof typeof SIDEBAR_NAV;
   /** 하단 프로필. 데이터 연동 전까지는 레이아웃에서 목업을 넘긴다. */
   user: SidebarUser;
+  /** 현재 URL 대신 강제로 활성 표시할 내비 path — 랜딩 목업처럼 라우트 밖에서 그릴 때 */
+  activePath?: string;
 };
 
 /** 회원 레이아웃 좌측 내비게이션(디자인 웹 v6 사이드바 — 홈/내가 만든 방/참여한 방/문제 세트/마이페이지). routes.ts의 SIDEBAR_NAV를 읽어 그린다. */
-export function RoleSidebar({ nav, user }: Props) {
+export function RoleSidebar({ nav, user, activePath: forcedActivePath }: Props) {
   const pathname = usePathname();
   // 내비에 없는 화면(유료 방 결제 등)은 routes.ts의 nav 지정을 따른다
   const activePath =
+    forcedActivePath ??
     findActivePath(
       pathname,
       SIDEBAR_NAV[nav].map((item) => item.path),
-    ) ?? matchRoute(pathname)?.nav;
+    ) ??
+    matchRoute(pathname)?.nav;
 
   return (
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col gap-1 border-r bg-sidebar px-3.5 pt-6 pb-5">

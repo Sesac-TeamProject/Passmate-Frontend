@@ -1,6 +1,6 @@
 import { Check, Star } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { BrandLogo } from "@/components/common/brand-logo";
 import { StudentAvatar } from "@/components/common/student-avatar";
 import { cn } from "@/lib/utils";
@@ -14,8 +14,12 @@ import {
   STATS,
   STEPS,
   type Feature,
+  type MockupKey,
 } from "./content";
 import { FaqList } from "./faq-list";
+import { PhoneMockup } from "./mockups/phone-mockup";
+import { ScreenMockup } from "./mockups/screen-mockup";
+import { EditorMockup, LiveMockup, ReportMockup } from "./mockups/screen-mockups";
 
 /** 시안 폭 1440 안의 콘텐츠 폭 1200 (좌우 여백 120). 패딩 24를 더해 1248 이상에서 콘텐츠가 정확히 1200이 되게 한다 */
 const INNER = "mx-auto w-full max-w-[1248px] px-6";
@@ -31,7 +35,14 @@ const BUTTON = {
   ink: "bg-ink text-white hover:bg-mint-ink",
 } as const;
 
-/** L-01 랜딩 (시안 NOxTe, 스픽 스타일 · 실제 화면 중심). 정적 소개 페이지 — 상태 없음, FAQ 아코디언만 클라이언트 */
+/** 기능 섹션 목업 — 실제 화면 컴포넌트를 축소해 넣는다 ("실제 화면 중심") */
+const MOCKUPS: Record<MockupKey, ReactNode> = {
+  editor: <EditorMockup />,
+  live: <LiveMockup />,
+  report: <ReportMockup />,
+};
+
+/** L-01 랜딩 (시안 MGeTr, 스픽 스타일 · 실제 화면 중심). 정적 소개 페이지 — 상태 없음, FAQ 아코디언만 클라이언트 */
 export function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-card text-foreground">
@@ -119,14 +130,7 @@ function Hero() {
             </p>
           </div>
         </div>
-        <Image
-          src="/landing/hero-stage.png"
-          alt="학생 폰의 풀이 화면 — PIN, 남은 시간, 정답률, AI 첨삭이 함께 떠 있다"
-          width={600}
-          height={700}
-          priority
-          className="h-auto w-[600px] min-w-0 flex-1"
-        />
+        <PhoneMockup />
       </div>
     </section>
   );
@@ -189,13 +193,7 @@ function FeatureSection({ feature, tinted }: { feature: Feature; tinted: boolean
             ))}
           </ul>
         </div>
-        <Image
-          src={`/landing/${feature.shot}.png`}
-          alt={feature.shotAlt}
-          width={691}
-          height={432}
-          className="h-auto w-[691px] min-w-0 flex-1 rounded-[20px] shadow-[0_16px_35px] shadow-ink/12"
-        />
+        <ScreenMockup label={feature.mockupLabel}>{MOCKUPS[feature.mockup]}</ScreenMockup>
       </div>
     </section>
   );

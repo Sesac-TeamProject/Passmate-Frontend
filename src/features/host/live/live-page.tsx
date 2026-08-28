@@ -7,8 +7,13 @@ import { ChoiceLetter } from "./choice-letter";
 import { Countdown } from "./countdown";
 import { ProjectorShell } from "./projector-shell";
 
+type Props = {
+  /** 타이머를 시안 숫자에서 멈춘다 — 랜딩 목업용 */
+  frozen?: boolean;
+};
+
 /** W-05 진행 (프로젝터 · 기본형) — 민트 배경, 문항·선택지·타이머·제출 현황·PTT */
-export function LivePage() {
+export function LivePage({ frozen = false }: Props = {}) {
   const q = LIVE_QUESTION;
   const room = LIVE_ROOM;
 
@@ -72,7 +77,11 @@ export function LivePage() {
       <div className="flex flex-1 items-center">
         <section className="relative flex w-[1080px] flex-col gap-7 rounded-[28px] border bg-card px-14 pt-16 pb-11">
           <div className="absolute -top-[38px] left-1/2 flex size-[76px] -translate-x-1/2 items-center justify-center rounded-full border-[7px] border-yellow bg-card">
-            <Countdown from={q.remaining} className="text-display-sm text-mint-dark" />
+            <Countdown
+              from={q.remaining}
+              paused={frozen}
+              className="text-display-sm text-mint-dark"
+            />
           </div>
           <h1 className="text-center text-display-md text-ink">{q.prompt}</h1>
           <ol className="grid grid-cols-2 gap-3.5">
