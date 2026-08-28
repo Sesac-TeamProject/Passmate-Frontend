@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-/** design/student-teacher.pen "학생 아바타 — Avatar 세트"에서 내보낸 12종. public/avatars/<key>.png */
+/** design/design.pen "학생 아바타 — Avatar 세트"에서 내보낸 12종. public/avatars/<key>.png */
 export const AVATAR_KEYS = [
   "cat",
   "dog",

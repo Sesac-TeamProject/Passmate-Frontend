@@ -102,7 +102,7 @@ scripts/             check-routes.mjs
 
 | 담당 | 이름   | 범위                                                                                                      |
 | ---- | ------ | --------------------------------------------------------------------------------------------------------- |
-| A    | (미정) | `(public)`, `(student)`, `teacher/`, `features/student`, `features/teacher`, `design/student-teacher.pen` |
-| B    | (미정) | `admin/`, `features/admin`, `design/admin.pen`                                                            |
+| A    | (미정) | `(public)`, `(student)`, `teacher/`, `features/student`, `features/teacher`, `design/design.pen`(공용) |
+| B    | (미정) | `admin/`, `features/admin`                       |
 
 `components/`, `config/`, `lib/` 등 공용 영역을 고칠 땐 상대에게 먼저 알린다.
