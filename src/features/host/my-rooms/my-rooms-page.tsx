@@ -18,9 +18,8 @@ export function MyRoomsPage() {
         title="내가 만든 방"
         description="방 하나가 세션 하나예요 — 종료하면 끝나고, 종료된 방은 상세 보기에서 리포트를 봐요"
         action={
-          // TODO: 새 방 만들기 모달은 홈(W-01 v6)에 있다. 모달 공용화 후 여기서 바로 연다.
           <Link
-            href="/home"
+            href="/host/rooms/new"
             className="flex h-[52px] shrink-0 items-center rounded-2xl bg-mint px-6 text-heading-sm text-white transition-colors hover:bg-mint-dark"
           >
             +&nbsp;&nbsp;새 방 만들기
