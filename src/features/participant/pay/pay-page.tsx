@@ -71,6 +71,7 @@ export function PayPage({
             nickname={values.nickname}
             avatar={values.avatar}
             onNicknameChange={(nickname) => onChange({ ...values, nickname })}
+            onAvatarChange={(avatar) => onChange({ ...values, avatar })}
             disabled={paying}
           />
         </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/common/brand-logo";
-import { getRoute, SIDEBAR_NAV } from "@/config/routes";
+import { getRoute, matchRoute, SIDEBAR_NAV } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
 export type SidebarUser = {
@@ -28,10 +28,12 @@ type Props = {
 /** 회원 레이아웃 좌측 내비게이션(디자인 웹 v6 사이드바 — 홈/내가 만든 방/참여한 방/문제 세트/마이페이지). routes.ts의 SIDEBAR_NAV를 읽어 그린다. */
 export function RoleSidebar({ nav, user }: Props) {
   const pathname = usePathname();
-  const activePath = findActivePath(
-    pathname,
-    SIDEBAR_NAV[nav].map((item) => item.path),
-  );
+  // 내비에 없는 화면(유료 방 결제 등)은 routes.ts의 nav 지정을 따른다
+  const activePath =
+    findActivePath(
+      pathname,
+      SIDEBAR_NAV[nav].map((item) => item.path),
+    ) ?? matchRoute(pathname)?.nav;
 
   return (
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col gap-1 border-r bg-sidebar px-3.5 pt-6 pb-5">
