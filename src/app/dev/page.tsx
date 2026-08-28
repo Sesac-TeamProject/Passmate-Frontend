@@ -4,13 +4,14 @@ import { AREA_LABEL, ROUTES, type Area } from "@/config/routes";
 
 const AREA_ORDER: Area[] = ["public", "participant", "host", "member", "admin"];
 
-export default function Home() {
+/** 개발용 사이트맵. 실제 루트(/)는 L-01 랜딩 */
+export default function DevSitemapPage() {
   return (
     <>
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 p-8">
         <div>
-          <h1 className="text-heading-lg text-ink">PassMate 화면 목록</h1>
+          <h1 className="text-heading-lg text-ink">PassMate 화면 목록 (개발용)</h1>
           <p className="text-body-md text-muted-foreground">
             깡통 단계 사이트맵. 각 화면은 <code>src/config/routes.ts</code>에서 관리한다.
           </p>

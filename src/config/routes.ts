@@ -29,6 +29,14 @@ export const AREA_LABEL: Record<Area, string> = {
 export const ROUTES: readonly RouteMeta[] = [
   // 공통
   {
+    path: "/",
+    sample: "/",
+    title: "랜딩",
+    description:
+      "서비스 소개 (L-01) — 무료로 방 열기·PIN 입장, 사용 방법 3단계, 기능 3종, 후기, FAQ",
+    area: "public",
+  },
+  {
     path: "/login",
     sample: "/login",
     title: "로그인",

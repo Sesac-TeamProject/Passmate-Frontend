@@ -54,7 +54,7 @@ async function expectRedirect(from, to) {
 
 try {
   await waitForServer();
-  await expectOk("/");
+  await expectOk("/dev");
   for (const r of ROUTES) await expectOk(r.sample);
   for (const r of REDIRECTS) await expectRedirect(r.from, r.to);
 } finally {

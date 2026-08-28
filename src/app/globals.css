@@ -111,11 +111,15 @@
   --color-avatar-peach-foreground: var(--avatar-peach-foreground);
 }
 
-/* --- 타이포그래피 v5 (design/student-teacher.pen "Typography — 10 styles") ---
+/* --- 타이포그래피 v5 (design/design.pen "Typography — 10 styles") + 랜딩 전용 display-xl ---
    글꼴 Pretendard Variable · 자간 공통 -2% · 굵기는 700/500/400 세 단계만.
    한 클래스(text-heading-md 등)가 크기·굵기·행간·자간을 함께 적용한다. 이 10종 밖의 크기·굵기는 쓰지 않는다. */
 @theme {
   /* display — 700 · 행간 1.2 */
+  --text-display-xl: 4rem; /* 64px — 랜딩(L-01) 히어로 제목 전용 */
+  --text-display-xl--line-height: 1.12;
+  --text-display-xl--letter-spacing: -0.02em;
+  --text-display-xl--font-weight: 700;
   --text-display-lg: 2.25rem; /* 36px */
   --text-display-lg--line-height: 1.2;
   --text-display-lg--letter-spacing: -0.02em;
