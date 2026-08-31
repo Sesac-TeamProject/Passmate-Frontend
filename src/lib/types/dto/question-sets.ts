@@ -33,6 +33,8 @@ export type QuestionDraft = {
   explanation?: string | null;
   points: number;
   timeLimitSec: number;
+  /** @draft 계약에 없다 — 제한 시간이 끝나면 자동으로 다음 문항으로 넘길지. DESIGN_GAPS D-15 */
+  autoAdvance?: boolean | null;
   origin: "AI" | "MANUAL" | "MATERIAL";
 };
 /** @draft GET /question-sets/{id} · generate 응답 */

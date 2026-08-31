@@ -37,6 +37,8 @@ function toDraftQuestion(q: SnapshotQuestion): QuestionDraft {
     explanation: null,
     points: q.points ?? DEFAULT_QUESTION_POINTS,
     timeLimitSec: q.timeLimitSec ?? DEFAULT_QUESTION_TIME_LIMIT_SEC,
+    // 시안 W-02b는 서술형만 자동 넘김이 꺼져 있다 — 표본이 하나뿐이라 추정이다
+    autoAdvance: q.type !== "ESSAY",
     origin: "AI",
   };
 }

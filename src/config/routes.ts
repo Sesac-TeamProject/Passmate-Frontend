@@ -217,6 +217,13 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "host",
   },
   {
+    path: "/host/rooms/[code]/timing",
+    sample: "/host/rooms/482913/timing",
+    title: "문항별 시간 설정",
+    description: "방에 붙은 세트의 문항별 제한 시간·자동 넘김 일괄/개별 조정",
+    area: "host",
+  },
+  {
     path: "/host/rooms/[code]/lobby",
     sample: "/host/rooms/482913/lobby",
     title: "대기실",

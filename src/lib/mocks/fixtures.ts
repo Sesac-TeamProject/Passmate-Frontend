@@ -41,6 +41,7 @@ export const DEMO_ROOM: RoomInfoResponse = {
   topic: "백엔드",
   status: "WAITING",
   questionCount: 8,
+  questionSetId: 1,
   estimatedMinutes: 40,
   scheduledAt: "2026-08-28T20:00:00+09:00",
   participantCount: 24,
