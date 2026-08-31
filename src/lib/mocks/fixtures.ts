@@ -27,7 +27,7 @@ export const ME_PROFILE: UserProfileResponse = {
 };
 
 /**
- * 시연 방 — PIN "482913". features/host/my-rooms/mock.ts MY_ROOMS[0]·features/home/mock.ts
+ * 시연 방 — PIN "482913". features/host/my-rooms/mock.ts MY_ROOMS[0]·구 features/home/mock.ts(삭제됨)의
  * POPULAR_ROOMS[0]·features/participant/pay/mock.ts PAID_ROOM이 같은 방을 가리킨다.
  * 호스트 등급(Lv.3)·평점(4.5)은 PAID_ROOM(features/participant/pay/mock.ts) 기준으로 통일한다
  * (과제 지시) — PAID_ROOM.host.level이 3이므로 여기도 3.
@@ -109,7 +109,7 @@ export const HOSTED_ROOMS: HostedRoomDto[] = [
 ];
 
 /**
- * features/home/mock.ts POPULAR_ROOMS → hostName=host, hostLevel=level,
+ * 구 features/home/mock.ts(삭제됨)의 POPULAR_ROOMS 값 — hostName=host, hostLevel=level,
  * participantCount=participants, isPaid=type==="paid". 첫 항목(482913)은 DEMO_ROOM과 같은 방.
  */
 export const PUBLIC_ROOMS: PublicRoomDto[] = [
