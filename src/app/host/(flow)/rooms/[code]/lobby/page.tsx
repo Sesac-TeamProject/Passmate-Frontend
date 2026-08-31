@@ -6,6 +6,7 @@ import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
 import { LobbyPage } from "@/features/host/live/lobby-page";
+import { formatDotDateWithDay } from "@/lib/format";
 import { useRoomByPin } from "@/lib/queries/use-rooms";
 import { useStartSession } from "@/lib/queries/use-session-control";
 import { useSessionStore } from "@/lib/stores/session-store";
@@ -58,7 +59,15 @@ export default function Page() {
     <LobbyPage
       pin={room.data.pin}
       title={room.data.title}
+      dateLabel={room.data.scheduledAt ? formatDotDateWithDay(room.data.scheduledAt) : null}
+      hostName={room.data.host?.nickname ?? null}
       students={toStudents(participants)}
+      questionCount={room.data.questionCount ?? null}
+      // TODO(API): 문항당 제한 시간은 RoomInfoResponse에 없다 — DESIGN_GAPS D-6(호스트용 방 상세)에 묶여 있어
+      // 계약이 오기 전까지 메타 통계에서 "—"로 비워 둔다.
+      timeLimitSec={null}
+      isPaid={room.data.isPaid ?? false}
+      maxParticipants={room.data.maxParticipants ?? null}
       onStart={handleStart}
       starting={start.isPending}
       errorMessage={errorMessage}
