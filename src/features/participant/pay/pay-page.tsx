@@ -1,10 +1,10 @@
 import type { AvatarKey } from "@/components/common/student-avatar";
 import type { PayMethod } from "@/lib/portone";
 import { CoinChargeCard } from "./coin-charge-card";
-import type { PaidRoom } from "./mock";
 import { ParticipantInfoCard } from "./participant-info-card";
 import { PaymentCompleteCard, type PaymentReceipt } from "./payment-complete-card";
 import { RoomInfoCard } from "./room-info-card";
+import type { PaidRoom } from "./types";
 
 export type PayFormValues = {
   nickname: string;

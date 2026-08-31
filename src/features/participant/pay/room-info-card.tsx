@@ -3,7 +3,7 @@ import { ReputationBadge } from "@/components/common/reputation-badge";
 import { StatusChip } from "@/components/common/status-chip";
 import { StudentAvatar } from "@/components/common/student-avatar";
 import { formatWon } from "./format";
-import type { PaidRoom } from "./mock";
+import type { PaidRoom } from "./types";
 
 type Props = { room: PaidRoom };
 
