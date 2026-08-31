@@ -37,7 +37,14 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   setAccessToken: (accessToken) => set({ accessToken }),
 
   setProfile: (patch) =>
-    set((s) => ({ profile: s.profile ? { ...s.profile, ...patch } : s.profile })),
+    set((s) => {
+      if (!s.profile) return { profile: s.profile };
+      // patch에 값이 있는 키만 덮어쓴다 — undefined를 명시적으로 넘겨도 기존 값을 지우지 않는다.
+      const defined = Object.fromEntries(
+        Object.entries(patch).filter(([, value]) => value !== undefined),
+      ) as Partial<MeResponse>;
+      return { profile: { ...s.profile, ...defined } };
+    }),
 
   clearSession: () => set({ status: "unauthenticated", accessToken: null, profile: null }),
 }));

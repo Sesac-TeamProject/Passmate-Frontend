@@ -21,6 +21,8 @@ export const qk = {
   snapshot: (roomId: number) => ["rooms", roomId, "session"] as const,
   submissions: (roomId: number) => ["rooms", roomId, "session", "submissions"] as const,
   hints: (roomId: number) => ["rooms", roomId, "session", "hints"] as const,
+  /** status 무관 전체 무효화용 prefix — generate·clone·confirm처럼 모든 status 캐시를 갱신해야 할 때 쓴다 */
+  questionSetsRoot: ["question-sets"] as const,
   questionSets: (status?: QuestionSetStatusFilter) => ["question-sets", status ?? "ALL"] as const,
   questionSet: (setId: number) => ["question-sets", setId] as const,
   myResult: (roomId: number) => ["rooms", roomId, "results", "me"] as const,

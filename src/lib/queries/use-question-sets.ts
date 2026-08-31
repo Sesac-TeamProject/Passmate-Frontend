@@ -16,9 +16,6 @@ import type {
 } from "@/lib/types/dto";
 import { qk } from "./keys";
 
-/** 상태 무관하게 문항 세트 목록 캐시 전체(모든 status 변형)를 무효화한다 */
-const QUESTION_SETS_LIST_KEY = ["question-sets"] as const;
-
 /** GET /question-sets — status는 "CONFIRMED"만 확정으로 해석 */
 export function useQuestionSets(status?: QuestionSetStatusFilter) {
   return useQuery({
@@ -43,7 +40,7 @@ export function useGenerateQuestionSet() {
   return useMutation({
     mutationFn: (body: GenerateQuestionSetRequest) => generateQuestionSet(body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUESTION_SETS_LIST_KEY });
+      queryClient.invalidateQueries({ queryKey: qk.questionSetsRoot });
       queryClient.invalidateQueries({ queryKey: qk.aiUsage });
     },
   });
@@ -56,10 +53,15 @@ export function useUpdateQuestionSet(setId: number) {
   });
 }
 
-/** POST /question-sets/{id}/confirm */
+/** POST /question-sets/{id}/confirm. status가 바뀌므로 성공 시 문항 세트 목록을 갱신한다 */
 export function useConfirmQuestionSet() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (setId: number) => confirmQuestionSet(setId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.questionSetsRoot });
+    },
   });
 }
 
@@ -70,7 +72,7 @@ export function useCloneQuestionSet() {
   return useMutation({
     mutationFn: (setId: number) => cloneQuestionSet(setId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUESTION_SETS_LIST_KEY });
+      queryClient.invalidateQueries({ queryKey: qk.questionSetsRoot });
     },
   });
 }

@@ -13,7 +13,12 @@ import {
   updateProfile,
 } from "@/lib/api/me";
 import { useAuthStore } from "@/lib/stores/auth-store";
-import type { NotificationSettingsDto, ReportRequest, UpdateProfileRequest } from "@/lib/types/dto";
+import type {
+  MeResponse,
+  NotificationSettingsDto,
+  ReportRequest,
+  UpdateProfileRequest,
+} from "@/lib/types/dto";
 import { qk } from "./keys";
 
 const ME_STALE_TIME_MS = 60_000;
@@ -88,10 +93,11 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: (body: UpdateProfileRequest) => updateProfile(body),
     onSuccess: (_data, variables) => {
-      useAuthStore.getState().setProfile({
-        nickname: variables.nickname ?? undefined,
-        avatarId: variables.avatarId,
-      });
+      // 호출자가 실제로 보낸 필드만 합친다 — 생략한 필드까지 undefined로 덮어써 지우지 않도록.
+      const patch: Partial<MeResponse> = {};
+      if (variables.nickname !== undefined) patch.nickname = variables.nickname ?? undefined;
+      if (variables.avatarId !== undefined) patch.avatarId = variables.avatarId;
+      useAuthStore.getState().setProfile(patch);
       queryClient.invalidateQueries({ queryKey: qk.me });
     },
   });

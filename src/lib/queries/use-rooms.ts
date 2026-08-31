@@ -65,13 +65,15 @@ export function useJoinRoom(roomId: number | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: JoinRoomRequest) => {
+    mutationFn: async (body: JoinRoomRequest) => {
       if (roomId === null) throw new AppError("NotFound");
-      return joinRoom(roomId, body);
+      const res = await joinRoom(roomId, body);
+      // roomId는 여기서 이미 number로 좁혀져 있다 — onSuccess에 그대로 실어 보내 재검사를 없앤다.
+      return { res, roomId };
     },
-    onSuccess: (res) => {
+    onSuccess: ({ res, roomId }) => {
       if (res.participantToken) writeGuestToken(res.participantToken);
-      if (roomId !== null) queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
+      queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
     },
   });
 }
@@ -81,13 +83,15 @@ export function useLeaveRoom(roomId: number | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (roomId === null) throw new AppError("NotFound");
-      return leaveRoom(roomId);
+      await leaveRoom(roomId);
+      // roomId는 여기서 이미 number로 좁혀져 있다 — onSuccess에 그대로 실어 보내 재검사를 없앤다.
+      return roomId;
     },
-    onSuccess: () => {
+    onSuccess: (roomId) => {
       clearGuestToken();
-      if (roomId !== null) queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
+      queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
     },
   });
 }
