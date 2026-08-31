@@ -1,9 +1,9 @@
-import { formatWon } from "@/features/me/mock";
 import {
   SETTLEMENT_STATUS_LABEL,
   type SettlementRow,
   type SettlementStatus,
-} from "@/features/me/settlement/mock";
+} from "@/features/me/settlement/types";
+import { formatWon } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const GRID_CLASS =
@@ -12,6 +12,7 @@ const GRID_CLASS =
 const STATUS_CLASS: Record<SettlementStatus, string> = {
   scheduled: "bg-choice-c text-choice-c-foreground",
   paid: "bg-choice-d text-choice-d-foreground",
+  held: "bg-choice-a text-choice-a-foreground",
 };
 
 const COLUMNS = [

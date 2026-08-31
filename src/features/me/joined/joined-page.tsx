@@ -1,9 +1,9 @@
 import { DoorOpen, Target, Trophy } from "lucide-react";
-import type { LearningRecord } from "@/features/me/mock";
+import type { LearningRecord } from "@/features/me/types";
 import { ActiveSessionCard } from "./active-session-card";
-import type { ActiveSession } from "./mock";
 import { RecordStatCard } from "./record-stat-card";
 import { SessionRow } from "./session-row";
+import type { ActiveSession } from "./types";
 
 type Props = {
   learning: LearningRecord;

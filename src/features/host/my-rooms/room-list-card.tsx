@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { StatusChip } from "@/components/common/status-chip";
-import { formatPin } from "@/features/host/mock";
+import { formatPin } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { MyRoom, MyRoomStatus } from "./mock";
+import type { MyRoom, MyRoomStatus } from "./types";
 
 type Props = {
   status: MyRoomStatus;
@@ -23,7 +23,8 @@ function subtitle(room: MyRoom): string {
   if (room.status === "live") {
     return [
       `학생 ${room.students}명 참여 중`,
-      `${room.questionCount}문항`,
+      // 계약에 방별 문항 수가 없다 — 값이 있을 때만 보여준다
+      room.questionCount !== undefined && `${room.questionCount}문항`,
       room.pin && `PIN ${formatPin(room.pin)}`,
       room.startsLabel,
     ]
@@ -39,8 +40,7 @@ function action(room: MyRoom): { href: string; label: string } {
   if (room.status === "live") {
     return { href: `/host/rooms/${room.code}/live`, label: "진행 화면 열기 ›" };
   }
-  // TODO(API): 종료된 방의 리포트 id는 서버가 내려준다. 지금은 목의 reportId(샘플 "1")
-  return { href: `/host/sessions/${room.reportId ?? "1"}/review`, label: "상세 보기 ›" };
+  return { href: `/host/sessions/${room.reportId || "1"}/review`, label: "상세 보기 ›" };
 }
 
 /** W-09 방 목록 카드 — 상태 칩 헤더 + h64 행(제목·부제 / 우측 220px 텍스트 링크) */
@@ -54,11 +54,10 @@ export function RoomListCard({ status, summary, rooms }: Props) {
       <ul>
         {rooms.map((room) => {
           const { href, label } = action(room);
+          // 종료된 방은 pin이 없어 code가 비어 있을 수 있다 — reportId(항상 고유)를 key로 우선한다
+          const key = room.reportId || room.code || room.title;
           return (
-            <li
-              key={room.code}
-              className="flex h-16 items-center justify-between gap-4 border-t px-5"
-            >
+            <li key={key} className="flex h-16 items-center justify-between gap-4 border-t px-5">
               <div className="flex min-w-0 flex-col gap-0.5">
                 <span className="truncate text-label-lg text-ink">{room.title}</span>
                 <span className="truncate text-label-md text-muted-foreground">

@@ -1,54 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { ConfirmDialog } from "@/components/common/confirm-dialog";
-import { PAYMENT_METHODS, type PaymentMethodItem } from "@/features/me/payment-methods/mock";
+import { ScreenError } from "@/components/common/screen-error";
+import { ScreenLoading } from "@/components/common/screen-loading";
+import { toMeErrorMessage, toPaymentMethodItems, toWireMethod } from "@/features/me/adapt";
 import { PaymentMethodsPage } from "@/features/me/payment-methods/payment-methods-page";
+import type { PayMethod } from "@/lib/portone";
+import { useCoinBalance, useUpdatePaymentMethod } from "@/lib/queries/use-payments";
 
-/** C-02-8 컨테이너. 목록·기본 변경·삭제 다이얼로그를 소유한다. */
+// TODO(API): DESIGN_GAPS C-4 — 계약은 기본 결제 수단 1개 선택만 지원한다(카드 목록·삭제·빌링키 없음)
+/** C-02-8 컨테이너. 기본 결제 수단 선택을 소유한다. */
 export default function Page() {
-  // TODO(API): ['me','payment-methods'] 쿼리 + 기본 변경/삭제 뮤테이션으로 교체 — 지금은 목 목록을 로컬 상태로
-  const [items, setItems] = useState<PaymentMethodItem[]>(PAYMENT_METHODS);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const balance = useCoinBalance();
+  const update = useUpdatePaymentMethod();
 
   const handleSetDefault = (id: string) => {
-    setItems((prev) => prev.map((item) => ({ ...item, isDefault: item.id === id })));
+    if (update.isPending) return;
+    update.mutate(toWireMethod(id as PayMethod));
   };
 
-  const handleConfirmDelete = () => {
-    if (!deleteTargetId) return;
-    setItems((prev) => {
-      const rest = prev.filter((item) => item.id !== deleteTargetId);
-      // 기본 수단을 지웠으면 남은 첫 수단을 기본으로
-      if (rest.length > 0 && !rest.some((item) => item.isDefault)) {
-        return rest.map((item, index) => ({ ...item, isDefault: index === 0 }));
-      }
-      return rest;
-    });
-    setDeleteTargetId(null);
-  };
-
-  const handleAdd = () => {
-    // TODO(API): 포트원 빌링키 발급(requestIssueBillingKey) 또는 간편결제 연결 — 계약 확정 후
-  };
+  if (balance.isPending) return <ScreenLoading />;
+  if (balance.isError)
+    return <ScreenError message={balance.error.message} onRetry={() => balance.refetch()} />;
 
   return (
-    <>
-      <PaymentMethodsPage
-        items={items}
-        onSetDefault={handleSetDefault}
-        onDelete={setDeleteTargetId}
-        onAdd={handleAdd}
-      />
-      <ConfirmDialog
-        open={deleteTargetId !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTargetId(null);
-        }}
-        title="결제 수단을 삭제할까요?"
-        confirmLabel="삭제"
-        onConfirm={handleConfirmDelete}
-      />
-    </>
+    <PaymentMethodsPage
+      items={toPaymentMethodItems(balance.data.defaultMethod)}
+      onSetDefault={handleSetDefault}
+      pending={update.isPending}
+      errorMessage={update.isError ? toMeErrorMessage(update.error) : null}
+    />
   );
 }

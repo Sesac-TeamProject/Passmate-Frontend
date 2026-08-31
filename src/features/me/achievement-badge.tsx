@@ -1,4 +1,4 @@
-import type { Achievement } from "@/features/me/mock";
+import type { Achievement } from "@/features/me/types";
 import { cn } from "@/lib/utils";
 
 type Props = { badge: Achievement };

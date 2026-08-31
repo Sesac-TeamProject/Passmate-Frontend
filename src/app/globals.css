@@ -109,11 +109,47 @@
   /* 이니셜 아바타 peach (사이드바 프로필·순위 원) */
   --color-avatar-peach: var(--avatar-peach);
   --color-avatar-peach-foreground: var(--avatar-peach-foreground);
+
+  /* --- 프로젝터 모드 전용 (design.pen "프로젝터 모드 — 디자인 규칙" · W-04·05·06·12) ---
+     교실 뒤에서 보는 화면이라 앱·웹과 규칙이 다르다: 흰 바탕 + 헤어라인, 카드·그림자 없음. */
+  /* 레일 배경 · W-04 메타 통계 패널 — --muted(#f3f4f6)·--background(#f6f6f7)보다 한 단계 옅다 */
+  --color-surface-subtle: var(--surface-subtle);
+  /* 행 구분선 — 섹션 구분선(--border #e5e7eb)보다 옅은 두 번째 선 두께 */
+  --color-line-soft: var(--line-soft);
+  /* 타이머 바 트랙 (--yellow가 채움) */
+  --color-yellow-soft: var(--yellow-soft);
+  /* 오답 강조 — "많이 고른 오답" 행. 값은 choice-a와 같고 이름만 의미에 맞춘 별칭 */
+  --color-negative-bg: var(--negative-bg);
+  --color-negative-soft: var(--negative-soft);
+  --color-negative-soft-foreground: var(--negative-soft-foreground);
+  /* 포디움 스탠드 배경 틴트 — 기존 --podium-* 솔리드는 아바타 링 색으로 쓴다 */
+  --color-podium-gold-bg: var(--podium-gold-bg);
+  --color-podium-silver-bg: var(--podium-silver-bg);
+  --color-podium-bronze-bg: var(--podium-bronze-bg);
 }
 
 /* --- 타이포그래피 v5 (design/design.pen "Typography — 10 styles") + 랜딩 전용 display-xl·2xl ---
    글꼴 Pretendard Variable · 자간 공통 -2% · 굵기는 700/500/400 세 단계만.
-   한 클래스(text-heading-md 등)가 크기·굵기·행간·자간을 함께 적용한다. 이 10종 밖의 크기·굵기는 쓰지 않는다. */
+   한 클래스(text-heading-md 등)가 크기·굵기·행간·자간을 함께 적용한다. 이 10종 밖의 크기·굵기는 쓰지 않는다.
+
+   프로젝터 4화면(W-04·05·06·12)은 시안이 이 10종에 없는 크기를 쓴다(88·40·22·18·17·15·13px).
+   2026-08-31 사용자 결정: **전용 스케일을 새로 만들지 않고 기존 10종에 스냅한다.**
+   크기만이 아니라 (크기, 굵기) 쌍이 가장 가까운 토큰을 고른다 — 프로젝터는 멀리서 보는 화면이라
+   굵기 차이가 크기 차이만큼 눈에 띈다.
+     시안 88px/700 PIN        → text-display-2xl (64/700)  ※ 24px 작아지는 걸 감수한 결정
+     시안 40px/700 문항·정답률  → text-display-lg  (36/700)
+     시안 28px/700 메타 통계    → text-display-sm  (28/700)  ※ 일치
+     시안 24px/700 정답 보기    → text-heading-lg  (24/700)  ※ 일치
+     시안 24px/500 기본 보기    → text-heading-lg  (24/700)  ※ 굵기만 다름
+     시안 22px/700 포디움 이름  → text-heading-lg  (24/700)
+     시안 20px/700 문항레일 현재 → text-heading-md (20/700)  ※ 일치
+     시안 18px/700 세션명·레일  → text-heading-md  (20/700)  ※ 굵기 일치를 크기보다 우선
+     시안 17px/500 안내 단계    → text-heading-sm  (16/500)  ※ 굵기 일치
+     시안 16px/400 안내문       → text-body-lg     (16/400)  ※ 일치
+     시안 15px/400 부제·응답수  → text-body-md     (14/400)
+     시안 13px/700 자간 라벨    → text-label-md    (12/400) + font-bold + tracking-[0.16em~0.2em]
+   자간을 넓힌 라벨("방 코드"·"대기중"·"세션 종료")은 글자 사이 공백 대신 tracking 유틸리티로 낸다
+   (시안은 공백까지 넣었지만 스크린리더가 낱글자로 읽는다). */
 @theme {
   /* display — 700 · 행간 1.2 */
   --text-display-2xl: 4rem; /* 64px — 랜딩(L-01) 히어로 제목 전용 */
@@ -214,6 +250,17 @@
   --orange-soft: #fdefde;
   --avatar-peach: #f8c6a4;
   --avatar-peach-foreground: #7a3a11;
+
+  /* 프로젝터 모드 전용 토큰 */
+  --surface-subtle: #fafafb;
+  --line-soft: #edeef0;
+  --yellow-soft: #fff0d6;
+  --negative-bg: #fdeeef;
+  --negative-soft: var(--choice-a);
+  --negative-soft-foreground: var(--choice-a-foreground);
+  --podium-gold-bg: #fbf0d9;
+  --podium-silver-bg: #eff1f5;
+  --podium-bronze-bg: #f6eae0;
 
   /* shadcn 변수 → v5 매핑 */
   --background: #f6f6f7; /* bg/page-web */

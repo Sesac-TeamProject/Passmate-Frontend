@@ -11,6 +11,7 @@ type Props = {
   onConfirmedChange: (confirmed: boolean) => void;
   pending: boolean;
   onWithdraw: () => void;
+  errorMessage?: string | null;
 };
 
 const CONFIRM_ID = "withdraw-confirm";
@@ -22,6 +23,7 @@ export function WithdrawPage({
   onConfirmedChange,
   pending,
   onWithdraw,
+  errorMessage,
 }: Props) {
   const items = [
     "참여 기록 · 뱃지 · 명성 등급",
@@ -31,6 +33,14 @@ export function WithdrawPage({
 
   return (
     <MeFormPage title="회원 탈퇴">
+      {errorMessage && (
+        <p
+          role="alert"
+          className="rounded-xl bg-destructive-soft px-3.5 py-3 text-label-md text-destructive"
+        >
+          {errorMessage}
+        </p>
+      )}
       <div className="flex flex-col gap-2.5 rounded-2xl bg-muted p-5">
         <p className="text-label-lg text-foreground">탈퇴하면 아래 내용이 모두 삭제돼요</p>
         <ul className="flex flex-col gap-2.5">

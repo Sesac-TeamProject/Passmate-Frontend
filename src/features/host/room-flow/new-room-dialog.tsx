@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useId, useState, type ChangeEvent, type FormEvent } from "react";
 import { X } from "lucide-react";
 import { FIELD_INPUT_CLASS, FieldInput } from "@/components/common/form-field";
@@ -13,8 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { QUESTION_SETS, ROOM_SETUP } from "@/features/host/mock";
+import type { CreateRoomRequest } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
+import {
+  DEFAULT_ENTRY_FEE,
+  HOST_SHARE,
+  levelTitle,
+  PAID_ROOM_MIN_LEVEL,
+  type QuestionSetOption,
+} from "./adapt";
 import { ReputationRow } from "./reputation-row";
 import { RoomTypeTabs, type RoomType } from "./room-type-tabs";
 import { SettlementPreview } from "./settlement-preview";
@@ -22,15 +28,14 @@ import { SettlementPreview } from "./settlement-preview";
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** 확정(CONFIRMED)된 문제 세트만 */
+  sets: QuestionSetOption[];
+  /** 명성 레벨. 유료 탭 잠금·명성 행에 쓴다 */
+  level: number;
+  onSubmit: (body: CreateRoomRequest) => void;
+  pending?: boolean;
+  errorMessage?: string | null;
 };
-
-/** 방 생성 후 이동할 대기실 — 목 단계 데모 방 (host/mock LIVE_ROOM.code) */
-const DEMO_LOBBY_HREF = "/host/rooms/DEMO01/lobby";
-
-const SET_ITEMS = QUESTION_SETS.map((s) => ({
-  value: s.id,
-  label: `${s.title} (${s.questionCount}문항)`,
-}));
 
 const LABEL = "text-label-md text-muted-foreground";
 
@@ -38,18 +43,31 @@ const LABEL = "text-label-md text-muted-foreground";
  * W-01 v6 새 방 만들기 모달 (FAB · 빈 상태 CTA) — 방 이름 · 문제 세트 · 방 유형.
  * 유료를 고르면 모달 안에서 참가비 · 정산 미리보기 · 명성 행이 펼쳐진다. 확정 시 바로 PIN 발급 → 대기실.
  */
-export function NewRoomDialog({ open, onOpenChange }: Props) {
-  const router = useRouter();
+export function NewRoomDialog({
+  open,
+  onOpenChange,
+  sets,
+  level,
+  onSubmit,
+  pending,
+  errorMessage,
+}: Props) {
   const nameId = useId();
-  const setId = useId();
+  const setFieldId = useId();
   const feeId = useId();
 
   const [name, setName] = useState("");
-  const [questionSetId, setQuestionSetId] = useState(QUESTION_SETS[0]?.id ?? "");
+  const [questionSetId, setQuestionSetId] = useState("");
   const [roomType, setRoomType] = useState<RoomType>("free");
-  const [fee, setFee] = useState(ROOM_SETUP.defaultFee);
+  const [fee, setFee] = useState(DEFAULT_ENTRY_FEE);
 
-  const paidLocked = ROOM_SETUP.reputation.level < ROOM_SETUP.paidMinLevel;
+  // 모달은 목록보다 먼저 마운트되므로 세트가 도착하면 첫 세트를 기본값으로 채운다.
+  // 렌더 중 조정(react.dev "Adjusting state when a prop changes") — effect 안에서 setState 하지 않는다.
+  const firstSetId = sets[0]?.id ?? "";
+  if (questionSetId === "" && firstSetId !== "") setQuestionSetId(firstSetId);
+
+  const setItems = sets.map((s) => ({ value: s.id, label: `${s.title} (${s.questionCount}문항)` }));
+  const paidLocked = level < PAID_ROOM_MIN_LEVEL;
   const isPaid = roomType === "paid";
 
   const handleFeeChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -59,9 +77,14 @@ export function NewRoomDialog({ open, onOpenChange }: Props) {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO(API): 방 생성(이름·세트·유형·참가비) → 발급된 PIN/code로 대기실 이동
-    onOpenChange(false);
-    router.push(DEMO_LOBBY_HREF);
+    if (pending) return;
+    onSubmit({
+      title: name.trim(),
+      questionSetId: questionSetId ? Number(questionSetId) : null,
+      isPaid,
+      entryFee: isPaid ? fee : null,
+      isListed: true,
+    });
   };
 
   return (
@@ -89,6 +112,7 @@ export function NewRoomDialog({ open, onOpenChange }: Props) {
               id={nameId}
               type="text"
               name="name"
+              required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="예: 8월 4주차 Spring 스터디"
@@ -96,18 +120,18 @@ export function NewRoomDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label htmlFor={setId} className={LABEL}>
+            <label htmlFor={setFieldId} className={LABEL}>
               문제 세트
             </label>
             <Select
-              items={SET_ITEMS}
+              items={setItems}
               value={questionSetId}
               onValueChange={(value) => {
                 if (value) setQuestionSetId(value);
               }}
             >
               <SelectTrigger
-                id={setId}
+                id={setFieldId}
                 className={cn(
                   FIELD_INPUT_CLASS,
                   "justify-between border-0 text-label-lg data-[size=default]:h-12",
@@ -116,7 +140,7 @@ export function NewRoomDialog({ open, onOpenChange }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {SET_ITEMS.map((item) => (
+                {setItems.map((item) => (
                   <SelectItem key={item.value} value={item.value} className="text-label-lg">
                     {item.label}
                   </SelectItem>
@@ -132,7 +156,7 @@ export function NewRoomDialog({ open, onOpenChange }: Props) {
               value={roomType}
               onChange={setRoomType}
               paidLocked={paidLocked}
-              paidLabel={`유료 (Lv.${ROOM_SETUP.paidMinLevel}부터)`}
+              paidLabel={`유료 (Lv.${PAID_ROOM_MIN_LEVEL}부터)`}
             />
           </div>
 
@@ -152,13 +176,19 @@ export function NewRoomDialog({ open, onOpenChange }: Props) {
                   className="text-label-lg"
                 />
               </div>
-              <SettlementPreview fee={fee} hostShare={ROOM_SETUP.hostShare} />
+              <SettlementPreview fee={fee} hostShare={HOST_SHARE} />
               <ReputationRow
-                level={ROOM_SETUP.reputation.level}
-                title={ROOM_SETUP.reputation.title}
-                minLevel={ROOM_SETUP.paidMinLevel}
+                level={level}
+                title={levelTitle(level)}
+                minLevel={PAID_ROOM_MIN_LEVEL}
               />
             </>
+          )}
+
+          {errorMessage && (
+            <p role="alert" className="text-label-lg text-negative">
+              {errorMessage}
+            </p>
           )}
 
           <p className="text-label-md text-ink-disabled">
@@ -174,8 +204,8 @@ export function NewRoomDialog({ open, onOpenChange }: Props) {
             >
               취소
             </Button>
-            <Button type="submit" size="xl">
-              방 만들기 → PIN 발급
+            <Button type="submit" size="xl" disabled={pending}>
+              {pending ? "방 만드는 중…" : "방 만들기 → PIN 발급"}
             </Button>
           </div>
         </form>

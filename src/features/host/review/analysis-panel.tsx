@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { EssayAnswer, ReportQuestion } from "@/features/host/mock";
+import type { EssayAnswer, ReportQuestion } from "@/features/host/types";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import { cn } from "@/lib/utils";
 

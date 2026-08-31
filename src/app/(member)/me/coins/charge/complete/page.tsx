@@ -2,10 +2,12 @@
 
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { ChargeCompletePage } from "@/features/me/coins/charge-complete-page";
-import { COIN_BALANCE, DEFAULT_CHARGE_AMOUNT } from "@/features/me/coins/mock";
+import { DEFAULT_CHARGE_AMOUNT } from "@/features/me/coins/types";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
+import { useCoinBalance } from "@/lib/queries/use-payments";
 
 function isPayMethod(value: string | null): value is PayMethod {
   return value !== null && value in PAY_METHOD_LABEL;
@@ -15,6 +17,7 @@ function isPayMethod(value: string | null): value is PayMethod {
 function ChargeCompleteContainer() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const balance = useCoinBalance();
 
   const amountParam = Number(searchParams.get("amount"));
   const amount =
@@ -22,14 +25,15 @@ function ChargeCompleteContainer() {
   const methodParam = searchParams.get("method");
   const payMethod: PayMethod = isPayMethod(methodParam) ? methodParam : "kakaopay";
 
-  // TODO(API): paymentId 로 ['me','coins','charge',paymentId] 조회 → 충전량·잔액·수단을 서버 값으로 교체
-  const balanceAfter = COIN_BALANCE + amount;
+  if (balance.isPending) return <ScreenLoading />;
+  if (balance.isError)
+    return <ScreenError message={balance.error.message} onRetry={() => balance.refetch()} />;
 
   return (
     <ChargeCompletePage
       amount={amount}
       payMethod={payMethod}
-      balanceAfter={balanceAfter}
+      balanceAfter={balance.data.balance ?? 0}
       onConfirm={() => router.push("/me")}
     />
   );

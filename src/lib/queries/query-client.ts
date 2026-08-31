@@ -15,6 +15,7 @@ const MAX_RETRY = 2;
 const NON_RETRYABLE: readonly AppErrorKind[] = [
   "Unauthorized",
   "PermissionDenied",
+  "PaymentRequired",
   "ValidationFailed",
   "NotFound",
   "Conflict",

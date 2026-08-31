@@ -1,18 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import type { QuestionSet, RoomSetup } from "@/features/host/mock";
+import type { CreateRoomRequest } from "@/lib/types/dto";
+import {
+  DEFAULT_ENTRY_FEE,
+  HOST_SHARE,
+  levelTitle,
+  PAID_ROOM_MIN_LEVEL,
+  type QuestionSetOption,
+} from "./adapt";
 import { ReputationRow } from "./reputation-row";
 import { RoomTypeTabs, type RoomType } from "./room-type-tabs";
 import { SettlementPreview } from "./settlement-preview";
 
 type Props = {
-  sets: QuestionSet[];
-  setup: RoomSetup;
-  /** 세트 확정 후 이동할 다음 단계 경로 */
-  nextHref: string;
+  /** 확정(CONFIRMED)된 문제 세트만 */
+  sets: QuestionSetOption[];
+  /** 명성 레벨. 유료 탭 잠금·명성 행에 쓴다 */
+  level: number;
+  onSubmit: (body: CreateRoomRequest) => void;
+  pending?: boolean;
+  errorMessage?: string | null;
   editorHref: string;
 };
 
@@ -20,14 +29,13 @@ const FIELD = "h-[54px] w-[440px] rounded-2xl bg-muted px-[18px]";
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /** W-02 v2 방 설정 카드 — 방 이름·문제 세트·방 유형(무료/유료)·참가비 */
-export function NewRoomForm({ sets, setup, nextHref, editorHref }: Props) {
-  const router = useRouter();
+export function NewRoomForm({ sets, level, onSubmit, pending, errorMessage, editorHref }: Props) {
   const [name, setName] = useState("");
   const [setId, setSetId] = useState(sets[0]?.id ?? "");
   const [roomType, setRoomType] = useState<RoomType>("free");
-  const [fee, setFee] = useState(setup.defaultFee);
+  const [fee, setFee] = useState(DEFAULT_ENTRY_FEE);
 
-  const paidLocked = setup.reputation.level < setup.paidMinLevel;
+  const paidLocked = level < PAID_ROOM_MIN_LEVEL;
   const isPaid = roomType === "paid";
 
   function handleFeeChange(e: ChangeEvent<HTMLInputElement>) {
@@ -37,8 +45,14 @@ export function NewRoomForm({ sets, setup, nextHref, editorHref }: Props) {
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // TODO(API): 방 생성 요청(유형·참가비 포함) → PIN 발급 후 이동
-    router.push(nextHref);
+    if (pending) return;
+    onSubmit({
+      title: name.trim(),
+      questionSetId: setId ? Number(setId) : null,
+      isPaid,
+      entryFee: isPaid ? fee : null,
+      isListed: true,
+    });
   }
 
   return (
@@ -58,6 +72,7 @@ export function NewRoomForm({ sets, setup, nextHref, editorHref }: Props) {
         <input
           type="text"
           name="name"
+          required
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="예: 8월 4주차 Spring 스터디"
@@ -111,13 +126,9 @@ export function NewRoomForm({ sets, setup, nextHref, editorHref }: Props) {
             </span>
           </label>
 
-          <SettlementPreview fee={fee} hostShare={setup.hostShare} />
+          <SettlementPreview fee={fee} hostShare={HOST_SHARE} />
 
-          <ReputationRow
-            level={setup.reputation.level}
-            title={setup.reputation.title}
-            minLevel={setup.paidMinLevel}
-          />
+          <ReputationRow level={level} title={levelTitle(level)} minLevel={PAID_ROOM_MIN_LEVEL} />
         </>
       )}
 
@@ -128,11 +139,18 @@ export function NewRoomForm({ sets, setup, nextHref, editorHref }: Props) {
         </Link>
       </p>
 
+      {errorMessage && (
+        <p role="alert" className="text-label-lg text-negative">
+          {errorMessage}
+        </p>
+      )}
+
       <button
         type="submit"
-        className="flex h-14 w-[440px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark"
+        disabled={pending}
+        className="flex h-14 w-[440px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
       >
-        다음 — 문제 준비
+        {pending ? "방 만드는 중…" : "방 만들기 → PIN 발급"}
       </button>
 
       <p className="text-label-md text-muted-foreground">

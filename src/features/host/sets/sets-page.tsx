@@ -2,14 +2,20 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { QUESTION_SETS } from "@/features/host/mock";
+import type { QuestionSet } from "@/features/host/types";
 import { SetCard } from "./set-card";
 import { SetDetailPanel } from "./set-detail-panel";
 
+type Props = {
+  sets: QuestionSet[];
+  onClone: (setId: string) => void;
+  cloning?: boolean;
+};
+
 /** W-08 문제 세트 관리 — 목록 + 우측 상세 패널(세트 재활용) */
-export function SetsPage() {
-  const [selectedId, setSelectedId] = useState(QUESTION_SETS[0].id);
-  const selected = QUESTION_SETS.find((s) => s.id === selectedId) ?? QUESTION_SETS[0];
+export function SetsPage({ sets, onClone, cloning }: Props) {
+  const [selectedId, setSelectedId] = useState(sets[0]?.id ?? null);
+  const selected = sets.find((s) => s.id === selectedId) ?? sets[0] ?? null;
 
   return (
     <div className="flex min-h-screen">
@@ -23,18 +29,29 @@ export function SetsPage() {
             + 새 세트
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-[18px]">
-          {QUESTION_SETS.map((s) => (
-            <SetCard
-              key={s.id}
-              set={s}
-              selected={s.id === selectedId}
-              onSelect={() => setSelectedId(s.id)}
-            />
-          ))}
-        </div>
+        {sets.length === 0 ? (
+          // TODO(design): DESIGN_GAPS W-08 빈 상태
+          <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed py-16 text-center text-body-md text-muted-foreground">
+            아직 만든 문제 세트가 없어요
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-[18px]">
+            {sets.map((s) => (
+              <SetCard
+                key={s.id}
+                set={s}
+                selected={s.id === selectedId}
+                onSelect={() => setSelectedId(s.id)}
+                onClone={() => onClone(s.id)}
+                cloning={cloning}
+              />
+            ))}
+          </div>
+        )}
       </main>
-      <SetDetailPanel set={selected} />
+      {selected && (
+        <SetDetailPanel set={selected} onClone={() => onClone(selected.id)} cloning={cloning} />
+      )}
     </div>
   );
 }

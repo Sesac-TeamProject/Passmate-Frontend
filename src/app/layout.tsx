@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { SessionBootstrap } from "@/components/common/session-bootstrap";
 import { QueryProvider } from "@/components/providers/query-provider";
 
 /** 디자인 시스템 v5 글꼴 — Pretendard Variable (pretendard 패키지, 가변 45~920) */
@@ -20,7 +21,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={`h-full antialiased ${pretendard.variable}`}>
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <SessionBootstrap />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

@@ -1,20 +1,29 @@
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import type { PaymentMethodItem } from "@/features/me/payment-methods/mock";
+import type { PaymentMethodItem } from "@/features/me/payment-methods/types";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
 import { SettingsList, SettingsRow } from "@/features/me/settings/settings-list";
 
 type Props = {
   items: PaymentMethodItem[];
   onSetDefault: (id: string) => void;
-  onDelete: (id: string) => void;
-  onAdd: () => void;
+  pending?: boolean;
+  errorMessage?: string | null;
 };
 
-/** C-02-8 결제 수단 관리 — 수단 3행(기본 칩 · 삭제/기본으로) · 추가 버튼 · 안내 */
-export function PaymentMethodsPage({ items, onSetDefault, onDelete, onAdd }: Props) {
+/**
+ * C-02-8 결제 수단 관리 — 기본 결제 수단 선택. 계약은 기본 수단 1개 선택만 지원한다(카드 등록·삭제 없음, DESIGN_GAPS C-4) —
+ * 시안의 카드 추가·삭제 UI는 목업이었다.
+ */
+export function PaymentMethodsPage({ items, onSetDefault, pending = false, errorMessage }: Props) {
   return (
     <MeFormPage title="결제 수단 관리">
+      {errorMessage && (
+        <p
+          role="alert"
+          className="rounded-xl bg-destructive-soft px-3.5 py-3 text-label-md text-destructive"
+        >
+          {errorMessage}
+        </p>
+      )}
       <SettingsList>
         {items.map((item) => (
           <SettingsRow
@@ -29,21 +38,14 @@ export function PaymentMethodsPage({ items, onSetDefault, onDelete, onAdd }: Pro
                 )}
               </span>
             }
-            description={item.isDefault ? "기본 결제 수단" : (item.detail ?? "연결됨")}
+            description={item.isDefault ? "기본 결제 수단" : undefined}
             action={
-              item.isDefault ? (
-                <button
-                  type="button"
-                  onClick={() => onDelete(item.id)}
-                  className="text-label-md text-ink-disabled transition-colors hover:text-foreground"
-                >
-                  삭제
-                </button>
-              ) : (
+              item.isDefault ? null : (
                 <button
                   type="button"
                   onClick={() => onSetDefault(item.id)}
-                  className="text-label-md text-mint transition-colors hover:text-mint-dark"
+                  disabled={pending}
+                  className="text-label-md text-mint transition-colors hover:text-mint-dark disabled:opacity-50"
                 >
                   기본으로
                 </button>
@@ -52,16 +54,6 @@ export function PaymentMethodsPage({ items, onSetDefault, onDelete, onAdd }: Pro
           />
         ))}
       </SettingsList>
-
-      <Button
-        variant="outline"
-        size="xl"
-        className="w-full gap-1.5 bg-card text-foreground"
-        onClick={onAdd}
-      >
-        <Plus className="size-[18px]" aria-hidden />
-        결제 수단 추가
-      </Button>
 
       <p className="text-label-md text-muted-foreground">
         결제는 포트원(PortOne)을 통해 안전하게 처리돼요. 카드 정보는 저장하지 않아요.

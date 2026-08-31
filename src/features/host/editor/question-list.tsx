@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Question } from "@/features/host/mock";
+import type { Question } from "@/features/host/types";
 import { QuestionTypeChip } from "./question-type-chip";
 
 type Props = { initial: Question[] };

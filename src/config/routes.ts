@@ -44,6 +44,20 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "public",
   },
   {
+    path: "/auth/callback",
+    sample: "/auth/callback",
+    title: "로그인 처리",
+    description: "소셜 로그인 콜백 — 토큰 수신 후 원래 가려던 화면으로",
+    area: "public",
+  },
+  {
+    path: "/hosts/[userId]",
+    sample: "/hosts/42",
+    title: "선생님 프로필",
+    description: "공개 프로필 — 평점·운영 실적·뱃지·운영 중인 방 (인기 방 카드에서 이름 탭)",
+    area: "public",
+  },
+  {
     path: "/rooms",
     sample: "/rooms",
     title: "공개 방 목록",
@@ -159,7 +173,7 @@ export const ROUTES: readonly RouteMeta[] = [
   },
   {
     path: "/play/[code]",
-    sample: "/play/DEMO01",
+    sample: "/play/482913",
     title: "풀이",
     description: "문항·선택지·서술 입력, 타이머, 제출, 음성 힌트 수신 배너·재생",
     area: "participant",
@@ -173,7 +187,7 @@ export const ROUTES: readonly RouteMeta[] = [
   },
   {
     path: "/pay/[code]",
-    sample: "/pay/DEMO01",
+    sample: "/pay/482913",
     title: "유료 방 결제",
     description:
       "방 정보·참가자 정보 확인, 코인 잔액 확인 → 부족분 포트원 충전 → 코인 차감, 결제 완료 후 대기실 입장 (회원 전용)",
@@ -210,24 +224,38 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "host",
   },
   {
+    path: "/host/rooms/[code]/timing",
+    sample: "/host/rooms/482913/timing",
+    title: "문항별 시간 설정",
+    description: "방에 붙은 세트의 문항별 제한 시간·자동 넘김 일괄/개별 조정",
+    area: "host",
+  },
+  {
     path: "/host/rooms/[code]/lobby",
-    sample: "/host/rooms/DEMO01/lobby",
+    sample: "/host/rooms/482913/lobby",
     title: "대기실",
     description: "PIN/QR 표시, 학생 목록 (프로젝터 투사 가정)",
     area: "host",
   },
   {
     path: "/host/rooms/[code]/live",
-    sample: "/host/rooms/DEMO01/live",
+    sample: "/host/rooms/482913/live",
     title: "진행 화면",
     description: "문항·타이머·제출 현황·랭킹, PTT 음성 힌트 버튼",
     area: "host",
   },
   {
     path: "/host/rooms/[code]/result",
-    sample: "/host/rooms/DEMO01/result",
+    sample: "/host/rooms/482913/result",
     title: "문항 결과",
     description: "문항별 정답·선택 분포·랭킹 변동 (프로젝터 투사 가정)",
+    area: "host",
+  },
+  {
+    path: "/host/rooms/[code]/final",
+    sample: "/host/rooms/482913/final",
+    title: "최종 순위",
+    description: "세션 종료 후 포디움·전체 순위·세션 요약 (프로젝터 투사 가정)",
     area: "host",
   },
   {
@@ -330,7 +358,7 @@ export function routesByArea(area: Area): RouteMeta[] {
   return ROUTES.filter((r) => r.area === area);
 }
 
-/** 실제 pathname(/pay/DEMO01)에 해당하는 라우트. 동적 세그먼트([code] 등)는 아무 값이나 허용. 없으면 undefined */
+/** 실제 pathname(/pay/482913)에 해당하는 라우트. 동적 세그먼트([code] 등)는 아무 값이나 허용. 없으면 undefined */
 export function matchRoute(pathname: string): RouteMeta | undefined {
   return ROUTES.find((r) =>
     new RegExp("^" + r.path.replace(/\[[^\]]+\]/g, "[^/]+") + "$").test(pathname),

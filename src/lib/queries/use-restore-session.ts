@@ -40,7 +40,7 @@ async function restoreSession() {
   const tokens = await refreshTokens(refreshToken);
 
   useAuthStore.getState().setAccessToken(tokens.accessToken);
-  writeRefreshToken(tokens.refreshToken);
+  if (tokens.refreshToken) writeRefreshToken(tokens.refreshToken);
 
   const profile = await getMe();
 

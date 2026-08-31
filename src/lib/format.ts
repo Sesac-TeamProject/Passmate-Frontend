@@ -78,3 +78,24 @@ export function formatDurationHours(hours: number): string {
 export function formatHours(hours: number): string {
   return `${hours.toFixed(1)}시간`;
 }
+
+const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
+
+/** ISO 시각 → "2026. 08. 22 (금)" (프로젝터 헤더의 진행 날짜). 값이 깨졌으면 빈 문자열 */
+export function formatDotDateWithDay(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}. ${month}. ${day} (${WEEKDAY[date.getDay()]})`;
+}
+
+/** "482913" → "482 913" (6자리 참여 PIN 표기) */
+export function formatPin(pin: string): string {
+  return `${pin.slice(0, 3)} ${pin.slice(3)}`;
+}
+
+/** 원화 표기(공백 옵션) — 마이페이지 v3 행은 붙임("₩64,000"), W-10 정산 표는 공백("₩ 60,000") */
+export function formatWon(value: number, spaced = false): string {
+  return `${spaced ? "₩ " : "₩"}${formatNumber(value)}`;
+}

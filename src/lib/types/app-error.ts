@@ -6,6 +6,7 @@
 export type AppErrorKind =
   | "Unauthorized"
   | "PermissionDenied"
+  | "PaymentRequired"
   | "ValidationFailed"
   | "NetworkError"
   | "NotFound"
@@ -26,6 +27,7 @@ type AppErrorOptions = {
 const USER_MESSAGE: Record<AppErrorKind, string> = {
   Unauthorized: "로그인이 필요합니다.",
   PermissionDenied: "접근 권한이 없습니다.",
+  PaymentRequired: "코인이 부족합니다. 충전 후 다시 시도해 주세요.",
   ValidationFailed: "입력값을 확인해 주세요.",
   NetworkError: "네트워크 연결을 확인해 주세요.",
   NotFound: "요청한 정보를 찾을 수 없습니다.",
@@ -37,6 +39,7 @@ const USER_MESSAGE: Record<AppErrorKind, string> = {
 const KIND_BY_STATUS: Record<number, AppErrorKind> = {
   400: "ValidationFailed",
   401: "Unauthorized",
+  402: "PaymentRequired",
   403: "PermissionDenied",
   404: "NotFound",
   409: "Conflict",
@@ -60,7 +63,10 @@ export class AppError extends Error {
   }
 
   /** HTTP 오류 응답 → AppError. 본문 `{code, message}`는 계약 §공통 오류 형식. */
-  static fromResponse(status: number, body: { code?: string; message?: string } | null): AppError {
+  static fromResponse(
+    status: number,
+    body: { code?: string | null; message?: string | null } | null,
+  ): AppError {
     const kind = KIND_BY_STATUS[status] ?? "Unknown";
 
     return new AppError(kind, {

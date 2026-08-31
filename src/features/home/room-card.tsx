@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
 import { StatusChip } from "@/components/common/status-chip";
-import type { PopularRoom } from "./mock";
+import type { PopularRoom } from "./types";
 
 type Props = {
   room: PopularRoom;
@@ -21,7 +21,14 @@ export function RoomCard({ room, href }: Props) {
       </div>
       <h3 className="truncate text-heading-md text-ink">{room.title}</h3>
       <p className="text-label-md text-muted-foreground">
-        {room.host} 선생님 · Lv.{room.level}
+        {room.hostId === null ? (
+          `${room.host} 선생님`
+        ) : (
+          <Link href={`/hosts/${room.hostId}`} className="hover:underline">
+            {room.host} 선생님
+          </Link>
+        )}{" "}
+        · Lv.{room.level}
       </p>
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-1 text-label-md text-muted-foreground">

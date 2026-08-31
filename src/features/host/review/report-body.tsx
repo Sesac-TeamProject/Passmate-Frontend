@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SessionReport, ReportQuestion } from "@/features/host/mock";
+import type { EssayAnswer, ReportQuestion, SessionReport } from "@/features/host/types";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import { cn } from "@/lib/utils";
 import { AnalysisPanel } from "./analysis-panel";
@@ -9,15 +9,27 @@ import { AnalysisPanel } from "./analysis-panel";
 const TABS = ["개요", "문항별", "학생별"] as const;
 type Tab = (typeof TABS)[number];
 
-type Props = { report: SessionReport; students: { id: string; name: string }[] };
+type Props = {
+  report: SessionReport;
+  students: { id: string; name: string }[];
+  /** 우측 분석 패널이 보고 있는 문항. 서술형 답변 조회를 구동하므로 컨테이너가 소유한다 */
+  selectedQuestionId: string | null;
+  onSelectQuestion: (id: string) => void;
+  /** 선택된 문항의 서술형 답변 (객관식·OX면 빈 배열) */
+  essayAnswers: EssayAnswer[];
+};
 
 /** W-07 본문 — 탭 · 문항 목록 · 우측 AI 분석/첨삭 패널 */
-export function ReportBody({ report, students }: Props) {
+export function ReportBody({
+  report,
+  students,
+  selectedQuestionId,
+  onSelectQuestion,
+  essayAnswers,
+}: Props) {
   const [tab, setTab] = useState<Tab>("문항별");
-  const [selectedId, setSelectedId] = useState(
-    report.questions.find((q) => q.type === "essay")?.id ?? report.questions[0].id,
-  );
-  const selected = report.questions.find((q) => q.id === selectedId)!;
+  const selected =
+    report.questions.find((q) => q.id === selectedQuestionId) ?? report.questions[0] ?? null;
 
   return (
     <>
@@ -48,17 +60,19 @@ export function ReportBody({ report, students }: Props) {
               <li key={q.id}>
                 <QuestionRow
                   question={q}
-                  selected={q.id === selectedId}
-                  onSelect={() => setSelectedId(q.id)}
+                  selected={q.id === selected?.id}
+                  onSelect={() => onSelectQuestion(q.id)}
                 />
               </li>
             ))}
           </ol>
-          <AnalysisPanel
-            question={selected}
-            answers={report.essayAnswers[selected.id] ?? []}
-            students={students}
-          />
+          {selected ? (
+            <AnalysisPanel question={selected} answers={essayAnswers} students={students} />
+          ) : (
+            <div className="flex w-[430px] shrink-0 items-center justify-center rounded-[20px] border border-dashed text-body-md text-muted-foreground">
+              문항이 없어요
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex flex-1 items-center justify-center rounded-[20px] border border-dashed text-body-md text-muted-foreground">

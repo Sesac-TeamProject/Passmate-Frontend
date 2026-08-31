@@ -4,7 +4,7 @@ import {
   COIN_HISTORY_FILTERS,
   type CoinHistoryFilter,
   type CoinHistoryItem,
-} from "@/features/me/coins/mock";
+} from "@/features/me/coins/types";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
 import { SettingsList } from "@/features/me/settings/settings-list";
 import { formatNumber, formatShortDate } from "@/lib/format";

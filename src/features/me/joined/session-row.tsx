@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { AttendedSession } from "@/features/me/mock";
+import type { AttendedSession } from "@/features/me/types";
 import { cn } from "@/lib/utils";
 
 /** 1·2·3위는 포디움 토큰, 그 외는 muted */
