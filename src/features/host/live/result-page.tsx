@@ -17,6 +17,8 @@ type Props = {
   onNext: () => void;
   onEndSession: () => void;
   pending?: boolean;
+  /** 다음 문항·세션 종료 요청이 실패했을 때 보여줄 문구 */
+  errorMessage?: string | null;
 };
 
 const FALLBACK_STUDENT: Omit<Student, "id"> = { name: "학생", avatar: "cat" };
@@ -31,6 +33,7 @@ export function ResultPage({
   onNext,
   onEndSession,
   pending = false,
+  errorMessage = null,
 }: Props) {
   const byId = new Map(students.map((s) => [s.id, s]));
   const student = (id: string): Student => byId.get(id) ?? { id, ...FALLBACK_STUDENT };
@@ -64,9 +67,15 @@ export function ResultPage({
       bottomClassName="py-[18px]"
       bottom={
         <>
-          <p className="text-label-lg text-mint-ink-secondary">
-            마지막 문항이 끝나면 최종 결과와 리포트가 열려요
-          </p>
+          {errorMessage ? (
+            <p role="alert" className="text-label-lg text-negative">
+              {errorMessage}
+            </p>
+          ) : (
+            <p className="text-label-lg text-mint-ink-secondary">
+              마지막 문항이 끝나면 최종 결과와 리포트가 열려요
+            </p>
+          )}
           <button
             type="button"
             onClick={isLastQuestion ? onEndSession : onNext}

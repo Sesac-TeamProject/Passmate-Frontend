@@ -18,6 +18,10 @@ import { useCreateRoom, useJoinByPin, usePublicRooms } from "@/lib/queries/use-r
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type { CreateRoomRequest } from "@/lib/types/dto";
 
+/** PIN 없이 만들어진 방은 대기실로 갈 수 없다 — 목록에서 다시 찾도록 안내한다 (host/rooms/new와 같은 문구) */
+const PIN_MISSING_MESSAGE =
+  "방은 만들어졌지만 PIN을 받지 못했어요. 내가 만든 방에서 확인해 주세요.";
+
 /** W-01 v6 홈 컨테이너 — PIN 폼 상태·새 방 모달 open을 소유하고 렌더는 HomePage에 맡긴다. */
 export default function Page() {
   const router = useRouter();
@@ -32,6 +36,7 @@ export default function Page() {
   const [joinValues, setJoinValues] = useState<JoinValues>(INITIAL_JOIN_VALUES);
   const [paidGuestPin, setPaidGuestPin] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [pinMissing, setPinMissing] = useState(false);
   const [defaultsApplied, setDefaultsApplied] = useState(false);
 
   // 내 프로필이 처음 오면 닉네임·캐릭터 기본값을 한 번 채운다 — 이미 입력을 시작했으면 덮어쓰지 않는다.
@@ -71,9 +76,13 @@ export default function Page() {
   };
 
   const handleCreateRoom = (body: CreateRoomRequest) => {
+    setPinMissing(false);
     create.mutate(body, {
       onSuccess: (res) => {
-        if (!res.pin) return;
+        if (!res.pin) {
+          setPinMissing(true);
+          return;
+        }
         setCreateOpen(false);
         router.push(`/host/rooms/${res.pin}/lobby`);
       },
@@ -116,7 +125,13 @@ export default function Page() {
         level={grade.data?.level ?? 1}
         onSubmit={handleCreateRoom}
         pending={create.isPending}
-        errorMessage={create.isError ? toCreateRoomErrorMessage(create.error) : null}
+        errorMessage={
+          pinMissing
+            ? PIN_MISSING_MESSAGE
+            : create.isError
+              ? toCreateRoomErrorMessage(create.error)
+              : null
+        }
       />
     </>
   );

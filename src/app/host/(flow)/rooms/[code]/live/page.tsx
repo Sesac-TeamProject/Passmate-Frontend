@@ -39,6 +39,7 @@ export default function Page() {
   const reveal = useSessionStore((s) => s.reveal);
   const isLocked = useSessionStore((s) => s.isLocked);
   const connection = useSessionStore((s) => s.connection);
+  const snapshotTs = useSessionStore((s) => s.snapshotTs);
 
   const next = useNextQuestion(roomId ?? 0);
   const endCurrent = useEndCurrentQuestion(roomId ?? 0);
@@ -52,7 +53,9 @@ export default function Page() {
     // 세션이 끝났으면 리포트로, 문항이 마감돼 정답이 공개되면 결과 화면으로
     if (phase === "FINISHED") router.replace(`/host/sessions/${roomId}/review`);
     else if (reveal !== null) router.replace(`/host/rooms/${pin}/result`);
-  }, [phase, reveal, roomId, pin, router]);
+    // 스냅샷까지 받고도 WAITING이면 아직 시작 전이다(주소로 바로 들어온 경우) — 대기실로 돌려보낸다
+    else if (snapshotTs !== null && phase === "WAITING") router.replace(`/host/rooms/${pin}/lobby`);
+  }, [phase, reveal, snapshotTs, roomId, pin, router]);
 
   if (room.isPending) return <ScreenLoading />;
   if (room.isError)

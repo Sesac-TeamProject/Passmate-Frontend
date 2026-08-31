@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,9 +33,30 @@ export function PttButton({
 }: Props) {
   const [recording, setRecording] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const startedAtRef = useRef(0);
   // 권한 팝업이 뜬 사이에 손을 떼면 녹음을 시작하지 않는다
   const heldRef = useRef(false);
+  // 언마운트 뒤에는 클립을 올리지 않는다 — 사라진 화면의 콜백을 부르지 않기 위해
+  const unmountedRef = useRef(false);
+
+  // 누른 채로 화면이 바뀌어도(진행 → 결과 라우팅 등) 녹음기와 마이크를 반드시 놓는다
+  useEffect(() => {
+    const recorderHolder = recorderRef;
+    const streamHolder = streamRef;
+    const unmountedHolder = unmountedRef;
+    const heldHolder = heldRef;
+
+    return () => {
+      unmountedHolder.current = true;
+      heldHolder.current = false;
+      const recorder = recorderHolder.current;
+      recorderHolder.current = null;
+      if (recorder && recorder.state !== "inactive") recorder.stop();
+      streamHolder.current?.getTracks().forEach((t) => t.stop());
+      streamHolder.current = null;
+    };
+  }, []);
 
   const stopRecording = () => {
     heldRef.current = false;
@@ -64,11 +85,16 @@ export function PttButton({
       return;
     }
 
-    const stopTracks = () => stream.getTracks().forEach((t) => t.stop());
-    if (!heldRef.current) {
+    const stopTracks = () => {
+      stream.getTracks().forEach((t) => t.stop());
+      if (streamRef.current === stream) streamRef.current = null;
+    };
+    // 권한 팝업을 기다리는 사이에 손을 떼거나 화면이 사라졌으면 시작하지 않는다
+    if (!heldRef.current || unmountedRef.current) {
       stopTracks();
       return;
     }
+    streamRef.current = stream;
 
     const recorder = new MediaRecorder(
       stream,
@@ -81,7 +107,8 @@ export function PttButton({
     recorder.onstop = () => {
       stopTracks();
       const clip = new Blob(chunks, { type: recorder.mimeType || PREFERRED_MIME });
-      if (clip.size > 0) onRecorded(clip, Date.now() - startedAtRef.current);
+      if (clip.size > 0 && !unmountedRef.current)
+        onRecorded(clip, Date.now() - startedAtRef.current);
     };
 
     startedAtRef.current = Date.now();
