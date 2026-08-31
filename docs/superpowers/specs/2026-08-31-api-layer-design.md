@@ -140,7 +140,7 @@ src/lib/
 | `session-store` `reduce()` 8종 이벤트 + 스냅샷 교체(ts 이전 이벤트 폐기) | Vitest, 순수 함수 |
 | 목 라우트 표가 모든 api 함수 경로를 덮는지 | Vitest: `handlers.ts` 키 ↔ api 함수가 만드는 경로 대조 |
 | 기존 `client.test.ts` 5개 | 유지 |
-| 화면 | `pnpm build` + `check:routes`(40경로) + 목 모드 수동 확인(Chrome) |
+| 화면 | `pnpm build` + `check:routes`(41경로) + 목 모드 수동 확인(Chrome) |
 
 ## 9. 가정 (사용자 부재 중 내가 정한 것 — 확인 필요)
 

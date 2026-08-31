@@ -1,7 +1,7 @@
 import type { StatItem } from "@/components/common/stat-cards";
 import { avatarKeyFromId } from "@/components/common/student-avatar";
 import { formatShortDate, formatWon } from "@/lib/format";
-import { levelTitle } from "@/lib/host-level";
+import { LEVEL_TITLE, levelTitle } from "@/lib/host-level";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
 import type {
@@ -64,7 +64,7 @@ export function toProfile(me: MeResponse, grade?: GradeResponse): Profile {
     joinedLabel: me.joinedAt ? `${me.joinedAt.slice(0, 7)} 가입` : "",
     avatar: avatarKeyFromId(me.avatarId),
     level,
-    levelTitle: levelTitle(level),
+    levelTitle: levelTitle(level) ?? LEVEL_TITLE[1],
     levelPerk: level >= PAID_ROOM_MIN_LEVEL ? "유료 방 개설 가능" : "",
     nextLevel: {
       level: next?.level ?? level + 1,

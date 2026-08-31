@@ -1,5 +1,5 @@
 import type { StatItem } from "@/components/common/stat-cards";
-import { levelTitle } from "@/lib/host-level";
+import { LEVEL_TITLE, levelTitle } from "@/lib/host-level";
 import type { GradeResponse, HostedRoomDto } from "@/lib/types/dto";
 import { type LevelStatus, type MyRoom, type Promotion, type PromotionRule } from "./types";
 
@@ -34,11 +34,11 @@ export function toLevelStatus(grade: GradeResponse | undefined): LevelStatus {
 
   return {
     level,
-    title: levelTitle(level),
+    title: levelTitle(level) ?? LEVEL_TITLE[1],
     achievedLabel: grade?.achievedAt ? `${grade.achievedAt} 달성 · ${tail}` : tail,
     next: {
       level: nextLevel,
-      title: levelTitle(nextLevel),
+      title: levelTitle(nextLevel) ?? "",
       progress: grade?.next?.progressPercent ?? 0,
     },
     perks: LEVEL_PERK_DEFS.map((p) => ({ label: p.label, earned: level >= p.requiredLevel })),

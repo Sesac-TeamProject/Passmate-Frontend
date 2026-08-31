@@ -14,7 +14,7 @@ Next.js 16(App Router, TS) + Tailwind v4 + shadcn/ui + TanStack Query + Zustand.
 
 - `src/lib/api/` — fetch 래퍼(`client.ts`: 인증 헤더·401 refresh 1회·`AppError` 변환·다운로드)와 도메인별 api 함수(`rooms.ts`·`sessions.ts`·`question-sets.ts`·`results.ts`·`me.ts`·`payments.ts`·`ratings.ts`·`auth.ts`·`admin.ts`). **컴포넌트·page에서 `fetch` 직접 호출 금지.**
 - `src/lib/types/` — 계약 1:1 DTO(`dto.ts`는 도메인별 `dto/*.ts`를 다시 내보내는 허브)와 `AppError`. 계약에 없는 필드를 임의 추가하지 않는다 (계약 갱신이 먼저). 계약이 아직 없는 호출·필드는 `@draft` 주석으로 표시.
-- `src/lib/queries/` — TanStack Query 훅(서버 상태). 쿼리 키 상수는 `keys.ts` 한 곳. 뮤테이션 성공 시 `invalidateQueries`.
+- `src/lib/queries/` — TanStack Query 훅(서버 상태). 호스트·참여·회원 도메인 훅의 쿼리 키는 `keys.ts` 한 곳에 둔다 — 관리자 훅은 각 파일에 로컬 키를 그대로 둔다(예: `use-admin-ad-campaigns.ts`의 `ADMIN_AD_CAMPAIGNS_KEY`). 뮤테이션 성공 시 `invalidateQueries`.
 - `src/lib/stores/` — Zustand(`auth-store`, `session-store`). 서버 상태를 스토어·useState에 복사하지 않는다.
 - `src/lib/mocks/` — `NEXT_PUBLIC_API_BASE_URL`이 비어 있을 때만 쓰는 목 응답. 경로 파라미터 라우터(`router.ts`, `METHOD path` 표)가 도메인별 핸들러(`handlers.ts` + `rooms.ts`·`session.ts`·`question-sets.ts`·`results.ts`·`me.ts`·`payments.ts`·`auth.ts`·`admin.ts`)로 총 64개 라우트(도메인 54 + 관리자 10)를 흘려보낸다. 공용 값은 `fixtures.ts`. 백엔드 연동 시 이 폴더를 통째로 걷어낸다.
 - 화면: `app/**/page.tsx`는 `'use client'` 컨테이너(쿼리·스토어·효과·다이얼로그 소유), `features/<role>/**/*-view.tsx`는 props만 받는 렌더 전용.

@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { levelTitle } from "@/lib/host-level";
 import type { CreateRoomRequest } from "@/lib/types/dto";
 import {
   DEFAULT_ENTRY_FEE,
   HOST_SHARE,
+  levelTitle,
   PAID_ROOM_MIN_LEVEL,
   type QuestionSetOption,
 } from "./adapt";

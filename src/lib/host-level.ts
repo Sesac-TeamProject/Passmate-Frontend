@@ -9,9 +9,12 @@ export const LEVEL_TITLE: Record<HostLevel, string> = {
   5: "마스터",
 };
 
-/** 레벨 → 칭호. 값이 없거나 범위를 벗어나면 가장 가까운 등급(기본 Lv.1)으로 접는다 */
-export function levelTitle(level: number | null | undefined): string {
-  if (level == null || Number.isNaN(level)) return LEVEL_TITLE[1];
-  const lv = Math.min(5, Math.max(1, Math.round(level))) as HostLevel;
-  return LEVEL_TITLE[lv];
+/**
+ * 레벨 → 칭호. 1~5의 정확한 키가 아니면(범위 밖·값 없음) undefined를 돌려준다 — 폴백은
+ * 호출부가 정한다(예: `levelTitle(level) ?? LEVEL_TITLE[1]`, 빈 문자열, 반올림·클램프 등
+ * 화면마다 다를 수 있어 헬퍼에 기본값을 박아 두지 않는다).
+ */
+export function levelTitle(level: number | null | undefined): string | undefined {
+  if (level == null) return undefined;
+  return LEVEL_TITLE[level as HostLevel];
 }
