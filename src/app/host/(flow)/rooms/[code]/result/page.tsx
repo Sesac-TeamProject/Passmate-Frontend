@@ -6,6 +6,7 @@ import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import {
   firstErrorMessage,
+  toAccuracyByQuestion,
   toQuestionResult,
   toRankedStudents,
   toStudents,
@@ -56,13 +57,18 @@ export default function Page() {
   if (reveal === null) return <ScreenLoading />;
 
   const students = ranking.length > 0 ? toRankedStudents(ranking) : toStudents(participants);
+  const result = toQuestionResult(reveal, submissions.data, ranking, currentQuestion);
+  const total = questionCount ?? reveal.questionNo;
 
   return (
     <ResultPage
       questionIndex={reveal.questionNo}
-      questionTotal={questionCount ?? reveal.questionNo}
-      result={toQuestionResult(reveal, submissions.data, ranking, currentQuestion)}
+      questionTotal={total}
+      result={result}
       students={students}
+      // TODO(API): 문항별 오답자 목록이 계약에 없다 (DESIGN_GAPS D-17). 빈 배열이면 화면이 섹션을 감춘다.
+      wrongStudents={[]}
+      accuracyByQuestion={toAccuracyByQuestion(total, reveal.questionNo, result.accuracy)}
       isLastQuestion={questionCount !== null && reveal.questionNo === questionCount}
       onNext={() => next.mutate()}
       onEndSession={() => end.mutate()}

@@ -71,6 +71,19 @@ export function toQuestionResult(
   };
 }
 
+/**
+ * 레일 미니 차트가 쓰는 문항별 정답률 배열.
+ * 진행 중 누적 정답률은 계약에 없어(DESIGN_GAPS D-18) 방금 끝난 문항만 채우고 나머지는 null로 둔다 —
+ * 차트가 null을 "미진행" 회색 막대로 그린다.
+ */
+export function toAccuracyByQuestion(
+  total: number,
+  questionNo: number,
+  accuracy: number,
+): (number | null)[] {
+  return Array.from({ length: total }, (_, i) => (i + 1 === questionNo ? accuracy : null));
+}
+
 /** 여러 뮤테이션 중 처음 실패한 것의 문구. 모두 성공이면 null */
 export function firstErrorMessage(...errors: (Error | null)[]): string | null {
   for (const error of errors) if (error) return error.message;
