@@ -1,9 +1,9 @@
-import type { MeResponse, RefreshTokenRequest, TokenPair } from "@/lib/types/dto";
+import type { MeResponse, TokenPair, TokenRefreshRequest } from "@/lib/types/dto";
 import { request } from "./client";
 
 /** POST /auth/refresh — refresh 토큰으로 토큰 쌍 재발급 */
 export function refreshTokens(refreshToken: string): Promise<TokenPair> {
-  const body: RefreshTokenRequest = { refreshToken };
+  const body: TokenRefreshRequest = { refreshToken };
   return request<TokenPair>("/auth/refresh", { method: "POST", body });
 }
 

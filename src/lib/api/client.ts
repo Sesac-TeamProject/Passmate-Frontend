@@ -1,9 +1,10 @@
 import { API_BASE_URL, IS_MOCK } from "@/lib/env";
+import { readGuestToken } from "@/lib/guest-token-storage";
 import { resolveMock } from "@/lib/mocks/handlers";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { clearRefreshToken, readRefreshToken, writeRefreshToken } from "@/lib/token-storage";
 import { AppError } from "@/lib/types/app-error";
-import type { ApiErrorBody, RefreshTokenRequest, TokenPair } from "@/lib/types/dto";
+import type { ApiErrorBody, TokenRefreshRequest, TokenRefreshResponse } from "@/lib/types/dto";
 
 /**
  * fetch 공통 래퍼 (설계 문서 §2, 규칙 문서 §5).
@@ -54,6 +55,19 @@ export async function downloadFile(path: string, filename: string): Promise<void
   URL.revokeObjectURL(objectUrl);
 }
 
+/** multipart/form-data (PTT 클립·자료 업로드). Content-Type은 브라우저가 boundary와 함께 붙인다. */
+export async function requestMultipart<T>(path: string, form: FormData): Promise<T> {
+  const url = buildUrl(path);
+
+  if (IS_MOCK) return resolveMock<T>("POST", url);
+
+  const response = await sendWithRefresh(url, path, { method: "POST", body: form });
+
+  if (response.status === HTTP_NO_CONTENT) return undefined as T;
+
+  return (await response.json()) as T;
+}
+
 /* ── 내부 ─────────────────────────────────────────────── */
 
 function buildUrl(path: string, query?: Record<string, QueryValue>): string {
@@ -69,15 +83,21 @@ function buildUrl(path: string, query?: Record<string, QueryValue>): string {
 
 async function send(url: string, options: RequestOptions, accessToken: string | null) {
   const headers = new Headers();
+  const isFormData = options.body instanceof FormData;
+  const bearer = accessToken ?? readGuestToken();
 
-  if (options.body !== undefined) headers.set("Content-Type", "application/json");
-  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+  if (options.body !== undefined && !isFormData) headers.set("Content-Type", "application/json");
+  if (bearer) headers.set("Authorization", `Bearer ${bearer}`);
 
   try {
     return await fetch(url, {
       method: options.method ?? "GET",
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: isFormData
+        ? (options.body as FormData)
+        : options.body === undefined
+          ? undefined
+          : JSON.stringify(options.body),
       signal: options.signal,
     });
   } catch (cause) {
@@ -85,12 +105,20 @@ async function send(url: string, options: RequestOptions, accessToken: string | 
   }
 }
 
-/** 401이면 refresh 후 한 번만 재시도한다. 성공 응답(2xx)만 돌려주고 나머지는 AppError로 던진다. */
+/**
+ * 401이면 refresh 후 한 번만 재시도한다. 성공 응답(2xx)만 돌려주고 나머지는 AppError로 던진다.
+ * 회원 토큰(store.accessToken)이 있을 때만 refresh를 시도한다 — 게스트·비로그인 401(예: LOGIN_REQUIRED)은
+ * refresh 대상이 아니므로 code를 보존한 채 그대로 AppError로 바꾼다.
+ */
 async function sendWithRefresh(url: string, path: string, options: RequestOptions) {
   const store = useAuthStore.getState();
   let response = await send(url, options, store.accessToken);
 
-  if (response.status === HTTP_UNAUTHORIZED && path !== REFRESH_PATH) {
+  if (
+    response.status === HTTP_UNAUTHORIZED &&
+    store.accessToken !== null &&
+    path !== REFRESH_PATH
+  ) {
     const refreshed = await refreshAccessToken();
 
     if (!refreshed) throw new AppError("Unauthorized", { status: HTTP_UNAUTHORIZED });
@@ -136,7 +164,7 @@ async function doRefresh(): Promise<string | null> {
     return null;
   }
 
-  const body: RefreshTokenRequest = { refreshToken };
+  const body: TokenRefreshRequest = { refreshToken };
   const response = await send(buildUrl(REFRESH_PATH), { method: "POST", body }, null);
 
   if (!response.ok) {
@@ -145,10 +173,10 @@ async function doRefresh(): Promise<string | null> {
     return null;
   }
 
-  const tokens = (await response.json()) as TokenPair;
+  const tokens = (await response.json()) as TokenRefreshResponse;
 
   store.setAccessToken(tokens.accessToken);
-  writeRefreshToken(tokens.refreshToken);
+  if (tokens.refreshToken) writeRefreshToken(tokens.refreshToken);
 
   return tokens.accessToken;
 }

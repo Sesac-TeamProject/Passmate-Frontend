@@ -18,12 +18,18 @@ function jsonResponse(status: number, body: unknown): Response {
 
 function stubLocalStorage(initial: Record<string, string>) {
   const store = new Map(Object.entries(initial));
+  const session = new Map<string, string>();
 
   vi.stubGlobal("window", {
     localStorage: {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => void store.set(k, v),
       removeItem: (k: string) => void store.delete(k),
+    },
+    sessionStorage: {
+      getItem: (k: string) => session.get(k) ?? null,
+      setItem: (k: string, v: string) => void session.set(k, v),
+      removeItem: (k: string) => void session.delete(k),
     },
     location: { pathname: "/admin/users", search: "", assign: vi.fn() },
   });
@@ -135,5 +141,58 @@ describe("api/client", () => {
     const { request } = await loadClient();
 
     await expect(request("/me")).rejects.toMatchObject({ kind: "NetworkError" });
+  });
+
+  it("402는 PaymentRequired가 된다", async () => {
+    stubLocalStorage({});
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(402, { code: "PAYMENT_REQUIRED", message: "코인 부족" }),
+    );
+    const { request } = await loadClient();
+
+    await expect(
+      request("/rooms/1/entry-payments", { method: "POST", body: {} }),
+    ).rejects.toMatchObject({ kind: "PaymentRequired", code: "PAYMENT_REQUIRED" });
+  });
+
+  it("회원 토큰이 없으면 401에 refresh를 시도하지 않고 code를 보존한다 (게스트 유료 방)", async () => {
+    stubLocalStorage({});
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(401, { code: "LOGIN_REQUIRED", message: "로그인 필요" }),
+    );
+    const { request } = await loadClient();
+
+    await expect(
+      request("/rooms/1/participants", { method: "POST", body: {} }),
+    ).rejects.toMatchObject({ kind: "Unauthorized", code: "LOGIN_REQUIRED" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("refresh 응답에 refreshToken이 없으면 기존 refresh 토큰을 유지한다", async () => {
+    const store = stubLocalStorage({ [REFRESH_KEY]: "old-refresh" });
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(401, { code: "TOKEN_EXPIRED", message: "만료" }))
+      .mockResolvedValueOnce(jsonResponse(200, { accessToken: "new-access" }))
+      .mockResolvedValueOnce(jsonResponse(200, { ok: true }));
+    const { request, useAuthStore } = await loadClient();
+    useAuthStore.getState().setAccessToken("old-access");
+
+    await request("/users/me");
+
+    expect(store.get(REFRESH_KEY)).toBe("old-refresh");
+    expect(useAuthStore.getState().accessToken).toBe("new-access");
+  });
+
+  it("회원 토큰이 없고 게스트 토큰이 있으면 게스트 토큰을 Bearer로 보낸다", async () => {
+    stubLocalStorage({});
+    const { request } = await loadClient();
+    const { writeGuestToken } = await import("@/lib/guest-token-storage");
+    writeGuestToken("guest-1");
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { ok: true }));
+
+    await request("/rooms/1/session");
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect((init.headers as Headers).get("Authorization")).toBe("Bearer guest-1");
   });
 });

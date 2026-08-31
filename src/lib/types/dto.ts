@@ -16,10 +16,13 @@ export type ApiErrorBody = { code: string; message: string };
 /* ── 인증 ─────────────────────────────────────────────── */
 
 /** POST /auth/refresh 요청 */
-export type RefreshTokenRequest = { refreshToken: string };
+export type TokenRefreshRequest = { refreshToken: string };
 
 /** 로그인·refresh 응답 */
 export type TokenPair = { accessToken: string; refreshToken: string };
+
+/** POST /auth/refresh 응답 — refreshToken은 미회전 시 생략 */
+export type TokenRefreshResponse = { accessToken: string; refreshToken?: string | null };
 
 /** GET /me */
 export type MeResponse = {
