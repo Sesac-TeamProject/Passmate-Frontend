@@ -15,6 +15,7 @@ import { MyPage } from "@/features/me/my-page";
 import { useLogout } from "@/lib/queries/use-auth";
 import { useGrade, useMe } from "@/lib/queries/use-me";
 import { useCoinBalance, useEarnings, useSettlementAccount } from "@/lib/queries/use-payments";
+import { AppError } from "@/lib/types/app-error";
 
 /** C-02 v3 컨테이너 — 로그아웃 확인 다이얼로그(C-02-11) 상태를 소유한다 */
 export default function Page() {
@@ -39,12 +40,18 @@ export default function Page() {
     });
   };
 
-  if (me.isPending || coins.isPending || earnings.isPending) return <ScreenLoading />;
+  const isAccountNotRegistered =
+    account.isError && AppError.isAppError(account.error) && account.error.kind === "NotFound";
+
+  if (me.isPending || coins.isPending || earnings.isPending || account.isPending)
+    return <ScreenLoading />;
   if (me.isError) return <ScreenError message={me.error.message} onRetry={() => me.refetch()} />;
   if (coins.isError)
     return <ScreenError message={coins.error.message} onRetry={() => coins.refetch()} />;
   if (earnings.isError)
     return <ScreenError message={earnings.error.message} onRetry={() => earnings.refetch()} />;
+  if (account.isError && !isAccountNotRegistered)
+    return <ScreenError message={account.error.message} onRetry={() => account.refetch()} />;
 
   return (
     <>

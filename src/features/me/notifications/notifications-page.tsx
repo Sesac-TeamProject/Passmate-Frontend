@@ -6,12 +6,23 @@ import { SettingsList, SettingsRow } from "@/features/me/settings/settings-list"
 type Props = {
   settings: NotificationSetting[];
   onToggle: (key: NotificationKey, enabled: boolean) => void;
+  /** 뮤테이션 진행 중 — 중복 요청을 막기 위해 스위치를 잠근다 */
+  pending?: boolean;
+  errorMessage?: string | null;
 };
 
 /** C-02-10 알림 설정 — 4행 토글(44×24) · 안내 */
-export function NotificationsPage({ settings, onToggle }: Props) {
+export function NotificationsPage({ settings, onToggle, pending = false, errorMessage }: Props) {
   return (
     <MeFormPage title="알림 설정">
+      {errorMessage && (
+        <p
+          role="alert"
+          className="rounded-xl bg-destructive-soft px-3.5 py-3 text-label-md text-destructive"
+        >
+          {errorMessage}
+        </p>
+      )}
       <SettingsList>
         {settings.map((setting) => (
           <SettingsRow
@@ -23,6 +34,7 @@ export function NotificationsPage({ settings, onToggle }: Props) {
                 aria-label={setting.title}
                 checked={setting.enabled}
                 onCheckedChange={(checked) => onToggle(setting.key, checked)}
+                disabled={pending}
                 // 시안 44×24 · 노브 20 흰색 (shadcn 기본 32×18.4 덮어쓰기)
                 className="px-px data-[size=default]:h-6 data-[size=default]:w-11 [&_span[data-slot=switch-thumb]]:size-5 [&_span[data-slot=switch-thumb][data-checked]]:translate-x-5"
               />
