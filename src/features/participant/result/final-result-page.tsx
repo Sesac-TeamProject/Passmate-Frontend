@@ -49,7 +49,7 @@ type Props = {
   rows: RankRow[];
   /** 게스트면 가입 유도 버튼을 보여 준다 */
   isGuest: boolean;
-  /** 리포트 화면이 아직 없으면 undefined — 버튼을 비활성으로 둔다 */
+  /** 리포트로 이동. 없으면 버튼을 비활성으로 둔다 */
   onOpenReport?: () => void;
   onSignUp: () => void;
 };
@@ -149,7 +149,6 @@ export function FinalResultPage({
       </div>
 
       <div className="mx-auto mt-auto flex w-full max-w-sm flex-col gap-2.5 px-5 pt-8">
-        {/* TODO(design): 리포트 화면(M-06)이 아직 없다 — 만들기 전까지 비활성으로 둔다 */}
         <button
           type="button"
           onClick={onOpenReport}

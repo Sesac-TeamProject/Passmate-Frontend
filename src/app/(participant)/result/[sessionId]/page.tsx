@@ -73,8 +73,7 @@ export default function Page() {
       podium={podium}
       rows={rows}
       isGuest={result.data.isGuest ?? false}
-      // TODO(design): 리포트 화면(M-06)이 아직 없다 — 만들면 여기서 연결한다
-      onOpenReport={undefined}
+      onOpenReport={() => router.push(`/result/${roomId}/report`)}
       onSignUp={() => router.push("/login")}
     />
   );

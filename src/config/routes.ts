@@ -181,8 +181,15 @@ export const ROUTES: readonly RouteMeta[] = [
   {
     path: "/result/[sessionId]",
     sample: "/result/1",
-    title: "결과·리포트",
-    description: "점수·랭킹, 문제별 피드백, 취약점 리포트, 세션 별점·코멘트, 게스트 가입 유도",
+    title: "최종 결과",
+    description: "내 등수·점수와 상위 순위, 리포트 열기, 게스트 가입 유도",
+    area: "participant",
+  },
+  {
+    path: "/result/[sessionId]/report",
+    sample: "/result/1/report",
+    title: "내 리포트",
+    description: "정답 수·보완할 주제, 문항별 채점 결과, 서술형 AI 분석과 선생님 코멘트",
     area: "participant",
   },
   {
