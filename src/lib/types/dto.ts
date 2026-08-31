@@ -18,7 +18,7 @@ export type ApiErrorBody = { code: string; message: string };
 /** POST /auth/refresh 요청 */
 export type TokenRefreshRequest = { refreshToken: string };
 
-/** 로그인·refresh 응답 */
+/** 로그인 콜백으로 받는 토큰 쌍 (refresh 응답은 TokenRefreshResponse) */
 export type TokenPair = { accessToken: string; refreshToken: string };
 
 /** POST /auth/refresh 응답 — refreshToken은 미회전 시 생략 */
