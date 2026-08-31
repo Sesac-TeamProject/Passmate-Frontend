@@ -1,4 +1,5 @@
 // 랜딩 목업은 실제 데이터가 아니라 시안 스냅숏이므로 정적 상수를 그대로 둔다 (API 연동 대상 아님).
+import type { SidebarUser } from "@/components/layout/role-sidebar";
 import type {
   EssayAnswer,
   LiveQuestion,
@@ -7,6 +8,14 @@ import type {
   SessionReport,
   Student,
 } from "@/features/host/types";
+
+/** 로그인한 회원 시안 스냅숏 — W-07 방 리포트 목업 사이드바 전용 */
+export const ACCOUNT: SidebarUser = {
+  name: "이한결",
+  initial: "한",
+  roleLabel: "회원",
+  tone: "peach",
+};
 
 /** 대기실·진행 중인 방 (W-04~W-06) 시안 스냅숏 — 히어로 목업 전용 */
 export const LIVE_ROOM: LiveRoom = {

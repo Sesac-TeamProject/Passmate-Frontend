@@ -83,3 +83,8 @@ export function formatHours(hours: number): string {
 export function formatPin(pin: string): string {
   return `${pin.slice(0, 3)} ${pin.slice(3)}`;
 }
+
+/** 원화 표기(공백 옵션) — 마이페이지 v3 행은 붙임("₩64,000"), W-10 정산 표는 공백("₩ 60,000") */
+export function formatWon(value: number, spaced = false): string {
+  return `${spaced ? "₩ " : "₩"}${formatNumber(value)}`;
+}

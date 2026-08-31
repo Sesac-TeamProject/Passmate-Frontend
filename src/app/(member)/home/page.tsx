@@ -11,7 +11,6 @@ import { PAID_ROOM_LOGIN_MESSAGE, toJoinErrorMessage } from "@/features/particip
 import { INITIAL_JOIN_VALUES, type JoinValues } from "@/features/participant/join/join-form";
 import { toCreateRoomErrorMessage, toQuestionSetOptions } from "@/features/host/room-flow/adapt";
 import { NewRoomDialog } from "@/features/host/room-flow/new-room-dialog";
-import { ACCOUNT } from "@/features/me/mock";
 import { useGrade, useMe } from "@/lib/queries/use-me";
 import { useQuestionSets } from "@/lib/queries/use-question-sets";
 import { useCreateRoom, useJoinByPin, usePublicRooms } from "@/lib/queries/use-rooms";
@@ -104,7 +103,7 @@ export default function Page() {
   return (
     <>
       <HomePage
-        name={ACCOUNT.name.slice(1)}
+        name={me.data?.nickname ?? ""}
         popularRooms={toPopularRooms(rooms.data.items ?? [])}
         join={{
           values: joinValues,

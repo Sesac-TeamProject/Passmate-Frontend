@@ -21,6 +21,7 @@ type Props = {
   onChange: (next: SettlementAccountValues) => void;
   onSubmit: () => void;
   pending?: boolean;
+  errorMessage?: string | null;
 };
 
 /** C-02-3 정산 계좌 등록 — 은행 select · 계좌번호 · 예금주 · 등록하기. 렌더 전용 */
@@ -30,6 +31,7 @@ export function SettlementAccountPage({
   onChange,
   onSubmit,
   pending = false,
+  errorMessage,
 }: Props) {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -39,6 +41,14 @@ export function SettlementAccountPage({
   return (
     <MeFormPage title="정산 계좌 등록">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {errorMessage && (
+          <p
+            role="alert"
+            className="rounded-xl bg-destructive-soft px-3.5 py-3 text-label-md text-destructive"
+          >
+            {errorMessage}
+          </p>
+        )}
         <FormField label="은행" htmlFor="settlement-bank">
           <Select
             value={values.bank}

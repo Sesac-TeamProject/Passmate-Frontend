@@ -12,7 +12,7 @@ export default function Page() {
   const [values, setValues] = useState<PasswordValues>(INITIAL_VALUES);
 
   const handleSubmit = () => {
-    // TODO(API): PATCH /me/password — 검증(8자 이상·영문+숫자·확인 일치) 문구는 시안 없음
+    // TODO(API): 비밀번호 변경 계약 없음 — DESIGN_GAPS C-1/D-11 (Google 로그인 전용이라 비밀번호 자체가 없을 수 있다)
     router.push("/me");
   };
 

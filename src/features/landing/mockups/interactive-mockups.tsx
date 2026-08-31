@@ -3,8 +3,8 @@
 import { RoleSidebar } from "@/components/layout/role-sidebar";
 import { EditorPage } from "@/features/host/editor/editor-page";
 import { ReviewPage } from "@/features/host/review/review-page";
-import { ACCOUNT } from "@/features/me/mock";
 import {
+  ACCOUNT,
   EDITOR_MOCK_QUESTIONS,
   EDITOR_MOCK_TITLE,
   REPORT_ESSAY_ANSWERS_MOCK,

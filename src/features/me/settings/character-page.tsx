@@ -16,10 +16,17 @@ type Props = {
   onSelect: (avatar: AvatarKey) => void;
   onSubmit: () => void;
   pending?: boolean;
+  errorMessage?: string | null;
 };
 
 /** C-02-7 내 캐릭터 변경 — 아바타 12종 6×2 라디오 그리드 · "선택: 여우" · 저장하기. 렌더 전용 */
-export function CharacterPage({ selected, onSelect, onSubmit, pending = false }: Props) {
+export function CharacterPage({
+  selected,
+  onSelect,
+  onSubmit,
+  pending = false,
+  errorMessage,
+}: Props) {
   /* 라디오 그룹 키보드 이동 — ←/→ 이전·다음, ↑/↓ 한 줄(6칸) 위·아래 */
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 6, ArrowUp: -6 }[event.key];
@@ -33,6 +40,14 @@ export function CharacterPage({ selected, onSelect, onSubmit, pending = false }:
 
   return (
     <MeFormPage title="내 캐릭터 변경">
+      {errorMessage && (
+        <p
+          role="alert"
+          className="rounded-xl bg-destructive-soft px-3.5 py-3 text-label-md text-destructive"
+        >
+          {errorMessage}
+        </p>
+      )}
       <p className="text-body-md text-muted-foreground">
         대기실 · 결과 화면에서 닉네임과 함께 보여요
       </p>

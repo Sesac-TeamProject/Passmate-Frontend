@@ -1,6 +1,6 @@
 import { StudentAvatar } from "@/components/common/student-avatar";
 import { ReputationBadge } from "@/components/common/reputation-badge";
-import type { Profile } from "@/features/me/mock";
+import type { Profile } from "@/features/me/types";
 
 type Props = { profile: Profile; joinedRooms: number; hostedRooms: number };
 

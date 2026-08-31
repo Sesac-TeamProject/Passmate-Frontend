@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CoinBalanceCard } from "@/features/me/coins/coin-balance-card";
-import { CHARGE_PRESETS } from "@/features/me/coins/mock";
+import { CHARGE_PRESETS } from "@/features/me/coins/types";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
 import { formatKrwInline } from "@/lib/format";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";

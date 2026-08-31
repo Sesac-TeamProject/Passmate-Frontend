@@ -15,10 +15,19 @@ type Props = {
   onChange: (next: AccountValues) => void;
   onSubmit: () => void;
   pending?: boolean;
+  errorMessage?: string | null;
 };
 
 /** C-02-1 계정 정보 변경 — 아바타 행 · 닉네임 · 이메일(읽기 전용) · 저장하기. 렌더 전용 */
-export function AccountPage({ avatar, email, values, onChange, onSubmit, pending = false }: Props) {
+export function AccountPage({
+  avatar,
+  email,
+  values,
+  onChange,
+  onSubmit,
+  pending = false,
+  errorMessage,
+}: Props) {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit();
@@ -27,6 +36,14 @@ export function AccountPage({ avatar, email, values, onChange, onSubmit, pending
   return (
     <MeFormPage title="계정 정보 변경">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {errorMessage && (
+          <p
+            role="alert"
+            className="rounded-xl bg-destructive-soft px-3.5 py-3 text-label-md text-destructive"
+          >
+            {errorMessage}
+          </p>
+        )}
         <div className="flex items-center gap-3.5">
           <StudentAvatar avatar={avatar} size={72} />
           <div className="flex flex-col gap-0.5">

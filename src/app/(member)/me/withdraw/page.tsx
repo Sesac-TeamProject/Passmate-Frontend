@@ -2,28 +2,43 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { COIN_BALANCE } from "@/features/me/coins/mock";
+import { ScreenError } from "@/components/common/screen-error";
+import { ScreenLoading } from "@/components/common/screen-loading";
+import { toMeErrorMessage } from "@/features/me/adapt";
 import { WithdrawPage } from "@/features/me/withdraw/withdraw-page";
+import { useLogout } from "@/lib/queries/use-auth";
+import { useDeleteMe } from "@/lib/queries/use-me";
+import { useCoinBalance } from "@/lib/queries/use-payments";
 
 /** C-02-12 컨테이너. 확인 체크·탈퇴 요청을 소유한다. */
 export default function Page() {
   const router = useRouter();
+  const balance = useCoinBalance();
+  const deleteMe = useDeleteMe();
+  const logout = useLogout();
   const [confirmed, setConfirmed] = useState(false);
-  const [pending, setPending] = useState(false);
 
   const handleWithdraw = () => {
-    // TODO(API): 회원 탈퇴 계약 없음 — lib/api 연동 후 auth-store clear. 정산 예정 금액이 있으면 서버 code 기준으로 막는다
-    setPending(true);
-    router.push("/login");
+    if (deleteMe.isPending) return;
+    deleteMe.mutate(undefined, {
+      onSuccess: () => {
+        logout.mutate(undefined, { onSettled: () => router.replace("/") });
+      },
+    });
   };
+
+  if (balance.isPending) return <ScreenLoading />;
+  if (balance.isError)
+    return <ScreenError message={balance.error.message} onRetry={() => balance.refetch()} />;
 
   return (
     <WithdrawPage
-      balance={COIN_BALANCE}
+      balance={balance.data.balance ?? 0}
       confirmed={confirmed}
       onConfirmedChange={setConfirmed}
-      pending={pending}
+      pending={deleteMe.isPending || logout.isPending}
       onWithdraw={handleWithdraw}
+      errorMessage={deleteMe.isError ? toMeErrorMessage(deleteMe.error) : null}
     />
   );
 }

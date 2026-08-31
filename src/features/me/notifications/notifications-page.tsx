@@ -1,5 +1,5 @@
 import { Switch } from "@/components/ui/switch";
-import type { NotificationKey, NotificationSetting } from "@/features/me/notifications/mock";
+import type { NotificationKey, NotificationSetting } from "@/features/me/notifications/types";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
 import { SettingsList, SettingsRow } from "@/features/me/settings/settings-list";
 
