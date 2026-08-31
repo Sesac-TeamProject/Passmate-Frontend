@@ -9,6 +9,7 @@ export function toPopularRooms(items: PublicRoomDto[]): PopularRoom[] {
     type: room.isPaid ? "paid" : "free",
     title: room.title ?? "",
     host: room.hostName ?? "",
+    hostId: room.hostId ?? null,
     level: room.hostLevel ?? 1,
     participants: room.participantCount ?? 0,
   }));

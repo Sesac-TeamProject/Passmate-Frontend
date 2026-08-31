@@ -51,6 +51,13 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "public",
   },
   {
+    path: "/hosts/[userId]",
+    sample: "/hosts/42",
+    title: "선생님 프로필",
+    description: "공개 프로필 — 평점·운영 실적·뱃지·운영 중인 방 (인기 방 카드에서 이름 탭)",
+    area: "public",
+  },
+  {
     path: "/rooms",
     sample: "/rooms",
     title: "공개 방 목록",

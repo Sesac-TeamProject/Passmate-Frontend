@@ -285,6 +285,19 @@ const BADGE_META: Record<BadgeType, { kind: AchievementBadgeKind; label?: string
     AI_SETS_50: { kind: "empty", title: "AI 세트 50개" },
   };
 
+/**
+ * 호스트 공개 프로필은 뱃지를 BadgeDto가 아니라 BadgeType 목록으로 준다 — 목록에 있으면 획득한 것이다.
+ */
+export function toEarnedAchievement(type: BadgeType): Achievement {
+  const meta = BADGE_META[type];
+  return {
+    id: type,
+    kind: meta?.kind ?? "empty",
+    label: meta?.label,
+    title: meta?.title ?? type,
+  };
+}
+
 function toAchievement(badge: BadgeDto): Achievement {
   const meta = badge.type ? BADGE_META[badge.type] : undefined;
 
