@@ -10,10 +10,13 @@ import type { ApiErrorBody, TokenRefreshRequest, TokenRefreshResponse } from "@/
  * fetch 공통 래퍼 (설계 문서 §2, 규칙 문서 §5).
  * 담당: baseURL · 인증 헤더 · 401 → refresh 1회 → 재시도 · `{code,message}` → AppError · 파일 다운로드.
  * 403은 권한 거부로만 해석하고 refresh하지 않는다 (만료는 항상 401).
- * refresh까지 실패하면 세션만 비운다 — `/login?next=` 이동은 UI 층의 RequireAuth 가드가 status를 보고 한다.
+ * refresh까지 실패하면 세션만 비운다(400·401·403일 때만 — 5xx는 일시 장애로 보고 토큰을 남긴다).
+ * `/login?next=` 이동은 UI 층의 RequireAuth 가드가 status를 보고 한다.
  */
 const REFRESH_PATH = "/auth/refresh";
 const HTTP_UNAUTHORIZED = 401;
+/** refresh 응답이 이 상태면 리프레시 토큰이 죽은 것 — 저장분을 지운다. 그 밖(5xx 등)은 일시 장애로 본다. */
+const SESSION_KILLING_STATUSES = [400, 401, 403];
 const HTTP_NO_CONTENT = 204;
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -168,8 +171,12 @@ async function doRefresh(): Promise<string | null> {
   const response = await send(buildUrl(REFRESH_PATH), { method: "POST", body }, null);
 
   if (!response.ok) {
-    store.clearSession();
-    clearRefreshToken();
+    // 리프레시 토큰이 실제로 죽은 응답(400·401·403)에서만 세션을 비운다 — KMP ApiClient와 같은 기준.
+    // 5xx·게이트웨이 오류에도 지우면 배포 중 한 번의 500으로 열린 탭이 전부 로그아웃된다(복구 불가).
+    if (SESSION_KILLING_STATUSES.includes(response.status)) {
+      store.clearSession();
+      clearRefreshToken();
+    }
     return null;
   }
 

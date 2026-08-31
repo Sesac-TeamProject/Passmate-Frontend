@@ -181,6 +181,53 @@ describe("api/client", () => {
     expect(useAuthStore.getState().accessToken).toBe("new-access");
   });
 
+  it("동시 401 두 건이어도 refresh는 한 번만 나간다", async () => {
+    stubLocalStorage({ [REFRESH_KEY]: "old-refresh" });
+    const seen = new Map<string, number>();
+    fetchMock.mockImplementation((url: string) => {
+      if (url.endsWith("/auth/refresh"))
+        return Promise.resolve(jsonResponse(200, { accessToken: "new-access" }));
+
+      const count = (seen.get(url) ?? 0) + 1;
+      seen.set(url, count);
+      return Promise.resolve(
+        count === 1
+          ? jsonResponse(401, { code: "TOKEN_EXPIRED", message: "만료" })
+          : jsonResponse(200, { ok: true }),
+      );
+    });
+    const { request, useAuthStore } = await loadClient();
+    useAuthStore.getState().setAccessToken("old-access");
+
+    await Promise.all([request("/users/me"), request("/rooms/hosted")]);
+
+    const refreshCalls = fetchMock.mock.calls.filter(([url]) =>
+      String(url).endsWith("/auth/refresh"),
+    );
+    expect(refreshCalls).toHaveLength(1);
+    expect(useAuthStore.getState().accessToken).toBe("new-access");
+  });
+
+  it("refresh가 5xx면 세션·리프레시 토큰을 지우지 않는다 (배포 중 게이트웨이 장애)", async () => {
+    const store = stubLocalStorage({ [REFRESH_KEY]: "old-refresh" });
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(401, { code: "TOKEN_EXPIRED", message: "만료" }))
+      .mockResolvedValueOnce(jsonResponse(500, { code: "INTERNAL_ERROR", message: "서버 오류" }));
+    const { request, useAuthStore, AppError } = await loadClient();
+    useAuthStore.getState().setSession("old-access", {
+      nickname: "n",
+      email: "e",
+      role: "ADMIN",
+    });
+
+    const error = await request("/users/me").catch((e: unknown) => e);
+
+    expect(AppError.isAppError(error) && error.kind).toBe("Unauthorized");
+    expect(store.get(REFRESH_KEY)).toBe("old-refresh");
+    expect(useAuthStore.getState().status).toBe("authenticated");
+    expect(useAuthStore.getState().accessToken).toBe("old-access");
+  });
+
   it("회원 토큰이 없고 게스트 토큰이 있으면 게스트 토큰을 Bearer로 보낸다", async () => {
     stubLocalStorage({});
     const { request } = await loadClient();

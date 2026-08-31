@@ -22,12 +22,12 @@ export function getRoomReport(roomId: number): Promise<RoomReportResponse> {
   return request<RoomReportResponse>(`/rooms/${roomId}/results`);
 }
 
-/** @draft — 계약 없음. tasks.md T070 경로. 계약 도착 시 수정 */
+/** @draft — 계약 없음. ../docs/tasks.md T070 경로. 계약 도착 시 수정 */
 export function getEssayAnswers(roomId: number, questionId: number): Promise<EssayAnswersResponse> {
   return request<EssayAnswersResponse>(`/rooms/${roomId}/questions/${questionId}/answers`);
 }
 
-/** @draft — 계약 없음. tasks.md T070 경로. 계약 도착 시 수정 (FR-034) */
+/** @draft — 계약 없음. ../docs/tasks.md T070 경로. 계약 도착 시 수정 (FR-034) */
 export function postHostReview(answerId: number, body: HostReviewRequest): Promise<void> {
   return request<void>(`/answers/${answerId}/review`, { method: "POST", body });
 }

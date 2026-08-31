@@ -13,7 +13,7 @@ export type QuestionSetDto = {
 export type QuestionSetsResponse = CursorPage<QuestionSetDto>;
 export type QuestionSetStatusFilter = "CONFIRMED" | "DRAFT";
 
-/* ── 아래는 전부 @draft — 계약 없음(KMP는 목록만 호출). tasks.md T027·T028·T076·T087 경로. 계약 도착 시 수정 ── */
+/* ── 아래는 전부 @draft — 계약 없음(KMP는 목록만 호출). ../docs/tasks.md T027·T028·T076·T087 경로. 계약 도착 시 수정 ── */
 
 /** @draft POST /question-sets/generate 요청 (FR-009·016) */
 export type GenerateQuestionSetRequest = {

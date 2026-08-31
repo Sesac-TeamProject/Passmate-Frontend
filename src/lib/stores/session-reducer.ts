@@ -108,17 +108,18 @@ export function reduceSessionEvent(state: SessionState, event: ServerEvent): Ses
         currentQuestion: state.currentQuestion
           ? { ...state.currentQuestion, isClosed: true }
           : null,
+        // 서버 프레임의 중첩 필드는 계약상 필수지만 방어적으로 읽는다 — 한 프레임이 깨져도 화면이 죽지 않도록.
         reveal: {
           questionNo: event.data.questionNo,
-          answer: event.data.answerReveal.answer ?? null,
-          explanation: event.data.answerReveal.explanation ?? null,
-          correctCount: event.data.correctCount,
+          answer: event.data.answerReveal?.answer ?? null,
+          explanation: event.data.answerReveal?.explanation ?? null,
+          correctCount: event.data.correctCount ?? 0,
         },
       };
     case "SCORE_UPDATED":
       return base;
     case "RANKING_UPDATED":
-      return { ...base, ranking: event.data.ranking };
+      return { ...base, ranking: event.data.ranking ?? [] };
     case "SCREEN_LOCKED":
       return { ...base, isLocked: event.data.locked };
     case "HINT_PUBLISHED":
@@ -127,8 +128,8 @@ export function reduceSessionEvent(state: SessionState, event: ServerEvent): Ses
       return {
         ...base,
         phase: "FINISHED",
-        finalRanking: event.data.finalRanking,
-        ranking: event.data.finalRanking,
+        finalRanking: event.data.finalRanking ?? [],
+        ranking: event.data.finalRanking ?? [],
       };
     case "ROOM_CANCELLED":
       return { ...base, cancelledReason: event.data.reason ?? "" };

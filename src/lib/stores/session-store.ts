@@ -17,6 +17,7 @@ type SessionStore = SessionState & {
   dispatch: (event: ServerEvent) => void;
   replaceWithSnapshot: (snapshot: SessionSnapshotResponse | null) => void; // null = 404 미시작 → WAITING 유지, snapshotTs=now
   setParticipants: (participants: SessionState["participants"]) => void; // GET /participants 초기 로딩
+  setHints: (hints: SessionState["hints"]) => void; // GET /session/hints 재접속 복구
   setConnection: (c: ConnectionStatus) => void;
   setAiAnalysisEnabled: (v: boolean) => void;
   reset: () => void;
@@ -38,6 +39,7 @@ export const useSessionStore = create<SessionStore>()((set, get) => ({
         : { ...s, phase: "WAITING", snapshotTs: new Date().toISOString() },
     ),
   setParticipants: (participants) => set({ participants }),
+  setHints: (hints) => set({ hints }),
   setConnection: (connection) => set({ connection }),
   setAiAnalysisEnabled: (aiAnalysisEnabled) => set({ aiAnalysisEnabled }),
   reset: () => set({ ...initialSessionState, connection: "idle", snapshotTs: null }),

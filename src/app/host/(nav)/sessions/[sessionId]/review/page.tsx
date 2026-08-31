@@ -9,7 +9,7 @@ import { ReviewPage } from "@/features/host/review/review-page";
 import { downloadFile } from "@/lib/api/client";
 import { useEssayAnswers, useRoomReport } from "@/lib/queries/use-results";
 
-/** @draft — 계약 없음(tasks.md T060). 실패 시(목 모드 404 포함) 안내만 보여준다 */
+/** @draft — 계약 없음(../docs/tasks.md T060). 실패 시(목 모드 404 포함) 안내만 보여준다 */
 const EXPORT_UNAVAILABLE_MESSAGE = "백엔드 연동 후 제공돼요";
 
 /**
@@ -43,7 +43,7 @@ export default function Page() {
     setExportError(null);
     setExporting(true);
     try {
-      // @draft — 계약 없음(tasks.md T060)
+      // @draft — 계약 없음(../docs/tasks.md T060)
       await downloadFile(`/sessions/${roomId}/stats/export`, `passmate-report-${roomId}.csv`);
     } catch {
       // 목 모드에서는 라우트가 없어 404(AppError)가 난다 — 실제 실패도 같은 안내로 접는다.

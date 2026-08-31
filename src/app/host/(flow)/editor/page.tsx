@@ -21,6 +21,14 @@ function EditorContainer() {
   const querySetId = searchParams.get("set");
 
   const [setId, setSetId] = useState<number | null>(querySetId ? Number(querySetId) : null);
+  const [lastQuerySetId, setLastQuerySetId] = useState<string | null>(querySetId);
+
+  // 뒤로/앞으로 가기로 ?set= 이 바뀌면 편집 중인 세트도 따라간다 — 렌더 중 조정
+  // (react.dev "Adjusting state when a prop changes"). AI 생성으로 setId만 바뀐 경우는 건드리지 않는다.
+  if (querySetId !== lastQuerySetId) {
+    setLastQuerySetId(querySetId);
+    setSetId(querySetId ? Number(querySetId) : null);
+  }
 
   const questionSet = useQuestionSet(setId);
   const usage = useAiUsage();

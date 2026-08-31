@@ -319,4 +319,6 @@ export function __resetSessionForTests(): void {
   submittedCount = 0;
   locked = false;
   myTotalScore = 0;
+  hints = [{ hintId: 1, questionNo: 2, clipUrl: "/mock/hints/hint-1.mp3", durationMs: 5000 }];
+  nextHintId = 2;
 }

@@ -18,6 +18,10 @@ export const qk = {
   publicRooms: (q: PublicRoomsQuery) => ["rooms", "public", q] as const,
   roomByPin: (pin: string) => ["rooms", "pin", pin] as const,
   participants: (roomId: number) => ["rooms", roomId, "participants"] as const,
+  /**
+   * 세션 스냅샷은 쿼리로 읽지 않는다(스토어가 소유 — use-session-connection). 이 키는 세션 제어 뮤테이션이
+   * ["rooms", id, "session", …] 하위(submissions·hints)를 prefix로 한꺼번에 무효화하는 데만 쓰인다.
+   */
   snapshot: (roomId: number) => ["rooms", roomId, "session"] as const,
   submissions: (roomId: number) => ["rooms", roomId, "session", "submissions"] as const,
   hints: (roomId: number) => ["rooms", roomId, "session", "hints"] as const,

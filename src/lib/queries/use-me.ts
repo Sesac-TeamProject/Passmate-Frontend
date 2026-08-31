@@ -98,7 +98,8 @@ export function useUpdateProfile() {
       if (variables.nickname !== undefined) patch.nickname = variables.nickname ?? undefined;
       if (variables.avatarId !== undefined) patch.avatarId = variables.avatarId;
       useAuthStore.getState().setProfile(patch);
-      queryClient.invalidateQueries({ queryKey: qk.me });
+      // exact — ["me"]는 코인·수익·정산 계좌·등급·AI 사용량 키의 prefix라 그냥 무효화하면 전부 다시 불린다.
+      queryClient.invalidateQueries({ queryKey: qk.me, exact: true });
     },
   });
 }

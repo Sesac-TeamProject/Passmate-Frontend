@@ -85,7 +85,7 @@ export type RoomReportResponse = {
   students?: RoomReportStudent[];
 };
 
-/** @draft — 계약 없음. tasks.md T070. 서술형 답안 목록(W-07 분석 패널) */
+/** @draft — 계약 없음. ../docs/tasks.md T070. 서술형 답안 목록(W-07 분석 패널) */
 export type EssayAnswerDto = {
   answerId: number;
   participantId: number;

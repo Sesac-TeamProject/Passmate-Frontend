@@ -31,6 +31,26 @@ pnpm dev           # http://localhost:3000
 
 env 두 줄(`NEXT_PUBLIC_API_BASE_URL`·`NEXT_PUBLIC_WS_URL`)을 채우면 `lib/mocks`를 거치지 않고 실서버로 바로 붙는다(`IS_MOCK`이 꺼진다). 서버 계약이 이 리포의 DTO와 다르면 `src/lib/types/dto/*`와 `src/lib/mocks/*`만 고치면 된다 — 나머지 층(`lib/api`·`lib/queries`·화면)은 그대로 둔다.
 
+### 아직 화면이 없는 훅
+
+계약·`lib/api`·쿼리 훅까지는 있지만 아직 부르는 화면이 없는 훅들이다. 시안이 없어 화면을 만들지 않았을 뿐
+(`DESIGN_GAPS.md` §A) 연결은 끝나 있으므로, 해당 화면을 그릴 때 그대로 쓰면 된다.
+
+| 훅                                           | 엔드포인트                                  |
+| -------------------------------------------- | ------------------------------------------- |
+| `useMyResult` / `useMyReport`                | `GET /rooms/{id}/results/me`, `/reports/me` |
+| `useReport`                                  | `GET /rooms/{id}/results`                   |
+| `useSubmitRating` / `usePostHostReview`      | `POST /rooms/{id}/ratings`, `/host-reviews` |
+| `useHostProfile`                             | `GET /users/{userId}/profile`               |
+| `useClaimGuestRecord`                        | `POST /guests/claim`                        |
+| `useBadges`                                  | `GET /users/me/badges`                      |
+| `useParticipants` / `useLeaveRoom`           | `GET`·`DELETE /rooms/{id}/participants`     |
+| `useUpdateQuestionSet` / `useUploadMaterial` | `PUT /question-sets/{id}`, 자료 업로드      |
+| `useVoiceHints`                              | `GET /rooms/{id}/session/hints`             |
+
+`useParticipants`·`useVoiceHints`가 읽는 데이터는 지금 실시간 연결(`use-session-connection`)이 직접
+불러 세션 스토어에 넣는다 — 훅 자체는 별도 화면(예: 참가자 관리·힌트 다시 듣기)이 생길 때 쓴다.
+
 ## 기술 스택
 
 Next.js 16 (App Router, TypeScript) · Tailwind CSS v4 · shadcn/ui · TanStack Query · Zustand · Vitest · pnpm
