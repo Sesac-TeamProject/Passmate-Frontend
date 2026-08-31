@@ -238,6 +238,13 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "host",
   },
   {
+    path: "/host/rooms/[code]/final",
+    sample: "/host/rooms/482913/final",
+    title: "최종 순위",
+    description: "세션 종료 후 포디움·전체 순위·세션 요약 (프로젝터 투사 가정)",
+    area: "host",
+  },
+  {
     path: "/host/sessions/[sessionId]/review",
     sample: "/host/sessions/1/review",
     title: "방 리포트",

@@ -3,10 +3,13 @@ import type { ChoiceKey, QuestionResult, Student } from "@/features/host/types";
 import type {
   ParticipantEntry,
   RankingEntry,
+  RoomReportResponse,
   SnapshotQuestion,
   SubmissionsResponse,
 } from "@/lib/types/dto";
 import type { SessionState } from "@/lib/stores/session-reducer";
+import type { FinalRankRow } from "./final-page";
+import type { HardestQuestion, SessionSummary } from "./final-rail";
 
 const CHOICE_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
 
@@ -82,6 +85,68 @@ export function toAccuracyByQuestion(
   accuracy: number,
 ): (number | null)[] {
   return Array.from({ length: total }, (_, i) => (i + 1 === questionNo ? accuracy : null));
+}
+
+/**
+ * 최종 순위 행 — 아바타·점수는 세션 랭킹에서, 맞힌 문항 수는 방 리포트에서 온다.
+ * `RankingEntry`에 correctCount가 없고 `RoomReportStudent`에 avatarId가 없어 participantId로 합친다.
+ */
+export function toFinalRanking(
+  ranking: RankingEntry[],
+  report: RoomReportResponse | undefined,
+): FinalRankRow[] {
+  const correctById = new Map(
+    (report?.students ?? []).map((s) => [String(s.participantId), s.correctCount ?? null]),
+  );
+  return ranking.map((r) => ({
+    rank: r.rank,
+    student: {
+      id: String(r.participantId),
+      name: r.nickname,
+      avatar: avatarKeyFromId(r.avatarId),
+    },
+    score: r.total,
+    correctCount: correctById.get(String(r.participantId)) ?? null,
+  }));
+}
+
+/** W-12 레일의 세션 요약. 진행 시간은 계약에 없어 늘 null이다 (DESIGN_GAPS D-16) */
+export function toSessionSummary(
+  report: RoomReportResponse | undefined,
+  studentCount: number,
+  questionCount: number,
+): SessionSummary {
+  return {
+    avgAccuracy: report?.summary?.avgAccuracyPercent ?? null,
+    studentCount: report?.summary?.studentCount ?? studentCount,
+    minutes: null,
+    questionCount: report?.summary?.questionCount ?? questionCount,
+  };
+}
+
+/** 리포트의 문항별 정답률을 문항 번호 순서대로 편다. 아직 채점되지 않은 문항은 null */
+export function toReportAccuracy(
+  report: RoomReportResponse | undefined,
+  questionCount: number,
+): (number | null)[] {
+  const byNo = new Map(
+    (report?.questions ?? []).map((q) => [q.questionNo ?? 0, q.accuracyPercent ?? null]),
+  );
+  return Array.from({ length: questionCount }, (_, i) => byNo.get(i + 1) ?? null);
+}
+
+/** 정답률이 가장 낮은 문항. 채점된 문항이 없으면 null */
+export function toHardestQuestion(report: RoomReportResponse | undefined): HardestQuestion | null {
+  const scored = (report?.questions ?? []).filter(
+    (q): q is typeof q & { accuracyPercent: number } => typeof q.accuracyPercent === "number",
+  );
+  if (scored.length === 0) return null;
+  const worst = scored.reduce((a, b) => (b.accuracyPercent < a.accuracyPercent ? b : a));
+  return {
+    no: worst.questionNo ?? 0,
+    accuracy: worst.accuracyPercent,
+    title: worst.title ?? "",
+  };
 }
 
 /** 여러 뮤테이션 중 처음 실패한 것의 문구. 모두 성공이면 null */

@@ -42,7 +42,7 @@ export default function Page() {
 
   useEffect(() => {
     if (roomId === null) return;
-    if (phase === "FINISHED") router.replace(`/host/sessions/${roomId}/review`);
+    if (phase === "FINISHED") router.replace(`/host/rooms/${pin}/final`);
     // 스냅샷까지 받고도 WAITING이면 아직 시작 전이다(주소로 바로 들어온 경우) — 대기실로 돌려보낸다
     else if (snapshotTs !== null && phase === "WAITING") router.replace(`/host/rooms/${pin}/lobby`);
     // 다음 문항이 시작되면 reveal이 지워진다 — 새로고침으로 reveal이 없을 때도 진행 화면이 맞다
