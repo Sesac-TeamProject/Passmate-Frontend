@@ -1,0 +1,211 @@
+import { AppError } from "@/lib/types/app-error";
+import type {
+  ChargeCheckoutResponse,
+  CoinBalanceResponse,
+  CoinTransactionDto,
+  CoinTransactionPageResponse,
+  ConfirmChargeRequest,
+  ConfirmChargeResponse,
+  CreateChargeRequest,
+  CreateEntryPaymentRequest,
+  EarningsResponse,
+  EntryPaymentResponse,
+  PaymentMethodRequest,
+  SettlementAccountDto,
+  SettlementItemDto,
+} from "@/lib/types/dto";
+import { DEMO_ROOM } from "./fixtures";
+
+/**
+ * 코인·정산(payments) 목 응답. features/me/coins/mock.ts·features/me/settlement/mock.ts·
+ * features/me/mock.ts를 DTO 모양으로 옮긴다. 잔액은 모듈 스코프에서 유지한다.
+ */
+
+let balance = 1200;
+
+/** features/me/coins/mock.ts COIN_HISTORY — 합계 1,200 C(잔액과 일치). balanceAfter는 시간순 누적. */
+const COIN_HISTORY: CoinTransactionDto[] = [
+  {
+    id: 1,
+    type: "DEDUCT",
+    amount: -10000,
+    balanceAfter: 1200,
+    roomTitle: "Spring 실전 모의고사",
+    createdAt: "2026-08-22",
+  },
+  {
+    id: 2,
+    type: "CHARGE",
+    amount: 10000,
+    balanceAfter: 11200,
+    method: "KAKAO_PAY",
+    createdAt: "2026-08-20",
+  },
+  {
+    id: 3,
+    type: "DEDUCT",
+    amount: -5000,
+    balanceAfter: 1200,
+    roomTitle: "CS 기술면접 라운드 2",
+    createdAt: "2026-08-15",
+  },
+  {
+    id: 4,
+    type: "CHARGE",
+    amount: 5000,
+    balanceAfter: 6200,
+    method: "KAKAO_PAY",
+    createdAt: "2026-08-10",
+  },
+  { id: 5, type: "CHARGE", amount: 1200, balanceAfter: 1200, createdAt: "2026-08-01" },
+];
+
+/** features/me/settlement/mock.ts SETTLEMENT_ROWS */
+const SETTLEMENT_ITEMS: SettlementItemDto[] = [
+  {
+    settlementId: 1,
+    dateLabel: "8/22",
+    roomTitle: "8월 4주차 Spring 스터디",
+    participantCount: 6,
+    entryFeeTotal: 60000,
+    feeAmount: 12000,
+    payoutAmount: 48000,
+    status: "SCHEDULED",
+  },
+  {
+    settlementId: 2,
+    dateLabel: "8/20",
+    roomTitle: "CS 모의면접 3회차",
+    participantCount: 5,
+    entryFeeTotal: 50000,
+    feeAmount: 10000,
+    payoutAmount: 40000,
+    status: "SCHEDULED",
+  },
+  {
+    settlementId: 3,
+    dateLabel: "8/15",
+    roomTitle: "JPA 심화 2회차",
+    participantCount: 4,
+    entryFeeTotal: 40000,
+    feeAmount: 8000,
+    payoutAmount: 32000,
+    status: "PAID",
+  },
+  {
+    settlementId: 4,
+    dateLabel: "8/08",
+    roomTitle: "Spring 기술면접 1회차",
+    participantCount: 8,
+    entryFeeTotal: 80000,
+    feeAmount: 16000,
+    payoutAmount: 64000,
+    status: "PAID",
+  },
+];
+
+let settlementAccount: SettlementAccountDto = {
+  bankName: "국민은행",
+  accountNumber: "123456-01-234567",
+  holderName: "이한결",
+};
+
+let chargeCounter = 1;
+const pendingCharges = new Map<string, number>();
+
+/** GET /users/me/coins */
+export function mockCoinBalance(): CoinBalanceResponse {
+  return { balance, defaultMethod: "KAKAO_PAY", recent: COIN_HISTORY[0] ?? null };
+}
+
+/** GET /users/me/coins/transactions */
+export function mockCoinTransactions(): CoinTransactionPageResponse {
+  return { items: COIN_HISTORY, nextCursor: null, hasNext: false };
+}
+
+const AMOUNT_LOCALE = "ko-KR";
+
+/** POST /coins/charges — roomId 있으면 충전 후 바로 차감할 방. 포트원 V2 결제창 파라미터를 돌려준다 */
+export function mockCreateCharge(body: CreateChargeRequest): ChargeCheckoutResponse {
+  const chargeId = `chg-${chargeCounter}`;
+  const paymentId = `PM-${chargeCounter}`;
+  chargeCounter += 1;
+  pendingCharges.set(chargeId, body.amount);
+
+  return {
+    chargeId,
+    storeId: "store-mock",
+    channelKey: "channel-mock",
+    paymentId,
+    orderName: `패스메이트 코인 ${body.amount.toLocaleString(AMOUNT_LOCALE)} C 충전`,
+    amount: body.amount,
+    currency: "KRW",
+    payMethod: body.method,
+  };
+}
+
+/** POST /coins/charges/{chargeId}/confirm */
+export function mockConfirmCharge(
+  chargeId: string,
+  body: ConfirmChargeRequest,
+): ConfirmChargeResponse {
+  const amount = pendingCharges.get(chargeId) ?? 0;
+  pendingCharges.delete(chargeId);
+  balance += amount;
+
+  let entryPayment: EntryPaymentResponse | null = null;
+  if (body.roomId != null) {
+    balance -= DEMO_ROOM.entryFee ?? 0;
+    entryPayment = { paymentNo: `PM-ENTRY-${chargeCounter}`, balance };
+  }
+
+  return { balance, entryPayment };
+}
+
+/** POST /rooms/{roomId}/entry-payments — 참가비 코인 차감. 402 잔액 부족 */
+export function mockEntryPayment(
+  _roomId: string,
+  _body: CreateEntryPaymentRequest,
+): EntryPaymentResponse {
+  const entryFee = DEMO_ROOM.entryFee ?? 0;
+  if (balance < entryFee) {
+    throw new AppError("PaymentRequired", { code: "PAYMENT_REQUIRED" });
+  }
+  balance -= entryFee;
+  return { paymentNo: `PM-ENTRY-${chargeCounter++}`, balance };
+}
+
+/** GET /users/me/earnings — 수익·정산 요약+내역. features/me/settlement/mock.ts SETTLEMENT_STATS */
+export function mockEarnings(): EarningsResponse {
+  return {
+    items: SETTLEMENT_ITEMS,
+    nextCursor: null,
+    hasNext: false,
+    monthlyTotal: 384000,
+    hostSharePercent: 80,
+    nextPayout: { dateLabel: "9/5", amount: 307200 },
+    paidRoomCount: 12,
+    studentCount: 48,
+    account: {
+      bankName: settlementAccount.bankName,
+      maskedNumber: "***-***-4821",
+      payoutNote: null,
+    },
+  };
+}
+
+/** GET /users/me/settlement-account — 미등록이면 404(목에서는 항상 등록됨) */
+export function mockSettlementAccount(): SettlementAccountDto {
+  return settlementAccount;
+}
+
+/** PUT /users/me/settlement-account */
+export function mockPutSettlementAccount(body: SettlementAccountDto): SettlementAccountDto {
+  settlementAccount = { ...settlementAccount, ...body };
+  return settlementAccount;
+}
+
+/** PUT /users/me/payment-method */
+export function mockPutPaymentMethod(_body: PaymentMethodRequest): undefined {
+  return undefined;
+}

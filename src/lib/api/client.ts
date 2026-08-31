@@ -32,7 +32,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const method = options.method ?? "GET";
   const url = buildUrl(path, options.query);
 
-  if (IS_MOCK) return resolveMock<T>(method, url);
+  if (IS_MOCK) return resolveMock<T>(method, url, options.body);
 
   const response = await sendWithRefresh(url, path, options);
 
@@ -59,7 +59,7 @@ export async function downloadFile(path: string, filename: string): Promise<void
 export async function requestMultipart<T>(path: string, form: FormData): Promise<T> {
   const url = buildUrl(path);
 
-  if (IS_MOCK) return resolveMock<T>("POST", url);
+  if (IS_MOCK) return resolveMock<T>("POST", url, form);
 
   const response = await sendWithRefresh(url, path, { method: "POST", body: form });
 
