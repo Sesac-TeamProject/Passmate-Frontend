@@ -7,10 +7,21 @@ type Props = {
   onChange: (next: JoinValues) => void;
   onSubmit: () => void;
   pending?: boolean;
+  /** PIN 조회·입장 실패 문구 (유료 방 로그인 안내 포함) */
+  errorMessage?: string | null;
+  /** errorMessage가 유료 방 안내일 때만: "로그인하기" 버튼이 가리킬 경로(/login?next=/pay/{pin}) */
+  loginHref?: string | null;
 };
 
 /** C-03 게스트 입장 (웹) — PIN · 닉네임 · 캐릭터 한 카드. 렌더 전용, 상태는 app/(bare)/join/page.tsx가 소유 */
-export function JoinPage({ values, onChange, onSubmit, pending = false }: Props) {
+export function JoinPage({
+  values,
+  onChange,
+  onSubmit,
+  pending = false,
+  errorMessage = null,
+  loginHref = null,
+}: Props) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-5 bg-background">
       <BrandLogo size="lg" />
@@ -22,6 +33,21 @@ export function JoinPage({ values, onChange, onSubmit, pending = false }: Props)
             선생님 화면의 6자리 숫자를 입력하세요
           </p>
         </div>
+
+        {errorMessage && (
+          <div
+            role="alert"
+            className="flex flex-col items-start gap-1.5 rounded-xl bg-destructive-soft px-3.5 py-3 text-label-md text-destructive"
+          >
+            <p>{errorMessage}</p>
+            {loginHref && (
+              <Link href={loginHref} className="text-label-md font-semibold underline">
+                로그인하기 →
+              </Link>
+            )}
+          </div>
+        )}
+
         <JoinForm
           variant="guest"
           values={values}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { POPULAR_PAGE_SIZE, type PopularRoom } from "./mock";
+import { POPULAR_PAGE_SIZE, type PopularRoom } from "./types";
 import { RoomCard } from "./room-card";
 
 type Props = {

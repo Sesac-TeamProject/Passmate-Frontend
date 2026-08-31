@@ -1,7 +1,7 @@
 import { HeroBanner } from "@/components/common/hero-banner";
 import type { JoinValues } from "@/features/participant/join/join-form";
 import { CreateRoomFab } from "./fab";
-import type { PopularRoom } from "./mock";
+import type { PopularRoom } from "./types";
 import { PinEntryCard } from "./pin-entry-card";
 import { PopularRooms } from "./popular-rooms";
 
@@ -14,6 +14,8 @@ type Props = {
     onChange: (next: JoinValues) => void;
     onSubmit: () => void;
     pending?: boolean;
+    errorMessage?: string | null;
+    loginHref?: string | null;
   };
   /** FAB → 새 방 만들기 모달 */
   onCreateRoom: () => void;
@@ -36,6 +38,8 @@ export function HomePage({ name, popularRooms, join, onCreateRoom }: Props) {
         onChange={join.onChange}
         onSubmit={join.onSubmit}
         pending={join.pending}
+        errorMessage={join.errorMessage}
+        loginHref={join.loginHref}
       />
 
       <PopularRooms rooms={popularRooms} />

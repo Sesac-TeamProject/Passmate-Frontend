@@ -78,6 +78,29 @@ export function useJoinRoom(roomId: number | null) {
   });
 }
 
+/**
+ * PIN 입장 한 번에 처리(/join·홈 PIN 카드 공용): PIN → 방 조회 → 유료면 결제 필요(방 정보만 반환, 화면이 로그인·결제로 안내),
+ * 무료면 바로 참가자로 등록하고 게스트 토큰을 저장한다.
+ */
+export function useJoinByPin() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ pin, body }: { pin: string; body: JoinRoomRequest }) => {
+      const room = await getRoomByPin(pin);
+      if (room.isPaid) return { kind: "paid" as const, room };
+      const res = await joinRoom(room.roomId, body);
+      if (res.participantToken) writeGuestToken(res.participantToken);
+      return { kind: "joined" as const, room, res };
+    },
+    onSuccess: (data) => {
+      if (data.kind === "joined") {
+        queryClient.invalidateQueries({ queryKey: qk.participants(data.room.roomId) });
+      }
+    },
+  });
+}
+
 /** DELETE /rooms/{roomId}/participants/me. 게스트 토큰을 지우고 참가자 목록을 갱신한다 */
 export function useLeaveRoom(roomId: number | null) {
   const queryClient = useQueryClient();

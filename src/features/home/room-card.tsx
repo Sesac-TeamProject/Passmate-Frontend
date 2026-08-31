@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
 import { StatusChip } from "@/components/common/status-chip";
-import type { PopularRoom } from "./mock";
+import type { PopularRoom } from "./types";
 
 type Props = {
   room: PopularRoom;

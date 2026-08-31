@@ -34,6 +34,16 @@ export const AVATAR_LABEL: Record<AvatarKey, string> = {
   dino: "공룡",
 };
 
+/** avatarId(1..12) → AvatarKey. 범위를 벗어나거나 없으면 1(cat)로 안전하게 접는다 */
+export function avatarKeyFromId(id: number | null | undefined): AvatarKey {
+  return AVATAR_KEYS[(id ?? 1) - 1] ?? "cat";
+}
+
+/** AvatarKey → avatarId(1..12) — 서버로 보낼 때 쓴다 */
+export function avatarIdFromKey(key: AvatarKey): number {
+  return AVATAR_KEYS.indexOf(key) + 1;
+}
+
 type Props = {
   avatar: AvatarKey;
   /** 렌더 크기(px). 원본은 132px */
