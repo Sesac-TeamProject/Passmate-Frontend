@@ -4,14 +4,18 @@ import { PttButton } from "@/components/common/ptt-button";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import type { LiveQuestion } from "@/features/host/types";
 import { cn } from "@/lib/utils";
-import { ChoiceLetter } from "./choice-letter";
-import { Countdown } from "./countdown";
+import { ChoiceRow, type ChoiceRowState } from "./choice-row";
+import { LiveRail, LiveRailMini, type SolvingStudent } from "./live-rail";
 import { ProjectorShell } from "./projector-shell";
+import { QuestionRail } from "./question-rail";
+import { Timer } from "./timer";
 
 type Props = {
   question: LiveQuestion;
-  /** 제출 현황의 분모 — 방에 들어와 있는 학생 수 */
-  totalCount: number;
+  /** 보기별 실시간 응답 수. 계약이 보기 순서대로 준다 */
+  counts: number[];
+  /** 제출 여부가 붙은 참가자 목록 */
+  students: SolvingStudent[];
   isLocked: boolean;
   /** 마지막 문항이면 "다음 문항" 자리에 "세션 종료"를 놓는다 */
   isLastQuestion: boolean;
@@ -32,12 +36,16 @@ type Props = {
   frozen?: boolean;
 };
 
-const CONTROL = "flex h-[46px] items-center rounded-xl text-label-lg transition-colors";
+const CONTROL = "flex h-13 items-center rounded-2xl text-heading-sm font-bold transition-colors";
 
-/** W-05 진행 (프로젝터 · 기본형) — 민트 배경, 문항·선택지·타이머·제출 현황·PTT */
+/**
+ * W-05 진행 (프로젝터) — 헤더에 문항 레일과 타이머, 본문에 문항과 실시간 응답 분포,
+ * 오른쪽 레일에 제출 현황.
+ */
 export function LivePage({
   question: q,
-  totalCount,
+  counts,
+  students,
   isLocked,
   isLastQuestion,
   onNext,
@@ -52,17 +60,18 @@ export function LivePage({
   errorMessage = null,
   frozen = false,
 }: Props) {
+  const maxCount = Math.max(...counts, 0);
+  // 정답을 공개하기 전이라 "정답"이 아니라 "지금 가장 많이 고른 보기"를 강조한다
+  const leadingIndex = maxCount > 0 ? counts.indexOf(maxCount) : -1;
+
   return (
     <ProjectorShell
+      rail={<LiveRail students={students} />}
+      railCollapsed={<LiveRailMini students={students} />}
       top={
         <>
-          <div className="flex items-center gap-3">
-            <span className="text-heading-lg">
-              Q{q.index} / {q.total}
-            </span>
-            <span className="rounded-full bg-mint-tint px-3 py-[5px] text-label-lg text-mint-dark">
-              {QUESTION_TYPE_LABEL[q.type]}
-            </span>
+          <div className="flex items-center gap-6">
+            <QuestionRail current={q.index} total={q.total} />
             {reconnecting && (
               // TODO(design): DESIGN_GAPS W-05 — 연결 상태 배지는 시안에 없어 임시 스타일
               <span
@@ -73,39 +82,32 @@ export function LivePage({
               </span>
             )}
           </div>
-          <ol className="flex items-center gap-[5px]" aria-label="진행도">
-            {Array.from({ length: q.total }, (_, i) => (
-              <li
-                key={i}
-                className={cn("h-2 rounded", i < q.index ? "w-[22px] bg-yellow" : "w-2.5 bg-mint")}
-              />
-            ))}
-          </ol>
+          {/* key: 문항이 바뀌면 새 남은 시간에서 다시 시작한다 */}
+          <Timer key={q.index} remaining={q.remaining} total={q.seconds} paused={frozen} />
         </>
       }
       bottom={
-        /* 3열 그리드: PTT 버튼을 좌우 요소 폭과 무관하게 화면 정중앙에 */
-        <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center">
-          <p className="flex items-center gap-2">
-            <span className="text-heading-sm text-muted-foreground">제출</span>
-            <span className="text-heading-md">
-              {q.submitted} / {totalCount}
-            </span>
-          </p>
-          <div className="flex flex-col items-center gap-1">
+        <>
+          {errorMessage ? (
+            <p role="alert" className="text-body-md text-negative">
+              {errorMessage}
+            </p>
+          ) : (
+            <p className="text-body-md text-muted-foreground">
+              제출한 학생만 다음 문항으로 넘어가요
+            </p>
+          )}
+          <div className="flex items-center gap-5">
+            {/* TODO(design): 새 시안 하단바는 "정답 공개 / 다음 문항" 2개뿐이고 PTT·화면 잠금이 없다.
+                프로젝터 규칙 카드는 "프로젝터는 아무도 안 만짐"이라 앱 리모컨(M-T2)으로 옮긴 것으로 읽히는데,
+                PTT 플로우 시트는 "선생님 웹 · W-05"에서 누른다고 못박아 서로 어긋난다.
+                디자이너 확인 전까지 두 조작을 남겨 둔다 — HANDOVER.md 결정 1번. */}
             <PttButton
               onRecorded={onHint}
               onError={onHintError}
               uploading={hintUploading}
               disabled={frozen}
             />
-            {errorMessage && (
-              <p role="alert" className="text-label-md text-negative">
-                {errorMessage}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2.5 justify-self-end">
             <button
               type="button"
               onClick={onToggleLock}
@@ -113,7 +115,7 @@ export function LivePage({
               aria-pressed={isLocked}
               className={cn(
                 CONTROL,
-                "border-[1.5px] px-[18px] disabled:opacity-60",
+                "border-[1.5px] px-5 disabled:opacity-60",
                 isLocked ? "border-mint bg-mint-tint text-mint-dark" : "hover:bg-muted",
               )}
             >
@@ -123,9 +125,12 @@ export function LivePage({
               type="button"
               onClick={onEndCurrent}
               disabled={pending}
-              className={cn(CONTROL, "border-[1.5px] px-[18px] hover:bg-muted disabled:opacity-60")}
+              className={cn(
+                CONTROL,
+                "w-39 justify-center border-[1.5px] hover:bg-muted disabled:opacity-60",
+              )}
             >
-              문항 마감
+              정답 공개
             </button>
             <button
               type="button"
@@ -133,39 +138,46 @@ export function LivePage({
               disabled={pending}
               className={cn(
                 CONTROL,
-                "bg-mint px-6 text-white hover:bg-mint-dark disabled:opacity-60",
+                "w-44 justify-center bg-mint text-white hover:bg-mint-dark disabled:opacity-60",
               )}
             >
               {isLastQuestion ? "세션 종료" : "다음 문항"}
             </button>
           </div>
-        </div>
+        </>
       }
     >
-      <div className="flex flex-1 items-center">
-        <section className="relative flex w-[1080px] flex-col gap-7 rounded-[28px] border bg-card px-14 pt-16 pb-11">
-          <div className="absolute -top-[38px] left-1/2 flex size-[76px] -translate-x-1/2 items-center justify-center rounded-full border-[7px] border-yellow bg-card">
-            {/* key: 문항이 바뀌면 표시용 카운트다운을 새 남은 시간에서 다시 시작한다 */}
-            <Countdown
-              key={q.index}
-              from={q.remaining}
-              paused={frozen}
-              className="text-display-sm text-mint-dark"
-            />
-          </div>
-          <h1 className="text-center text-display-md text-ink">{q.prompt}</h1>
-          <ol className="grid grid-cols-2 gap-3.5">
-            {q.choices.map((c) => (
-              <li
+      <div className="mt-8 flex items-center gap-4 text-body-md text-muted-foreground">
+        <span className="text-label-md font-bold tracking-[0.08em]">
+          {QUESTION_TYPE_LABEL[q.type]}
+        </span>
+        <span aria-hidden className="h-4 w-px bg-line-soft" />
+        <span>1점</span>
+        <span aria-hidden className="h-4 w-px bg-line-soft" />
+        <span>
+          {q.total}문항 중 {q.index}번째
+        </span>
+      </div>
+
+      <h1 className="mt-4 text-display-lg">{q.prompt}</h1>
+
+      <div className="mt-8 border-t pt-4">
+        <ul className="flex flex-col gap-2">
+          {q.choices.map((c, i) => {
+            const state: ChoiceRowState = i === leadingIndex ? "leading" : "default";
+            return (
+              <ChoiceRow
                 key={c.key}
-                className="flex h-[72px] items-center gap-4 rounded-2xl bg-muted px-5 text-heading-md text-ink"
-              >
-                <ChoiceLetter choice={c.key} />
-                {c.text}
-              </li>
-            ))}
-          </ol>
-        </section>
+                no={i + 1}
+                text={c.text}
+                count={counts[i] ?? 0}
+                maxCount={maxCount}
+                state={state}
+                variant="live"
+              />
+            );
+          })}
+        </ul>
       </div>
     </ProjectorShell>
   );

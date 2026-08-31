@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
-import { firstErrorMessage } from "@/features/host/live/adapt";
+import { firstErrorMessage, toSolvingStudents } from "@/features/host/live/adapt";
 import { LivePage } from "@/features/host/live/live-page";
 // 문항 → 뷰 타입 변환은 학생 화면과 같은 함수를 쓴다(중복 정의 금지)
 import { toLiveQuestion } from "@/features/participant/play/adapt";
@@ -14,9 +14,13 @@ import {
   useEndSession,
   useLockScreen,
   useNextQuestion,
+  useSubmissions,
   useUploadVoiceHint,
 } from "@/lib/queries/use-session-control";
 import { useSessionStore } from "@/lib/stores/session-store";
+
+/** 제출 현황 폴링 간격 — 프로젝터가 벽에 떠 있는 동안 계속 돈다 */
+const SUBMISSIONS_POLL_MS = 3000;
 
 /**
  * W-05 진행 컨테이너. 실시간 연결은 상위 [code] 레이아웃이 잡는다.
@@ -41,6 +45,8 @@ export default function Page() {
   const connection = useSessionStore((s) => s.connection);
   const snapshotTs = useSessionStore((s) => s.snapshotTs);
 
+  // 보기별 응답 수와 학생별 제출 여부는 이벤트에 없어 진행 중에는 폴링으로 따라간다
+  const submissions = useSubmissions(roomId, phase === "RUNNING", SUBMISSIONS_POLL_MS);
   const next = useNextQuestion(roomId ?? 0);
   const endCurrent = useEndCurrentQuestion(roomId ?? 0);
   const end = useEndSession(roomId ?? 0);
@@ -66,7 +72,6 @@ export default function Page() {
     return <ScreenLoading label="문항을 여는 중이에요…" />;
 
   const question = toLiveQuestion(currentQuestion, questionCount, serverTs, submitted);
-  const totalCount = Math.max(submitted.totalCount, participants.length);
   const pending = next.isPending || endCurrent.isPending || end.isPending || lock.isPending;
   const errorMessage =
     hintError ?? firstErrorMessage(next.error, endCurrent.error, end.error, lock.error, hint.error);
@@ -74,7 +79,8 @@ export default function Page() {
   return (
     <LivePage
       question={question}
-      totalCount={totalCount}
+      counts={(submissions.data?.choices ?? []).map((c) => c.count ?? 0)}
+      students={toSolvingStudents(submissions.data?.participants, participants)}
       isLocked={isLocked}
       isLastQuestion={questionCount !== null && currentQuestion.questionNo === questionCount}
       onNext={() => next.mutate()}

@@ -4,12 +4,14 @@ import type {
   ParticipantEntry,
   RankingEntry,
   RoomReportResponse,
+  SubmissionParticipant,
   SnapshotQuestion,
   SubmissionsResponse,
 } from "@/lib/types/dto";
 import type { SessionState } from "@/lib/stores/session-reducer";
 import type { FinalRankRow } from "./final-page";
 import type { HardestQuestion, SessionSummary } from "./final-rail";
+import type { SolvingStudent } from "./live-rail";
 
 const CHOICE_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
 
@@ -147,6 +149,31 @@ export function toHardestQuestion(report: RoomReportResponse | undefined): Harde
     accuracy: worst.accuracyPercent,
     title: worst.title ?? "",
   };
+}
+
+/**
+ * W-05 제출 현황 레일이 쓰는 학생 목록.
+ * 제출 여부는 제출 집계(GET .../submissions)에만 있어, 아직 못 받았으면 참가자 목록으로 대신하고
+ * 전원을 "풀이 중"으로 둔다 — 문항이 막 열린 시점의 실제 상태와 같다.
+ */
+export function toSolvingStudents(
+  submissionParticipants: SubmissionParticipant[] | undefined,
+  participants: ParticipantEntry[],
+): SolvingStudent[] {
+  if (submissionParticipants && submissionParticipants.length > 0) {
+    return submissionParticipants.map((p) => ({
+      id: String(p.participantId),
+      name: p.nickname ?? "",
+      avatar: avatarKeyFromId(p.avatarId),
+      submitted: p.submitted ?? false,
+    }));
+  }
+  return participants.map((p) => ({
+    id: String(p.participantId),
+    name: p.nickname,
+    avatar: avatarKeyFromId(p.avatarId),
+    submitted: false,
+  }));
 }
 
 /** 여러 뮤테이션 중 처음 실패한 것의 문구. 모두 성공이면 null */

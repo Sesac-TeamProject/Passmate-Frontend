@@ -76,11 +76,16 @@ export function useLockScreen(roomId: number) {
  * GET /rooms/{roomId}/session/current/submissions (호스트).
  * SUBMISSION_UPDATED 수신 시 갱신은 Task 6의 실시간 연결 훅이 invalidate로 담당한다.
  */
-export function useSubmissions(roomId: number | null, enabled: boolean) {
+/**
+ * ANSWER_SUBMITTED 이벤트는 제출 "수"만 실어 오고 보기별 분포·학생별 제출 여부는 없다.
+ * 진행 화면(W-05)이 그 둘을 실시간으로 보여 줘야 해서 폴링 간격을 받는다 — 결과 화면은 한 번만 읽는다.
+ */
+export function useSubmissions(roomId: number | null, enabled: boolean, refetchMs?: number) {
   return useQuery({
     queryKey: qk.submissions(roomId ?? 0),
     queryFn: () => getSubmissions(roomId as number),
     enabled: roomId !== null && enabled,
+    refetchInterval: refetchMs,
   });
 }
 
