@@ -1,0 +1,114 @@
+// 마이페이지(C-02 v3) 공용 뷰 타입. API 응답 → 이 타입 변환은 ./adapt.ts가 맡는다.
+import type { AvatarKey } from "@/components/common/student-avatar";
+
+/** 프로필 카드 — 명성(레벨)은 방 운영 실적으로 오른다 */
+export type Profile = {
+  /** 가입한 이름(예금주와 같아야 한다). 계약에 별도 필드가 없어 닉네임과 같다 */
+  name: string;
+  /** 방 안에서 학생·선생님에게 보이는 이름 */
+  nickname: string;
+  email: string;
+  joinedLabel: string;
+  avatar: AvatarKey;
+  level: number;
+  levelTitle: string;
+  /** 현재 레벨로 열리는 권한. 예: "유료 방 개설 가능" */
+  levelPerk: string;
+  /** 다음 레벨까지 남은 실적 */
+  nextLevel: { level: number; roomsLeft: number; studentsLeft: number };
+  /** 다음 레벨까지 진행률(%) */
+  progress: number;
+};
+
+/** 유료 방 개설이 열리는 최소 레벨. features/host/room-flow/adapt.ts PAID_ROOM_MIN_LEVEL과 값을 맞춰 여기 복제해 뒀다(공용화 TODO). */
+export const PAID_ROOM_MIN_LEVEL = 3;
+
+/** C-02 v3 카드/계정 — 로그인 방식·비밀번호 변경일. 계약에 없어(DESIGN_GAPS C-1) 지금은 화면에서 쓰지 않는다 */
+export type AccountSettings = {
+  loginProvider: string;
+  passwordChangedAt?: string;
+};
+
+/** C-02 v3 카드/코인 · 결제 */
+export type CoinSummary = {
+  /** 보유 코인 (1C = ₩1) */
+  balance: number;
+  /** 기본 결제 수단 라벨. 예: "카카오페이 (기본) · 포트원 안전결제" */
+  paymentMethodLabel: string;
+  /** 최근 사용·충전 1건. 서버 recent가 없으면 null */
+  lastTransaction: { dateLabel: string; title: string; amount: number } | null;
+};
+
+/** 정산 계좌 — C-02 v3 · C-02-3 · W-10이 같은 값을 쓴다 */
+export type SettlementAccount = {
+  bank: string;
+  /** 화면 표시용 마스킹 계좌번호. 예: "***-***-4821" */
+  maskedNumber: string;
+  /** 등록 폼 초기값(원문 계좌번호) */
+  accountNumber: string;
+  holder: string;
+};
+
+/** C-02-3 은행 선택지 — 정책 목록이라 서버 데이터가 아닌 UI 상수로 둔다 */
+export const BANKS = [
+  "국민은행",
+  "신한은행",
+  "우리은행",
+  "하나은행",
+  "카카오뱅크",
+  "토스뱅크",
+] as const;
+
+/** C-02 v3 카드/정산 — 이번 달 정산 예정 요약 */
+export type SettlementSummary = {
+  /** 정산 예정 금액(원) */
+  thisMonthAmount: number;
+  /** 지급일 표기. 예: "9/5" */
+  payoutDateLabel: string;
+  /** 선생님 몫 비율(%) */
+  hostShare: number;
+  /** 유료 방 개설이 열리는 레벨 */
+  paidRoomLevel: number;
+  /** 세금 안내 한 줄 — 고정 정책 문구, 계약에 없다 */
+  taxNote: string;
+};
+
+/** C-02 v3 카드/알림 · 기타 — 알림 행 설명. 항목 이름 나열이라 서버 데이터가 아닌 UI 상수로 둔다 */
+export const NOTIFICATION_SUMMARY = "세션 시작 · 별점 요청 · 정산 완료";
+
+export type AchievementBadgeKind = "flag" | "number" | "paws" | "ring" | "drop" | "won" | "empty";
+
+export type Achievement = {
+  id: string;
+  kind: AchievementBadgeKind;
+  /** number·ring 뱃지에 찍히는 숫자 */
+  label?: string;
+  title: string;
+  /** 아직 획득하지 못한 뱃지 — opacity 0.3으로 그린다 */
+  locked?: boolean;
+};
+
+/** 개설한 방(host) 실적. 지금은 어느 화면도 그리지 않는다(마이페이지에 "기록" 카드 UI가 없다) — adapt.ts에만 정의해 둔다 */
+export type HostRecord = {
+  stats: { rooms: number; rating: number; students: number };
+  badges: { earned: number; total: number; locked: number; items: Achievement[] };
+  openRooms: number;
+  /** 이번 달 정산 예정 금액(원) */
+  settlementThisMonth: number;
+};
+
+export type AttendedSession = {
+  id: string;
+  rank: number;
+  title: string;
+  dateLabel: string;
+  questionCount: number;
+  score: number;
+};
+
+/** 참여한 방(client) 학습 기록 */
+export type LearningRecord = {
+  stats: { sessions: number; accuracy: number; averageRank: number };
+  weakTopics: string[];
+  sessions: AttendedSession[];
+};

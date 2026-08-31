@@ -1,0 +1,386 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  /* 라운드는 Tailwind 기본 스케일 고정 (shadcn의 --radius 배수 스케일은 시안 값과 어긋난다).
+     시안 값: 8=lg · 12=xl · 16=2xl · 24=3xl · 32=4xl, 그 외(10·14·18·20·28)는 rounded-[Npx] */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+
+  /* --- 디자인 시스템 v5 (design/student-teacher.pen "v5 컬러 토큰") --- */
+  /* 잉크 */
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-disabled: var(--ink-disabled);
+  /* 포인트 — 민트 하나 */
+  --color-mint: var(--mint);
+  --color-mint-dark: var(--mint-dark);
+  --color-mint-tint: var(--mint-tint);
+  --color-mint-bg: var(--mint-bg);
+  /* 옐로 — 마스코트 패시·타이머 링 전용 */
+  --color-yellow: var(--yellow);
+  /* 선택지 A~D (배경 / 잉크) */
+  --color-choice-a: var(--choice-a);
+  --color-choice-a-foreground: var(--choice-a-foreground);
+  --color-choice-b: var(--choice-b);
+  --color-choice-b-foreground: var(--choice-b-foreground);
+  --color-choice-c: var(--choice-c);
+  --color-choice-c-foreground: var(--choice-c-foreground);
+  --color-choice-d: var(--choice-d);
+  --color-choice-d-foreground: var(--choice-d-foreground);
+  /* 포디움 */
+  --color-podium-gold: var(--podium-gold);
+  --color-podium-silver: var(--podium-silver);
+  --color-podium-bronze: var(--podium-bronze);
+  --color-podium-gold-foreground: var(--podium-gold-foreground);
+  --color-podium-silver-foreground: var(--podium-silver-foreground);
+  --color-podium-bronze-foreground: var(--podium-bronze-foreground);
+
+  /* --- v6 시안 확장 토큰 (v5 시트에는 없지만 웹 v6 화면·뱃지 시트에서 반복되는 색) --- */
+  /* 민트 배경(mint-bg) 위 잉크 — 배너·프로젝터 헤더·하단 바 */
+  --color-mint-ink: var(--mint-ink);
+  --color-mint-ink-secondary: var(--mint-ink-secondary);
+  /* 민트 확장 — 엠블럼·업적 뱃지·명성 칩·리포트 막대 */
+  --color-mint-deep: var(--mint-deep);
+  --color-mint-light: var(--mint-light);
+  --color-mint-soft: var(--mint-soft);
+  --color-mint-line: var(--mint-line);
+  /* 긍정/부정 수치 — 정답 배지·랭킹 ▲▼·승급 조건 충족/미충족 */
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  /* 골드 — Lv.5 엠블럼 림·왕관 */
+  --color-gold: var(--gold);
+  /* 타일·칩 보조 색 — 서술형(파랑)·OX/유료(주황) */
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-orange: var(--orange);
+  --color-orange-soft: var(--orange-soft);
+  /* 이니셜 아바타 peach (사이드바 프로필·순위 원) */
+  --color-avatar-peach: var(--avatar-peach);
+  --color-avatar-peach-foreground: var(--avatar-peach-foreground);
+
+  /* --- 프로젝터 모드 전용 (design.pen "프로젝터 모드 — 디자인 규칙" · W-04·05·06·12) ---
+     교실 뒤에서 보는 화면이라 앱·웹과 규칙이 다르다: 흰 바탕 + 헤어라인, 카드·그림자 없음. */
+  /* 레일 배경 · W-04 메타 통계 패널 — --muted(#f3f4f6)·--background(#f6f6f7)보다 한 단계 옅다 */
+  --color-surface-subtle: var(--surface-subtle);
+  /* 행 구분선 — 섹션 구분선(--border #e5e7eb)보다 옅은 두 번째 선 두께 */
+  --color-line-soft: var(--line-soft);
+  /* 타이머 바 트랙 (--yellow가 채움) */
+  --color-yellow-soft: var(--yellow-soft);
+  /* 오답 강조 — "많이 고른 오답" 행. 값은 choice-a와 같고 이름만 의미에 맞춘 별칭 */
+  --color-negative-bg: var(--negative-bg);
+  --color-negative-soft: var(--negative-soft);
+  --color-negative-soft-foreground: var(--negative-soft-foreground);
+  /* 포디움 스탠드 배경 틴트 — 기존 --podium-* 솔리드는 아바타 링 색으로 쓴다 */
+  --color-podium-gold-bg: var(--podium-gold-bg);
+  --color-podium-silver-bg: var(--podium-silver-bg);
+  --color-podium-bronze-bg: var(--podium-bronze-bg);
+}
+
+/* --- 타이포그래피 v5 (design/design.pen "Typography — 10 styles") + 랜딩 전용 display-xl·2xl ---
+   글꼴 Pretendard Variable · 자간 공통 -2% · 굵기는 700/500/400 세 단계만.
+   한 클래스(text-heading-md 등)가 크기·굵기·행간·자간을 함께 적용한다. 이 10종 밖의 크기·굵기는 쓰지 않는다.
+
+   프로젝터 4화면(W-04·05·06·12)은 시안이 이 10종에 없는 크기를 쓴다(88·40·22·18·17·15·13px).
+   2026-08-31 사용자 결정: **전용 스케일을 새로 만들지 않고 기존 10종에 스냅한다.**
+   크기만이 아니라 (크기, 굵기) 쌍이 가장 가까운 토큰을 고른다 — 프로젝터는 멀리서 보는 화면이라
+   굵기 차이가 크기 차이만큼 눈에 띈다.
+     시안 88px/700 PIN        → text-display-2xl (64/700)  ※ 24px 작아지는 걸 감수한 결정
+     시안 40px/700 문항·정답률  → text-display-lg  (36/700)
+     시안 28px/700 메타 통계    → text-display-sm  (28/700)  ※ 일치
+     시안 24px/700 정답 보기    → text-heading-lg  (24/700)  ※ 일치
+     시안 24px/500 기본 보기    → text-heading-lg  (24/700)  ※ 굵기만 다름
+     시안 22px/700 포디움 이름  → text-heading-lg  (24/700)
+     시안 20px/700 문항레일 현재 → text-heading-md (20/700)  ※ 일치
+     시안 18px/700 세션명·레일  → text-heading-md  (20/700)  ※ 굵기 일치를 크기보다 우선
+     시안 17px/500 안내 단계    → text-heading-sm  (16/500)  ※ 굵기 일치
+     시안 16px/400 안내문       → text-body-lg     (16/400)  ※ 일치
+     시안 15px/400 부제·응답수  → text-body-md     (14/400)
+     시안 13px/700 자간 라벨    → text-label-md    (12/400) + font-bold + tracking-[0.16em~0.2em]
+   자간을 넓힌 라벨("방 코드"·"대기중"·"세션 종료")은 글자 사이 공백 대신 tracking 유틸리티로 낸다
+   (시안은 공백까지 넣었지만 스크린리더가 낱글자로 읽는다). */
+@theme {
+  /* display — 700 · 행간 1.2 */
+  --text-display-2xl: 4rem; /* 64px — 랜딩(L-01) 히어로 제목 전용 */
+  --text-display-2xl--line-height: 1.12;
+  --text-display-2xl--letter-spacing: -0.02em;
+  --text-display-2xl--font-weight: 700;
+  --text-display-xl: 3rem; /* 48px — 랜딩(L-01) CTA 제목 전용 */
+  --text-display-xl--line-height: 1.2;
+  --text-display-xl--letter-spacing: -0.02em;
+  --text-display-xl--font-weight: 700;
+  --text-display-lg: 2.25rem; /* 36px */
+  --text-display-lg--line-height: 1.2;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 700;
+  --text-display-md: 2rem; /* 32px */
+  --text-display-md--line-height: 1.2;
+  --text-display-md--letter-spacing: -0.02em;
+  --text-display-md--font-weight: 700;
+  --text-display-sm: 1.75rem; /* 28px */
+  --text-display-sm--line-height: 1.2;
+  --text-display-sm--letter-spacing: -0.02em;
+  --text-display-sm--font-weight: 700;
+  /* heading — lg·md 700, sm 500 · 행간 1.2 */
+  --text-heading-lg: 1.5rem; /* 24px */
+  --text-heading-lg--line-height: 1.2;
+  --text-heading-lg--letter-spacing: -0.02em;
+  --text-heading-lg--font-weight: 700;
+  --text-heading-md: 1.25rem; /* 20px */
+  --text-heading-md--line-height: 1.2;
+  --text-heading-md--letter-spacing: -0.02em;
+  --text-heading-md--font-weight: 700;
+  --text-heading-sm: 1rem; /* 16px */
+  --text-heading-sm--line-height: 1.2;
+  --text-heading-sm--letter-spacing: -0.02em;
+  --text-heading-sm--font-weight: 500;
+  /* body — 400 · 행간 1.4 */
+  --text-body-lg: 1rem; /* 16px */
+  --text-body-lg--line-height: 1.4;
+  --text-body-lg--letter-spacing: -0.02em;
+  --text-body-lg--font-weight: 400;
+  --text-body-md: 0.875rem; /* 14px */
+  --text-body-md--line-height: 1.4;
+  --text-body-md--letter-spacing: -0.02em;
+  --text-body-md--font-weight: 400;
+  /* label — lg 500, md 400 · 행간 1.4 */
+  --text-label-lg: 0.875rem; /* 14px */
+  --text-label-lg--line-height: 1.4;
+  --text-label-lg--letter-spacing: -0.02em;
+  --text-label-lg--font-weight: 500;
+  --text-label-md: 0.75rem; /* 12px */
+  --text-label-md--line-height: 1.4;
+  --text-label-md--letter-spacing: -0.02em;
+  --text-label-md--font-weight: 400;
+}
+
+:root {
+  --font-sans:
+    var(--font-pretendard), "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+
+  /* v5 원본 토큰 */
+  --ink: #1b1f24;
+  --ink-secondary: #6b7280;
+  --ink-disabled: #a0a6b0;
+  --mint: #17b884;
+  --mint-dark: #0e8a63;
+  --mint-tint: #d6f3e6;
+  --mint-bg: #eaf8f1;
+  --yellow: #ffb020;
+  --choice-a: #f7adb1;
+  --choice-a-foreground: #7c1f26;
+  --choice-b: #aac6f6;
+  --choice-b-foreground: #173872;
+  --choice-c: #f7dba1;
+  --choice-c-foreground: #6e4c06;
+  --choice-d: #a9dec3;
+  --choice-d-foreground: #14523b;
+  --podium-gold: #f4d488;
+  --podium-silver: #dde0e7;
+  --podium-bronze: #e5c6ac;
+  --podium-gold-foreground: #845f0f;
+  --podium-silver-foreground: #495160;
+  --podium-bronze-foreground: #804b28;
+
+  /* v6 확장 토큰 */
+  --mint-ink: #0f3d2e;
+  --mint-ink-secondary: #3f6b5b;
+  --mint-deep: #0b6b4c;
+  --mint-light: #4cc687;
+  --mint-soft: #5ccfa0;
+  --mint-line: #bfebd8;
+  --positive: #338158;
+  --negative: #e03131;
+  --gold: #f2c94c;
+  --blue: #0e61d9;
+  --blue-soft: #deedff;
+  --orange: #bf3f0c;
+  --orange-soft: #fdefde;
+  --avatar-peach: #f8c6a4;
+  --avatar-peach-foreground: #7a3a11;
+
+  /* 프로젝터 모드 전용 토큰 */
+  --surface-subtle: #fafafb;
+  --line-soft: #edeef0;
+  --yellow-soft: #fff0d6;
+  --negative-bg: #fdeeef;
+  --negative-soft: var(--choice-a);
+  --negative-soft-foreground: var(--choice-a-foreground);
+  --podium-gold-bg: #fbf0d9;
+  --podium-silver-bg: #eff1f5;
+  --podium-bronze-bg: #f6eae0;
+
+  /* shadcn 변수 → v5 매핑 */
+  --background: #f6f6f7; /* bg/page-web */
+  --foreground: var(--ink);
+  --card: #ffffff; /* surface/card */
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--mint);
+  --primary-foreground: #ffffff;
+  --secondary: var(--mint-tint);
+  --secondary-foreground: var(--mint-dark);
+  --muted: #f3f4f6; /* surface/input */
+  --muted-foreground: var(--ink-secondary);
+  --accent: var(--mint-bg);
+  --accent-foreground: var(--mint-dark);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #e5e7eb; /* line */
+  --input: #e5e7eb;
+  --ring: var(--mint);
+  --chart-1: var(--mint);
+  --chart-2: var(--mint-dark);
+  --chart-3: var(--choice-b);
+  --chart-4: var(--choice-c);
+  --chart-5: var(--choice-a);
+  --radius: 1rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--mint);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f4f6;
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: var(--mint);
+
+  /* --- 관리자 화면(feature/admin) 공용 시맨틱 토큰. 값은 v5와 같은 팔레트 --- */
+  --canvas: #f6f6f7; /* 관리자 페이지 바탕 (= bg/page-web) */
+  --primary-strong: var(--mint-dark);
+  --primary-soft: var(--mint-tint);
+  --success: #12805a;
+  --success-soft: #e4f5ee;
+  --info: #2455c4;
+  --info-soft: #e7eefd;
+  --warning: #b4780a;
+  --warning-soft: #fdf2dc;
+  --destructive-soft: #fbeaeb;
+}
+
+/*
+ * 관리자 시안 팔레트 (design/admin.pen, A-01~A-06). /admin 레이아웃 루트의 `.theme-admin`에서만 적용한다.
+ * 학생·선생님 화면은 v5 토큰(흰 사이드바·#f6f6f7 배경)을, 관리자 화면은 어두운 사이드바·흰 배경을 쓰므로
+ * 같은 시맨틱 이름을 스코프로 나눠 두 디자인이 서로를 덮지 않게 한다.
+ */
+.theme-admin {
+  --background: #ffffff;
+  --foreground: #1b1733;
+  --card-foreground: #1b1733;
+  --popover-foreground: #1b1733;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #1b1733;
+  --muted-foreground: #6e6a85;
+  --accent: #f3f4f6;
+  --accent-foreground: #1b1733;
+  --destructive: #c43a43;
+  --chart-2: var(--mint-tint);
+  --chart-3: var(--info);
+  --chart-4: var(--warning);
+  --chart-5: var(--destructive);
+  --sidebar: #221e38;
+  --sidebar-foreground: #ffffff;
+  --sidebar-accent: #332c52;
+  /* 시안은 #0e8a63이지만 어두운 배경 위 대비가 낮아 밝은 민트로 올렸다 */
+  --sidebar-accent-foreground: var(--mint);
+  --sidebar-border: #332c52;
+}
+
+/* 다크 모드는 디자인에 없다. shadcn 기본값을 유지한다. */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --canvas: oklch(0.145 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-body-md text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
