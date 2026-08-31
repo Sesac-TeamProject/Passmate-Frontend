@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
+import { toStudents } from "@/features/host/live/adapt";
 import { toLiveQuestion } from "@/features/participant/play/adapt";
 import { DisconnectedOverlay } from "@/features/participant/play/disconnected-overlay";
+import { WaitingPage } from "@/features/participant/play/waiting-page";
 import { PlayPage } from "@/features/participant/play/play-page";
+import { readMyParticipant } from "@/lib/my-participant";
 import { useRoomByPin } from "@/lib/queries/use-rooms";
 import { useSubmitAnswer } from "@/lib/queries/use-session-control";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
 import { useSessionStore } from "@/lib/stores/session-store";
+
+const NO_SUBSCRIBE = () => () => {};
+const readMyName = () => readMyParticipant()?.nickname ?? null;
+const readMyNameOnServer = () => null;
 
 /** P-Web 학생 풀이 컨테이너. PIN → roomId 조회 → 실시간 세션 연결, 스토어는 selector로만 읽는다. */
 export default function Page() {
@@ -34,6 +41,10 @@ export default function Page() {
   const connection = useSessionStore((s) => s.connection);
 
   const submitAnswer = useSubmitAnswer(roomId ?? 0);
+  // sessionStorage는 서버 렌더에 없다. 렌더 중에 그냥 읽으면 하이드레이션이 어긋나므로
+  // 서버 스냅샷을 null로 둔다 — 값은 참여 시점에 한 번 쓰이고 바뀌지 않아 구독은 빈 함수로 충분하다.
+  const myName = useSyncExternalStore(NO_SUBSCRIBE, readMyName, readMyNameOnServer);
+
   const [submittedQuestionId, setSubmittedQuestionId] = useState<number | null>(null);
   const [syncedQuestionId, setSyncedQuestionId] = useState<number | null>(
     currentQuestion?.questionId ?? null,
@@ -60,15 +71,12 @@ export default function Page() {
 
     if (phase === "WAITING") {
       return (
-        // TODO(design): DESIGN_GAPS A-2 — 학생 웹 대기실 시안 없음, 임시 배치
-        <main
-          role="status"
-          aria-live="polite"
-          className="flex min-h-screen flex-col items-center justify-center gap-2 p-10 text-center"
-        >
-          <p className="text-heading-sm text-ink">선생님이 시작하면 자동으로 넘어가요</p>
-          <p className="text-body-md text-muted-foreground">참가자 {participants.length}명</p>
-        </main>
+        <WaitingPage
+          roomTitle={room.data.title}
+          pin={pin}
+          myName={myName}
+          students={toStudents(participants)}
+        />
       );
     }
 

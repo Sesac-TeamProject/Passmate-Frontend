@@ -9,6 +9,7 @@ import {
   leaveRoom,
 } from "@/lib/api/rooms";
 import { clearGuestToken, writeGuestToken } from "@/lib/guest-token-storage";
+import { writeMyParticipant } from "@/lib/my-participant";
 import { AppError } from "@/lib/types/app-error";
 import type { CreateRoomRequest, JoinRoomRequest, PublicRoomsQuery } from "@/lib/types/dto";
 import { qk } from "./keys";
@@ -68,6 +69,8 @@ export function useJoinRoom(roomId: number | null) {
     mutationFn: async (body: JoinRoomRequest) => {
       if (roomId === null) throw new AppError("NotFound");
       const res = await joinRoom(roomId, body);
+      // 대기실이 "OO 님"으로 부르려면 방금 쓴 닉네임을 남겨야 한다 — 참여 응답에는 없다
+      writeMyParticipant({ participantId: res.participantId, nickname: body.nickname });
       // roomId는 여기서 이미 number로 좁혀져 있다 — onSuccess에 그대로 실어 보내 재검사를 없앤다.
       return { res, roomId };
     },
@@ -91,6 +94,7 @@ export function useJoinByPin() {
       if (room.isPaid) return { kind: "paid" as const, room };
       const res = await joinRoom(room.roomId, body);
       if (res.participantToken) writeGuestToken(res.participantToken);
+      writeMyParticipant({ participantId: res.participantId, nickname: body.nickname });
       return { kind: "joined" as const, room, res };
     },
     onSuccess: (data) => {
