@@ -29,14 +29,12 @@ export function LobbyPage({ pin, title, students, onStart, starting, errorMessag
 
   return (
     <ProjectorShell
-      tone="mint"
-      mascot
       top={
-        <header className="flex h-[60px] shrink-0 items-center justify-center gap-2 text-heading-sm">
-          <span className="text-mint-ink-secondary">passmate.app 에 접속해서</span>
-          <span className="text-mint-ink">PIN {prettyPin}</span>
-          <span className="text-mint-ink-secondary">을 입력하세요</span>
-        </header>
+        <div className="flex items-center gap-2 text-heading-sm">
+          <span className="text-muted-foreground">passmate.app 에 접속해서</span>
+          <span>PIN {prettyPin}</span>
+          <span className="text-muted-foreground">을 입력하세요</span>
+        </div>
       }
       bottom={
         <>
@@ -45,7 +43,7 @@ export function LobbyPage({ pin, title, students, onStart, starting, errorMessag
               {errorMessage}
             </p>
           ) : (
-            <p className="text-label-lg text-mint-ink-secondary">
+            <p className="text-label-lg text-muted-foreground">
               학생이 모두 들어오면 세션을 시작하세요
             </p>
           )}
@@ -60,32 +58,35 @@ export function LobbyPage({ pin, title, students, onStart, starting, errorMessag
         </>
       }
     >
-      <h1 className="pt-11 text-heading-lg text-mint-ink">{title}</h1>
+      {/* TODO(design): W-04 본작업 전까지만 유지하는 가운데 정렬 — 새 시안은 좌측 정렬 패널 구성이다 */}
+      <div className="flex flex-col items-center">
+        <h1 className="pt-11 text-heading-lg">{title}</h1>
 
-      <div className="flex items-center gap-7 pt-7">
-        <div className="flex flex-col items-center gap-0.5 rounded-[28px] border bg-card px-16 pt-[26px] pb-[30px]">
-          <span className="text-display-lg text-mint-dark">{prettyPin}</span>
-          <span className="text-label-lg text-muted-foreground">참여 PIN</span>
+        <div className="flex items-center gap-7 pt-7">
+          <div className="flex flex-col items-center gap-0.5 rounded-[28px] border bg-card px-16 pt-[26px] pb-[30px]">
+            <span className="text-display-lg text-mint-dark">{prettyPin}</span>
+            <span className="text-label-lg text-muted-foreground">참여 PIN</span>
+          </div>
+          <div className="flex flex-col items-center gap-2.5 rounded-3xl border bg-card px-[22px] pt-[22px] pb-4">
+            <JoinQr pin={pin} />
+            <span className="text-label-lg text-muted-foreground">QR로 바로 입장</span>
+          </div>
         </div>
-        <div className="flex flex-col items-center gap-2.5 rounded-3xl border bg-card px-[22px] pt-[22px] pb-4">
-          <JoinQr pin={pin} />
-          <span className="text-label-lg text-muted-foreground">QR로 바로 입장</span>
-        </div>
-      </div>
 
-      <section className="flex flex-col items-center gap-3.5 pt-10">
-        <h2 className="text-heading-sm text-mint-ink">학생 {students.length}명이 함께해요</h2>
-        <ul className="flex flex-wrap items-center justify-center gap-2.5">
-          {students.map((s) => (
-            <li key={s.id}>
-              <StudentChip student={s} />
+        <section className="flex flex-col items-center gap-3.5 pt-10">
+          <h2 className="text-heading-sm">학생 {students.length}명이 함께해요</h2>
+          <ul className="flex flex-wrap items-center justify-center gap-2.5">
+            {students.map((s) => (
+              <li key={s.id}>
+                <StudentChip student={s} />
+              </li>
+            ))}
+            <li className="rounded-full bg-mint-tint px-[18px] py-[11px] text-label-lg text-mint-dark">
+              입장 중 · · ·
             </li>
-          ))}
-          <li className="rounded-full bg-mint-tint px-[18px] py-[11px] text-label-lg text-mint-dark">
-            입장 중 · · ·
-          </li>
-        </ul>
-      </section>
+          </ul>
+        </section>
+      </div>
     </ProjectorShell>
   );
 }

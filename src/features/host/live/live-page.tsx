@@ -54,11 +54,10 @@ export function LivePage({
 }: Props) {
   return (
     <ProjectorShell
-      tone="mint"
       top={
-        <header className="flex items-center justify-between px-10 pt-[22px] pb-2.5">
+        <>
           <div className="flex items-center gap-3">
-            <span className="text-heading-lg text-mint-ink">
+            <span className="text-heading-lg">
               Q{q.index} / {q.total}
             </span>
             <span className="rounded-full bg-mint-tint px-3 py-[5px] text-label-lg text-mint-dark">
@@ -82,15 +81,14 @@ export function LivePage({
               />
             ))}
           </ol>
-        </header>
+        </>
       }
-      /* 3열 그리드: PTT 버튼을 좌우 요소 폭과 무관하게 화면 정중앙에 */
-      bottomClassName="grid grid-cols-[1fr_auto_1fr] py-[18px]"
       bottom={
-        <>
+        /* 3열 그리드: PTT 버튼을 좌우 요소 폭과 무관하게 화면 정중앙에 */
+        <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center">
           <p className="flex items-center gap-2">
-            <span className="text-heading-sm text-mint-ink-secondary">제출</span>
-            <span className="text-heading-md text-mint-ink">
+            <span className="text-heading-sm text-muted-foreground">제출</span>
+            <span className="text-heading-md">
               {q.submitted} / {totalCount}
             </span>
           </p>
@@ -116,9 +114,7 @@ export function LivePage({
               className={cn(
                 CONTROL,
                 "border-[1.5px] px-[18px] disabled:opacity-60",
-                isLocked
-                  ? "border-mint bg-mint-tint text-mint-dark"
-                  : "text-mint-ink hover:bg-muted",
+                isLocked ? "border-mint bg-mint-tint text-mint-dark" : "hover:bg-muted",
               )}
             >
               {isLocked ? "잠금 해제" : "화면 잠금"}
@@ -127,10 +123,7 @@ export function LivePage({
               type="button"
               onClick={onEndCurrent}
               disabled={pending}
-              className={cn(
-                CONTROL,
-                "border-[1.5px] px-[18px] text-mint-ink hover:bg-muted disabled:opacity-60",
-              )}
+              className={cn(CONTROL, "border-[1.5px] px-[18px] hover:bg-muted disabled:opacity-60")}
             >
               문항 마감
             </button>
@@ -146,7 +139,7 @@ export function LivePage({
               {isLastQuestion ? "세션 종료" : "다음 문항"}
             </button>
           </div>
-        </>
+        </div>
       }
     >
       <div className="flex flex-1 items-center">

@@ -44,10 +44,9 @@ export function ResultPage({
 
   return (
     <ProjectorShell
-      tone="mint"
       top={
-        <header className="flex items-center justify-between px-10 pt-[22px] pb-4">
-          <span className="text-heading-lg text-mint-ink">
+        <>
+          <span className="text-heading-lg">
             Q{questionIndex} / {questionTotal} · 결과
           </span>
           {r.correct ? (
@@ -62,9 +61,8 @@ export function ResultPage({
               서술형 — 정답 대신 AI 분석이 리포트에 담겨요
             </span>
           )}
-        </header>
+        </>
       }
-      bottomClassName="py-[18px]"
       bottom={
         <>
           {errorMessage ? (
@@ -72,7 +70,7 @@ export function ResultPage({
               {errorMessage}
             </p>
           ) : (
-            <p className="text-label-lg text-mint-ink-secondary">
+            <p className="text-label-lg text-muted-foreground">
               마지막 문항이 끝나면 최종 결과와 리포트가 열려요
             </p>
           )}
@@ -87,7 +85,7 @@ export function ResultPage({
         </>
       }
     >
-      <main className="flex w-full flex-col gap-5 px-12 pt-2 pb-7">
+      <div className="flex w-full flex-col gap-5 pt-2 pb-7">
         <section className="flex flex-col gap-[18px] rounded-3xl border bg-card px-[34px] py-[26px]">
           <h2 className="text-heading-lg text-ink">랭킹 TOP 5</h2>
           {r.ranking.length === 0 ? (
@@ -177,7 +175,7 @@ export function ResultPage({
             )}
           </p>
         </section>
-      </main>
+      </div>
     </ProjectorShell>
   );
 }
