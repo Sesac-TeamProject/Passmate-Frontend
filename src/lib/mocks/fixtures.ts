@@ -294,6 +294,8 @@ export const QUESTION_SETS: QuestionSetDto[] = [
  * 진행 문항 8개 — features/host/mock.ts DRAFT_QUESTIONS(type·body·points·seconds) 순서를 기반으로,
  * 2번 문항은 LIVE_QUESTION(실제 choices가 있는 유일한 예시)의 내용으로 채운다(그래서 1·2번 순서를 맞바꿨다).
  * OX 문항의 choices는 계약 주석("OX: O|X")을 그대로 쓴 것으로 화면 값을 지어낸 것이 아니다.
+ * 4·5·7번(MULTIPLE_CHOICE)의 choices는 body 질문에 맞춰 채운 보기 4개 — session.ts의
+ * CORRECT_ANSWERS가 그중 하나를 정답으로 표시한다.
  * endsAt은 session.ts가 호출 시점에 계산해 덮어쓰므로 여기서는 자리표시자만 둔다.
  */
 const ENDS_AT_PLACEHOLDER = new Date(0).toISOString();
@@ -333,6 +335,7 @@ export const LIVE_QUESTIONS: SnapshotQuestion[] = [
     questionNo: 4,
     type: "MULTIPLE_CHOICE",
     body: "Spring AOP가 기본으로 사용하는 프록시 방식은?",
+    choices: ["JDK 동적 프록시", "CGLIB", "ByteBuddy", "AspectJ 위빙"],
     points: 100,
     timeLimitSec: 30,
     endsAt: ENDS_AT_PLACEHOLDER,
@@ -342,6 +345,7 @@ export const LIVE_QUESTIONS: SnapshotQuestion[] = [
     questionNo: 5,
     type: "MULTIPLE_CHOICE",
     body: "@Autowired 주입 방식 중 권장되는 것은?",
+    choices: ["필드 주입", "세터 주입", "생성자 주입", "세터·필드 혼용"],
     points: 100,
     timeLimitSec: 30,
     endsAt: ENDS_AT_PLACEHOLDER,
@@ -360,6 +364,12 @@ export const LIVE_QUESTIONS: SnapshotQuestion[] = [
     questionNo: 7,
     type: "MULTIPLE_CHOICE",
     body: "JPA에서 지연 로딩(LAZY)의 기본 대상은?",
+    choices: [
+      "@ManyToOne 연관관계",
+      "@OneToOne 연관관계",
+      "@OneToMany·@ManyToMany 연관관계",
+      "모든 연관관계",
+    ],
     points: 100,
     timeLimitSec: 30,
     endsAt: ENDS_AT_PLACEHOLDER,

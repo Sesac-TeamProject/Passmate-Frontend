@@ -4,7 +4,9 @@ import type {
   RankingEntry,
   ScreenLockRequest,
   SessionSnapshotResponse,
+  SnapshotQuestion,
   StartSessionResponse,
+  SubmissionChoice,
   SubmissionsResponse,
   SubmitAnswerRequest,
   SubmitAnswerResponse,
@@ -21,22 +23,54 @@ import { DEMO_ROOM_ID, LIVE_QUESTIONS, PARTICIPANTS } from "./fixtures";
 
 type SessionPhase = "WAITING" | "RUNNING" | "FINISHED";
 
-/** features/host/mock.ts QUESTION_RESULT — 2번 문항(@Transactional)의 제출 분포·정답률 */
-const CURRENT_RESULT = {
-  accuracyPercent: 67,
-  distribution: [
-    { label: "REQUIRED", count: 4 },
-    { label: "REQUIRES_NEW", count: 1 },
-    { label: "SUPPORTS", count: 1 },
-    { label: "NESTED", count: 0 },
-  ],
-};
-
-/** 채점용 정답 — SnapshotQuestion에는 절대 담지 않고 여기서만 쓴다 */
+/** 채점용 정답 — SnapshotQuestion에는 절대 담지 않고 여기서만 쓴다. 응답 분포·정답 수 계산이 모두 이 표를 근거로 삼는다. */
 const CORRECT_ANSWERS: Record<number, string> = {
   2: "REQUIRED", // @Transactional 기본 전파 속성
   3: "X", // Bean 기본 스코프는 singleton이라 "prototype이다"는 거짓
+  4: "CGLIB", // 스프링 부트는 proxyTargetClass=true가 기본이라 CGLIB 프록시를 쓴다
+  5: "생성자 주입", // 순환 참조를 컴파일 시점에 막을 수 있어 스프링 공식 문서가 권장
+  7: "@OneToMany·@ManyToMany 연관관계", // ManyToOne·OneToOne은 기본 EAGER, 컬렉션 연관관계만 기본 LAZY
 };
+
+/**
+ * 문항 보기별 제출 수 — CORRECT_ANSWERS를 유일한 정답 출처로 삼아 정답 보기에 다수표를 몰아준다.
+ * Math.random을 쓰지 않는 고정 비율(정답 40%·나머지는 원래 순서대로 25%·20%·15%, OX는 65%/35%)로
+ * submittedCount를 나눠 재현 가능하게 만든다. 서술형은 보기가 없어 호출하지 않는다.
+ */
+function buildChoiceCounts(choices: string[], correctAnswer: string | undefined): number[] {
+  const correctIndex = correctAnswer ? choices.indexOf(correctAnswer) : -1;
+  const otherWeights = choices.length <= 2 ? [0.35] : [0.25, 0.2, 0.15];
+  const counts = new Array(choices.length).fill(0);
+  let othersTotal = 0;
+
+  let otherRank = 0;
+  choices.forEach((_, i) => {
+    if (i === correctIndex) return;
+    const weight = otherWeights[otherRank] ?? 0;
+    counts[i] = Math.floor(submittedCount * weight);
+    othersTotal += counts[i];
+    otherRank += 1;
+  });
+
+  // 정답 보기(또는 정답을 모르면 첫 보기)가 나머지를 가져가 항상 최다수가 되고, 합은 submittedCount와 같다.
+  counts[correctIndex >= 0 ? correctIndex : 0] += submittedCount - othersTotal;
+  return counts;
+}
+
+/** 현재 문항의 응답 분포(choices) — 서술형이면 null(분포 카드 없음) */
+function buildSubmissionChoices(q: SnapshotQuestion): SubmissionChoice[] | null {
+  if (!q.choices || q.choices.length === 0) return null;
+  const counts = buildChoiceCounts(q.choices, CORRECT_ANSWERS[q.questionId]);
+  return q.choices.map((label, i) => ({ label, count: counts[i] }));
+}
+
+/** 정답 보기의 제출 수 — mockEndCurrent(정답 공개)와 mockSubmissions(분포)가 같은 숫자를 말하도록 공유한다 */
+function correctCountFor(q: SnapshotQuestion): number {
+  const correctAnswer = CORRECT_ANSWERS[q.questionId];
+  if (!q.choices || !correctAnswer) return 0;
+  const index = q.choices.indexOf(correctAnswer);
+  return index >= 0 ? (buildChoiceCounts(q.choices, correctAnswer)[index] ?? 0) : 0;
+}
 
 let phase: SessionPhase = "WAITING";
 let currentIndex = 0;
@@ -168,7 +202,7 @@ export function mockNext(): undefined {
 export function mockEndCurrent(): undefined {
   locked = true;
   const q = currentQuestion();
-  const correctCount = Math.round(submittedCount * (CURRENT_RESULT.accuracyPercent / 100));
+  const correctCount = correctCountFor(q);
   emitMockEvent({
     type: "QUESTION_ENDED",
     ts: new Date().toISOString(),
@@ -199,16 +233,27 @@ export function mockLock(body: ScreenLockRequest): undefined {
   return undefined;
 }
 
-/** GET /rooms/{roomId}/session/current/submissions (호스트) */
+/**
+ * GET /rooms/{roomId}/session/current/submissions (호스트) — 응답 분포는 현재 문항 자신의
+ * choices·CORRECT_ANSWERS 기준(buildSubmissionChoices)이라 문항마다 달라진다. 서술형은
+ * choices:null(분포 카드 없음)·accuracyPercent:null(정답 개념이 없어 AI 분석으로 대체).
+ */
 export function mockSubmissions(): SubmissionsResponse {
   const q = currentQuestion();
+  const isEssay = q.type === "ESSAY";
+  const correctCount = isEssay ? 0 : correctCountFor(q);
+  const accuracyPercent = isEssay
+    ? null
+    : submittedCount > 0
+      ? Math.round((correctCount / submittedCount) * 100)
+      : 0;
 
   return {
     questionNo: q.questionNo,
     submittedCount,
     totalCount: PARTICIPANTS.length,
-    accuracyPercent: CURRENT_RESULT.accuracyPercent,
-    choices: CURRENT_RESULT.distribution,
+    accuracyPercent,
+    choices: isEssay ? null : buildSubmissionChoices(q),
     participants: PARTICIPANTS.map((p) => ({
       participantId: p.participantId,
       nickname: p.nickname,
