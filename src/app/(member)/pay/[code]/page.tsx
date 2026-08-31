@@ -56,6 +56,14 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
   const [step, setStep] = useState<PayStep>("idle");
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
+  // 참가비 차감이 끝난 방을 기억한다 — joinRoom만 실패한 재시도가 참가비를 다시 차감하지 않도록.
+  const [paidReceipt, setPaidReceipt] = useState<{
+    roomId: number;
+    paymentNo?: string;
+    balance?: number;
+    chargeAmount: number;
+    payMethod: PayFormValues["payMethod"];
+  } | null>(null);
 
   const balance = balanceQuery.data?.balance ?? 0;
   const fee = room.data?.entryFee ?? 0;
@@ -104,8 +112,31 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
     const avatarId = avatarIdFromKey(values.avatar);
 
     try {
+      // 이미 이 방의 참가비를 냈다(직전 시도가 joinRoom에서만 실패) — 다시 차감하지 않고 입장만 재시도한다.
+      if (paidReceipt && paidReceipt.roomId === roomId) {
+        await joinRoom.mutateAsync({ nickname, avatarId });
+        setReceipt({
+          paymentId: paidReceipt.paymentNo ?? "",
+          roomCode: pin,
+          roomTitle: paidRoom.title,
+          chargeAmount: paidReceipt.chargeAmount,
+          payMethod: paidReceipt.payMethod,
+          deducted: paidRoom.fee,
+          remaining: paidReceipt.balance ?? balance,
+        });
+        setStep("done");
+        return;
+      }
+
       if (shortfall <= 0) {
         const entryRes = await entryPayment.mutateAsync({ nickname, avatarId });
+        setPaidReceipt({
+          roomId,
+          paymentNo: entryRes.paymentNo,
+          balance: entryRes.balance,
+          chargeAmount: 0,
+          payMethod: values.payMethod,
+        });
         await joinRoom.mutateAsync({ nickname, avatarId });
         setReceipt({
           paymentId: entryRes.paymentNo ?? "",
@@ -126,6 +157,12 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
         roomId,
       });
 
+      if (!checkout.chargeId) {
+        setError("충전 준비에 실패했어요. 다시 시도해 주세요");
+        setStep("idle");
+        return;
+      }
+
       const payResult = await requestPayment({
         orderName:
           checkout.orderName ?? `패스메이트 코인 ${values.chargeAmount.toLocaleString()} C 충전`,
@@ -144,7 +181,7 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
       }
 
       const confirmRes = await confirmCharge.mutateAsync({
-        chargeId: checkout.chargeId!,
+        chargeId: checkout.chargeId,
         body: { paymentId: payResult.paymentId, roomId },
       });
 
@@ -157,6 +194,15 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
         paymentNo = entryRes.paymentNo;
         remaining = entryRes.balance ?? remaining;
       }
+
+      // 참가비 차감이 끝났다 — joinRoom이 실패해도 재시도가 다시 차감하지 않도록 방 단위로 기억해 둔다.
+      setPaidReceipt({
+        roomId,
+        paymentNo,
+        balance: remaining,
+        chargeAmount: values.chargeAmount,
+        payMethod: values.payMethod,
+      });
 
       await joinRoom.mutateAsync({ nickname, avatarId });
 
