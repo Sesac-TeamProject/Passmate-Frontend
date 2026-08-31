@@ -44,6 +44,13 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "public",
   },
   {
+    path: "/auth/callback",
+    sample: "/auth/callback",
+    title: "로그인 처리",
+    description: "소셜 로그인 콜백 — 토큰 수신 후 원래 가려던 화면으로",
+    area: "public",
+  },
+  {
     path: "/rooms",
     sample: "/rooms",
     title: "공개 방 목록",

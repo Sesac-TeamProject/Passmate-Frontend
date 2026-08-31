@@ -17,13 +17,14 @@ type Props = {
   onChange: (next: LoginValues) => void;
   onSubmit: () => void;
   pending?: boolean;
+  onGoogleClick?: () => void;
 };
 
 /**
  * C-01 v2 로그인 (웹) — 가운데 카드형. 렌더 전용, 상태는 app/(bare)/login/page.tsx가 소유.
  * 시안(b6JNW)은 1440×900에 상하 여백 74 — 뷰포트가 그보다 낮으면 FitToViewport가 전체를 비율 유지 축소해 스크롤을 없앤다.
  */
-export function LoginPage({ values, onChange, onSubmit, pending = false }: Props) {
+export function LoginPage({ values, onChange, onSubmit, pending = false, onGoogleClick }: Props) {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit();
@@ -99,13 +100,13 @@ export function LoginPage({ values, onChange, onSubmit, pending = false }: Props
             <span aria-hidden className="h-px flex-1 bg-border" />
           </div>
 
-          {/* TODO(API): Google OAuth 계약 없음 */}
           <Button
             type="button"
             variant="outline"
             size="xl"
             className="w-full gap-2 bg-card"
             disabled={pending}
+            onClick={onGoogleClick}
           >
             <span aria-hidden className="text-label-lg text-blue">
               G
