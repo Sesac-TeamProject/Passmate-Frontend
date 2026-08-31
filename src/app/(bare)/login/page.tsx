@@ -5,10 +5,10 @@ import { Suspense, useEffect, useState } from "react";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { LoginPage, type LoginValues } from "@/features/auth/login-page";
 import { googleLoginUrl } from "@/lib/api/auth";
+import { safeNextPath } from "@/lib/safe-next";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 const INITIAL_VALUES: LoginValues = { email: "", password: "", remember: false };
-const HOME_PATH = "/home";
 
 /** C-01 v2 컨테이너. 폼 상태·제출을 소유하고 렌더는 LoginPage에 맡긴다. */
 function LoginContainer() {
@@ -17,7 +17,7 @@ function LoginContainer() {
   const status = useAuthStore((s) => s.status);
   const [values, setValues] = useState<LoginValues>(INITIAL_VALUES);
   const [pending, setPending] = useState(false);
-  const next = searchParams.get("next") ?? HOME_PATH;
+  const next = safeNextPath(searchParams.get("next"));
 
   useEffect(() => {
     if (status === "authenticated") router.replace(next);
