@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/lib/types/app-error";
 import { MOCK_ROUTES, resolveMock } from "./handlers";
 import { __resetSessionForTests } from "./session";
@@ -70,4 +70,78 @@ describe("mocks/handlers", () => {
       amount: 0,
     });
   });
+
+  it(
+    "모든 api 함수가 목 라우트를 갖는다",
+    async () => {
+      vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "");
+      vi.resetModules();
+
+      const [rooms, sessions, qs, results, me, payments, ratings, auth] = await Promise.all([
+        import("@/lib/api/rooms"),
+        import("@/lib/api/sessions"),
+        import("@/lib/api/question-sets"),
+        import("@/lib/api/results"),
+        import("@/lib/api/me"),
+        import("@/lib/api/payments"),
+        import("@/lib/api/ratings"),
+        import("@/lib/api/auth"),
+      ]);
+      const calls: (() => Promise<unknown>)[] = [
+        () => rooms.getRoomByPin("482913"),
+        () => rooms.createRoom({ title: "t" }),
+        () => rooms.getHostedRooms(),
+        () => rooms.getPublicRooms({ sort: "popular", type: "all" }),
+        () => rooms.joinRoom(1, { nickname: "n" }),
+        () => rooms.getParticipants(1),
+        () => rooms.leaveRoom(1),
+        () => sessions.startSession(1),
+        () => sessions.getSessionSnapshot(1),
+        () => sessions.nextQuestion(1),
+        () => sessions.endCurrentQuestion(1),
+        () => sessions.endSession(1),
+        () => sessions.lockScreen(1, true),
+        () => sessions.getSubmissions(1),
+        () => sessions.submitAnswer(1, 1, "A"),
+        () => sessions.getVoiceHints(1),
+        () => qs.getQuestionSets(),
+        () => qs.getQuestionSet(1),
+        () => qs.confirmQuestionSet(1),
+        () => qs.cloneQuestionSet(1),
+        () => qs.getAiUsage(),
+        () => results.getMyResult(1),
+        () => results.getMyReport(1),
+        () => results.getRoomReport(1),
+        () => results.getEssayAnswers(1, 1),
+        () => results.postHostReview(1, { comment: "c" }),
+        () => me.getMyPage(),
+        () => me.getGrade(),
+        () => me.getBadges(),
+        () => me.getNotificationSettings(),
+        () => me.getHostProfile(42),
+        () => me.claimGuestRecord(11),
+        () => payments.getCoinBalance(),
+        () => payments.getCoinTransactions(),
+        () => payments.createCharge({ amount: 10000, method: "KAKAO_PAY" }),
+        () => payments.confirmCharge("chg-1", { paymentId: "p" }),
+        () => payments.getEarnings(),
+        () => payments.getSettlementAccount(),
+        () => payments.putPaymentMethod("CARD"),
+        () => ratings.submitRating(1, { stars: 5, tags: [] }),
+        () => auth.getMe(),
+        () => auth.logout(),
+      ];
+
+      for (const call of calls) {
+        try {
+          await call();
+        } catch (e) {
+          expect((e as { code?: string | null }).code).not.toBe("MOCK_ROUTE_MISSING");
+        }
+      }
+
+      vi.unstubAllEnvs();
+    },
+    ROUTE_SWEEP_TIMEOUT_MS,
+  );
 });

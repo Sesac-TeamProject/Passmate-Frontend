@@ -110,7 +110,6 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /auth/logout": () => undefined,
 
   /* ── 내 프로필 ────────────────────────────────────── */
-  "GET /me": () => mockMe(),
   "GET /users/me": () => mockMe(),
   "PUT /users/me": (ctx) => mockUpdateProfile(asBody<UpdateProfileRequest>(ctx)),
   "DELETE /users/me": () => mockDeleteMe(),
