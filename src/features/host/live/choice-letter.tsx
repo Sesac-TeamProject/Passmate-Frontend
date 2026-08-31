@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import type { ChoiceKey } from "@/features/host/mock";
+import type { ChoiceKey } from "@/features/host/types";
 
 /** 선택지 A~D 색 (globals.css choice 토큰). muted=true면 정답이 아닌 선택지 톤 */
 export const CHOICE_CLASS: Record<ChoiceKey, { solid: string; muted: string; bar: string }> = {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { InitialTile } from "@/components/common/initial-tile";
-import type { QuestionSet } from "@/features/host/mock";
+import type { QuestionSet } from "@/features/host/types";
 import { cn } from "@/lib/utils";
 
 type Props = { set: QuestionSet; selected: boolean; onSelect: () => void };

@@ -1,4 +1,4 @@
-import type { SessionReport } from "@/features/host/mock";
+import type { SessionReport } from "@/features/host/types";
 
 type Props = { stats: SessionReport["stats"] };
 

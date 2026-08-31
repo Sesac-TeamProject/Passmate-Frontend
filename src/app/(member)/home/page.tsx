@@ -9,11 +9,14 @@ import { toPopularRooms } from "@/features/home/adapt";
 import { HomePage } from "@/features/home/home-page";
 import { PAID_ROOM_LOGIN_MESSAGE, toJoinErrorMessage } from "@/features/participant/join/adapt";
 import { INITIAL_JOIN_VALUES, type JoinValues } from "@/features/participant/join/join-form";
+import { toCreateRoomErrorMessage, toQuestionSetOptions } from "@/features/host/room-flow/adapt";
 import { NewRoomDialog } from "@/features/host/room-flow/new-room-dialog";
 import { ACCOUNT } from "@/features/me/mock";
-import { useMe } from "@/lib/queries/use-me";
-import { useJoinByPin, usePublicRooms } from "@/lib/queries/use-rooms";
+import { useGrade, useMe } from "@/lib/queries/use-me";
+import { useQuestionSets } from "@/lib/queries/use-question-sets";
+import { useCreateRoom, useJoinByPin, usePublicRooms } from "@/lib/queries/use-rooms";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import type { CreateRoomRequest } from "@/lib/types/dto";
 
 /** W-01 v6 홈 컨테이너 — PIN 폼 상태·새 방 모달 open을 소유하고 렌더는 HomePage에 맡긴다. */
 export default function Page() {
@@ -22,6 +25,9 @@ export default function Page() {
   const me = useMe();
   const rooms = usePublicRooms({ sort: "popular", type: "all" });
   const join = useJoinByPin();
+  const sets = useQuestionSets("CONFIRMED");
+  const grade = useGrade();
+  const create = useCreateRoom();
 
   const [joinValues, setJoinValues] = useState<JoinValues>(INITIAL_JOIN_VALUES);
   const [paidGuestPin, setPaidGuestPin] = useState<string | null>(null);
@@ -64,6 +70,16 @@ export default function Page() {
     );
   };
 
+  const handleCreateRoom = (body: CreateRoomRequest) => {
+    create.mutate(body, {
+      onSuccess: (res) => {
+        if (!res.pin) return;
+        setCreateOpen(false);
+        router.push(`/host/rooms/${res.pin}/lobby`);
+      },
+    });
+  };
+
   const errorMessage = join.isPending
     ? null
     : paidGuestPin
@@ -93,7 +109,15 @@ export default function Page() {
         }}
         onCreateRoom={() => setCreateOpen(true)}
       />
-      <NewRoomDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <NewRoomDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        sets={toQuestionSetOptions(sets.data?.items ?? [])}
+        level={grade.data?.level ?? 1}
+        onSubmit={handleCreateRoom}
+        pending={create.isPending}
+        errorMessage={create.isError ? toCreateRoomErrorMessage(create.error) : null}
+      />
     </>
   );
 }

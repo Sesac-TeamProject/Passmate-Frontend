@@ -1,4 +1,4 @@
-import type { ChoiceKey, LiveQuestion, QuestionType } from "@/features/host/mock";
+import type { ChoiceKey, LiveQuestion, QuestionType } from "@/features/host/types";
 import type { SnapshotQuestion } from "@/lib/types/dto";
 
 const QUESTION_TYPE_MAP: Record<string, QuestionType> = {

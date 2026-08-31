@@ -1,21 +1,43 @@
-import Link from "next/link";
 import { clsx } from "clsx";
-import { LIVE_QUESTION, LIVE_ROOM, QUESTION_RESULT } from "@/features/host/mock";
+import type { QuestionResult, Student } from "@/features/host/types";
 import { cn } from "@/lib/utils";
 import { CHOICE_CLASS } from "./choice-letter";
 import { Podium } from "./podium";
 import { ProjectorShell } from "./projector-shell";
 
+type Props = {
+  /** 방금 끝난 문항 번호와 총 문항 수 */
+  questionIndex: number;
+  questionTotal: number;
+  result: QuestionResult;
+  /** 랭킹 이름·아바타를 찾을 학생 목록 */
+  students: Student[];
+  /** 마지막 문항이면 "다음 문항" 대신 "세션 종료" */
+  isLastQuestion: boolean;
+  onNext: () => void;
+  onEndSession: () => void;
+  pending?: boolean;
+};
+
+const FALLBACK_STUDENT: Omit<Student, "id"> = { name: "학생", avatar: "cat" };
+
 /** W-06 문항 결과 (프로젝터 · 민트 톤 G7rpdd) — 정답 공개, 랭킹 TOP 5, 응답 분포 */
-export function ResultPage() {
-  const q = LIVE_QUESTION;
-  const r = QUESTION_RESULT;
-  const room = LIVE_ROOM;
-  const byId = new Map(room.students.map((s) => [s.id, s]));
-  const student = (id: string) => byId.get(id)!;
-  const correct = r.distribution.find((d) => d.key === r.correct)!;
+export function ResultPage({
+  questionIndex,
+  questionTotal,
+  result: r,
+  students,
+  isLastQuestion,
+  onNext,
+  onEndSession,
+  pending = false,
+}: Props) {
+  const byId = new Map(students.map((s) => [s.id, s]));
+  const student = (id: string): Student => byId.get(id) ?? { id, ...FALLBACK_STUDENT };
+  const correct = r.correct ? r.distribution.find((d) => d.key === r.correct) : undefined;
   const maxCount = Math.max(...r.distribution.map((d) => d.count), 1);
   const [top1, top2, top3, ...rest] = r.ranking;
+  const hasPodium = r.ranking.length >= 3;
 
   return (
     <ProjectorShell
@@ -23,14 +45,20 @@ export function ResultPage() {
       top={
         <header className="flex items-center justify-between px-10 pt-[22px] pb-4">
           <span className="text-heading-lg text-mint-ink">
-            Q{q.index} / {q.total} · 결과
+            Q{questionIndex} / {questionTotal} · 결과
           </span>
-          <span className="flex items-center gap-2.5 rounded-[14px] bg-positive py-2.5 pr-5 pl-[18px] text-heading-sm text-white">
-            <span className="flex size-[26px] items-center justify-center rounded-lg bg-card text-label-lg text-positive">
-              {r.correct}
+          {r.correct ? (
+            <span className="flex items-center gap-2.5 rounded-[14px] bg-positive py-2.5 pr-5 pl-[18px] text-heading-sm text-white">
+              <span className="flex size-[26px] items-center justify-center rounded-lg bg-card text-label-lg text-positive">
+                {r.correct}
+              </span>
+              정답 · {correct?.text ?? ""}
             </span>
-            정답 · {correct.text}
-          </span>
+          ) : (
+            <span className="rounded-[14px] bg-card py-2.5 pr-5 pl-[18px] text-heading-sm text-muted-foreground">
+              서술형 — 정답 대신 AI 분석이 리포트에 담겨요
+            </span>
+          )}
         </header>
       }
       bottomClassName="py-[18px]"
@@ -39,38 +67,48 @@ export function ResultPage() {
           <p className="text-label-lg text-mint-ink-secondary">
             마지막 문항이 끝나면 최종 결과와 리포트가 열려요
           </p>
-          <Link
-            href={`/host/rooms/${room.code}/live`}
-            className="flex h-[46px] items-center rounded-xl bg-mint px-[26px] text-label-lg text-white transition-colors hover:bg-mint-dark"
+          <button
+            type="button"
+            onClick={isLastQuestion ? onEndSession : onNext}
+            disabled={pending}
+            className="flex h-[46px] items-center rounded-xl bg-mint px-[26px] text-label-lg text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
           >
-            다음 문항
-          </Link>
+            {isLastQuestion ? "세션 종료" : "다음 문항"}
+          </button>
         </>
       }
     >
       <main className="flex w-full flex-col gap-5 px-12 pt-2 pb-7">
         <section className="flex flex-col gap-[18px] rounded-3xl border bg-card px-[34px] py-[26px]">
           <h2 className="text-heading-lg text-ink">랭킹 TOP 5</h2>
-          <div className="flex items-center gap-14">
-            <Podium
-              first={student(top1.studentId)}
-              second={student(top2.studentId)}
-              third={student(top3.studentId)}
-            />
-            <ol className="flex flex-1 flex-col gap-1">
-              {rest.map((row) => (
-                <li
-                  key={row.rank}
-                  className="flex items-center gap-4 border-t-2 py-3.5 text-heading-md"
-                >
-                  <span className="text-muted-foreground">{row.rank}</span>
-                  <span className="flex-1 text-ink">{student(row.studentId).name}</span>
-                  <span className="text-ink">{row.score}</span>
-                  <RankChange change={row.change} />
-                </li>
-              ))}
-            </ol>
-          </div>
+          {r.ranking.length === 0 ? (
+            <p className="text-body-md text-muted-foreground">
+              아직 채점된 점수가 없어요 — 첫 채점이 끝나면 순위가 올라옵니다
+            </p>
+          ) : (
+            <div className="flex items-center gap-14">
+              {hasPodium && (
+                <Podium
+                  first={student(top1.studentId)}
+                  second={student(top2.studentId)}
+                  third={student(top3.studentId)}
+                />
+              )}
+              <ol className="flex flex-1 flex-col gap-1">
+                {(hasPodium ? rest : r.ranking).map((row) => (
+                  <li
+                    key={row.rank}
+                    className="flex items-center gap-4 border-t-2 py-3.5 text-heading-md"
+                  >
+                    <span className="text-muted-foreground">{row.rank}</span>
+                    <span className="flex-1 text-ink">{student(row.studentId).name}</span>
+                    <span className="text-ink">{row.score}</span>
+                    <RankChange change={row.change} />
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </section>
 
         <section className="flex flex-col gap-[18px] rounded-3xl border bg-card px-8 py-[26px]">
@@ -117,11 +155,17 @@ export function ResultPage() {
             );
           })}
           <p className="flex items-center gap-1.5 pt-1 text-label-lg text-muted-foreground">
-            <span className="flex size-[22px] items-center justify-center rounded-full bg-warning-soft text-warning">
-              {r.accuracyDelta >= 0 ? "↑" : "↓"}
-            </span>
-            정답률 {r.accuracy}% — 지난 문항보다 {Math.abs(r.accuracyDelta)}%p{" "}
-            {r.accuracyDelta >= 0 ? "올랐어요" : "내렸어요"}
+            {r.accuracyDelta === 0 ? (
+              `정답률 ${r.accuracy}%`
+            ) : (
+              <>
+                <span className="flex size-[22px] items-center justify-center rounded-full bg-warning-soft text-warning">
+                  {r.accuracyDelta > 0 ? "↑" : "↓"}
+                </span>
+                정답률 {r.accuracy}% — 지난 문항보다 {Math.abs(r.accuracyDelta)}%p{" "}
+                {r.accuracyDelta > 0 ? "올랐어요" : "내렸어요"}
+              </>
+            )}
           </p>
         </section>
       </main>

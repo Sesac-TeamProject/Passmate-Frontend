@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { QuestionSet } from "@/features/host/mock";
+import type { QuestionSet } from "@/features/host/types";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import { cn } from "@/lib/utils";
 

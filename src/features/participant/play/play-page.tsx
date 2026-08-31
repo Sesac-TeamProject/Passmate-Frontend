@@ -1,4 +1,4 @@
-import type { LiveQuestion } from "@/features/host/mock";
+import type { LiveQuestion } from "@/features/host/types";
 import type { VoiceHintEntry } from "@/lib/types/dto";
 import { HintBanner } from "./hint-banner";
 import { PlayCard } from "./play-card";

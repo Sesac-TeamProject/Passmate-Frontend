@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import type { ChoiceKey, LiveQuestion } from "@/features/host/mock";
+import type { ChoiceKey, LiveQuestion } from "@/features/host/types";
 import { CHOICE_CLASS } from "@/features/host/live/choice-letter";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import { cn } from "@/lib/utils";

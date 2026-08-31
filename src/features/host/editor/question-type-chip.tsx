@@ -1,4 +1,4 @@
-import type { QuestionType } from "@/features/host/mock";
+import type { QuestionType } from "@/features/host/types";
 import { cn } from "@/lib/utils";
 
 export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {

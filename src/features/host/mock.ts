@@ -1,131 +1,16 @@
-// 데이터 연동 전 화면 확인용 목업. API 클라이언트가 들어오면 이 파일의 타입만 남기고 교체한다.
-import type { TileTone } from "@/components/common/initial-tile";
-import type { StatItem } from "@/components/common/stat-cards";
-import type { AvatarKey } from "@/components/common/student-avatar";
-
-/** @deprecated 공용 StatItem을 쓴다 (components/common/stat-cards) */
-export type DashboardStat = StatItem;
-
-export type QuestionSet = {
-  id: string;
-  title: string;
-  /** "객관식 5 · 서술형 3 · 8문항" 형태의 요약 */
-  summary: string;
-  questionCount: number;
-  tile: { label: string; tone: TileTone };
-  /** 유형별 문항 수 (W-08 상세 칩) */
-  composition: { type: QuestionType; count: number }[];
-  totalPoints: number;
-  /** 예상 소요(분) */
-  minutes: number;
-  /** 사용 이력. 없으면 미사용 */
-  usage?: { count: number; lastUsed: string };
-  /** 문항 미리보기 (앞 몇 개) */
-  preview: string[];
-};
-
-export type PastSession = {
-  id: string;
-  /** "8/22" */
-  date: string;
-  title: string;
-  participants: number;
-  averageScore: number;
-};
-
-export type Student = { id: string; name: string; avatar: AvatarKey };
-
-export type LiveRoom = {
-  code: string;
-  /** 6자리 참여 PIN */
-  pin: string;
-  title: string;
-  students: Student[];
-};
-
-export type ChoiceKey = "A" | "B" | "C" | "D";
-
-/** 학생 화면에서 재생 중인 음성 힌트 (P-Web) */
-export type VoiceHint = { positionSec: number; durationSec: number };
-
-export type Choice = { key: ChoiceKey; text: string };
-
-/** 진행 중인 문항 (W-05) */
-export type LiveQuestion = {
-  index: number;
-  total: number;
-  type: QuestionType;
-  prompt: string;
-  choices: Choice[];
-  /** 제한 시간(초) */
-  seconds: number;
-  /** 남은 시간(초) — 목업 초기값 */
-  remaining: number;
-  submitted: number;
-};
-
-/** 문항 결과 (W-06) */
-export type QuestionResult = {
-  correct: ChoiceKey;
-  distribution: { key: ChoiceKey; text: string; count: number }[];
-  /** 정답률(%) */
-  accuracy: number;
-  /** 지난 문항 대비 정답률 변동(%p) */
-  accuracyDelta: number;
-  ranking: { rank: number; studentId: string; score: number; change: number }[];
-};
-
-/** 세션 리포트 (W-07) */
-export type ReportQuestion = {
-  id: string;
-  index: number;
-  title: string;
-  type: QuestionType;
-  /** 객관식·OX 정답률(%) */
-  accuracy?: number;
-  /** 서술형 AI 분석 건수 */
-  aiCount?: number;
-};
-
-export type AnswerFinding = { tone: "good" | "lack" | "tip"; text: string };
-
-export type EssayAnswer = {
-  studentId: string;
-  text: string;
-  findings: AnswerFinding[];
-};
-
-export type SessionReport = {
-  id: string;
-  title: string;
-  dateLabel: string;
-  stats: { accuracy: number; students: number; questions: number; aiAnalyses: number };
-  questions: ReportQuestion[];
-  /** 문항 id → 서술형 답변 목록 */
-  essayAnswers: Record<string, EssayAnswer[]>;
-};
-
-export type QuestionType = "multiple" | "essay" | "ox";
-
-export type Question = {
-  id: string;
-  type: QuestionType;
-  prompt: string;
-  points: number;
-  seconds: number;
-};
-
-/** 방 설정 (W-02 v2) — 유료 방 옵션·정산 미리보기·명성 조건 */
-export type RoomSetup = {
-  /** 참가비 기본값(원, 1인당) */
-  defaultFee: number;
-  /** 선생님 정산 비율 (0~1). 비율은 확정 전 예시 (§13.5) */
-  hostShare: number;
-  /** 유료 방 개설에 필요한 최소 명성 레벨 */
-  paidMinLevel: number;
-  /** 현재 로그인한 선생님의 명성 */
-  reputation: { level: number; title: string };
-};
+// 데이터 연동 전 화면 확인용 목업. 뷰 타입은 ./types로 옮겼고 여기에는 데이터만 남는다.
+// 화면이 API에 연결되는 대로 이 파일은 통째로 걷어낸다.
+import type {
+  DashboardStat,
+  LiveQuestion,
+  LiveRoom,
+  PastSession,
+  Question,
+  QuestionResult,
+  QuestionSet,
+  RoomSetup,
+  SessionReport,
+} from "./types";
 
 export const DASHBOARD_STATS: DashboardStat[] = [
   { id: "rooms", label: "개설한 방", value: "12개", tile: { label: "P", tone: "mint" } },

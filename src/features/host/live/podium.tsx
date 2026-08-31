@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
 import { StudentAvatar } from "@/components/common/student-avatar";
-import type { Student } from "@/features/host/mock";
+import type { Student } from "@/features/host/types";
 
 type Props = { first: Student; second: Student; third: Student };
 

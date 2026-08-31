@@ -1,12 +1,31 @@
-import Link from "next/link";
-import { formatPin, LIVE_ROOM } from "@/features/host/mock";
+"use client";
+
+import dynamic from "next/dynamic";
+import { formatPin } from "@/features/host/mock";
+import type { Student } from "@/features/host/types";
 import { ProjectorShell } from "./projector-shell";
 import { StudentChip } from "./student-chip";
 
+// window.location을 읽는 QR은 서버 렌더에서 제외한다 — 자리는 회색 박스로 잡아 둔다.
+const JoinQr = dynamic(() => import("./join-qr").then((m) => m.JoinQr), {
+  ssr: false,
+  loading: () => <div aria-label="QR 코드" className="size-[116px] rounded-[10px] bg-muted" />,
+});
+
+type Props = {
+  /** 6자리 참여 PIN */
+  pin: string;
+  title: string;
+  students: Student[];
+  onStart: () => void;
+  /** 세션 시작 요청 중 */
+  starting?: boolean;
+  errorMessage?: string | null;
+};
+
 /** W-04 대기실 (프로젝터 · 기본형) — 민트 배경, PIN/QR 표시, 입장한 학생 목록 */
-export function LobbyPage() {
-  const room = LIVE_ROOM;
-  const pin = formatPin(room.pin);
+export function LobbyPage({ pin, title, students, onStart, starting, errorMessage }: Props) {
+  const prettyPin = formatPin(pin);
 
   return (
     <ProjectorShell
@@ -15,42 +34,49 @@ export function LobbyPage() {
       top={
         <header className="flex h-[60px] shrink-0 items-center justify-center gap-2 text-heading-sm">
           <span className="text-mint-ink-secondary">passmate.app 에 접속해서</span>
-          <span className="text-mint-ink">PIN {pin}</span>
+          <span className="text-mint-ink">PIN {prettyPin}</span>
           <span className="text-mint-ink-secondary">을 입력하세요</span>
         </header>
       }
       bottom={
         <>
-          <p className="text-label-lg text-mint-ink-secondary">
-            학생 이름을 누르면 내보낼 수 있어요
-          </p>
-          <Link
-            href={`/host/rooms/${room.code}/live`}
-            className="flex h-14 w-[190px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark"
+          {errorMessage ? (
+            <p role="alert" className="text-label-lg text-negative">
+              {errorMessage}
+            </p>
+          ) : (
+            <p className="text-label-lg text-mint-ink-secondary">
+              학생이 모두 들어오면 세션을 시작하세요
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={onStart}
+            disabled={starting}
+            className="flex h-14 w-[190px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
           >
-            세션 시작
-          </Link>
+            {starting ? "시작하는 중…" : "세션 시작"}
+          </button>
         </>
       }
     >
-      <h1 className="pt-11 text-heading-lg text-mint-ink">{room.title}</h1>
+      <h1 className="pt-11 text-heading-lg text-mint-ink">{title}</h1>
 
       <div className="flex items-center gap-7 pt-7">
         <div className="flex flex-col items-center gap-0.5 rounded-[28px] border bg-card px-16 pt-[26px] pb-[30px]">
-          <span className="text-display-lg text-mint-dark">{pin}</span>
+          <span className="text-display-lg text-mint-dark">{prettyPin}</span>
           <span className="text-label-lg text-muted-foreground">참여 PIN</span>
         </div>
         <div className="flex flex-col items-center gap-2.5 rounded-3xl border bg-card px-[22px] pt-[22px] pb-4">
-          {/* TODO(API): 방 입장 URL QR */}
-          <div aria-label="QR 코드" className="size-[116px] rounded-[10px] bg-muted" />
+          <JoinQr pin={pin} />
           <span className="text-label-lg text-muted-foreground">QR로 바로 입장</span>
         </div>
       </div>
 
       <section className="flex flex-col items-center gap-3.5 pt-10">
-        <h2 className="text-heading-sm text-mint-ink">학생 {room.students.length}명이 함께해요</h2>
+        <h2 className="text-heading-sm text-mint-ink">학생 {students.length}명이 함께해요</h2>
         <ul className="flex flex-wrap items-center justify-center gap-2.5">
-          {room.students.map((s) => (
+          {students.map((s) => (
             <li key={s.id}>
               <StudentChip student={s} />
             </li>

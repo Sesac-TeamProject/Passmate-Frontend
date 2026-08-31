@@ -1,6 +1,5 @@
 import { RoleSidebar } from "@/components/layout/role-sidebar";
 import { EditorPage } from "@/features/host/editor/editor-page";
-import { LivePage } from "@/features/host/live/live-page";
 import { ReviewPage } from "@/features/host/review/review-page";
 import { ACCOUNT } from "@/features/me/mock";
 
@@ -18,14 +17,8 @@ export function EditorMockup() {
   );
 }
 
-/** W-05 진행(프로젝터) — 타이머는 시안 숫자(23)에서 멈춘다 */
-export function LiveMockup() {
-  return (
-    <div className="h-full *:min-h-full!">
-      <LivePage frozen />
-    </div>
-  );
-}
+// W-05 진행 목업은 콜백을 넘겨야 해서 클라이언트 경계 안(live-mockup.tsx)에 둔다
+export { LiveMockup } from "./live-mockup";
 
 /** W-07 방 리포트 — 회원 사이드바(내가 만든 방 활성) + 리포트 본문 */
 export function ReportMockup() {

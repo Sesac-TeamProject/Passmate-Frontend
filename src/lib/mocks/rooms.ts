@@ -25,6 +25,9 @@ const AVATAR_COUNT = 12;
 let hostedRooms: HostedRoomDto[] = [...HOSTED_ROOMS];
 let nextHostedRoomId = 104;
 
+/** 이번 세션에 새로 만든 방 — 발급한 PIN으로 다시 조회할 수 있어야 대기실로 들어간다 */
+let createdRooms: RoomInfoResponse[] = [];
+
 let participants: ParticipantEntry[] = [...PARTICIPANTS];
 let nextParticipantId = 17;
 
@@ -38,8 +41,10 @@ function randomAvatarId(): number {
 
 /** GET /rooms/pin/{pin} — 404 잘못된 PIN. 계약상 410(종료된 방)은 시연 방에선 재현하지 않는다. */
 export function mockRoomByPin(pin: string): RoomInfoResponse {
-  if (pin !== DEMO_PIN) throw new AppError("NotFound");
-  return { ...DEMO_ROOM };
+  if (pin === DEMO_PIN) return { ...DEMO_ROOM };
+  const created = createdRooms.find((room) => room.pin === pin);
+  if (!created) throw new AppError("NotFound");
+  return { ...created };
 }
 
 /** POST /rooms — 유료 방은 Lv.3 이상만 개설 가능 */
@@ -50,6 +55,24 @@ export function mockCreateRoom(body: CreateRoomRequest): CreateRoomResponse {
 
   const roomId = nextHostedRoomId++;
   const pin = randomPin();
+
+  createdRooms = [
+    {
+      roomId,
+      pin,
+      title: body.title,
+      topic: body.topic ?? null,
+      status: "WAITING",
+      questionCount: null,
+      participantCount: 0,
+      maxParticipants: body.maxParticipants ?? null,
+      scheduledAt: body.scheduledAt ?? null,
+      isPaid: body.isPaid ?? false,
+      entryFee: body.entryFee ?? null,
+      host: { nickname: currentProfile().nickname ?? "나", level: currentProfile().level ?? null },
+    },
+    ...createdRooms,
+  ];
 
   hostedRooms = [
     {
