@@ -78,3 +78,8 @@ export function formatDurationHours(hours: number): string {
 export function formatHours(hours: number): string {
   return `${hours.toFixed(1)}시간`;
 }
+
+/** "482913" → "482 913" (6자리 참여 PIN 표기) */
+export function formatPin(pin: string): string {
+  return `${pin.slice(0, 3)} ${pin.slice(3)}`;
+}

@@ -25,6 +25,8 @@ export type QuestionSet = {
   usage?: { count: number; lastUsed: string };
   /** 문항 미리보기 (앞 몇 개) */
   preview: string[];
+  /** 확정 여부. false면 카드에 DRAFT 배지를 보여준다 */
+  isConfirmed?: boolean;
 };
 
 export type PastSession = {
@@ -105,8 +107,6 @@ export type SessionReport = {
   dateLabel: string;
   stats: { accuracy: number; students: number; questions: number; aiAnalyses: number };
   questions: ReportQuestion[];
-  /** 문항 id → 서술형 답변 목록 */
-  essayAnswers: Record<string, EssayAnswer[]>;
 };
 
 export type Question = {

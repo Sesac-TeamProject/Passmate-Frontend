@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { formatPin } from "@/features/host/mock";
 import type { Student } from "@/features/host/types";
+import { formatPin } from "@/lib/format";
 import { ProjectorShell } from "./projector-shell";
 import { StudentChip } from "./student-chip";
 

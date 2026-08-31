@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { PromotionRule } from "./mock";
+import type { PromotionRule } from "./types";
 
 type Props = { targetLevel: number; rules: PromotionRule[]; note: string };
 

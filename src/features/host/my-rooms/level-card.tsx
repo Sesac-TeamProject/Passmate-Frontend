@@ -1,7 +1,7 @@
 import { ReputationBadge } from "@/components/common/reputation-badge";
 import { LevelEmblem } from "@/features/me/level-emblem";
 import { cn } from "@/lib/utils";
-import type { LevelStatus } from "./mock";
+import type { LevelStatus } from "./types";
 
 type Props = { status: LevelStatus };
 

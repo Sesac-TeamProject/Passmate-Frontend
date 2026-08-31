@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { StatusChip } from "@/components/common/status-chip";
 import { Button } from "@/components/ui/button";
-import { formatPin } from "@/features/host/mock";
+import { formatPin } from "@/lib/format";
 import type { ActiveSession } from "./mock";
 
 type Props = { session: ActiveSession };

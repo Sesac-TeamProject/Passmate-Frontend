@@ -1,7 +1,7 @@
 "use client";
 
 import { LivePage } from "@/features/host/live/live-page";
-import { LIVE_QUESTION, LIVE_ROOM } from "@/features/host/mock";
+import { LIVE_QUESTION, LIVE_ROOM } from "./mock-data";
 
 /** 목업은 조작할 수 없다 — 진행 버튼은 아무 일도 하지 않는다 */
 const noop = () => {};

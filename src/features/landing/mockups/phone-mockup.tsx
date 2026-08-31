@@ -1,8 +1,8 @@
 import { Check, Clock, Mic } from "lucide-react";
 import { StudentAvatar } from "@/components/common/student-avatar";
 import { CHOICE_CLASS } from "@/features/host/live/choice-letter";
-import { LIVE_QUESTION } from "@/features/host/mock";
 import { cn } from "@/lib/utils";
+import { LIVE_QUESTION } from "./mock-data";
 
 /** 흰 플로팅 칩 공통 — r16 · 그림자 (시안 float/*) */
 const CHIP = "absolute flex items-center rounded-2xl bg-card shadow-[0_10px_21px] shadow-ink/15";

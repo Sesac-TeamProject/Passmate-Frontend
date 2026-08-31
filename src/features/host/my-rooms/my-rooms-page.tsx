@@ -1,40 +1,48 @@
 import Link from "next/link";
 import { HeroBanner } from "@/components/common/hero-banner";
-import { StatCards } from "@/components/common/stat-cards";
+import { StatCards, type StatItem } from "@/components/common/stat-cards";
 import { LevelCard } from "./level-card";
-import { LEVEL_STATUS, MY_ROOMS, MY_ROOMS_STATS, PROMOTION } from "./mock";
 import { PromotionCard } from "./promotion-card";
 import { RoomListCard } from "./room-list-card";
+import type { LevelStatus, MyRoom, Promotion } from "./types";
+
+type Props = {
+  rooms: MyRoom[];
+  stats: StatItem[];
+  level: LevelStatus;
+  promotion: Promotion;
+};
+
+const NEW_ROOM_ACTION = (
+  <Link
+    href="/host/rooms/new"
+    className="flex h-[52px] shrink-0 items-center rounded-2xl bg-mint px-6 text-heading-sm text-white transition-colors hover:bg-mint-dark"
+  >
+    +&nbsp;&nbsp;새 방 만들기
+  </Link>
+);
 
 /** W-09 내가 만든 방 (시안 voPdY) — 배너 · 통계 3장 · 명성 레벨/승급 조건 · 진행 중/종료 방 목록 */
-export function MyRoomsPage() {
-  // TODO(API): 목 대신 lib/queries의 내가 만든 방·명성 조회 훅으로 교체
-  const liveRooms = MY_ROOMS.filter((r) => r.status === "live");
-  const endedRooms = MY_ROOMS.filter((r) => r.status === "ended");
+export function MyRoomsPage({ rooms, stats, level, promotion }: Props) {
+  const liveRooms = rooms.filter((r) => r.status === "live");
+  const endedRooms = rooms.filter((r) => r.status === "ended");
 
   return (
     <main className="flex flex-col gap-6 px-9 py-7">
       <HeroBanner
         title="내가 만든 방"
         description="방 하나가 세션 하나예요 — 종료하면 끝나고, 종료된 방은 상세 보기에서 리포트를 봐요"
-        action={
-          <Link
-            href="/host/rooms/new"
-            className="flex h-[52px] shrink-0 items-center rounded-2xl bg-mint px-6 text-heading-sm text-white transition-colors hover:bg-mint-dark"
-          >
-            +&nbsp;&nbsp;새 방 만들기
-          </Link>
-        }
+        action={NEW_ROOM_ACTION}
       />
 
-      <StatCards stats={MY_ROOMS_STATS} />
+      <StatCards stats={stats} />
 
       <div className="flex gap-4">
-        <LevelCard status={LEVEL_STATUS} />
+        <LevelCard status={level} />
         <PromotionCard
-          targetLevel={PROMOTION.targetLevel}
-          rules={PROMOTION.rules}
-          note={PROMOTION.note}
+          targetLevel={promotion.targetLevel}
+          rules={promotion.rules}
+          note={promotion.note}
         />
       </div>
 
@@ -43,17 +51,27 @@ export function MyRoomsPage() {
           <div className="flex items-center gap-2">
             <h2 className="text-heading-sm text-ink">내가 만든 방</h2>
             <span className="text-label-md text-muted-foreground">
-              {MY_ROOMS.length}개 · 진행 중 {liveRooms.length}
+              {rooms.length}개 · 진행 중 {liveRooms.length}
             </span>
           </div>
           <p className="text-label-md text-mint-dark">방 하나 = 세션 하나 · 종료하면 끝나요</p>
         </div>
-        <RoomListCard status="live" summary={`${liveRooms.length}개`} rooms={liveRooms} />
-        <RoomListCard
-          status="ended"
-          summary={`${endedRooms.length}개 · 종료된 방은 상세 보기에서 리포트를 확인해요`}
-          rooms={endedRooms}
-        />
+        {rooms.length === 0 ? (
+          // TODO(design): DESIGN_GAPS W-09 빈 상태
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed py-16 text-center">
+            <p className="text-body-md text-muted-foreground">아직 만든 방이 없어요</p>
+            {NEW_ROOM_ACTION}
+          </div>
+        ) : (
+          <>
+            <RoomListCard status="live" summary={`${liveRooms.length}개`} rooms={liveRooms} />
+            <RoomListCard
+              status="ended"
+              summary={`${endedRooms.length}개 · 종료된 방은 상세 보기에서 리포트를 확인해요`}
+              rooms={endedRooms}
+            />
+          </>
+        )}
       </section>
     </main>
   );
