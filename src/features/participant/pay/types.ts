@@ -20,13 +20,3 @@ export type PaidRoom = {
 
 /** 충전 금액 선택지(코인) — 서버 데이터가 아니라 화면 정책 */
 export const CHARGE_OPTIONS = [10000, 30000, 50000] as const;
-
-// TODO: 등급 명칭 표를 공용으로 — src/features/host/my-rooms/types.ts LEVEL_TITLE과 값을 맞춰 여기 복제해 뒀다.
-/** 레벨(1~5) → 칭호 (계약 dto/common.ts HostLevel 주석과 동일) */
-export const LEVEL_TITLE: Record<number, string> = {
-  1: "새싹",
-  2: "성장",
-  3: "검증된 운영자",
-  4: "인기 운영자",
-  5: "마스터",
-};

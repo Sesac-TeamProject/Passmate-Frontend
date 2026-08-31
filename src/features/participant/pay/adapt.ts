@@ -1,9 +1,10 @@
 import { avatarKeyFromId } from "@/components/common/student-avatar";
+import { levelTitle } from "@/lib/host-level";
 import type { PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
 import type { PaymentMethod, RoomInfoResponse } from "@/lib/types/dto";
 import { ERROR_CODES } from "@/lib/types/error-codes";
-import { LEVEL_TITLE, type PaidRoom } from "./types";
+import type { PaidRoom } from "./types";
 
 /** ISO(scheduledAt) + estimatedMinutes(분) → "8/28 (금) 20:00 · 약 40분". 일정 없으면 빈 문자열, 소요 시간 없으면 시간까지만 */
 export function formatSchedule(
@@ -37,7 +38,7 @@ export function toPaidRoom(room: RoomInfoResponse): PaidRoom {
       // 계약에 호스트 avatarId가 없다 — 공개 프로필에도 아직 없어 기본 아바타로 접는다.
       avatar: avatarKeyFromId(null),
       level,
-      levelTitle: LEVEL_TITLE[level] ?? LEVEL_TITLE[1],
+      levelTitle: levelTitle(level),
     },
     rating: room.host?.avgStars ?? 0,
     students: room.host?.ratingCount ?? 0,

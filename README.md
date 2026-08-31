@@ -20,7 +20,16 @@ pnpm dev           # http://localhost:3000
 | `pnpm test`                         | Vitest 단위 테스트 (`lib/api` 등)                 |
 | `pnpm check:routes`                 | 빌드 후 모든 라우트 응답 검증 (`pnpm build` 선행) |
 
-`.env.example`을 `.env.local`로 복사해 `NEXT_PUBLIC_API_BASE_URL`을 채운다. 비워 두면 `src/lib/mocks`의 목 응답으로 동작한다 (백엔드 없이 화면 확인용, 운영자 계정으로 자동 로그인).
+`.env.example`을 `.env.local`로 복사해 채운다.
+
+| 변수                       | 설명                                                                                                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | 백엔드(Spring) 주소. 비워 두면 `src/lib/mocks`의 목 응답으로 동작한다(백엔드 없이 화면 확인용, 자동 로그인). 채울 때는 `/api/v1`까지 — 예: `http://localhost:8080/api/v1` |
+| `NEXT_PUBLIC_WS_URL`       | STOMP 엔드포인트. 비워 두면 `NEXT_PUBLIC_API_BASE_URL`에서 유도한다 — 예: `ws://localhost:8080/ws`                                                                        |
+
+### 백엔드 연동 방법
+
+env 두 줄(`NEXT_PUBLIC_API_BASE_URL`·`NEXT_PUBLIC_WS_URL`)을 채우면 `lib/mocks`를 거치지 않고 실서버로 바로 붙는다(`IS_MOCK`이 꺼진다). 서버 계약이 이 리포의 DTO와 다르면 `src/lib/types/dto/*`와 `src/lib/mocks/*`만 고치면 된다 — 나머지 층(`lib/api`·`lib/queries`·화면)은 그대로 둔다.
 
 ## 기술 스택
 

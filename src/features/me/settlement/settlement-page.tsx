@@ -34,7 +34,7 @@ export function SettlementPage({ stats, rows, account }: Props) {
       <section className="flex flex-col gap-3">
         <header className="flex items-center justify-between">
           <h2 className="text-heading-sm text-ink">결제 · 정산 내역</h2>
-          {/* TODO(API): 정산 내역 CSV 다운로드 — lib/api/client.ts download */}
+          {/* TODO(API): 정산 내역 CSV 다운로드 계약 없음 — DESIGN_GAPS에도 미기재(별도 요청 필요). 계약 도착 시 lib/api/client.ts downloadFile로 연결 */}
           <Link href="#" className="text-label-lg text-mint-dark">
             CSV 내보내기 ›
           </Link>

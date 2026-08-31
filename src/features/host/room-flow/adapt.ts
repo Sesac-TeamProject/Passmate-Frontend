@@ -14,15 +14,6 @@ export const DEFAULT_ENTRY_FEE = 10000;
 /** 선생님 정산 비율 (0~1). 비율은 확정 전 예시 (§13.5) */
 export const HOST_SHARE = 0.8;
 
-/** 명성 레벨 칭호 Lv.1~5 (계약 dto/common.ts HostLevel 주석) */
-const LEVEL_TITLES = ["새싹", "성장", "검증된 운영자", "인기 운영자", "마스터"] as const;
-
-/** 범위를 벗어난 레벨은 가장 가까운 등급 칭호로 접는다 */
-export function levelTitle(level: number): string {
-  const lv = Math.min(LEVEL_TITLES.length, Math.max(1, Math.round(level)));
-  return LEVEL_TITLES[lv - 1];
-}
-
 /** GET /question-sets(status=CONFIRMED) → 세트 선택 옵션. setId가 없는 항목은 고를 수 없으므로 버린다 */
 export function toQuestionSetOptions(sets: QuestionSetDto[]): QuestionSetOption[] {
   return sets

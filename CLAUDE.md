@@ -12,11 +12,11 @@ Next.js 16(App Router, TS) + Tailwind v4 + shadcn/ui + TanStack Query + Zustand.
 
 ## 레이어
 
-- `src/lib/api/` — fetch 래퍼(`client.ts`: 인증 헤더·401 refresh 1회·`AppError` 변환·다운로드)와 기능별 api 함수. **컴포넌트·page에서 `fetch` 직접 호출 금지.**
-- `src/lib/types/` — 계약 1:1 DTO(`dto.ts`)와 `AppError`. 계약에 없는 필드를 임의 추가하지 않는다 (계약 갱신이 먼저).
-- `src/lib/queries/` — TanStack Query 훅(서버 상태). 쿼리 키는 배열 계층 `['admin', 'users', filter]`. 뮤테이션 성공 시 `invalidateQueries`.
-- `src/lib/stores/` — Zustand(`auth-store`, 추후 `session-store`). 서버 상태를 스토어·useState에 복사하지 않는다.
-- `src/lib/mocks/` — `NEXT_PUBLIC_API_BASE_URL`이 비어 있을 때만 쓰는 목 응답. 백엔드 연동 시 통째로 걷어낸다.
+- `src/lib/api/` — fetch 래퍼(`client.ts`: 인증 헤더·401 refresh 1회·`AppError` 변환·다운로드)와 도메인별 api 함수(`rooms.ts`·`sessions.ts`·`question-sets.ts`·`results.ts`·`me.ts`·`payments.ts`·`ratings.ts`·`auth.ts`·`admin.ts`). **컴포넌트·page에서 `fetch` 직접 호출 금지.**
+- `src/lib/types/` — 계약 1:1 DTO(`dto.ts`는 도메인별 `dto/*.ts`를 다시 내보내는 허브)와 `AppError`. 계약에 없는 필드를 임의 추가하지 않는다 (계약 갱신이 먼저). 계약이 아직 없는 호출·필드는 `@draft` 주석으로 표시.
+- `src/lib/queries/` — TanStack Query 훅(서버 상태). 쿼리 키 상수는 `keys.ts` 한 곳. 뮤테이션 성공 시 `invalidateQueries`.
+- `src/lib/stores/` — Zustand(`auth-store`, `session-store`). 서버 상태를 스토어·useState에 복사하지 않는다.
+- `src/lib/mocks/` — `NEXT_PUBLIC_API_BASE_URL`이 비어 있을 때만 쓰는 목 응답. 경로 파라미터 라우터(`router.ts`, `METHOD path` 표)가 도메인별 핸들러(`handlers.ts` + `rooms.ts`·`session.ts`·`question-sets.ts`·`results.ts`·`me.ts`·`payments.ts`·`auth.ts`·`admin.ts`)로 총 64개 라우트(도메인 54 + 관리자 10)를 흘려보낸다. 공용 값은 `fixtures.ts`. 백엔드 연동 시 이 폴더를 통째로 걷어낸다.
 - 화면: `app/**/page.tsx`는 `'use client'` 컨테이너(쿼리·스토어·효과·다이얼로그 소유), `features/<role>/**/*-view.tsx`는 props만 받는 렌더 전용.
 - 라우트 가드: `components/common/require-auth.tsx`. `/admin/*`은 `role="ADMIN"`.
 - 색상 hex 하드코딩 금지 — `globals.css`의 시맨틱 토큰(`text-foreground`, `bg-success-soft`, `text-label-lg` 등)만 쓴다.
@@ -38,7 +38,7 @@ Next.js 16(App Router, TS) + Tailwind v4 + shadcn/ui + TanStack Query + Zustand.
 
 ## 검증
 
-커밋 전 `pnpm format && pnpm lint && pnpm test && pnpm build`. 라우트를 건드렸으면 `pnpm check:routes`까지.
+커밋 전 `pnpm format && pnpm lint && pnpm test && pnpm build`. 라우트를 건드렸으면 `pnpm check:routes`까지 — 41개 라우트(+ 리다이렉트)를 기대한다.
 
 ## 디자인
 
@@ -47,4 +47,6 @@ Next.js 16(App Router, TS) + Tailwind v4 + shadcn/ui + TanStack Query + Zustand.
 
 ## 아직 넣지 않은 것
 
-STOMP 클라이언트(`lib/stomp.ts`)·`session-store`, Playwright E2E — 실시간 화면 착수 시점에 추가.
+- Playwright E2E.
+- 실서버 검증 — STOMP 클라이언트(`lib/stomp.ts`)·`session-store`는 있지만 실제 브로커 연결은 아직 확인하지 않았다(목 모드는 이벤트 버스로 no-op 대체).
+- 계약이 없는 `@draft` 호출들(에디터 생성·문항 CRUD·서술형 첨삭·`GET /me/ai-usage`·자료 업로드·내보내기·이메일 로그인·`client=web` 콜백·`MeResponse.role`/`userId`) — 백엔드 계약이 오면 `lib/types/dto/*`·`lib/api/*`·`lib/mocks/*`만 고친다.

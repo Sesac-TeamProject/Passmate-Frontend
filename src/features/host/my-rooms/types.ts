@@ -45,12 +45,3 @@ export type PromotionRule = {
 
 /** W-09 다음 레벨 승급 조건 카드 */
 export type Promotion = { targetLevel: number; rules: PromotionRule[]; note: string };
-
-/** 레벨(1~5) → 칭호 (계약 dto/common.ts HostLevel 주석과 동일) */
-export const LEVEL_TITLE: Record<number, string> = {
-  1: "새싹",
-  2: "성장",
-  3: "검증된 운영자",
-  4: "인기 운영자",
-  5: "마스터",
-};

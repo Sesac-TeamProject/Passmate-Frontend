@@ -149,3 +149,11 @@ src/lib/
 3. 호스트 진행 3라우트를 유지한다(단일 페이지로 합치지 않음).
 4. 이메일 로그인·회원가입·비밀번호 변경·결제 수단 관리·알림 설정·탈퇴는 계약이 전혀 없으므로 **UI는 그대로 두고 api 함수를 `@draft`로만** 둔다(연결 시도 안 함).
 5. 커밋은 작업 단위로 나눠 남기고 푸시하지 않는다.
+
+### 실행 결과 (Task 1~13 완료 후, 2026-08-31)
+
+1. **KMP DTO를 계약으로 삼음** — 그대로 진행. `lib/types/dto/*`(auth·rooms·question-sets·sessions·results·me·payments·ratings·admin·common)로 분할하고 `dto.ts`는 re-export 허브로 유지해 기존 import를 깨지 않았다. 백엔드 계약이 실제로 오면 이 폴더와 `lib/mocks/*`만 손댈 수 있는 상태.
+2. **KMP에 없는 호출은 `@draft`** — 그대로 진행. Task 13 기준 `@draft` 35건이 `lib/api/{auth,question-sets,results}.ts`·`lib/types/dto/{auth,question-sets,results}.ts`·`lib/mocks/{question-sets,results}.ts`에 남아 있다(문제 세트 에디터 생성·문항 CRUD·confirm·clone·`GET /me/ai-usage`·자료 업로드, 서술형 답안 목록·첨삭 저장, `client=web` 로그인 콜백, `MeResponse.role`/`userId`). 각 주석은 `tasks.md` 태스크 번호 또는 `DESIGN_GAPS.md` 항목(D-1·D-9 등)을 인용한다. `TODO(API)` 마커는 8건이 남았고 전부 `DESIGN_GAPS.md`(C-1·C-4·C-5·D-11) 또는 아직 계약이 없는 구체적 사유를 적었다.
+3. **호스트 진행 3라우트 유지** — 그대로 진행하되, §6 데이터 흐름 예시(“lobby 컨테이너가 `useSessionConnection` 호출”)에서 한 가지 벗어났다: 실시간 연결은 세 page.tsx가 각자 잡지 않고 **`src/app/host/(flow)/rooms/[code]/layout.tsx` 한 곳**에서 잡아 세 화면이 공유한다. 페이지 전환마다 훅이 재마운트되면 `session-store.reset()`이 방금 받은 `QUESTION_ENDED`(reveal)를 지워버려 화면이 깜빡이고 스냅샷을 다시 받아오는 문제가 있었기 때문(레이아웃 파일 상단 주석에 리뷰 결정으로 기록).
+4. **이메일 로그인·비밀번호 변경·결제 수단 관리·알림 설정·탈퇴는 연결 시도 안 함** — 그대로 진행. `me/password`·`me/payment-methods`·`me/notifications`·`login`(이메일 로그인부) 화면은 UI만 남기고 각각 `TODO(API)`로 DESIGN_GAPS C-1/C-4/C-5/D-11을 인용한다. 탈퇴(`DELETE /users/me`)는 KMP 계약이 있어 정상 연결됨(가정 4의 "탈퇴"는 실제로는 계약이 있었다).
+5. **커밋은 작업 단위로, 푸시 안 함** — 그대로 진행. Task 1~13이 각각 최소 1개 커밋으로 남았고(`git log`), Task 13 완료 시점까지 `origin/develop`으로 푸시하지 않았다.

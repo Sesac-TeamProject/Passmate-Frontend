@@ -1,7 +1,7 @@
 import type { StatItem } from "@/components/common/stat-cards";
 import { avatarKeyFromId } from "@/components/common/student-avatar";
-import { LEVEL_TITLE } from "@/features/host/my-rooms/types";
 import { formatShortDate, formatWon } from "@/lib/format";
+import { levelTitle } from "@/lib/host-level";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
 import type {
@@ -64,7 +64,7 @@ export function toProfile(me: MeResponse, grade?: GradeResponse): Profile {
     joinedLabel: me.joinedAt ? `${me.joinedAt.slice(0, 7)} 가입` : "",
     avatar: avatarKeyFromId(me.avatarId),
     level,
-    levelTitle: LEVEL_TITLE[level] ?? LEVEL_TITLE[1],
+    levelTitle: levelTitle(level),
     levelPerk: level >= PAID_ROOM_MIN_LEVEL ? "유료 방 개설 가능" : "",
     nextLevel: {
       level: next?.level ?? level + 1,
@@ -316,7 +316,8 @@ export function toHostRecord(
       students: stats?.totalStudents ?? 0,
     },
     badges: { earned, total: items.length, locked: items.length - earned, items },
-    // TODO(API): 진행 중인 방 수 · 이번 달 정산액은 각각 useHostedRooms/useEarnings 별도 조회가 필요하다(계약에 없음)
+    // 진행 중인 방 수 · 이번 달 정산액은 useHostedRooms/useEarnings에 계약이 있지만, 이 카드를 그리는
+    // 화면이 아직 없어(위 docstring 참고) 여기서는 채우지 않는다. 화면이 생기면 컨테이너가 두 훅을 더 호출해 채운다.
     openRooms: 0,
     settlementThisMonth: 0,
   };

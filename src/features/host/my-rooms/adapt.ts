@@ -1,12 +1,7 @@
 import type { StatItem } from "@/components/common/stat-cards";
+import { levelTitle } from "@/lib/host-level";
 import type { GradeResponse, HostedRoomDto } from "@/lib/types/dto";
-import {
-  LEVEL_TITLE,
-  type LevelStatus,
-  type MyRoom,
-  type Promotion,
-  type PromotionRule,
-} from "./types";
+import { type LevelStatus, type MyRoom, type Promotion, type PromotionRule } from "./types";
 
 /** GET /users/me/rooms/hosted 항목 → 방 목록 카드 */
 export function toMyRooms(items: HostedRoomDto[]): MyRoom[] {
@@ -39,11 +34,11 @@ export function toLevelStatus(grade: GradeResponse | undefined): LevelStatus {
 
   return {
     level,
-    title: LEVEL_TITLE[level] ?? LEVEL_TITLE[1],
+    title: levelTitle(level),
     achievedLabel: grade?.achievedAt ? `${grade.achievedAt} 달성 · ${tail}` : tail,
     next: {
       level: nextLevel,
-      title: LEVEL_TITLE[nextLevel] ?? "",
+      title: levelTitle(nextLevel),
       progress: grade?.next?.progressPercent ?? 0,
     },
     perks: LEVEL_PERK_DEFS.map((p) => ({ label: p.label, earned: level >= p.requiredLevel })),
