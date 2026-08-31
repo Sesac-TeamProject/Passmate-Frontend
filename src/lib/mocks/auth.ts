@@ -9,9 +9,10 @@ export const MOCK_TOKENS: TokenPair = {
 };
 
 export const MOCK_ME: MeResponse = {
-  id: 1,
+  userId: 1,
+  nickname: "이한결",
   name: "이한결",
   email: "admin@passmate.kr",
   role: "ADMIN",
-  hostLevel: null,
+  level: null,
 };

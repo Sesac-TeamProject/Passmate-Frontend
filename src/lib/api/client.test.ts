@@ -110,11 +110,9 @@ describe("api/client", () => {
       .mockResolvedValueOnce(jsonResponse(401, { code: "REFRESH_EXPIRED", message: "만료" }));
     const { request, useAuthStore, AppError } = await loadClient();
     useAuthStore.getState().setSession("old-access", {
-      id: 1,
-      name: "n",
+      nickname: "n",
       email: "e",
       role: "ADMIN",
-      hostLevel: null,
     });
 
     const error = await request("/me").catch((e: unknown) => e);

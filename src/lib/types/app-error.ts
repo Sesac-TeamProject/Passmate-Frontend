@@ -63,7 +63,10 @@ export class AppError extends Error {
   }
 
   /** HTTP 오류 응답 → AppError. 본문 `{code, message}`는 계약 §공통 오류 형식. */
-  static fromResponse(status: number, body: { code?: string; message?: string } | null): AppError {
+  static fromResponse(
+    status: number,
+    body: { code?: string | null; message?: string | null } | null,
+  ): AppError {
     const kind = KIND_BY_STATUS[status] ?? "Unknown";
 
     return new AppError(kind, {
