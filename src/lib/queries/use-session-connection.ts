@@ -1,6 +1,6 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getParticipants } from "@/lib/api/rooms";
 import { getSessionSnapshot, getVoiceHints } from "@/lib/api/sessions";
 import { connectRoomStream } from "@/lib/stomp";
@@ -16,6 +16,8 @@ import { qk } from "./keys";
  */
 export function useSessionConnection(roomId: number | null, { isHost }: { isHost: boolean }) {
   const queryClient = useQueryClient();
+  // 값이 바뀌면 아래 effect가 정리 → 재실행되며 스트림을 새로 연다
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (roomId === null) return;
@@ -83,5 +85,10 @@ export function useSessionConnection(roomId: number | null, { isHost }: { isHost
       disconnect();
       store.reset();
     };
-  }, [roomId, isHost, queryClient]);
+  }, [roomId, isHost, queryClient, attempt]);
+
+  /** 자동 재연결(지수 백오프)을 기다리지 않고 지금 바로 다시 붙는다 — 학생 화면의 "지금 다시 연결" */
+  const reconnect = useCallback(() => setAttempt((n) => n + 1), []);
+
+  return { reconnect };
 }

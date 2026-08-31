@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toLiveQuestion } from "@/features/participant/play/adapt";
+import { DisconnectedOverlay } from "@/features/participant/play/disconnected-overlay";
 import { PlayPage } from "@/features/participant/play/play-page";
 import { useRoomByPin } from "@/lib/queries/use-rooms";
 import { useSubmitAnswer } from "@/lib/queries/use-session-control";
@@ -20,7 +21,7 @@ export default function Page() {
   const room = useRoomByPin(pin);
   const roomId = room.data?.roomId ?? null;
 
-  useSessionConnection(roomId, { isHost: false });
+  const { reconnect } = useSessionConnection(roomId, { isHost: false });
 
   const phase = useSessionStore((s) => s.phase);
   const currentQuestion = useSessionStore((s) => s.currentQuestion);
@@ -30,6 +31,7 @@ export default function Page() {
   const submitted = useSessionStore((s) => s.submitted);
   const hints = useSessionStore((s) => s.hints);
   const isLocked = useSessionStore((s) => s.isLocked);
+  const connection = useSessionStore((s) => s.connection);
 
   const submitAnswer = useSubmitAnswer(roomId ?? 0);
   const [submittedQuestionId, setSubmittedQuestionId] = useState<number | null>(null);
@@ -52,45 +54,55 @@ export default function Page() {
   if (room.isError)
     return <ScreenError message={room.error.message} onRetry={() => room.refetch()} />;
 
-  // 세션이 끝났으면 위 effect가 결과 화면으로 보낸다 — 그 사이 화면은 로딩으로만 보인다
-  if (phase === "FINISHED") return <ScreenLoading />;
+  const stage = () => {
+    // 세션이 끝났으면 위 effect가 결과 화면으로 보낸다 — 그 사이 화면은 로딩으로만 보인다
+    if (phase === "FINISHED") return <ScreenLoading />;
 
-  if (phase === "WAITING") {
+    if (phase === "WAITING") {
+      return (
+        // TODO(design): DESIGN_GAPS A-2 — 학생 웹 대기실 시안 없음, 임시 배치
+        <main
+          role="status"
+          aria-live="polite"
+          className="flex min-h-screen flex-col items-center justify-center gap-2 p-10 text-center"
+        >
+          <p className="text-heading-sm text-ink">선생님이 시작하면 자동으로 넘어가요</p>
+          <p className="text-body-md text-muted-foreground">참가자 {participants.length}명</p>
+        </main>
+      );
+    }
+
+    // RUNNING인데 아직 첫 문항이 도착하지 않은 짧은 순간
+    if (!currentQuestion) return <ScreenLoading />;
+
+    const question = toLiveQuestion(currentQuestion, questionCount, serverTs, submitted);
+    const latestHint = hints.length > 0 ? hints[hints.length - 1] : null;
+
+    const handleSubmit = (content: string) => {
+      if (roomId === null || submitAnswer.isPending) return;
+      submitAnswer.mutate(
+        { questionId: currentQuestion.questionId, content },
+        { onSuccess: () => setSubmittedQuestionId(currentQuestion.questionId) },
+      );
+    };
+
     return (
-      // TODO(design): DESIGN_GAPS A-2 — 학생 웹 대기실 시안 없음, 임시 배치
-      <main
-        role="status"
-        aria-live="polite"
-        className="flex min-h-screen flex-col items-center justify-center gap-2 p-10 text-center"
-      >
-        <p className="text-heading-sm text-ink">선생님이 시작하면 자동으로 넘어가요</p>
-        <p className="text-body-md text-muted-foreground">참가자 {participants.length}명</p>
-      </main>
-    );
-  }
-
-  // RUNNING인데 아직 첫 문항이 도착하지 않은 짧은 순간
-  if (!currentQuestion) return <ScreenLoading />;
-
-  const question = toLiveQuestion(currentQuestion, questionCount, serverTs, submitted);
-  const latestHint = hints.length > 0 ? hints[hints.length - 1] : null;
-
-  const handleSubmit = (content: string) => {
-    if (roomId === null || submitAnswer.isPending) return;
-    submitAnswer.mutate(
-      { questionId: currentQuestion.questionId, content },
-      { onSuccess: () => setSubmittedQuestionId(currentQuestion.questionId) },
+      <PlayPage
+        question={question}
+        onSubmit={handleSubmit}
+        submitting={submitAnswer.isPending}
+        hasSubmitted={submittedQuestionId === currentQuestion.questionId}
+        isLocked={isLocked}
+        hint={latestHint}
+      />
     );
   };
 
   return (
-    <PlayPage
-      question={question}
-      onSubmit={handleSubmit}
-      submitting={submitAnswer.isPending}
-      hasSubmitted={submittedQuestionId === currentQuestion.questionId}
-      isLocked={isLocked}
-      hint={latestHint}
-    />
+    <>
+      {stage()}
+      {/* 끊긴 동안에도 화면을 갈아 끼우지 않고 겹친다 — 쓰던 서술형 답안을 잃지 않는다 */}
+      {connection === "reconnecting" && <DisconnectedOverlay onRetry={reconnect} />}
+    </>
   );
 }
