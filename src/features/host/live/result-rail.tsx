@@ -41,7 +41,14 @@ export function ResultRail({ rows, accuracyByQuestion, averageScore, totalStuden
         <p className="text-heading-md">랭킹 TOP {RANKING_LIMIT}</p>
       </div>
 
-      <ol className="flex flex-col gap-2.5 border-t px-3.5 pt-2.5">
+      {rows.length === 0 && (
+        // 첫 문항이 끝나기 전에는 랭킹이 없다 — 비워 두면 레일 가운데가 크게 빈다
+        <p className="border-t px-[26px] pt-5 text-body-md text-muted-foreground">
+          채점이 끝나면 순위가 올라와요
+        </p>
+      )}
+
+      <ol className={cn("flex flex-col gap-2.5 px-3.5 pt-2.5", rows.length > 0 && "border-t")}>
         {rows.map((row) => {
           const isFirst = row.rank === 1;
           return (

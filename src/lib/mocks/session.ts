@@ -158,7 +158,8 @@ export function mockSnapshot(): SessionSnapshotResponse {
     myAnswers: [],
     totalScore: myTotalScore,
     rank: null,
-    ranking: [],
+    // 재접속·결과 화면이 상위 순위를 그릴 수 있게 실어 보낸다(계약도 ranking을 준다)
+    ranking: buildMockRanking(),
     isLocked: locked,
   };
 }

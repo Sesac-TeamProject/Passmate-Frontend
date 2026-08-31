@@ -78,18 +78,21 @@ export function FinalResultPage({
 
   return (
     <main className="flex min-h-screen flex-col pb-6">
-      <section className="relative flex flex-col items-center gap-3.5 bg-mint-bg px-5 pt-14 pb-[70px]">
-        <p className="text-label-lg text-mint-ink">최종 결과</p>
+      {/* 히어로 배경만 전체 폭으로 깔고 안쪽 내용은 앱 시안 폭에 맞춘다 */}
+      <section className="relative flex flex-col items-center bg-mint-bg px-5 pt-14 pb-[70px]">
+        <div className="flex w-full max-w-sm flex-col items-center gap-3.5">
+          <p className="text-label-lg text-mint-ink">최종 결과</p>
 
-        {ordered.length > 0 && (
-          <ol className="flex items-end gap-3.5">
-            {ordered.map((entry) => (
-              <Stand key={entry.rank} entry={entry} />
-            ))}
-          </ol>
-        )}
+          {ordered.length > 0 && (
+            <ol className="flex items-end gap-3.5">
+              {ordered.map((entry) => (
+                <Stand key={entry.rank} entry={entry} />
+              ))}
+            </ol>
+          )}
 
-        <p className="text-heading-sm">{mySummary}</p>
+          <p className="text-heading-sm">{mySummary}</p>
+        </div>
 
         <span aria-hidden className="absolute top-9 right-6">
           <span className="relative block">
@@ -101,46 +104,51 @@ export function FinalResultPage({
         </span>
       </section>
 
-      <div className="-mt-10 px-5">
-        <div className="flex flex-col gap-2.5 rounded-3xl border bg-card px-5 py-[22px]">
+      {/* 히어로가 relative라 그냥 두면 카드가 그 뒤로 깔린다 — 겹쳐 올라오는 쪽에도 relative를 준다 */}
+      <div className="relative -mt-10 flex justify-center px-5">
+        <div className="flex w-full max-w-sm flex-col gap-2.5 rounded-3xl border bg-card px-5 py-[22px]">
           <p className="text-heading-sm">{mySummary}</p>
-          <ol className="flex flex-col gap-2.5">
-            {rows.map((row) => (
-              <li
-                key={row.student.id}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-[11px]",
-                  row.isMe && "bg-muted",
-                )}
-              >
-                <span
+          {rows.length === 0 ? (
+            <p className="text-label-md text-muted-foreground">순위는 채점이 끝나면 채워져요</p>
+          ) : (
+            <ol className="flex flex-col gap-2.5">
+              {rows.map((row) => (
+                <li
+                  key={row.student.id}
                   className={cn(
-                    "flex size-6 shrink-0 items-center justify-center rounded-full text-label-lg",
-                    row.rank <= 3
-                      ? STAND[row.rank as PodiumPlace].cls
-                      : "bg-muted text-muted-foreground",
+                    "flex items-center gap-3 rounded-xl px-3 py-[11px]",
+                    row.isMe && "bg-muted",
                   )}
                 >
-                  {row.rank}
-                </span>
-                <span
-                  className={cn(
-                    "min-w-0 flex-1 truncate text-label-lg",
-                    row.isMe && "text-mint-dark",
-                  )}
-                >
-                  {row.isMe ? `나 (${row.student.name})` : row.student.name}
-                </span>
-                <span className={cn("text-label-lg", row.isMe && "text-mint-dark")}>
-                  {formatNumber(row.score)}
-                </span>
-              </li>
-            ))}
-          </ol>
+                  <span
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded-full text-label-lg",
+                      row.rank <= 3
+                        ? STAND[row.rank as PodiumPlace].cls
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {row.rank}
+                  </span>
+                  <span
+                    className={cn(
+                      "min-w-0 flex-1 truncate text-label-lg",
+                      row.isMe && "text-mint-dark",
+                    )}
+                  >
+                    {row.isMe ? `나 (${row.student.name})` : row.student.name}
+                  </span>
+                  <span className={cn("text-label-lg", row.isMe && "text-mint-dark")}>
+                    {formatNumber(row.score)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
         </div>
       </div>
 
-      <div className="mt-auto flex flex-col gap-2.5 px-5 pt-8">
+      <div className="mx-auto mt-auto flex w-full max-w-sm flex-col gap-2.5 px-5 pt-8">
         {/* TODO(design): 리포트 화면(M-06)이 아직 없다 — 만들기 전까지 비활성으로 둔다 */}
         <button
           type="button"
