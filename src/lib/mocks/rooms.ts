@@ -14,6 +14,7 @@ import type {
 } from "@/lib/types/dto";
 import { DEMO_PIN, DEMO_ROOM, HOSTED_ROOMS, PARTICIPANTS, PUBLIC_ROOMS } from "./fixtures";
 import { currentProfile } from "./me";
+import { emitMockEvent } from "./session";
 
 /** 방(rooms) 도메인 목 응답. 입장 인원 등 상태가 필요한 값은 모듈 스코프에서 유지한다. */
 
@@ -109,6 +110,18 @@ export function mockJoinRoom(_roomId: string, body: JoinRoomRequest): JoinRoomRe
     ...participants,
     { participantId, nickname: body.nickname, avatarId, isGuest: !isMember },
   ];
+
+  emitMockEvent({
+    type: "PARTICIPANT_JOINED",
+    ts: new Date().toISOString(),
+    data: {
+      participantId,
+      nickname: body.nickname,
+      isGuest: !isMember,
+      avatarId,
+      count: participants.length,
+    },
+  });
 
   return { participantId, participantToken: isMember ? undefined : "mock-guest-token", avatarId };
 }

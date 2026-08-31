@@ -135,7 +135,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /rooms/:roomId/session/questions/:questionId/answers": (ctx) =>
     mockSubmitAnswer(asBody<SubmitAnswerRequest>(ctx)),
   "GET /rooms/:roomId/session/hints": () => mockHints(),
-  "POST /rooms/:roomId/session/hints": () => mockUploadHint(),
+  "POST /rooms/:roomId/session/hints": (ctx) => mockUploadHint(asBody<FormData>(ctx)),
 
   /* ── 문제 세트 ────────────────────────────────────── */
   "GET /question-sets": (ctx) => mockQuestionSets(ctx.url),

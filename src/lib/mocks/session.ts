@@ -1,5 +1,7 @@
 import { AppError } from "@/lib/types/app-error";
 import type {
+  QuestionType,
+  RankingEntry,
   ScreenLockRequest,
   SessionSnapshotResponse,
   StartSessionResponse,
@@ -9,7 +11,8 @@ import type {
   VoiceHintEntry,
   VoiceHintsResponse,
 } from "@/lib/types/dto";
-import { LIVE_QUESTIONS, PARTICIPANTS } from "./fixtures";
+import type { ServerEvent } from "@/lib/types/events";
+import { DEMO_ROOM_ID, LIVE_QUESTIONS, PARTICIPANTS } from "./fixtures";
 
 /**
  * 진행 세션(session) 목 상태 머신 — phase WAITING→RUNNING→FINISHED, 현재 문항 인덱스,
@@ -46,6 +49,20 @@ let hints: VoiceHintEntry[] = [
 ];
 let nextHintId = 2;
 
+/**
+ * 목 세션 제어(mockStartSession 등)가 발행하는 실시간 이벤트 통로. `connectRoomStream`의 목 분기가
+ * 이걸 구독해 onEvent로 넘긴다 — 목 모드에서도 "REST 호출 → 이벤트 → 스토어" 경로가 실제와 같다.
+ */
+export const mockSessionEvents = new EventTarget();
+
+export function emitMockEvent(event: ServerEvent): void {
+  mockSessionEvents.dispatchEvent(new CustomEvent<ServerEvent>("event", { detail: event }));
+}
+
+export function isMockSessionWaiting(): boolean {
+  return phase === "WAITING";
+}
+
 function currentQuestion() {
   return LIVE_QUESTIONS[currentIndex] ?? LIVE_QUESTIONS[LIVE_QUESTIONS.length - 1];
 }
@@ -58,6 +75,41 @@ function buildCurrentQuestion() {
     endsAt: new Date(currentStartedAt + timeLimitSec * 1000).toISOString(),
     isClosed: locked,
   };
+}
+
+/** QUESTION_STARTED 이벤트 data — SnapshotQuestion(선택형 필드)을 이벤트 계약(필수 필드)으로 채운다 */
+function questionStartedData(): {
+  questionId: number;
+  questionNo: number;
+  type: QuestionType;
+  body: string;
+  choices?: string[] | null;
+  points: number;
+  timeLimitSec: number;
+  endsAt: string;
+} {
+  const q = buildCurrentQuestion();
+  return {
+    questionId: q.questionId,
+    questionNo: q.questionNo,
+    type: q.type ?? "ESSAY",
+    body: q.body,
+    choices: q.choices ?? null,
+    points: q.points ?? 100,
+    timeLimitSec: q.timeLimitSec ?? 30,
+    endsAt: q.endsAt,
+  };
+}
+
+/** SESSION_ENDED의 finalRanking — 참가자 픽스처를 점수 내림차순으로 흉내 낸다 */
+function buildMockRanking(): RankingEntry[] {
+  return PARTICIPANTS.map((p, i) => ({
+    rank: i + 1,
+    participantId: p.participantId,
+    nickname: p.nickname,
+    avatarId: p.avatarId,
+    total: Math.max(800 - i * 120, 100),
+  }));
 }
 
 /** GET /rooms/{roomId}/session — 재접속 스냅샷. 404 = 세션 미시작(WAITING) */
@@ -85,6 +137,16 @@ export function mockStartSession(): StartSessionResponse {
   submittedCount = 0;
   locked = false;
   myTotalScore = 0;
+  emitMockEvent({
+    type: "SESSION_STARTED",
+    ts: new Date().toISOString(),
+    data: { sessionId: DEMO_ROOM_ID, questionCount: LIVE_QUESTIONS.length },
+  });
+  emitMockEvent({
+    type: "QUESTION_STARTED",
+    ts: new Date().toISOString(),
+    data: questionStartedData(),
+  });
   return { aiAnalysisEnabled: true };
 }
 
@@ -94,24 +156,46 @@ export function mockNext(): undefined {
   currentStartedAt = Date.now();
   submittedCount = 0;
   locked = false;
+  emitMockEvent({
+    type: "QUESTION_STARTED",
+    ts: new Date().toISOString(),
+    data: questionStartedData(),
+  });
   return undefined;
 }
 
 /** POST /rooms/{roomId}/session/current/end */
 export function mockEndCurrent(): undefined {
   locked = true;
+  const q = currentQuestion();
+  const correctCount = Math.round(submittedCount * (CURRENT_RESULT.accuracyPercent / 100));
+  emitMockEvent({
+    type: "QUESTION_ENDED",
+    ts: new Date().toISOString(),
+    data: {
+      questionNo: q.questionNo,
+      answerReveal: { answer: CORRECT_ANSWERS[q.questionId] ?? null, explanation: null },
+      correctCount,
+    },
+  });
   return undefined;
 }
 
 /** POST /rooms/{roomId}/session/end */
 export function mockEndSession(): undefined {
   phase = "FINISHED";
+  emitMockEvent({
+    type: "SESSION_ENDED",
+    ts: new Date().toISOString(),
+    data: { sessionId: DEMO_ROOM_ID, finalRanking: buildMockRanking() },
+  });
   return undefined;
 }
 
 /** PUT /rooms/{roomId}/session/lock */
 export function mockLock(body: ScreenLockRequest): undefined {
   locked = body.locked;
+  emitMockEvent({ type: "SCREEN_LOCKED", ts: new Date().toISOString(), data: { locked } });
   return undefined;
 }
 
@@ -163,18 +247,23 @@ export function mockHints(): VoiceHintsResponse {
   return { hints };
 }
 
-/** POST /rooms/{roomId}/session/hints — PTT 음성 힌트 업로드(멀티파트) */
-export function mockUploadHint(): undefined {
-  hints = [
-    ...hints,
-    {
-      hintId: nextHintId++,
-      questionNo: currentQuestion().questionNo,
-      clipUrl: `/mock/hints/hint-${nextHintId}.mp3`,
-      durationMs: 5000,
-    },
-  ];
-  return undefined;
+/**
+ * POST /rooms/{roomId}/session/hints — PTT 음성 힌트 업로드(멀티파트). 라우트 스윕이 실제 FormData가
+ * 아닌 `{}`로도 호출하므로 `instanceof` 가드 없이 `form.get(...)`을 부르면 raw TypeError가 났다.
+ */
+export function mockUploadHint(form: FormData): VoiceHintEntry {
+  const raw = form instanceof FormData ? form.get("durationMs") : null;
+  const durationMs = typeof raw === "string" && raw !== "" ? Number(raw) : 5000;
+  const hintId = nextHintId++;
+  const entry = {
+    hintId,
+    questionNo: currentQuestion().questionNo,
+    clipUrl: `/mock/hints/hint-${hintId}.mp3`,
+    durationMs,
+  };
+  hints = [...hints, entry];
+  emitMockEvent({ type: "HINT_PUBLISHED", ts: new Date().toISOString(), data: entry });
+  return entry;
 }
 
 /** 테스트 전용 — 모듈 스코프 세션 상태를 초기값(WAITING·1번 문항·미제출·잠금 해제)으로 되돌린다. */
