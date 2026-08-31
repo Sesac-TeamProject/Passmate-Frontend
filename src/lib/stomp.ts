@@ -1,4 +1,4 @@
-import { Client, type IMessage } from "@stomp/stompjs";
+import { Client, ReconnectionTimeMode, type IMessage } from "@stomp/stompjs";
 import { IS_MOCK, WS_URL } from "@/lib/env";
 import { readGuestToken } from "@/lib/guest-token-storage";
 import { PARTICIPANTS } from "@/lib/mocks/fixtures";
@@ -21,7 +21,7 @@ const LOBBY_FILL_STAGGER_MS = 200;
 
 /**
  * 방 이벤트 스트림(계약 websocket-events). 구독: /topic/rooms/{id} (+ /host), /user/queue/feedback, /user/queue/errors.
- * 재연결은 선형 백오프(1s×n, 최대 5s). 재연결 후 스냅샷 재조회는 use-session-connection이 onStatus("connected")로 한다.
+ * 재연결은 stompjs 내장 지수 백오프(1s → 최대 5s). 재연결 후 스냅샷 재조회는 use-session-connection이 onStatus("connected")로 한다.
  * 목 모드(WS_URL 비어 있음)는 연결 없이 즉시 connected — 목 세션 제어(mockStartSession 등)가 흘려보내는
  * 이벤트를 그대로 전달한다(connectMockStream). 프로덕션·목 분기는 서로 섞이지 않는다.
  */
@@ -36,9 +36,10 @@ export function connectRoomStream({ roomId, isHost, onEvent, onStatus }: Options
     brokerURL: WS_URL,
     connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
     reconnectDelay: STEP_MS,
+    maxReconnectDelay: MAX_BACKOFF_MS,
+    reconnectTimeMode: ReconnectionTimeMode.EXPONENTIAL,
     debug: () => {},
     beforeConnect: () => {
-      client.reconnectDelay = Math.min(STEP_MS * (attempt + 1), MAX_BACKOFF_MS);
       onStatus(attempt === 0 ? "connecting" : "reconnecting");
     },
     onConnect: () => {

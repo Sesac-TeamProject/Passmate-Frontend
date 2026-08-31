@@ -144,6 +144,7 @@ export function applySnapshot(
   const status = snapshot.status ?? "WAITING";
   return {
     ...state,
+    // "ENDED"(및 그 외 WAITING·RUNNING이 아닌 값)는 SessionPhase가 3값뿐이라 의도적으로 FINISHED로 합친다
     phase: status === "RUNNING" ? "RUNNING" : status === "WAITING" ? "WAITING" : "FINISHED",
     questionCount: snapshot.questionCount ?? state.questionCount,
     currentQuestion: snapshot.currentQuestion ?? null,
