@@ -149,6 +149,13 @@ export function FinalPage({
           </div>
         </div>
       )}
+
+      {podium === null && rest.length === 0 && (
+        // 아무도 제출하지 않고 끝난 세션 — 비워 두면 본문 가운데가 통째로 빈다
+        <p className="mt-10 border-t pt-10 text-center text-heading-md text-muted-foreground">
+          순위에 올라온 학생이 없어요
+        </p>
+      )}
     </ProjectorShell>
   );
 }

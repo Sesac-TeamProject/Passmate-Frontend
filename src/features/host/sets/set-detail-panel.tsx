@@ -11,6 +11,23 @@ const CHIP: Record<QuestionSet["composition"][number]["type"], string> = {
 
 type Props = { set: QuestionSet; onClone: () => void; cloning?: boolean };
 
+/**
+ * 요약 한 줄. 총 배점·예상 시간은 계약(GET /question-sets)에 없어 adapt가 0으로 채운다 —
+ * 0을 그대로 찍으면 "총 배점 0 · 예상 0분"이 보이므로 값이 있는 조각만 이어 붙인다.
+ */
+function metaLine(set: QuestionSet): string {
+  const parts: string[] = [];
+
+  if (set.totalPoints > 0) parts.push(`총 배점 ${set.totalPoints}`);
+  if (set.minutes > 0) parts.push(`예상 ${set.minutes}분`);
+
+  if (!set.usage) parts.push("미사용");
+  else if (set.usage.lastUsed) parts.push(`마지막 사용 ${set.usage.lastUsed}`);
+  else parts.push(`${set.usage.count}회 사용`);
+
+  return parts.join(" · ");
+}
+
 /** W-08 우측 패널 — 선택한 세트 요약·문항 미리보기·재활용 액션 */
 export function SetDetailPanel({ set, onClone, cloning }: Props) {
   const more = set.questionCount - set.preview.length;
@@ -30,10 +47,7 @@ export function SetDetailPanel({ set, onClone, cloning }: Props) {
           ))}
         </div>
       )}
-      <p className="text-label-md text-muted-foreground">
-        총 배점 {set.totalPoints} · 예상 {set.minutes}분
-        {set.usage ? ` · 마지막 사용 ${set.usage.lastUsed}` : " · 미사용"}
-      </p>
+      <p className="text-label-md text-muted-foreground">{metaLine(set)}</p>
       <hr className="border-muted" />
       {set.preview.length > 0 && (
         <>
