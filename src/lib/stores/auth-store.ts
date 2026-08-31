@@ -16,6 +16,8 @@ type AuthState = {
   beginRestore: () => boolean;
   setSession: (accessToken: string, profile: MeResponse) => void;
   setAccessToken: (accessToken: string) => void;
+  /** 프로필 일부만 갱신(예: 닉네임 수정 성공 시). 프로필이 없으면(비로그인) 아무 일도 하지 않는다 */
+  setProfile: (patch: Partial<MeResponse>) => void;
   clearSession: () => void;
 };
 
@@ -33,6 +35,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   setSession: (accessToken, profile) => set({ status: "authenticated", accessToken, profile }),
 
   setAccessToken: (accessToken) => set({ accessToken }),
+
+  setProfile: (patch) =>
+    set((s) => ({ profile: s.profile ? { ...s.profile, ...patch } : s.profile })),
 
   clearSession: () => set({ status: "unauthenticated", accessToken: null, profile: null }),
 }));
