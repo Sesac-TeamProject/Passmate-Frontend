@@ -164,7 +164,7 @@ export function mockHints(): VoiceHintsResponse {
 }
 
 /** POST /rooms/{roomId}/session/hints — PTT 음성 힌트 업로드(멀티파트) */
-export function mockUploadHint(_form: FormData): undefined {
+export function mockUploadHint(): undefined {
   hints = [
     ...hints,
     {
@@ -175,4 +175,14 @@ export function mockUploadHint(_form: FormData): undefined {
     },
   ];
   return undefined;
+}
+
+/** 테스트 전용 — 모듈 스코프 세션 상태를 초기값(WAITING·1번 문항·미제출·잠금 해제)으로 되돌린다. */
+export function __resetSessionForTests(): void {
+  phase = "WAITING";
+  currentIndex = 0;
+  currentStartedAt = Date.now();
+  submittedCount = 0;
+  locked = false;
+  myTotalScore = 0;
 }

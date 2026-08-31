@@ -12,14 +12,8 @@ import type {
   PublicRoomPageResponse,
   RoomInfoResponse,
 } from "@/lib/types/dto";
-import {
-  DEMO_PIN,
-  DEMO_ROOM,
-  HOSTED_ROOMS,
-  ME_PROFILE,
-  PARTICIPANTS,
-  PUBLIC_ROOMS,
-} from "./fixtures";
+import { DEMO_PIN, DEMO_ROOM, HOSTED_ROOMS, PARTICIPANTS, PUBLIC_ROOMS } from "./fixtures";
+import { currentProfile } from "./me";
 
 /** 방(rooms) 도메인 목 응답. 입장 인원 등 상태가 필요한 값은 모듈 스코프에서 유지한다. */
 
@@ -49,7 +43,7 @@ export function mockRoomByPin(pin: string): RoomInfoResponse {
 
 /** POST /rooms — 유료 방은 Lv.3 이상만 개설 가능 */
 export function mockCreateRoom(body: CreateRoomRequest): CreateRoomResponse {
-  if (body.isPaid && (ME_PROFILE.level ?? 0) < HOST_MIN_LEVEL_FOR_PAID) {
+  if (body.isPaid && (currentProfile().level ?? 0) < HOST_MIN_LEVEL_FOR_PAID) {
     throw new AppError("PermissionDenied", { code: "HOST_LEVEL_REQUIRED" });
   }
 

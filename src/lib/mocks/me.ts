@@ -1,13 +1,11 @@
 import type {
   BadgesResponse,
   BadgeType,
-  ClaimGuestRecordRequest,
   GradeResponse,
   HostProfileResponse,
   MeResponse,
   MyPageResponse,
   NotificationSettingsDto,
-  ReportRequest,
   UpdateProfileRequest,
   UserProfileResponse,
 } from "@/lib/types/dto";
@@ -24,6 +22,11 @@ let notificationSettings: NotificationSettingsDto = {
   ratingRequest: true,
   settlementDone: true,
 };
+
+/** 현재 프로필(mutable). rooms.ts 등 다른 도메인 목이 등급 등을 읽을 때 이 getter로 단일 출처를 쓴다. */
+export function currentProfile(): UserProfileResponse {
+  return profile;
+}
 
 /** GET /me · GET /users/me — role: "ADMIN"은 관리자 화면 확인용으로 유지한다 */
 export function mockMe(): MeResponse {
@@ -171,7 +174,7 @@ export function mockHostProfile(userId: string): HostProfileResponse {
       userId: 42,
       nickname: "김민지",
       intro: "백엔드 실전 모의고사를 진행합니다.",
-      level: 4,
+      level: 3,
       avgStars: 4.5,
       ratingCount: 312,
       roomCount: 24,
@@ -196,11 +199,11 @@ export function mockHostProfile(userId: string): HostProfileResponse {
 }
 
 /** POST /reports — 게스트 익명 신고 가능 */
-export function mockReport(_body: ReportRequest): undefined {
+export function mockReport(): undefined {
   return undefined;
 }
 
 /** POST /guest-records/claim — 가입 후 7일 내. 목에서는 항상 성공한다 */
-export function mockClaim(_body: ClaimGuestRecordRequest): undefined {
+export function mockClaim(): undefined {
   return undefined;
 }

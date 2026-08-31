@@ -3,14 +3,12 @@ import type {
   AnswerVerdict,
   EssayAnswerDto,
   EssayAnswersResponse,
-  HostReviewRequest,
   LearningReportResponse,
   QuestionType,
   ResultQuestionDto,
   RoomReportResponse,
   RoomReportStudent,
   SessionResultResponse,
-  SubmitRatingRequest,
 } from "@/lib/types/dto";
 import { DEMO_ROOM } from "./fixtures";
 
@@ -202,7 +200,7 @@ function buildResultQuestion(q: ReportQuestionSource): ResultQuestionDto {
 }
 
 /** GET /rooms/{roomId}/results/me — 참여자 개인 결과 */
-export function mockMyResult(_roomId: string): SessionResultResponse {
+export function mockMyResult(): SessionResultResponse {
   return {
     roomTitle: DEMO_ROOM.title,
     rank: 3,
@@ -216,7 +214,7 @@ export function mockMyResult(_roomId: string): SessionResultResponse {
 }
 
 /** GET /rooms/{roomId}/reports/me — AI 학습 리포트 */
-export function mockMyReport(_roomId: string): LearningReportResponse {
+export function mockMyReport(): LearningReportResponse {
   return {
     accuracyPercent: REPORT_STATS.accuracy,
     weakTopics: ["JPA 영속성", "트랜잭션", "인덱스"],
@@ -229,7 +227,7 @@ export function mockMyReport(_roomId: string): LearningReportResponse {
 }
 
 /** GET /rooms/{roomId}/results (호스트) */
-export function mockRoomReport(_roomId: string): RoomReportResponse {
+export function mockRoomReport(): RoomReportResponse {
   return {
     roomTitle: DEMO_ROOM.title,
     pin: DEMO_ROOM.pin,
@@ -256,17 +254,17 @@ export function mockRoomReport(_roomId: string): RoomReportResponse {
 }
 
 /** @draft GET /rooms/{roomId}/questions/{questionId}/answers — 서술형 답안 목록(W-07 분석 패널) */
-export function mockEssayAnswers(_roomId: string, _questionId: string): EssayAnswersResponse {
+export function mockEssayAnswers(): EssayAnswersResponse {
   return { answers: ESSAY_ANSWERS_Q3 };
 }
 
 /** @draft POST /answers/{answerId}/review */
-export function mockPostReview(_answerId: string, _body: HostReviewRequest): undefined {
+export function mockPostReview(): undefined {
   return undefined;
 }
 
 /** POST /rooms/{roomId}/ratings — 세션당 1회. 409 ALREADY_RATED */
-export function mockSubmitRating(_roomId: string, _body: SubmitRatingRequest): undefined {
+export function mockSubmitRating(): undefined {
   if (rated) throw new AppError("Conflict", { code: "ALREADY_RATED" });
   rated = true;
   return undefined;

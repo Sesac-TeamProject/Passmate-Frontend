@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { AppError } from "@/lib/types/app-error";
 import { MOCK_ROUTES, resolveMock } from "./handlers";
+import { __resetSessionForTests } from "./session";
 
 const SAMPLE: Record<string, string> = {
   ":pin": "482913",
@@ -11,9 +13,37 @@ const SAMPLE: Record<string, string> = {
   ":chargeId": "chg-1",
 };
 
+// 라우트마다 지연(250ms)이 있고 /question-sets/generate는 1.5초 더 걸린다 — 기본 5초 타임아웃을 늘린다.
+const ROUTE_SWEEP_TIMEOUT_MS = 30000;
+
 describe("mocks/handlers", () => {
-  // 세션·상태 관련 단정(WAITING 등)은 아래 "표의 모든 라우트" 스윕보다 먼저 돈다 — 스윕이
-  // session/start·end 등을 모두 호출해 모듈 스코프 세션 상태(phase)를 옮겨 놓기 때문이다.
+  // session.ts의 phase 등은 모듈 스코프 상태라 테스트 간에 남는다 — 매 테스트 전에 되돌린다.
+  beforeEach(() => {
+    __resetSessionForTests();
+  });
+
+  it(
+    "표의 모든 라우트가 샘플 URL로 해석된다",
+    async () => {
+      for (const key of MOCK_ROUTES) {
+        const [method, path] = key.split(" ");
+        const url =
+          path.replace(/:[a-zA-Z]+/g, (m) => SAMPLE[m] ?? "1") +
+          (path === "/rooms/public" ? "?sort=popular&type=all" : "");
+
+        try {
+          await resolveMock(method, url, {});
+        } catch (e) {
+          // 라우트가 없어서 실패한 게 아니라면(MOCK_ROUTE_MISSING), 목 구현이 던지는 모든 실패는
+          // AppError여야 한다 — 계약에 맞지 않는 바디(`{}`)에서 raw TypeError가 새어 나오면 안 된다.
+          expect(AppError.isAppError(e)).toBe(true);
+          expect((e as { code?: string | null }).code).not.toBe("MOCK_ROUTE_MISSING");
+        }
+      }
+    },
+    ROUTE_SWEEP_TIMEOUT_MS,
+  );
+
   it("GET /rooms/pin/482913 은 시연 방을 돌려준다", async () => {
     await expect(resolveMock("GET", "/rooms/pin/482913")).resolves.toMatchObject({
       roomId: 1,
@@ -33,25 +63,11 @@ describe("mocks/handlers", () => {
     });
   });
 
-  // 라우트마다 지연(250ms)이 있고 /question-sets/generate는 1.5초 더 걸린다 — 기본 5초 타임아웃을 늘린다.
-  const ROUTE_SWEEP_TIMEOUT_MS = 30000;
-
-  it(
-    "표의 모든 라우트가 샘플 URL로 해석된다",
-    async () => {
-      for (const key of MOCK_ROUTES) {
-        const [method, path] = key.split(" ");
-        const url =
-          path.replace(/:[a-zA-Z]+/g, (m) => SAMPLE[m] ?? "1") +
-          (path === "/rooms/public" ? "?sort=popular&type=all" : "");
-
-        try {
-          await resolveMock(method, url, {});
-        } catch (e) {
-          expect((e as { code?: string | null }).code).not.toBe("MOCK_ROUTE_MISSING");
-        }
-      }
-    },
-    ROUTE_SWEEP_TIMEOUT_MS,
-  );
+  it("계약에 맞지 않는 바디로 코인 충전을 요청해도 AppError 대신 결제창 파라미터를 돌려준다", async () => {
+    await expect(resolveMock("POST", "/coins/charges", {})).resolves.toMatchObject({
+      chargeId: expect.any(String),
+      storeId: "store-mock",
+      amount: 0,
+    });
+  });
 });

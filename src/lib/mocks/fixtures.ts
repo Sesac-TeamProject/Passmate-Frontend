@@ -29,7 +29,8 @@ export const ME_PROFILE: UserProfileResponse = {
 /**
  * 시연 방 — PIN "482913". features/host/my-rooms/mock.ts MY_ROOMS[0]·features/home/mock.ts
  * POPULAR_ROOMS[0]·features/participant/pay/mock.ts PAID_ROOM이 같은 방을 가리킨다.
- * 호스트 등급(Lv.4)·평점(4.5)은 PAID_ROOM 기준으로 통일한다(과제 지시).
+ * 호스트 등급(Lv.3)·평점(4.5)은 PAID_ROOM(features/participant/pay/mock.ts) 기준으로 통일한다
+ * (과제 지시) — PAID_ROOM.host.level이 3이므로 여기도 3.
  */
 export const DEMO_ROOM_ID = 1;
 export const DEMO_PIN = "482913";
@@ -46,7 +47,7 @@ export const DEMO_ROOM: RoomInfoResponse = {
   maxParticipants: 40,
   isPaid: true,
   entryFee: 10000,
-  host: { userId: 42, nickname: "김민지", level: 4, avgStars: 4.5, ratingCount: 312 },
+  host: { userId: 42, nickname: "김민지", level: 3, avgStars: 4.5, ratingCount: 312 },
 };
 
 /**

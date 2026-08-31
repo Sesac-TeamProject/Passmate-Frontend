@@ -7,10 +7,8 @@ import type {
   ConfirmChargeRequest,
   ConfirmChargeResponse,
   CreateChargeRequest,
-  CreateEntryPaymentRequest,
   EarningsResponse,
   EntryPaymentResponse,
-  PaymentMethodRequest,
   SettlementAccountDto,
   SettlementItemDto,
 } from "@/lib/types/dto";
@@ -125,20 +123,25 @@ export function mockCoinTransactions(): CoinTransactionPageResponse {
 
 const AMOUNT_LOCALE = "ko-KR";
 
-/** POST /coins/charges — roomId 있으면 충전 후 바로 차감할 방. 포트원 V2 결제창 파라미터를 돌려준다 */
+/**
+ * POST /coins/charges — roomId 있으면 충전 후 바로 차감할 방. 포트원 V2 결제창 파라미터를 돌려준다.
+ * 라우트 스윕이 `{}`처럼 계약에 맞지 않는 바디로도 호출하므로 amount는 방어적으로 기본값을 둔다
+ * (원본 버그: `body.amount`가 없으면 `.toLocaleString()`에서 raw TypeError가 났다).
+ */
 export function mockCreateCharge(body: CreateChargeRequest): ChargeCheckoutResponse {
+  const amount = body.amount ?? 0;
   const chargeId = `chg-${chargeCounter}`;
   const paymentId = `PM-${chargeCounter}`;
   chargeCounter += 1;
-  pendingCharges.set(chargeId, body.amount);
+  pendingCharges.set(chargeId, amount);
 
   return {
     chargeId,
     storeId: "store-mock",
     channelKey: "channel-mock",
     paymentId,
-    orderName: `패스메이트 코인 ${body.amount.toLocaleString(AMOUNT_LOCALE)} C 충전`,
-    amount: body.amount,
+    orderName: `패스메이트 코인 ${amount.toLocaleString(AMOUNT_LOCALE)} C 충전`,
+    amount,
     currency: "KRW",
     payMethod: body.method,
   };
@@ -156,17 +159,14 @@ export function mockConfirmCharge(
   let entryPayment: EntryPaymentResponse | null = null;
   if (body.roomId != null) {
     balance -= DEMO_ROOM.entryFee ?? 0;
-    entryPayment = { paymentNo: `PM-ENTRY-${chargeCounter}`, balance };
+    entryPayment = { paymentNo: `PM-ENTRY-${chargeCounter++}`, balance };
   }
 
   return { balance, entryPayment };
 }
 
 /** POST /rooms/{roomId}/entry-payments — 참가비 코인 차감. 402 잔액 부족 */
-export function mockEntryPayment(
-  _roomId: string,
-  _body: CreateEntryPaymentRequest,
-): EntryPaymentResponse {
+export function mockEntryPayment(): EntryPaymentResponse {
   const entryFee = DEMO_ROOM.entryFee ?? 0;
   if (balance < entryFee) {
     throw new AppError("PaymentRequired", { code: "PAYMENT_REQUIRED" });
@@ -206,6 +206,6 @@ export function mockPutSettlementAccount(body: SettlementAccountDto): Settlement
 }
 
 /** PUT /users/me/payment-method */
-export function mockPutPaymentMethod(_body: PaymentMethodRequest): undefined {
+export function mockPutPaymentMethod(): undefined {
   return undefined;
 }

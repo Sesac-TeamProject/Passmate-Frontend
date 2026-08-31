@@ -170,9 +170,12 @@ export function mockAiUsage(): AiUsageResponse {
 
 const DEFAULT_EXTRACTED_CHARS = 12000;
 
-/** @draft POST /materials — 자료(PDF 등) 업로드 */
+/**
+ * @draft POST /materials — 자료(PDF 등) 업로드. 라우트 스윕이 실제 FormData가 아닌 `{}`로도
+ * 호출하므로 `instanceof` 가드 없이 `form.get(...)`을 부르면 raw TypeError가 났다.
+ */
 export function mockUploadMaterial(form: FormData): MaterialUploadResponse {
-  const file = form.get("file") as File | null;
+  const file = form instanceof FormData ? (form.get("file") as File | null) : null;
   return {
     materialFileId: 1,
     fileName: file?.name ?? "material.pdf",
