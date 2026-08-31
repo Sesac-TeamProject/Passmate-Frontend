@@ -72,7 +72,7 @@ describe("mocks/handlers", () => {
   });
 
   it(
-    "모든 api 함수가 목 라우트를 갖는다",
+    "네트워크를 타는 api 함수 전부가 목 라우트를 갖는다",
     async () => {
       vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "");
       vi.resetModules();
@@ -87,6 +87,7 @@ describe("mocks/handlers", () => {
         import("@/lib/api/ratings"),
         import("@/lib/api/auth"),
       ]);
+      // generateQuestionSet은 목 지연이 1.5초 더 걸려 맨 끝에 둔다(ROUTE_SWEEP_TIMEOUT_MS로 흡수).
       const calls: (() => Promise<unknown>)[] = [
         () => rooms.getRoomByPin("482913"),
         () => rooms.createRoom({ title: "t" }),
@@ -104,38 +105,59 @@ describe("mocks/handlers", () => {
         () => sessions.getSubmissions(1),
         () => sessions.submitAnswer(1, 1, "A"),
         () => sessions.getVoiceHints(1),
+        () => sessions.uploadVoiceHint(1, new Blob(["x"], { type: "audio/webm" }), 1200),
         () => qs.getQuestionSets(),
         () => qs.getQuestionSet(1),
+        () => qs.updateQuestionSet(1, { title: "t" }),
         () => qs.confirmQuestionSet(1),
         () => qs.cloneQuestionSet(1),
         () => qs.getAiUsage(),
+        () => qs.uploadMaterial(new File(["x"], "a.pdf", { type: "application/pdf" })),
         () => results.getMyResult(1),
         () => results.getMyReport(1),
         () => results.getRoomReport(1),
         () => results.getEssayAnswers(1, 1),
         () => results.postHostReview(1, { comment: "c" }),
+        () => me.updateProfile({ nickname: "n" }),
         () => me.getMyPage(),
         () => me.getGrade(),
         () => me.getBadges(),
         () => me.getNotificationSettings(),
+        () => me.putNotificationSettings({ sessionStart: true }),
         () => me.getHostProfile(42),
+        () => me.postReport({ targetType: "USER", targetId: 42, reason: "SPAM" }),
         () => me.claimGuestRecord(11),
         () => payments.getCoinBalance(),
         () => payments.getCoinTransactions(),
         () => payments.createCharge({ amount: 10000, method: "KAKAO_PAY" }),
         () => payments.confirmCharge("chg-1", { paymentId: "p" }),
+        () => payments.createEntryPayment(1, { nickname: "n" }),
         () => payments.getEarnings(),
         () => payments.getSettlementAccount(),
+        () =>
+          payments.putSettlementAccount({
+            bankName: "국민",
+            accountNumber: "1",
+            holderName: "h",
+          }),
         () => payments.putPaymentMethod("CARD"),
         () => ratings.submitRating(1, { stars: 5, tags: [] }),
         () => auth.getMe(),
         () => auth.logout(),
+        () => me.deleteMe(),
+        () =>
+          qs.generateQuestionSet({
+            topic: "Spring",
+            counts: [{ type: "MULTIPLE_CHOICE", count: 1 }],
+            difficulty: "MEDIUM",
+          }),
       ];
 
       for (const call of calls) {
         try {
           await call();
         } catch (e) {
+          expect(AppError.isAppError(e)).toBe(true);
           expect((e as { code?: string | null }).code).not.toBe("MOCK_ROUTE_MISSING");
         }
       }
