@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ServiceGate } from "@/components/common/service-gate";
 import { SessionBootstrap } from "@/components/common/session-bootstrap";
 import { QueryProvider } from "@/components/providers/query-provider";
 
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <QueryProvider>
           <SessionBootstrap />
-          {children}
+          <ServiceGate>{children}</ServiceGate>
         </QueryProvider>
       </body>
     </html>
