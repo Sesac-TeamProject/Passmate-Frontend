@@ -112,6 +112,21 @@ export const HOSTED_ROOMS: HostedRoomDto[] = [
  * 구 features/home/mock.ts(삭제됨)의 POPULAR_ROOMS 값 — hostName=host, hostLevel=level,
  * participantCount=participants, isPaid=type==="paid". 첫 항목(482913)은 DEMO_ROOM과 같은 방.
  */
+/**
+ * 공개 방 목록의 "20:00 시작 · 내일 19:00" 문구를 보려면 날짜가 흘러도 미래여야 한다.
+ * 고정 ISO를 박으면 하루만 지나도 전부 과거가 되므로 오늘을 기준으로 만든다.
+ */
+function eveningAfter(days: number, hour: number): string {
+  const at = new Date();
+  at.setDate(at.getDate() + days);
+  at.setHours(hour, 0, 0, 0);
+  return at.toISOString();
+}
+
+const TODAY_EVENING = eveningAfter(0, 20);
+const TOMORROW_EVENING = eveningAfter(1, 19);
+const DAY_AFTER_EVENING = eveningAfter(2, 21);
+
 export const PUBLIC_ROOMS: PublicRoomDto[] = [
   {
     roomId: DEMO_ROOM_ID,
@@ -136,6 +151,7 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
     hostName: "박세라",
     hostLevel: 4,
     status: "WAITING",
+    scheduledAt: TODAY_EVENING,
     participantCount: 18,
     isPaid: false,
   },
@@ -169,6 +185,7 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
     hostName: "최유나",
     hostLevel: 5,
     status: "WAITING",
+    scheduledAt: TOMORROW_EVENING,
     participantCount: 31,
     isPaid: true,
   },
@@ -190,7 +207,7 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
     topic: "알고리즘",
     hostName: "오다은",
     hostLevel: 3,
-    status: "WAITING",
+    status: "RUNNING",
     participantCount: 27,
     isPaid: false,
   },
@@ -212,7 +229,7 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
     topic: "프론트엔드",
     hostName: "장하늘",
     hostLevel: 4,
-    status: "WAITING",
+    status: "RUNNING",
     participantCount: 22,
     isPaid: false,
   },
@@ -246,6 +263,7 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
     hostName: "최유나",
     hostLevel: 5,
     status: "WAITING",
+    scheduledAt: DAY_AFTER_EVENING,
     participantCount: 19,
     isPaid: true,
   },

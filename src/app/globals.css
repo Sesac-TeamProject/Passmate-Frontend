@@ -44,6 +44,9 @@
   --color-info-soft: var(--info-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
+  /* 경고 배경 위 글자 — --warning은 --warning-soft 위에서 3.3:1이라 WCAG AA(4.5:1)에 못 미친다.
+     시안(04·07 보드)이 쓰는 값이 이쪽이고 5.3:1로 통과한다. 아이콘·큰 글자에는 --warning을 그대로 쓴다. */
+  --color-warning-strong: var(--warning-strong);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -126,6 +129,14 @@
   --color-podium-gold-bg: var(--podium-gold-bg);
   --color-podium-silver-bg: var(--podium-silver-bg);
   --color-podium-bronze-bg: var(--podium-bronze-bg);
+
+  /* --- 스켈레톤 (design.pen "07 · 로딩 · 스켈레톤" · card/스켈레톤 규격) ---
+     시안 규칙: "색은 절대 민트로 쓰지 않습니다 — 로딩은 상태가 아니라 대기입니다".
+     그래서 --muted·--mint 계열을 재사용하지 않고 전용 회색 두 단계를 따로 둔다. */
+  /* 블록 — 제목·이름처럼 눈이 먼저 가는 줄 */
+  --color-skeleton: var(--skeleton);
+  /* 보조 — 캡션·부제처럼 옅게 깔리는 줄 */
+  --color-skeleton-soft: var(--skeleton-soft);
 }
 
 /* --- 타이포그래피 v5 (design/design.pen "Typography — 10 styles") + 랜딩 전용 display-xl·2xl ---
@@ -262,6 +273,10 @@
   --podium-silver-bg: #eff1f5;
   --podium-bronze-bg: #f6eae0;
 
+  /* 스켈레톤 블록 */
+  --skeleton: #e7e9ec;
+  --skeleton-soft: #f1f3f5;
+
   /* shadcn 변수 → v5 매핑 */
   --background: #f6f6f7; /* bg/page-web */
   --foreground: var(--ink);
@@ -306,6 +321,7 @@
   --info-soft: #e7eefd;
   --warning: #b4780a;
   --warning-soft: #fdf2dc;
+  --warning-strong: #8a5a00;
   --destructive-soft: #fbeaeb;
 }
 
@@ -371,6 +387,66 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/*
+ * 스켈레톤 반짝임 (design.pen "07 · 로딩 · 스켈레톤" · card/스켈레톤 규격)
+ * 시안: "왼→오른쪽 1.2초 반복, 흰색 0 → 75% → 0 그라데이션".
+ * 블록마다 따로 깜빡이지 않고 묶음 하나를 빛줄기가 한 번에 훑고 지나간다 — 시안 demo가 그렇게 그려져 있다.
+ * 띠 폭은 시안이 520px 데모 기준 120px이라, 1440 화면에서도 같은 비율로 보이도록 240px로 넓혔다.
+ */
+@keyframes passmate-skeleton-shimmer {
+  to {
+    background-position: calc(100% + 240px) 0;
+  }
+}
+
+/*
+ * W-00 첫 로딩 바 (design.pen 프레임 UJwK9) — 몇 %인지 모르는 대기라서 좌우로 오갈 뿐
+ * 채워지지 않는다. 진행률을 셀 수 있는 작업에는 07 보드의 "진행 바"를 따로 쓴다.
+ */
+@keyframes app-boot-bar {
+  0% {
+    transform: translateX(-30%);
+  }
+  50% {
+    transform: translateX(180%);
+  }
+  100% {
+    transform: translateX(-30%);
+  }
+}
+
+@layer components {
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(255 255 255 / 0.75) 50%,
+      transparent 100%
+    );
+    background-repeat: no-repeat;
+    background-size: 240px 100%;
+    background-position: -240px 0;
+    animation: passmate-skeleton-shimmer 1.2s linear infinite;
+    pointer-events: none;
+  }
+
+  /* 움직임을 줄여 달라고 한 사용자에게는 정지된 블록만 보여준다 */
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-shimmer::after {
+      animation: none;
+      opacity: 0;
+    }
+  }
 }
 
 @layer base {

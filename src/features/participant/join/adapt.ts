@@ -6,8 +6,7 @@ export const PAID_ROOM_LOGIN_MESSAGE = "유료 방은 로그인 후 결제하고
 
 /** PIN 조회(404·410)·입장(409 NICKNAME_DUPLICATED 등) 오류 → 화면 문구 */
 export function toJoinErrorMessage(error: unknown): string {
-  if (!AppError.isAppError(error))
-    return "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+  if (!AppError.isAppError(error)) return "잠시 문제가 생겼어요. 다시 시도해 주세요.";
   if (error.kind === "NotFound") return "없는 PIN이에요. 다시 확인해 주세요";
   if (error.kind === "Gone") return "이미 종료된 방이에요";
   if (error.code === ERROR_CODES.NICKNAME_DUPLICATED)

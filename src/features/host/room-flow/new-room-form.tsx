@@ -13,6 +13,15 @@ import {
 import { ReputationRow } from "./reputation-row";
 import { RoomTypeTabs, type RoomType } from "./room-type-tabs";
 import { SettlementPreview } from "./settlement-preview";
+import { PendingLabel } from "@/components/common/pending-label";
+
+/** 다시 그릴 때 복원할 입력값. W-02e에서 "설정으로 돌아가기"로 돌아올 때 쓴다 */
+export type NewRoomInitialValues = {
+  title: string;
+  setId: string;
+  roomType: RoomType;
+  fee: number;
+};
 
 type Props = {
   /** 확정(CONFIRMED)된 문제 세트만 */
@@ -23,17 +32,27 @@ type Props = {
   pending?: boolean;
   errorMessage?: string | null;
   editorHref: string;
+  /** 없으면 빈 폼으로 시작한다 */
+  initialValues?: NewRoomInitialValues;
 };
 
 const FIELD = "h-[54px] w-[440px] rounded-2xl bg-muted px-[18px]";
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /** W-02 v2 방 설정 카드 — 방 이름·문제 세트·방 유형(무료/유료)·참가비 */
-export function NewRoomForm({ sets, level, onSubmit, pending, errorMessage, editorHref }: Props) {
-  const [name, setName] = useState("");
-  const [setId, setSetId] = useState(sets[0]?.id ?? "");
-  const [roomType, setRoomType] = useState<RoomType>("free");
-  const [fee, setFee] = useState(DEFAULT_ENTRY_FEE);
+export function NewRoomForm({
+  sets,
+  level,
+  onSubmit,
+  pending,
+  errorMessage,
+  editorHref,
+  initialValues,
+}: Props) {
+  const [name, setName] = useState(initialValues?.title ?? "");
+  const [setId, setSetId] = useState(initialValues?.setId ?? sets[0]?.id ?? "");
+  const [roomType, setRoomType] = useState<RoomType>(initialValues?.roomType ?? "free");
+  const [fee, setFee] = useState(initialValues?.fee ?? DEFAULT_ENTRY_FEE);
 
   const paidLocked = level < PAID_ROOM_MIN_LEVEL;
   const isPaid = roomType === "paid";
@@ -150,7 +169,7 @@ export function NewRoomForm({ sets, level, onSubmit, pending, errorMessage, edit
         disabled={pending}
         className="flex h-14 w-[440px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
       >
-        {pending ? "방 만드는 중…" : "방 만들기 → PIN 발급"}
+        {pending ? <PendingLabel>방 만드는 중…</PendingLabel> : "방 만들기 → PIN 발급"}
       </button>
 
       <p className="text-label-md text-muted-foreground">

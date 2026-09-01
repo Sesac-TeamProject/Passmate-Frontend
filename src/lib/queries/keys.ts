@@ -15,6 +15,8 @@ export const qk = {
   settlementAccount: ["me", "settlement-account"] as const,
   hostedRooms: ["rooms", "hosted"] as const,
   publicRooms: (q: PublicRoomsQuery) => ["rooms", "public", q] as const,
+  /** 커서 페이지를 이어 붙이는 목록(/rooms) — 단건 조회와 캐시를 섞지 않으려고 키를 나눈다 */
+  publicRoomsInfinite: (q: PublicRoomsQuery) => ["rooms", "public", "infinite", q] as const,
   roomByPin: (pin: string) => ["rooms", "pin", pin] as const,
   participants: (roomId: number) => ["rooms", roomId, "participants"] as const,
   /**

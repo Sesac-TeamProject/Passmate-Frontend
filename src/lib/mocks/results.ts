@@ -184,16 +184,22 @@ function buildResultQuestion(q: ReportQuestionSource): ResultQuestionDto {
   }
 
   const verdict: AnswerVerdict = (q.accuracy ?? 0) >= 50 ? "CORRECT" : "WRONG";
+  // 문항 상세(P-Web)가 "내가 고른 답 vs 정답"을 나란히 보여줘서 목도 두 값을 채운다.
+  // 보기 원문이 목에 없어 번호로 대신한다 — 계약이 오면 실제 보기 텍스트가 들어온다.
+  const correctChoice = "1번";
+  const myChoice = verdict === "CORRECT" ? correctChoice : "2번";
+
   return {
     questionId: q.no,
     questionNo: q.no,
     title: q.title,
     type,
     verdict,
-    myAnswer: null,
-    correctAnswer: null,
+    myAnswer: myChoice,
+    correctAnswer: correctChoice,
     explanation: null,
-    earnedScore: q.accuracy ?? 0,
+    // accuracy(정답률 %)를 점수로 쓰면 "획득 67점"처럼 읽혀 사실과 다르다
+    earnedScore: verdict === "CORRECT" ? 1 : 0,
     aiFeedback: null,
     hostReview: null,
   };

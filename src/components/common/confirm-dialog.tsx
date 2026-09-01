@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -10,7 +11,8 @@ type Props = {
   title: string;
   description?: string;
   cancelLabel?: string;
-  confirmLabel: string;
+  /** 진행 중 회전 링(PendingLabel)을 함께 넣을 수 있어 문자열로 좁히지 않는다 */
+  confirmLabel: ReactNode;
   /** primary: mint(로그아웃 등) · ink: 검정(회원 탈퇴 등 시안이 ink로 그린 위험 액션) */
   confirmTone?: "primary" | "ink";
   pending?: boolean;

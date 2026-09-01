@@ -1,7 +1,6 @@
 "use client";
 
 import { ScreenError } from "@/components/common/screen-error";
-import { ScreenLoading } from "@/components/common/screen-loading";
 import {
   toLevelStatus,
   toMyRoomStats,
@@ -9,6 +8,7 @@ import {
   toPromotion,
 } from "@/features/host/my-rooms/adapt";
 import { MyRoomsPage } from "@/features/host/my-rooms/my-rooms-page";
+import { MyRoomsSkeleton } from "@/features/host/my-rooms/my-rooms-skeleton";
 import { useGrade } from "@/lib/queries/use-me";
 import { useHostedRooms } from "@/lib/queries/use-rooms";
 
@@ -17,7 +17,7 @@ export default function Page() {
   const hostedRooms = useHostedRooms();
   const grade = useGrade();
 
-  if (hostedRooms.isPending || grade.isPending) return <ScreenLoading />;
+  if (hostedRooms.isPending || grade.isPending) return <MyRoomsSkeleton />;
   if (hostedRooms.isError)
     return (
       <ScreenError message={hostedRooms.error.message} onRetry={() => hostedRooms.refetch()} />
