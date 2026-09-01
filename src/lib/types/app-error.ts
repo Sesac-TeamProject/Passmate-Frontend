@@ -23,17 +23,23 @@ type AppErrorOptions = {
   cause?: unknown;
 };
 
-/** 화면에 바로 쓸 수 있는 안전한 기본 문구. 세부 문구는 화면이 code로 분기해 덮는다. */
+/**
+ * 화면에 바로 쓸 수 있는 안전한 기본 문구. 세부 문구는 화면이 code로 분기해 덮는다.
+ *
+ * design.pen "04 · 상태 · 오류 — 웹"의 문구 규칙을 따른다:
+ * 무엇이 잘못됐는지 → 지금 뭘 하면 되는지, 두 문장. "~해요" 체를 쓰고
+ * 사과("죄송합니다")·오류코드·전문용어는 넣지 않는다.
+ */
 const USER_MESSAGE: Record<AppErrorKind, string> = {
-  Unauthorized: "로그인이 필요합니다.",
-  PermissionDenied: "접근 권한이 없습니다.",
-  PaymentRequired: "코인이 부족합니다. 충전 후 다시 시도해 주세요.",
-  ValidationFailed: "입력값을 확인해 주세요.",
-  NetworkError: "네트워크 연결을 확인해 주세요.",
-  NotFound: "요청한 정보를 찾을 수 없습니다.",
-  Conflict: "이미 처리된 요청입니다.",
-  Gone: "종료되었거나 더 이상 유효하지 않은 항목입니다.",
-  Unknown: "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+  Unauthorized: "로그인이 필요해요.",
+  PermissionDenied: "이 화면을 볼 수 있는 권한이 없어요.",
+  PaymentRequired: "코인이 모자라요. 충전한 뒤 다시 시도해 주세요.",
+  ValidationFailed: "입력한 내용을 다시 확인해 주세요.",
+  NetworkError: "연결이 끊겼어요. 네트워크를 확인해 주세요.",
+  NotFound: "찾는 정보가 없어요. 주소가 바뀌었을 수 있어요.",
+  Conflict: "이미 처리된 요청이에요.",
+  Gone: "이미 끝난 방이에요.",
+  Unknown: "잠시 문제가 생겼어요. 다시 시도해 주세요.",
 };
 
 const KIND_BY_STATUS: Record<number, AppErrorKind> = {

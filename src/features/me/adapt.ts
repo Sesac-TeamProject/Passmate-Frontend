@@ -373,8 +373,7 @@ export function toPaymentMethodItems(
 
 /** 화면 공용 오류 문구 — 서버 kind로 분기한다 */
 export function toMeErrorMessage(error: unknown): string {
-  if (!AppError.isAppError(error))
-    return "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+  if (!AppError.isAppError(error)) return "잠시 문제가 생겼어요. 다시 시도해 주세요.";
   if (error.kind === "Conflict")
     return error.serverMessage ?? "정산 예정 금액이나 진행 중인 방이 있어 지금은 탈퇴할 수 없어요";
   if (error.kind === "ValidationFailed") return error.serverMessage ?? error.message;

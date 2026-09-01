@@ -50,8 +50,7 @@ export function toPaidRoom(room: RoomInfoResponse): PaidRoom {
 
 /** 방 조회·코인 충전·확인·참가비 차감·입장 오류 → 화면 문구 */
 export function toPayErrorMessage(error: unknown): string {
-  if (!AppError.isAppError(error))
-    return "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+  if (!AppError.isAppError(error)) return "잠시 문제가 생겼어요. 다시 시도해 주세요.";
   if (error.code === ERROR_CODES.NICKNAME_DUPLICATED)
     return "같은 닉네임이 이미 있어요. 다른 닉네임을 써 주세요";
   if (error.kind === "PaymentRequired") return "코인이 부족해요. 충전 후 다시 시도해 주세요";
