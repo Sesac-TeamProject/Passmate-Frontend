@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
@@ -32,17 +33,29 @@ export default function Page() {
   const setAiAnalysisEnabled = useSessionStore((s) => s.setAiAnalysisEnabled);
 
   const start = useStartSession(roomId ?? 0);
+  // W-04 "아직 아무도 안 들어왔어요" — 계약 없이 화면에서만 막는 실수 방지 확인
+  const [confirmEmptyStart, setConfirmEmptyStart] = useState(false);
 
   // 시작은 서버가 알린다 — SESSION_STARTED로 phase가 바뀌면 진행 화면으로 넘어간다
   useEffect(() => {
     if (phase === "RUNNING") router.replace(`/host/rooms/${pin}/live`);
   }, [phase, pin, router]);
 
-  const handleStart = () => {
+  const startSession = () => {
     if (roomId === null || start.isPending) return;
+    setConfirmEmptyStart(false);
     start.mutate(undefined, {
       onSuccess: (res) => setAiAnalysisEnabled(res.aiAnalysisEnabled ?? true),
     });
+  };
+
+  // 아무도 없을 때 시작을 누르면 한 번 되묻는다 — 늦게 들어온 학생은 앞 문항을 못 푼다.
+  const handleStart = () => {
+    if (participants.length === 0) {
+      setConfirmEmptyStart(true);
+      return;
+    }
+    startSession();
   };
 
   if (room.isPending) return <ScreenLoading />;
@@ -56,21 +69,33 @@ export default function Page() {
     : null;
 
   return (
-    <LobbyPage
-      pin={room.data.pin}
-      title={room.data.title}
-      dateLabel={room.data.scheduledAt ? formatDotDateWithDay(room.data.scheduledAt) : null}
-      hostName={room.data.host?.nickname ?? null}
-      students={toStudents(participants)}
-      questionCount={room.data.questionCount ?? null}
-      // TODO(API): 문항당 제한 시간은 RoomInfoResponse에 없다 — DESIGN_GAPS D-6(호스트용 방 상세)에 묶여 있어
-      // 계약이 오기 전까지 메타 통계에서 "—"로 비워 둔다.
-      timeLimitSec={null}
-      isPaid={room.data.isPaid ?? false}
-      maxParticipants={room.data.maxParticipants ?? null}
-      onStart={handleStart}
-      starting={start.isPending}
-      errorMessage={errorMessage}
-    />
+    <>
+      <LobbyPage
+        pin={room.data.pin}
+        title={room.data.title}
+        dateLabel={room.data.scheduledAt ? formatDotDateWithDay(room.data.scheduledAt) : null}
+        hostName={room.data.host?.nickname ?? null}
+        students={toStudents(participants)}
+        questionCount={room.data.questionCount ?? null}
+        // TODO(API): 문항당 제한 시간은 RoomInfoResponse에 없다 — DESIGN_GAPS D-6(호스트용 방 상세)에 묶여 있어
+        // 계약이 오기 전까지 메타 통계에서 "—"로 비워 둔다.
+        timeLimitSec={null}
+        isPaid={room.data.isPaid ?? false}
+        maxParticipants={room.data.maxParticipants ?? null}
+        onStart={handleStart}
+        starting={start.isPending}
+        errorMessage={errorMessage}
+      />
+      <ConfirmDialog
+        open={confirmEmptyStart}
+        onOpenChange={setConfirmEmptyStart}
+        title="아직 아무도 안 들어왔어요"
+        description="지금 시작하면 늦게 들어온 학생은 진행 중인 문항부터 풀게 돼요."
+        cancelLabel="조금 더 기다리기"
+        confirmLabel="그래도 시작"
+        pending={start.isPending}
+        onConfirm={startSession}
+      />
+    </>
   );
 }

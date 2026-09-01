@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { toEssayAnswers, toReportStudents, toSessionReport } from "@/features/host/review/adapt";
+import { ExportFailedDialog } from "@/features/host/review/export-failed-dialog";
 import { ReviewPage } from "@/features/host/review/review-page";
 import { ReviewSkeleton } from "@/features/host/review/review-skeleton";
 import { exportRoomReport } from "@/lib/api/results";
@@ -57,15 +58,23 @@ export default function Page() {
     return <ScreenError message={report.error.message} onRetry={() => report.refetch()} />;
 
   return (
-    <ReviewPage
-      report={toSessionReport(report.data, roomId)}
-      students={toReportStudents(report.data.students ?? [])}
-      selectedQuestionId={selectedQuestionId}
-      onSelectQuestion={setSelectedQuestionId}
-      essayAnswers={essayAnswers.data ? toEssayAnswers(essayAnswers.data) : []}
-      onExport={handleExport}
-      exporting={exporting}
-      exportError={exportError}
-    />
+    <>
+      <ReviewPage
+        report={toSessionReport(report.data, roomId)}
+        students={toReportStudents(report.data.students ?? [])}
+        selectedQuestionId={selectedQuestionId}
+        onSelectQuestion={setSelectedQuestionId}
+        essayAnswers={essayAnswers.data ? toEssayAnswers(essayAnswers.data) : []}
+        onExport={handleExport}
+        exporting={exporting}
+      />
+      <ExportFailedDialog
+        open={exportError !== null}
+        onOpenChange={(open) => !open && setExportError(null)}
+        description={exportError ?? undefined}
+        onRetry={handleExport}
+        retrying={exporting}
+      />
+    </>
   );
 }
