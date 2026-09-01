@@ -156,7 +156,10 @@ describe("api/client", () => {
   it("회원 토큰이 없으면 401에 refresh를 시도하지 않고 code를 보존한다 (게스트 유료 방)", async () => {
     stubLocalStorage({});
     fetchMock.mockResolvedValueOnce(
-      jsonResponse(401, { code: "GUEST_NOT_ALLOWED", message: "회원만 이용할 수 있습니다. 로그인해 주세요." }),
+      jsonResponse(401, {
+        code: "GUEST_NOT_ALLOWED",
+        message: "회원만 이용할 수 있습니다. 로그인해 주세요.",
+      }),
     );
     const { request } = await loadClient();
 

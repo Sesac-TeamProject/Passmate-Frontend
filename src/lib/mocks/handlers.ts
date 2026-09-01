@@ -51,15 +51,14 @@ import {
   mockSettlementAccount,
 } from "./payments";
 import {
-  mockAiUsage,
-  mockCloneQuestionSet,
+  mockDuplicateQuestionSet,
   mockConfirmQuestionSet,
   mockCreateQuestionSet,
   mockGenerate,
+  mockGenerateFromFile,
   mockQuestionSetDetail,
   mockQuestionSets,
   mockUpdateQuestionSet,
-  mockUploadMaterial,
 } from "./question-sets";
 import {
   mockCreateRoom,
@@ -139,15 +138,16 @@ const HANDLERS: Record<string, MockHandler> = {
 
   /* ── 문제 세트 ────────────────────────────────────── */
   "GET /question-sets": (ctx) => mockQuestionSets(ctx.url),
-  "POST /question-sets/generate": (ctx) => mockGenerate(asBody<GenerateQuestionSetRequest>(ctx)),
   "POST /question-sets": (ctx) => mockCreateQuestionSet(ctx.body),
   "GET /question-sets/:id": (ctx) => mockQuestionSetDetail(ctx.params.id),
-  "PATCH /question-sets/:id": (ctx) =>
+  "PUT /question-sets/:id": (ctx) =>
     mockUpdateQuestionSet(ctx.params.id, asBody<UpdateQuestionSetRequest>(ctx)),
   "POST /question-sets/:id/confirm": (ctx) => mockConfirmQuestionSet(ctx.params.id),
-  "POST /question-sets/:id/clone": (ctx) => mockCloneQuestionSet(ctx.params.id),
-  "GET /me/ai-usage": () => mockAiUsage(),
-  "POST /materials": (ctx) => mockUploadMaterial(asBody<FormData>(ctx)),
+  "POST /question-sets/:id/duplicate": (ctx) => mockDuplicateQuestionSet(ctx.params.id),
+  "POST /question-sets/:setId/questions/generate": (ctx) =>
+    mockGenerate(asBody<GenerateQuestionSetRequest>(ctx)),
+  "POST /question-sets/:setId/questions/generate-from-file": (ctx) =>
+    mockGenerateFromFile(asBody<FormData>(ctx)),
 
   /* ── 결과 · 리포트 · 평가 ─────────────────────────── */
   "GET /rooms/:roomId/results/me": () => mockMyResult(),

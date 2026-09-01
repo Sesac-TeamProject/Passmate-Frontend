@@ -8,12 +8,13 @@ const SAMPLE: Record<string, string> = {
   ":roomId": "1",
   ":questionId": "1",
   ":id": "1",
+  ":setId": "1",
   ":answerId": "1",
   ":userId": "42",
   ":chargeId": "chg-1",
 };
 
-// 라우트마다 지연(250ms)이 있고 /question-sets/generate는 1.5초 더 걸린다 — 기본 5초 타임아웃을 늘린다.
+// 라우트마다 지연(250ms)이 있고 /question-sets/:setId/questions/generate는 1.5초 더 걸린다 — 기본 5초 타임아웃을 늘린다.
 const ROUTE_SWEEP_TIMEOUT_MS = 30000;
 
 describe("mocks/handlers", () => {
@@ -110,9 +111,9 @@ describe("mocks/handlers", () => {
         () => qs.getQuestionSet(1),
         () => qs.updateQuestionSet(1, { title: "t" }),
         () => qs.confirmQuestionSet(1),
-        () => qs.cloneQuestionSet(1),
-        () => qs.getAiUsage(),
-        () => qs.uploadMaterial(new File(["x"], "a.pdf", { type: "application/pdf" })),
+        () => qs.duplicateQuestionSet(1),
+        () => qs.createQuestionSet({ title: "t" }),
+        () => qs.generateFromFile(1, new File(["x"], "a.pdf", { type: "application/pdf" })),
         () => results.getMyResult(1),
         () => results.getMyReport(1),
         () => results.getRoomReport(1),
@@ -146,7 +147,7 @@ describe("mocks/handlers", () => {
         () => auth.logout(),
         () => me.deleteMe(),
         () =>
-          qs.generateQuestionSet({
+          qs.generateQuestionSet(1, {
             topic: "Spring",
             counts: [{ type: "MULTIPLE_CHOICE", count: 1 }],
             difficulty: "MEDIUM",

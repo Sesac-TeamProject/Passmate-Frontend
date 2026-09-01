@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import type { QuestionType } from "@/features/host/types";
-import type { AiUsageResponse, GenerateQuestionSetRequest } from "@/lib/types/dto";
+import type { GenerateQuestionSetRequest } from "@/lib/types/dto";
 import { QUESTION_TYPE_LABEL } from "./question-type-chip";
 
 type Difficulty = GenerateQuestionSetRequest["difficulty"];
@@ -22,7 +22,6 @@ const DTO_TYPE: Record<QuestionType, GenerateQuestionSetRequest["counts"][number
 };
 
 type Props = {
-  usage?: AiUsageResponse;
   onGenerate: (body: GenerateQuestionSetRequest) => void;
   generating?: boolean;
   errorMessage?: string | null;
@@ -32,7 +31,7 @@ const FIELD =
   "h-[46px] w-full rounded-xl bg-muted px-3.5 text-label-lg text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /** W-03 좌측 "AI로 문제 만들기" 조건 입력 패널 */
-export function GeneratePanel({ usage, onGenerate, generating, errorMessage }: Props) {
+export function GeneratePanel({ onGenerate, generating, errorMessage }: Props) {
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("MEDIUM");
   const [counts, setCounts] = useState<Record<QuestionType, number>>({
@@ -120,12 +119,10 @@ export function GeneratePanel({ usage, onGenerate, generating, errorMessage }: P
           약 30초 걸려요 · 실패하면 자동 재시도 1번
         </p>
       )}
-      {usage && (
-        // TODO(design): DESIGN_GAPS W-03 잔여 횟수 — 시안 없음, 작은 라벨로 임시 배치
-        <p className="text-label-md text-muted-foreground">
-          무료 생성 {usage.generationLeft}/{usage.generationLimit}회 남음
-        </p>
-      )}
+      {/*
+        잔여 생성 횟수 표시는 뺐다 — GET /me/ai-usage가 API 명세서 v2에 없다.
+        명세는 "최초 5회 무료" 후 코인 차감(FR-075)인데 잔여 횟수를 주는 엔드포인트가 아직 없다.
+      */}
       <button
         type="button"
         className="flex h-[46px] items-center justify-center rounded-[14px] bg-muted text-label-lg text-mint-dark transition-colors hover:bg-mint-tint"
