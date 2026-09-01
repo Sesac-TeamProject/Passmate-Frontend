@@ -2,8 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { ScreenError } from "@/components/common/screen-error";
-import { ScreenLoading } from "@/components/common/screen-loading";
+import { LoginFailed } from "@/features/auth/login-failed";
+import { LoginProgress } from "@/features/auth/login-progress";
 import { socialLogin } from "@/lib/api/auth";
 import { safeNextPath } from "@/lib/safe-next";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -57,20 +57,21 @@ function CallbackClient() {
       });
   }, [code, next, router]);
 
+  // 인가 코드가 아예 없으면 사용자가 구글 화면에서 취소한 것, 있는데 실패면 교환이 깨진 것이다
   if (missingCode || failed)
     return (
-      <ScreenError
-        message="로그인에 실패했어요. 다시 시도해 주세요."
+      <LoginFailed
+        reason={missingCode ? "canceled" : "failed"}
         onRetry={() => router.replace("/login")}
       />
     );
-  return <ScreenLoading />;
+  return <LoginProgress />;
 }
 
 // useSearchParams()는 App Router에서 Suspense 경계가 필요하다(없으면 next build 실패).
 export default function Page() {
   return (
-    <Suspense fallback={<ScreenLoading />}>
+    <Suspense fallback={<LoginProgress />}>
       <CallbackClient />
     </Suspense>
   );
