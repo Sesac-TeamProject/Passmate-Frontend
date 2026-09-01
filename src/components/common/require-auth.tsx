@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AppBoot } from "@/components/common/app-boot";
+import { SessionExpired } from "@/components/common/session-expired";
 import { ScreenError } from "@/components/common/screen-error";
 import { Button } from "@/components/ui/button";
 import { useRestoreSession } from "@/lib/queries/use-restore-session";
@@ -26,18 +27,24 @@ type Props = {
 export function RequireAuth({ adminOnly, children }: Props) {
   const status = useRestoreSession();
   const profile = useAuthStore((s) => s.profile);
+  const expired = useAuthStore((s) => s.expired);
   const router = useRouter();
   const pathname = usePathname();
 
-  const isUnauthenticated = status === "unauthenticated";
+  // 만료는 화면으로 알리고 사용자가 직접 누르게 한다 — 하던 일이 있었으니 말없이 튕기지 않는다.
+  const isUnauthenticated = status === "unauthenticated" && !expired;
   const isAuthenticated = status === "authenticated";
   const hasRole = !adminOnly || profile?.isAdmin === true;
 
+  const loginHref = `${LOGIN_PATH}?next=${encodeURIComponent(pathname)}`;
+
   useEffect(() => {
-    if (isUnauthenticated) {
-      router.replace(`${LOGIN_PATH}?next=${encodeURIComponent(pathname)}`);
-    }
-  }, [isUnauthenticated, pathname, router]);
+    if (isUnauthenticated) router.replace(loginHref);
+  }, [isUnauthenticated, loginHref, router]);
+
+  // E-401 — 쓰던 도중에 끊긴 세션. 돌아올 곳을 next로 들고 간다.
+  if (expired && status === "unauthenticated")
+    return <SessionExpired onLogin={() => router.replace(loginHref)} />;
 
   // 로그인 판정 전 첫 페인트 — W-00. 화면별 스켈레톤은 판정이 끝난 뒤 각 page가 그린다.
   if (!isAuthenticated) return <AppBoot />;
