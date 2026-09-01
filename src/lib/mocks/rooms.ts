@@ -95,11 +95,18 @@ export function mockHostedRooms(): HostedRoomsResponse {
   return { items: hostedRooms, nextCursor: null, hasNext: false };
 }
 
-/** GET /rooms/public — type=free|paid 필터, q 부분 일치, sort=popular면 참여 인원 내림차순 */
+/** /rooms 목록 한 페이지 — 시안이 카드 6장 뒤에 "더 보기"를 두므로 목도 6개씩 끊는다 */
+const PUBLIC_PAGE_SIZE = 6;
+
+/**
+ * GET /rooms/public — type=free|paid 필터, q 부분 일치, sort=popular면 참여 인원 내림차순.
+ * cursor는 다음 페이지의 시작 인덱스를 문자열로 담는다(서버 커서 형식은 계약에 없다).
+ */
 export function mockPublicRooms(url: URL): PublicRoomPageResponse {
   const type = url.searchParams.get("type") ?? "all";
   const sort = url.searchParams.get("sort") ?? "popular";
   const q = url.searchParams.get("q");
+  const cursor = Number(url.searchParams.get("cursor") ?? 0) || 0;
 
   let items = PUBLIC_ROOMS.filter((room) => {
     if (type === "free" && room.isPaid) return false;
@@ -112,7 +119,11 @@ export function mockPublicRooms(url: URL): PublicRoomPageResponse {
     items = [...items].sort((a, b) => (b.participantCount ?? 0) - (a.participantCount ?? 0));
   }
 
-  return { items, nextCursor: null, hasNext: false };
+  const page = items.slice(cursor, cursor + PUBLIC_PAGE_SIZE);
+  const next = cursor + PUBLIC_PAGE_SIZE;
+  const hasNext = next < items.length;
+
+  return { items: page, nextCursor: hasNext ? String(next) : null, hasNext };
 }
 
 /**

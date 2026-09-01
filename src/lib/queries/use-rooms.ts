@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   createRoom,
   getHostedRooms,
@@ -36,6 +42,22 @@ export function usePublicRooms(query: PublicRoomsQuery) {
   return useQuery({
     queryKey: qk.publicRooms(query),
     queryFn: () => getPublicRooms(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * GET /rooms/public — "더 보기"로 커서를 이어 붙이는 공개 방 목록(P-Web).
+ * 홈 캐러셀은 첫 페이지만 쓰므로 usePublicRooms를 그대로 둔다.
+ */
+export function useInfinitePublicRooms(query: Omit<PublicRoomsQuery, "cursor">) {
+  return useInfiniteQuery({
+    queryKey: qk.publicRoomsInfinite(query),
+    queryFn: ({ pageParam }) => getPublicRooms({ ...query, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    // hasNext가 없으면 nextCursor 유무로 판단한다 — 목·서버 어느 쪽이 빠뜨려도 멈춘다
+    getNextPageParam: (last) =>
+      last.hasNext === false ? undefined : (last.nextCursor ?? undefined),
     placeholderData: keepPreviousData,
   });
 }
