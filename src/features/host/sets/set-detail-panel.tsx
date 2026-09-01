@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { QuestionSet } from "@/features/host/types";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import { cn } from "@/lib/utils";
+import { PendingLabel } from "@/components/common/pending-label";
 
 const CHIP: Record<QuestionSet["composition"][number]["type"], string> = {
   multiple: "bg-muted text-mint-dark",
@@ -78,7 +79,7 @@ export function SetDetailPanel({ set, onClone, cloning }: Props) {
           disabled={cloning}
           className="flex h-[46px] items-center justify-center rounded-[14px] bg-muted text-label-lg text-mint-dark transition-colors hover:bg-mint-tint disabled:opacity-60"
         >
-          {cloning ? "복제하는 중…" : "복제해서 수정하기"}
+          {cloning ? <PendingLabel>복제하는 중…</PendingLabel> : "복제해서 수정하기"}
         </button>
       </div>
     </aside>

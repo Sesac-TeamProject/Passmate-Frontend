@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { PendingLabel } from "@/components/common/pending-label";
 import type { ReportReason } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
 import { ROOM_REPORT_REASONS } from "./report-reasons";
@@ -94,7 +95,7 @@ export function ReportDialog({ open, onOpenChange, onSubmit, pending, errorMessa
             disabled={reason === null || pending}
             onClick={() => reason && onSubmit(reason, detail.trim() || null)}
           >
-            {pending ? "보내는 중…" : "신고하기"}
+            {pending ? <PendingLabel>보내는 중…</PendingLabel> : "신고하기"}
           </Button>
         </div>
       </DialogContent>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PendingLabel } from "@/components/common/pending-label";
 import type { RatingTag, SubmitRatingRequest } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
 import { RATING_TAG_LABEL, RATING_TAGS, STAR_LABEL } from "./rating-tags";
@@ -134,7 +135,7 @@ export function RatingSheet({
             disabled={stars === null || pending}
             onClick={() => stars && onSubmit({ stars, tags, comment: comment.trim() || null })}
           >
-            {pending ? "보내는 중…" : "보내기"}
+            {pending ? <PendingLabel>보내는 중…</PendingLabel> : "보내기"}
           </Button>
         </div>
       </div>

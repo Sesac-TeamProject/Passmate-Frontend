@@ -6,6 +6,7 @@ import type { Student } from "@/features/host/types";
 import { formatPin } from "@/lib/format";
 import { LobbyRail, LobbyRailMini } from "./lobby-rail";
 import { ProjectorShell } from "./projector-shell";
+import { PendingLabel } from "@/components/common/pending-label";
 
 // window.location을 읽는 QR은 서버 렌더에서 제외한다 — 자리는 회색 박스로 잡아 둔다.
 const JoinQr = dynamic(() => import("./join-qr").then((m) => m.JoinQr), {
@@ -108,7 +109,7 @@ export function LobbyPage({
             disabled={starting}
             className="h-13 w-[180px] rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
           >
-            {starting ? "시작하는 중…" : "시험 시작"}
+            {starting ? <PendingLabel>시작하는 중…</PendingLabel> : "시험 시작"}
           </button>
         </>
       }

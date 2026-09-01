@@ -1,6 +1,7 @@
 import type { EssayAnswer, SessionReport } from "@/features/host/types";
 import { ReportBody } from "./report-body";
 import { ReportStats } from "./report-stats";
+import { PendingLabel } from "@/components/common/pending-label";
 
 type Props = {
   report: SessionReport;
@@ -36,7 +37,7 @@ export function ReviewPage({
           disabled={exporting}
           className="flex h-10 items-center rounded-[14px] bg-card px-[18px] text-label-lg text-mint-dark transition-colors hover:bg-mint-tint disabled:opacity-60"
         >
-          {exporting ? "내보내는 중…" : "내보내기"}
+          {exporting ? <PendingLabel>내보내는 중…</PendingLabel> : "내보내기"}
         </button>
       </div>
       <ReportStats stats={report.stats} />

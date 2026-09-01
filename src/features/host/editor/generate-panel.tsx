@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import type { QuestionType } from "@/features/host/types";
 import type { GenerateQuestionSetRequest } from "@/lib/types/dto";
 import { QUESTION_TYPE_LABEL } from "./question-type-chip";
+import { PendingLabel } from "@/components/common/pending-label";
 
 type Difficulty = GenerateQuestionSetRequest["difficulty"];
 
@@ -108,7 +109,7 @@ export function GeneratePanel({ onGenerate, generating, errorMessage }: Props) {
         disabled={generating || total === 0}
         className="flex h-[50px] items-center justify-center rounded-[14px] bg-mint text-label-lg text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
       >
-        {generating ? "생성 중…" : `문항 ${total}개 생성하기`}
+        {generating ? <PendingLabel>생성 중…</PendingLabel> : `문항 ${total}개 생성하기`}
       </button>
       {errorMessage ? (
         <p role="alert" className="text-label-md text-negative">

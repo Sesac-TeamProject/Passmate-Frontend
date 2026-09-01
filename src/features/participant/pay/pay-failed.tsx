@@ -1,5 +1,6 @@
 import { FailureScreen } from "@/components/common/failure-screen";
 import { Button } from "@/components/ui/button";
+import { PendingLabel } from "@/components/common/pending-label";
 import { formatKrw } from "@/lib/format";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 
@@ -45,7 +46,7 @@ export function PayFailed({
       actions={
         <>
           <Button size="xl" className="flex-1" onClick={onRetry} disabled={retrying}>
-            {retrying ? "결제 중…" : "다시 결제하기"}
+            {retrying ? <PendingLabel>결제 중…</PendingLabel> : "다시 결제하기"}
           </Button>
           <Button size="xl" variant="outline" className="flex-1" onClick={onChangeMethod}>
             다른 결제 수단 고르기

@@ -3,6 +3,7 @@ import { FlowTopBar } from "@/features/host/room-flow/flow-top-bar";
 import type { GenerateQuestionSetRequest } from "@/lib/types/dto";
 import { GeneratePanel } from "./generate-panel";
 import { QuestionList } from "./question-list";
+import { PendingLabel } from "@/components/common/pending-label";
 
 type Props = {
   title: string;
@@ -41,7 +42,7 @@ export function EditorPage({
           disabled={!canConfirm || confirming}
           className="flex h-[42px] items-center rounded-[14px] bg-mint-tint px-5 text-label-lg text-mint-dark transition-colors hover:bg-mint hover:text-white disabled:opacity-60"
         >
-          {confirming ? "확정하는 중…" : "세트 확정하기"}
+          {confirming ? <PendingLabel>확정하는 중…</PendingLabel> : "세트 확정하기"}
         </button>
       </FlowTopBar>
       <main className="flex flex-1 gap-6 px-8 py-6">

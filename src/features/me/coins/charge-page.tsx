@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { PendingLabel } from "@/components/common/pending-label";
 import { CoinBalanceCard } from "@/features/me/coins/coin-balance-card";
 import { CHARGE_PRESETS } from "@/features/me/coins/types";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
@@ -104,7 +105,11 @@ export function ChargePage({
       </p>
 
       <Button size="xl" className="w-full" onClick={onSubmit} disabled={pending}>
-        {pending ? "결제창 여는 중…" : `${formatKrwInline(amount)} 충전하기`}
+        {pending ? (
+          <PendingLabel>결제창 여는 중…</PendingLabel>
+        ) : (
+          `${formatKrwInline(amount)} 충전하기`
+        )}
       </Button>
     </MeFormPage>
   );

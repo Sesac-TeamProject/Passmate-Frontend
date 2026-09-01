@@ -1,5 +1,6 @@
 import { FailureScreen } from "@/components/common/failure-screen";
 import { Button } from "@/components/ui/button";
+import { PendingLabel } from "@/components/common/pending-label";
 import { FlowTopBar } from "./flow-top-bar";
 
 type Props = {
@@ -32,7 +33,7 @@ export function NewRoomFailed({ summary, onRetry, onBack, retrying }: Props) {
       actions={
         <>
           <Button size="xl" className="flex-1" onClick={onRetry} disabled={retrying}>
-            {retrying ? "만드는 중…" : "다시 만들기"}
+            {retrying ? <PendingLabel>만드는 중…</PendingLabel> : "다시 만들기"}
           </Button>
           <Button size="xl" variant="outline" className="flex-1" onClick={onBack}>
             설정으로 돌아가기

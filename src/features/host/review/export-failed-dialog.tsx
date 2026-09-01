@@ -1,6 +1,7 @@
 "use client";
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { PendingLabel } from "@/components/common/pending-label";
 
 type Props = {
   open: boolean;
@@ -39,7 +40,7 @@ export function ExportFailedDialog({
       title={title}
       description={description ?? DEFAULT_DESCRIPTION}
       cancelLabel="닫기"
-      confirmLabel={retrying ? "내보내는 중…" : "다시 시도"}
+      confirmLabel={retrying ? <PendingLabel>내보내는 중…</PendingLabel> : "다시 시도"}
       pending={retrying}
       onConfirm={onRetry}
     />

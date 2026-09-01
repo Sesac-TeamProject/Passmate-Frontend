@@ -13,6 +13,7 @@ import {
 import { ReputationRow } from "./reputation-row";
 import { RoomTypeTabs, type RoomType } from "./room-type-tabs";
 import { SettlementPreview } from "./settlement-preview";
+import { PendingLabel } from "@/components/common/pending-label";
 
 /** 다시 그릴 때 복원할 입력값. W-02e에서 "설정으로 돌아가기"로 돌아올 때 쓴다 */
 export type NewRoomInitialValues = {
@@ -168,7 +169,7 @@ export function NewRoomForm({
         disabled={pending}
         className="flex h-14 w-[440px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
       >
-        {pending ? "방 만드는 중…" : "방 만들기 → PIN 발급"}
+        {pending ? <PendingLabel>방 만드는 중…</PendingLabel> : "방 만들기 → PIN 발급"}
       </button>
 
       <p className="text-label-md text-muted-foreground">

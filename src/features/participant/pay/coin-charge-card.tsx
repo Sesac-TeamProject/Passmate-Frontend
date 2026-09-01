@@ -2,6 +2,7 @@ import { KeyValueRow } from "@/components/common/key-value-row";
 import { StatusChip } from "@/components/common/status-chip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PendingLabel } from "@/components/common/pending-label";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 import { cn } from "@/lib/utils";
 import { formatCoin, formatWon } from "./format";
@@ -158,9 +159,11 @@ export function CoinChargeCard({
         disabled={!agreed || paying}
         onClick={onSubmit}
       >
-        {paying
-          ? "결제창 여는 중…"
-          : `${formatWon(chargeAmount)} 충전 → ${formatCoin(fee)} 차감하고 입장`}
+        {paying ? (
+          <PendingLabel>결제창 여는 중…</PendingLabel>
+        ) : (
+          `${formatWon(chargeAmount)} 충전 → ${formatCoin(fee)} 차감하고 입장`
+        )}
       </Button>
 
       <p className="text-label-md text-ink-disabled">

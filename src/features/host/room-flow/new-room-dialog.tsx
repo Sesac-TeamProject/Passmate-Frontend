@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { FIELD_INPUT_CLASS, FieldInput } from "@/components/common/form-field";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { PendingLabel } from "@/components/common/pending-label";
 import {
   Select,
   SelectContent,
@@ -205,7 +206,7 @@ export function NewRoomDialog({
               취소
             </Button>
             <Button type="submit" size="xl" disabled={pending}>
-              {pending ? "방 만드는 중…" : "방 만들기 → PIN 발급"}
+              {pending ? <PendingLabel>방 만드는 중…</PendingLabel> : "방 만들기 → PIN 발급"}
             </Button>
           </div>
         </form>
