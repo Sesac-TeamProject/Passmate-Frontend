@@ -4,7 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
-import { toCreateRoomErrorMessage, toQuestionSetOptions } from "@/features/host/room-flow/adapt";
+import {
+  isFormLevelCreateError,
+  toCreateRoomErrorMessage,
+  toQuestionSetOptions,
+  toNewRoomInitialValues,
+  toRoomSummary,
+} from "@/features/host/room-flow/adapt";
+import { NewRoomFailed } from "@/features/host/room-flow/new-room-failed";
 import { NewRoomPage } from "@/features/host/room-flow/new-room-page";
 import { useGrade } from "@/lib/queries/use-me";
 import { useQuestionSets } from "@/lib/queries/use-question-sets";
@@ -22,9 +29,12 @@ export default function Page() {
   const grade = useGrade();
   const create = useCreateRoom();
   const [pinMissing, setPinMissing] = useState(false);
+  // W-02e가 "입력한 설정은 그대로 남아 있어요"라고 약속하므로 보낸 값을 들고 있는다
+  const [lastBody, setLastBody] = useState<CreateRoomRequest | null>(null);
 
   const handleSubmit = (body: CreateRoomRequest) => {
     setPinMissing(false);
+    setLastBody(body);
     create.mutate(body, {
       onSuccess: (res) => {
         if (res.pin) router.push(`/host/rooms/${res.pin}/lobby`);
@@ -37,6 +47,19 @@ export default function Page() {
   if (sets.isError)
     return <ScreenError message={sets.error.message} onRetry={() => sets.refetch()} />;
 
+  const options = toQuestionSetOptions(sets.data.items ?? []);
+
+  // 서버·네트워크 때문에 깨진 실패만 전체 화면으로 알린다 (04 보드 A/B 규칙)
+  if (create.isError && lastBody && !isFormLevelCreateError(create.error))
+    return (
+      <NewRoomFailed
+        summary={toRoomSummary(lastBody, options)}
+        onRetry={() => handleSubmit(lastBody)}
+        onBack={() => create.reset()}
+        retrying={create.isPending}
+      />
+    );
+
   // 등급 조회가 실패해도 방 만들기는 막지 않는다 — 유료 옵션만 잠긴 채로 진행한다.
   const level = grade.data?.level ?? 1;
   const errorMessage = pinMissing
@@ -47,11 +70,12 @@ export default function Page() {
 
   return (
     <NewRoomPage
-      sets={toQuestionSetOptions(sets.data.items ?? [])}
+      sets={options}
       level={level}
       onSubmit={handleSubmit}
       pending={create.isPending}
       errorMessage={errorMessage}
+      initialValues={lastBody ? toNewRoomInitialValues(lastBody) : undefined}
     />
   );
 }
