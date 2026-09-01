@@ -144,25 +144,25 @@ describe("api/client", () => {
   it("402는 PaymentRequired가 된다", async () => {
     stubLocalStorage({});
     fetchMock.mockResolvedValueOnce(
-      jsonResponse(402, { code: "PAYMENT_REQUIRED", message: "코인 부족" }),
+      jsonResponse(402, { code: "INSUFFICIENT_COINS", message: "코인이 부족합니다." }),
     );
     const { request } = await loadClient();
 
     await expect(
       request("/rooms/1/entry-payments", { method: "POST", body: {} }),
-    ).rejects.toMatchObject({ kind: "PaymentRequired", code: "PAYMENT_REQUIRED" });
+    ).rejects.toMatchObject({ kind: "PaymentRequired", code: "INSUFFICIENT_COINS" });
   });
 
   it("회원 토큰이 없으면 401에 refresh를 시도하지 않고 code를 보존한다 (게스트 유료 방)", async () => {
     stubLocalStorage({});
     fetchMock.mockResolvedValueOnce(
-      jsonResponse(401, { code: "LOGIN_REQUIRED", message: "로그인 필요" }),
+      jsonResponse(401, { code: "GUEST_NOT_ALLOWED", message: "회원만 이용할 수 있습니다. 로그인해 주세요." }),
     );
     const { request } = await loadClient();
 
     await expect(
       request("/rooms/1/participants", { method: "POST", body: {} }),
-    ).rejects.toMatchObject({ kind: "Unauthorized", code: "LOGIN_REQUIRED" });
+    ).rejects.toMatchObject({ kind: "Unauthorized", code: "GUEST_NOT_ALLOWED" });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 

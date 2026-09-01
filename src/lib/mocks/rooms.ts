@@ -117,12 +117,12 @@ export function mockPublicRooms(url: URL): PublicRoomPageResponse {
 }
 
 /**
- * POST /rooms/{roomId}/participants — 닉네임 중복이면 Conflict(NICKNAME_TAKEN).
+ * POST /rooms/{roomId}/participants — 닉네임 중복이면 Conflict(NICKNAME_DUPLICATED).
  * 회원(access 토큰 있음)이면 participantToken 없음, 게스트면 "mock-guest-token".
  */
 export function mockJoinRoom(_roomId: string, body: JoinRoomRequest): JoinRoomResponse {
   if (participants.some((p) => p.nickname === body.nickname)) {
-    throw new AppError("Conflict", { code: "NICKNAME_TAKEN" });
+    throw new AppError("Conflict", { code: "NICKNAME_DUPLICATED" });
   }
 
   const participantId = nextParticipantId++;
