@@ -51,6 +51,7 @@ export default function Page() {
         feedback={toReportFeedback(questions)}
         onBack={() => router.push(`/result/${roomId}`)}
         onReport={validRoomId === null ? undefined : () => setReportOpen(true)}
+        onOpenQuestion={(no) => router.push(`/result/${roomId}/report/${no}`)}
       />
       <ReportDialog
         open={reportOpen}

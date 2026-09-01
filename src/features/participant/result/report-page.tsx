@@ -47,6 +47,8 @@ type Props = {
    * 그 화면이 아직 없어, 학생이 세션 뒤 마지막으로 머무는 이 화면에 조용한 진입점을 뒀다.
    */
   onReport?: () => void;
+  /** 문항 행 클릭 → 문항 상세. 없으면 행이 눌리지 않는다 */
+  onOpenQuestion?: (no: number) => void;
 };
 
 /**
@@ -64,6 +66,7 @@ export function ReportPage({
   feedback,
   onBack,
   onReport,
+  onOpenQuestion,
 }: Props) {
   // 방 제목이 길어도 등수·점수는 잘리면 안 된다 — 제목만 줄이고 뒤는 항상 붙여 둔다
   const rankAndScore = `${myRank === null ? "순위 집계 중" : `${myRank}위`} · ${formatNumber(myScore)}점`;
@@ -120,26 +123,29 @@ export function ReportPage({
       ) : (
         <ul className="flex flex-col gap-2">
           {questions.map((question) => (
-            <li
-              key={question.questionId}
-              className="flex items-center gap-2.5 rounded-2xl border bg-card px-4 py-3.5"
-            >
-              <span className="flex h-6 w-[30px] shrink-0 items-center justify-center rounded-lg bg-muted text-label-lg text-mint-dark">
-                Q{question.no}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-label-lg">{question.title}</span>
-              <span
-                className={cn(
-                  "shrink-0 rounded-full px-2 py-[3px] text-label-lg",
-                  VERDICT[question.verdict].cls,
-                )}
+            <li key={question.questionId}>
+              <button
+                type="button"
+                disabled={onOpenQuestion === undefined}
+                onClick={() => onOpenQuestion?.(question.no)}
+                className="flex w-full items-center gap-2.5 rounded-2xl border bg-card px-4 py-3.5 text-left transition-colors enabled:hover:bg-muted"
               >
-                {VERDICT[question.verdict].label}
-              </span>
-              {/* TODO(design): 셰브론이 가리킬 문항 상세 화면이 시안에 없다 — 아직 누를 수 없다 */}
-              <span aria-hidden className="shrink-0 text-label-lg text-muted-foreground">
-                ›
-              </span>
+                <span className="flex h-6 w-[30px] shrink-0 items-center justify-center rounded-lg bg-muted text-label-lg text-mint-dark">
+                  Q{question.no}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-label-lg">{question.title}</span>
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full px-2 py-[3px] text-label-lg",
+                    VERDICT[question.verdict].cls,
+                  )}
+                >
+                  {VERDICT[question.verdict].label}
+                </span>
+                <span aria-hidden className="shrink-0 text-label-lg text-muted-foreground">
+                  ›
+                </span>
+              </button>
             </li>
           ))}
         </ul>

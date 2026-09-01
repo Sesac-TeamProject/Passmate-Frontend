@@ -186,6 +186,13 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "participant",
   },
   {
+    path: "/result/[sessionId]/report/[questionNo]",
+    sample: "/result/1/report/3",
+    title: "문항 상세",
+    description: "내가 고른 답과 정답, AI 첨삭(잘한 점·놓친 점·다시 볼 것), 이전·다음 문항 이동",
+    area: "participant",
+  },
+  {
     path: "/pay/[code]",
     sample: "/pay/482913",
     title: "유료 방 결제",
