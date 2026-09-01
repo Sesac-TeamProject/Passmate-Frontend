@@ -77,7 +77,7 @@ function toEssayAnswer(dto: EssayAnswerDto): EssayAnswer {
   };
 }
 
-/** @draft GET /rooms/{roomId}/questions/{questionId}/answers → W-07 분석 패널 서술형 답변 목록 */
+/** @draft GET /rooms/{roomId}/answers → W-07 분석 패널 서술형 답변 목록 (응답 필드 미확보) */
 export function toEssayAnswers(dto: EssayAnswersResponse): EssayAnswer[] {
   return (dto.answers ?? []).map(toEssayAnswer);
 }

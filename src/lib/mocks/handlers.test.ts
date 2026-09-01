@@ -72,6 +72,8 @@ describe("mocks/handlers", () => {
     });
   });
 
+  // 예외 하나: results.exportRoomReport(GET /rooms/{roomId}/reports/export)는 일부러 목 라우트가 없다.
+  // CSV 바이너리를 목으로 흉내 낼 값이 없어, 화면이 404를 잡아 "백엔드 연동 후 제공돼요"로 접는다.
   it(
     "네트워크를 타는 api 함수 전부가 목 라우트를 갖는다",
     async () => {
@@ -118,7 +120,7 @@ describe("mocks/handlers", () => {
         () => results.getMyReport(1),
         () => results.getRoomReport(1),
         () => results.getEssayAnswers(1, 1),
-        () => results.postHostReview(1, { comment: "c" }),
+        () => results.putHostReview(1, 1, { comment: "c" }),
         () => me.updateProfile({ nickname: "n" }),
         () => me.getMyPage(),
         () => me.getGrade(),

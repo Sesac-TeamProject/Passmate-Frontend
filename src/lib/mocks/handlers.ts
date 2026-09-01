@@ -153,8 +153,8 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /rooms/:roomId/results/me": () => mockMyResult(),
   "GET /rooms/:roomId/reports/me": () => mockMyReport(),
   "GET /rooms/:roomId/results": () => mockRoomReport(),
-  "GET /rooms/:roomId/questions/:questionId/answers": () => mockEssayAnswers(),
-  "POST /answers/:answerId/review": () => mockPostReview(),
+  "GET /rooms/:roomId/answers": () => mockEssayAnswers(),
+  "PUT /rooms/:roomId/answers/:answerId/review": () => mockPostReview(),
   "POST /rooms/:roomId/ratings": () => mockSubmitRating(),
 
   /* ── 마이페이지 ───────────────────────────────────── */

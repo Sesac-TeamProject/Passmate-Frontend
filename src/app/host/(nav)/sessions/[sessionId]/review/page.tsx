@@ -6,15 +6,15 @@ import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toEssayAnswers, toReportStudents, toSessionReport } from "@/features/host/review/adapt";
 import { ReviewPage } from "@/features/host/review/review-page";
-import { downloadFile } from "@/lib/api/client";
+import { exportRoomReport } from "@/lib/api/results";
 import { useEssayAnswers, useRoomReport } from "@/lib/queries/use-results";
 
-/** @draft — 계약 없음(../docs/tasks.md T060). 실패 시(목 모드 404 포함) 안내만 보여준다 */
+/** 목 라우트가 없어 목 모드에서는 404가 난다 — 실제 실패도 같은 안내로 접는다 */
 const EXPORT_UNAVAILABLE_MESSAGE = "백엔드 연동 후 제공돼요";
 
 /**
  * W-07 방 리포트 컨테이너. [sessionId]는 roomId다(사전 판정).
- * 우측 분석 패널이 볼 문항 id를 여기서 들고 있다가 서술형 답변(@draft) 조회를 구동한다.
+ * 우측 분석 패널이 볼 문항 id를 여기서 들고 있다가 서술형 답변 조회를 구동한다.
  */
 export default function Page() {
   const params = useParams<{ sessionId: string }>();
@@ -43,8 +43,7 @@ export default function Page() {
     setExportError(null);
     setExporting(true);
     try {
-      // @draft — 계약 없음(../docs/tasks.md T060)
-      await downloadFile(`/sessions/${roomId}/stats/export`, `passmate-report-${roomId}.csv`);
+      await exportRoomReport(roomId);
     } catch {
       // 목 모드에서는 라우트가 없어 404(AppError)가 난다 — 실제 실패도 같은 안내로 접는다.
       setExportError(EXPORT_UNAVAILABLE_MESSAGE);
