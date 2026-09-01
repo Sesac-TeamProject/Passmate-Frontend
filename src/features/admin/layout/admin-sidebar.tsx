@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { routesByArea } from "@/config/routes";
 import { useAuthStore } from "@/lib/stores/auth-store";
-import type { UserRole } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,12 +14,6 @@ import { cn } from "@/lib/utils";
 const NAV_LABEL: Record<string, string> = {
   "/admin/reports": "신고 · 제재",
   "/admin/branded": "광고 · 브랜디드",
-};
-
-const ROLE_LABEL: Record<UserRole, string> = {
-  ADMIN: "운영 관리자",
-  TEACHER: "선생님",
-  STUDENT: "학생",
 };
 
 /**
@@ -90,7 +83,7 @@ export function AdminSidebar() {
           </span>
           <div className="flex flex-col gap-px">
             <p className="text-label-lg text-sidebar-foreground">{profile.name}</p>
-            <p className="text-label-md text-sidebar-foreground/50">{ROLE_LABEL[profile.role]}</p>
+            <p className="text-label-md text-sidebar-foreground/50">운영 관리자</p>
           </div>
         </div>
       ) : null}

@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { LoginPage, type LoginValues } from "@/features/auth/login-page";
-import { googleLoginUrl } from "@/lib/api/auth";
 import { safeNextPath } from "@/lib/safe-next";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
@@ -30,9 +29,10 @@ function LoginContainer() {
   };
 
   const handleGoogleClick = () => {
-    // 목 모드(NEXT_PUBLIC_API_BASE_URL 비어있음)에서는 API_BASE_URL이 빈 문자열이라
-    // 이 링크가 같은 origin의 "/auth/oauth/google…"로 이동해 404가 난다 — 백엔드 연동 전까지는 정상(DESIGN_GAPS D-1).
-    window.location.assign(googleLoginUrl(next));
+    // TODO(설정): GIS 클라이언트 ID를 받으면 여기서 idToken을 받아
+    // socialLogin("google", { idToken })를 부르고 토큰을 저장한다.
+    // 명세 v2에 서버 리다이렉트 진입점이 없어(POST /auth/login/{provider} 토큰 교환 방식)
+    // 그때까지는 누를 곳이 없다. 로그인 화면 정리는 다음 커밋(C-01)에서 한다.
   };
 
   return (

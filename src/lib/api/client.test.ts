@@ -112,7 +112,7 @@ describe("api/client", () => {
     useAuthStore.getState().setSession("old-access", {
       nickname: "n",
       email: "e",
-      role: "ADMIN",
+      isAdmin: true,
     });
 
     const error = await request("/me").catch((e: unknown) => e);
@@ -220,7 +220,7 @@ describe("api/client", () => {
     useAuthStore.getState().setSession("old-access", {
       nickname: "n",
       email: "e",
-      role: "ADMIN",
+      isAdmin: true,
     });
 
     const error = await request("/users/me").catch((e: unknown) => e);

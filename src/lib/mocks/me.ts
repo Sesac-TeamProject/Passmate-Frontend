@@ -28,9 +28,9 @@ export function currentProfile(): UserProfileResponse {
   return profile;
 }
 
-/** GET /me · GET /users/me — role: "ADMIN"은 관리자 화면 확인용으로 유지한다 */
+/** GET /users/me — isAdmin: true는 관리자 화면 확인용으로 유지한다 */
 export function mockMe(): MeResponse {
-  return { ...profile, userId: ME_USER_ID, name: profile.nickname, role: "ADMIN" };
+  return { ...profile, userId: ME_USER_ID, name: profile.nickname, isAdmin: true };
 }
 
 /** PUT /users/me — 닉네임·기본 캐릭터 부분 수정 */

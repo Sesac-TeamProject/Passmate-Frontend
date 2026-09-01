@@ -12,6 +12,7 @@ const SAMPLE: Record<string, string> = {
   ":answerId": "1",
   ":userId": "42",
   ":chargeId": "chg-1",
+  ":provider": "google",
 };
 
 // 라우트마다 지연(250ms)이 있고 /question-sets/:setId/questions/generate는 1.5초 더 걸린다 — 기본 5초 타임아웃을 늘린다.
@@ -157,6 +158,8 @@ describe("mocks/handlers", () => {
         () => admin.getAdminAdCampaigns(),
         () => admin.getAdminBrandedQuizzes(),
         () => auth.getMe(),
+        () => auth.socialLogin("google", { idToken: "tok" }),
+        () => auth.devLogin("web-dev"),
         () => auth.logout(),
         () => me.deleteMe(),
         () =>

@@ -25,7 +25,7 @@ import {
   mockAdminSettlements,
   mockAdminUsers,
 } from "./admin";
-import { MOCK_TOKENS } from "./auth";
+import { MOCK_TOKENS, mockLogin } from "./auth";
 import {
   mockClaim,
   mockDeleteMe,
@@ -105,6 +105,8 @@ function asBody<T>(ctx: MockContext): T {
 
 const HANDLERS: Record<string, MockHandler> = {
   /* ── 인증 ─────────────────────────────────────────── */
+  "POST /auth/login/:provider": () => mockLogin(),
+  "POST /auth/dev-login": () => mockLogin(),
   "POST /auth/refresh": () => MOCK_TOKENS,
   "POST /auth/logout": () => undefined,
 

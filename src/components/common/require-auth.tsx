@@ -9,22 +9,21 @@ import { Button } from "@/components/ui/button";
 import { useRestoreSession } from "@/lib/queries/use-restore-session";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { AppError } from "@/lib/types/app-error";
-import type { UserRole } from "@/lib/types/dto";
 
 const LOGIN_PATH = "/login";
 const HOME_PATH = "/";
 
 type Props = {
-  /** 지정하면 프로필 role까지 확인한다. 예: /admin/* 은 "ADMIN" */
-  role?: UserRole;
+  /** 지정하면 관리자만 통과시킨다. 예: /admin/* */
+  adminOnly?: boolean;
   children: React.ReactNode;
 };
 
 /**
  * 라우트 가드 (규칙 문서 §2-1, §8). 미로그인은 `/login?next=` 로 보내고,
- * role 불일치는 권한 거부 화면을 보인다. UX용 가드이며 최종 권위는 서버 403이다.
+ * 관리자가 아니면 권한 거부 화면을 보인다. UX용 가드이며 최종 권위는 서버 403이다.
  */
-export function RequireAuth({ role, children }: Props) {
+export function RequireAuth({ adminOnly, children }: Props) {
   const status = useRestoreSession();
   const profile = useAuthStore((s) => s.profile);
   const router = useRouter();
@@ -32,7 +31,7 @@ export function RequireAuth({ role, children }: Props) {
 
   const isUnauthenticated = status === "unauthenticated";
   const isAuthenticated = status === "authenticated";
-  const hasRole = !role || profile?.role === role;
+  const hasRole = !adminOnly || profile?.isAdmin === true;
 
   useEffect(() => {
     if (isUnauthenticated) {
