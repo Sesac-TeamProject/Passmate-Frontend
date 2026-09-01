@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ReconnectingBanner } from "@/components/common/reconnecting-banner";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
 import { toLiveQuestion } from "@/features/participant/play/adapt";
-import { DisconnectedOverlay } from "@/features/participant/play/disconnected-overlay";
 import { WaitingPage } from "@/features/participant/play/waiting-page";
 import { PlayPage } from "@/features/participant/play/play-page";
 import { readMyParticipant } from "@/lib/my-participant";
@@ -108,9 +108,17 @@ export default function Page() {
 
   return (
     <>
+      {/*
+        07 보드 "실시간 재연결" — 끊긴 동안에도 화면을 덮거나 갈아 끼우지 않고 맨 위 얇은 띠로만
+        알린다. 쓰던 서술형 답안을 언마운트로 잃지 않는 것이 이 규칙을 따르는 실질적인 이유다.
+        학생 화면은 호스트와 달리 10초가 지나도 오류 화면으로 넘기지 않는다 — 답안이 날아간다.
+      */}
+      {connection === "reconnecting" && (
+        <div className="fixed inset-x-0 top-0 z-50">
+          <ReconnectingBanner onRetry={reconnect} />
+        </div>
+      )}
       {stage()}
-      {/* 끊긴 동안에도 화면을 갈아 끼우지 않고 겹친다 — 쓰던 서술형 답안을 잃지 않는다 */}
-      {connection === "reconnecting" && <DisconnectedOverlay onRetry={reconnect} />}
     </>
   );
 }

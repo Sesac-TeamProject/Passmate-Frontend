@@ -6,6 +6,8 @@ import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { firstErrorMessage, toSolvingStudents } from "@/features/host/live/adapt";
 import { LivePage } from "@/features/host/live/live-page";
+import { ProjectorDisconnected } from "@/features/host/live/projector-disconnected";
+import { useDisconnectedTooLong } from "@/features/host/live/use-disconnected-too-long";
 // 문항 → 뷰 타입 변환은 학생 화면과 같은 함수를 쓴다(중복 정의 금지)
 import { toLiveQuestion } from "@/features/participant/play/adapt";
 import { useRoomByPin } from "@/lib/queries/use-rooms";
@@ -53,6 +55,9 @@ export default function Page() {
   const lock = useLockScreen(roomId ?? 0);
   const hint = useUploadVoiceHint(roomId ?? 0);
   const [hintError, setHintError] = useState<string | null>(null);
+  // 잠깐 끊긴 것과 복구 실패를 시간으로 가른다 — 07 보드 "10초 넘으면 오류 화면으로"
+  const disconnected = connection !== "connected";
+  const disconnectedTooLong = useDisconnectedTooLong(disconnected);
 
   useEffect(() => {
     if (roomId === null) return;
@@ -66,6 +71,21 @@ export default function Page() {
   if (room.isPending) return <ScreenLoading />;
   if (room.isError)
     return <ScreenError message={room.error.message} onRetry={() => room.refetch()} />;
+
+  // 10초가 지나도 안 붙으면 W-05e로 넘긴다. 문항이 아직 없어도 마찬가지 —
+  // 벽에 걸린 프로젝터가 "여는 중"에서 멈춰 있는 것보다 끊겼다고 말해 주는 편이 낫다.
+  if (disconnectedTooLong)
+    return (
+      <ProjectorDisconnected
+        pin={pin}
+        current={currentQuestion?.questionNo ?? 1}
+        total={questionCount ?? 1}
+        // 연결은 상위 [code] 레이아웃이 잡아 reconnect를 넘겨받을 수 없다.
+        // 레이아웃 주석대로 새로고침하면 스냅샷으로 이어지므로, 시안 각주("같은 주소를 다시 열면
+        // 자동으로 이어집니다")와도 같은 동작이다.
+        onRetry={() => window.location.reload()}
+      />
+    );
 
   // 시작 직후(SESSION_STARTED ~ 첫 QUESTION_STARTED)와 종료 직후에는 보여줄 문항이 없다
   if (!currentQuestion || phase !== "RUNNING")
@@ -94,7 +114,7 @@ export default function Page() {
       onHintError={setHintError}
       hintUploading={hint.isPending}
       pending={pending}
-      reconnecting={connection !== "connected"}
+      reconnecting={disconnected}
       errorMessage={errorMessage}
     />
   );

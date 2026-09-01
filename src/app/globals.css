@@ -44,6 +44,9 @@
   --color-info-soft: var(--info-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
+  /* 경고 배경 위 글자 — --warning은 --warning-soft 위에서 3.3:1이라 WCAG AA(4.5:1)에 못 미친다.
+     시안(04·07 보드)이 쓰는 값이 이쪽이고 5.3:1로 통과한다. 아이콘·큰 글자에는 --warning을 그대로 쓴다. */
+  --color-warning-strong: var(--warning-strong);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -318,6 +321,7 @@
   --info-soft: #e7eefd;
   --warning: #b4780a;
   --warning-soft: #fdf2dc;
+  --warning-strong: #8a5a00;
   --destructive-soft: #fbeaeb;
 }
 
