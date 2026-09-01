@@ -80,7 +80,7 @@ describe("mocks/handlers", () => {
       vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "");
       vi.resetModules();
 
-      const [rooms, sessions, qs, results, me, payments, ratings, auth] = await Promise.all([
+      const [rooms, sessions, qs, results, me, payments, ratings, auth, admin] = await Promise.all([
         import("@/lib/api/rooms"),
         import("@/lib/api/sessions"),
         import("@/lib/api/question-sets"),
@@ -89,6 +89,7 @@ describe("mocks/handlers", () => {
         import("@/lib/api/payments"),
         import("@/lib/api/ratings"),
         import("@/lib/api/auth"),
+        import("@/lib/api/admin"),
       ]);
       // generateQuestionSet은 목 지연이 1.5초 더 걸려 맨 끝에 둔다(ROUTE_SWEEP_TIMEOUT_MS로 흡수).
       const calls: (() => Promise<unknown>)[] = [
@@ -145,6 +146,16 @@ describe("mocks/handlers", () => {
           }),
         () => payments.putPaymentMethod("CARD"),
         () => ratings.submitRating(1, { stars: 5, tags: [] }),
+        () => admin.getAdminDashboard(),
+        () => admin.getAdminUsers("ALL"),
+        () => admin.getAdminRooms(),
+        () => admin.getAdminReviewQueue(),
+        () => admin.getAdminReports(),
+        () => admin.getAdminSanctions(),
+        () => admin.getAdminPayments(),
+        () => admin.getAdminSettlements(),
+        () => admin.getAdminAdCampaigns(),
+        () => admin.getAdminBrandedQuizzes(),
         () => auth.getMe(),
         () => auth.logout(),
         () => me.deleteMe(),

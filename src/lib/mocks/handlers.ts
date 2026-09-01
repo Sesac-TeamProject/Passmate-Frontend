@@ -189,9 +189,9 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /admin/reports": () => mockAdminReports(),
   "GET /admin/sanctions": () => mockAdminSanctions(),
   "GET /admin/payments": () => mockAdminPayments(),
-  "GET /admin/settlements/pending": () => mockAdminSettlements(),
+  "GET /admin/settlements": () => mockAdminSettlements(),
   "GET /admin/ad-campaigns": () => mockAdminAdCampaigns(),
-  "GET /admin/branded-quizzes": () => mockAdminBrandedQuizzes(),
+  "GET /admin/branded-rooms": () => mockAdminBrandedQuizzes(),
 };
 
 /** 라우트 표 키 목록 — handlers.test.ts가 전체 커버리지를 검증할 때 쓴다. */

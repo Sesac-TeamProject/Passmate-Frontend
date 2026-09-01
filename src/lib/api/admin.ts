@@ -18,9 +18,9 @@ export function getAdminAdCampaigns(): Promise<AdminAdCampaignsResponse> {
   return request<AdminAdCampaignsResponse>("/admin/ad-campaigns");
 }
 
-/** GET /admin/branded-quizzes — A-06 기업 브랜디드 퀴즈 */
+/** GET /admin/branded-rooms — A-06 기업 브랜디드 퀴즈 */
 export function getAdminBrandedQuizzes(): Promise<AdminBrandedQuizzesResponse> {
-  return request<AdminBrandedQuizzesResponse>("/admin/branded-quizzes");
+  return request<AdminBrandedQuizzesResponse>("/admin/branded-rooms");
 }
 
 /** GET /admin/payments — A-05 결제 KPI + 유료 방 결제 내역 */
@@ -28,9 +28,9 @@ export function getAdminPayments(): Promise<AdminPaymentsResponse> {
   return request<AdminPaymentsResponse>("/admin/payments");
 }
 
-/** GET /admin/settlements/pending — A-05 정산 대기 선생님 */
+/** GET /admin/settlements — A-05 정산 현황 목록 (호스트별 정산 건·다음 지급일) */
 export function getAdminSettlements(): Promise<AdminSettlementsResponse> {
-  return request<AdminSettlementsResponse>("/admin/settlements/pending");
+  return request<AdminSettlementsResponse>("/admin/settlements");
 }
 
 const SANCTION_HISTORY_DAYS = 30;
