@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toReportFeedback, toReportQuestions } from "@/features/participant/result/adapt";
+import { ReportDialog } from "@/features/participant/result/report-dialog";
 import { ReportPage } from "@/features/participant/result/report-page";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
+import { useReport } from "@/lib/queries/use-me";
 import { useMyReport, useMyResult } from "@/lib/queries/use-results";
 
 /**
@@ -24,6 +27,8 @@ export default function Page() {
 
   const result = useMyResult(validRoomId);
   const report = useMyReport(validRoomId);
+  const sendReport = useReport();
+  const [reportOpen, setReportOpen] = useState(false);
 
   if (result.isPending || report.isPending) return <ScreenLoading />;
   if (result.isError)
@@ -34,16 +39,34 @@ export default function Page() {
   const questions = result.data.questions ?? [];
 
   return (
-    <ReportPage
-      roomTitle={result.data.roomTitle ?? ""}
-      myRank={result.data.rank ?? null}
-      myScore={result.data.totalScore ?? 0}
-      correctCount={result.data.correctCount ?? 0}
-      questionCount={result.data.questionCount ?? 0}
-      weakTopics={report.data.weakTopics ?? []}
-      questions={toReportQuestions(questions)}
-      feedback={toReportFeedback(questions)}
-      onBack={() => router.push(`/result/${roomId}`)}
-    />
+    <>
+      <ReportPage
+        roomTitle={result.data.roomTitle ?? ""}
+        myRank={result.data.rank ?? null}
+        myScore={result.data.totalScore ?? 0}
+        correctCount={result.data.correctCount ?? 0}
+        questionCount={result.data.questionCount ?? 0}
+        weakTopics={report.data.weakTopics ?? []}
+        questions={toReportQuestions(questions)}
+        feedback={toReportFeedback(questions)}
+        onBack={() => router.push(`/result/${roomId}`)}
+        onReport={validRoomId === null ? undefined : () => setReportOpen(true)}
+      />
+      <ReportDialog
+        open={reportOpen}
+        onOpenChange={(open) => {
+          setReportOpen(open);
+          if (!open) sendReport.reset();
+        }}
+        onSubmit={(reason, detail) =>
+          sendReport.mutate(
+            { targetType: "ROOM", targetId: roomId, reason, detail },
+            { onSuccess: () => setReportOpen(false) },
+          )
+        }
+        pending={sendReport.isPending}
+        errorMessage={sendReport.isError ? sendReport.error.message : null}
+      />
+    </>
   );
 }

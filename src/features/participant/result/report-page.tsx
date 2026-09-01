@@ -42,6 +42,11 @@ type Props = {
   /** AI 분석이 붙은 문항이 없으면 null — 카드를 통째로 감춘다 */
   feedback: ReportFeedback | null;
   onBack: () => void;
+  /**
+   * 방 신고. 시안은 신고 다이얼로그를 "P-Web 리포트 — 문항 상세" 위에 그리는데
+   * 그 화면이 아직 없어, 학생이 세션 뒤 마지막으로 머무는 이 화면에 조용한 진입점을 뒀다.
+   */
+  onReport?: () => void;
 };
 
 /**
@@ -58,6 +63,7 @@ export function ReportPage({
   questions,
   feedback,
   onBack,
+  onReport,
 }: Props) {
   // 방 제목이 길어도 등수·점수는 잘리면 안 된다 — 제목만 줄이고 뒤는 항상 붙여 둔다
   const rankAndScore = `${myRank === null ? "순위 집계 중" : `${myRank}위`} · ${formatNumber(myScore)}점`;
@@ -165,6 +171,16 @@ export function ReportPage({
           )}
         </section>
       )}
+
+      {onReport ? (
+        <button
+          type="button"
+          onClick={onReport}
+          className="self-center text-label-lg text-muted-foreground underline underline-offset-2 hover:text-ink"
+        >
+          이 방 신고하기
+        </button>
+      ) : null}
     </main>
   );
 }
