@@ -1,4 +1,4 @@
-import { avatarKeyFromId } from "@/components/common/student-avatar";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import { LEVEL_TITLE, levelTitle } from "@/lib/host-level";
 import type { PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
@@ -36,7 +36,7 @@ export function toPaidRoom(room: RoomInfoResponse): PaidRoom {
     host: {
       name: room.host?.nickname ?? "",
       // 계약에 호스트 avatarId가 없다 — 공개 프로필에도 아직 없어 기본 아바타로 접는다.
-      avatar: avatarKeyFromId(null),
+      avatar: toAvatarKey(null),
       level,
       levelTitle: levelTitle(level) ?? LEVEL_TITLE[1],
     },
@@ -52,12 +52,12 @@ export function toPaidRoom(room: RoomInfoResponse): PaidRoom {
 export function toPayErrorMessage(error: unknown): string {
   if (!AppError.isAppError(error))
     return "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
-  if (error.code === ERROR_CODES.NICKNAME_TAKEN)
+  if (error.code === ERROR_CODES.NICKNAME_DUPLICATED)
     return "같은 닉네임이 이미 있어요. 다른 닉네임을 써 주세요";
   if (error.kind === "PaymentRequired") return "코인이 부족해요. 충전 후 다시 시도해 주세요";
   if (error.kind === "Gone") return "이미 종료된 방이에요";
   if (error.kind === "NotFound") return "없는 방이에요";
-  if (error.code === ERROR_CODES.LOGIN_REQUIRED) return "로그인 후 결제할 수 있어요";
+  if (error.code === ERROR_CODES.GUEST_NOT_ALLOWED) return "로그인 후 결제할 수 있어요";
   return error.message;
 }
 

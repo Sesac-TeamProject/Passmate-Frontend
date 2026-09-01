@@ -85,7 +85,7 @@ export type RoomReportResponse = {
   students?: RoomReportStudent[];
 };
 
-/** @draft — 계약 없음. ../docs/tasks.md T070. 서술형 답안 목록(W-07 분석 패널) */
+/** @draft 경로는 API 명세서 v2로 확정. 응답 필드는 미확보 — 서술형 답안 목록(W-07 분석 패널) */
 export type EssayAnswerDto = {
   answerId: number;
   participantId: number;
@@ -94,9 +94,9 @@ export type EssayAnswerDto = {
   aiFeedback?: AiFeedbackDto | null;
   hostReview?: HostReviewDto | null;
 };
-/** @draft GET /rooms/{roomId}/questions/{questionId}/answers */
+/** @draft GET /rooms/{roomId}/answers 응답 필드 */
 export type EssayAnswersResponse = { answers: EssayAnswerDto[] };
-/** @draft POST /answers/{answerId}/review (FR-034) */
+/** @draft PUT /rooms/{roomId}/answers/{answerId}/review 요청 필드 (FR-034) */
 export type HostReviewRequest = {
   comment: string;
   improvement?: string | null;

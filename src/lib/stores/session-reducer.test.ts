@@ -13,7 +13,7 @@ describe("session-reducer", () => {
     let s = reduceSessionEvent(initialSessionState, {
       type: "PARTICIPANT_JOINED",
       ts,
-      data: { participantId: 11, nickname: "영희", isGuest: true, avatarId: 1, count: 1 },
+      data: { participantId: 11, nickname: "영희", isGuest: true, avatarId: "cat", count: 1 },
     });
     expect(s.participants).toHaveLength(1);
     s = reduceSessionEvent(s, {

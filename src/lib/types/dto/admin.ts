@@ -243,7 +243,7 @@ export type AdminPayment = {
   status: PaymentStatus;
 };
 
-/** GET /admin/settlements/pending — 다음 정산일 지급 대기 선생님 */
+/** GET /admin/settlements — 호스트별 정산 건과 다음 지급일 */
 export type AdminSettlementsResponse = {
   /** 일괄 지급일 YYYY-MM-DD */
   payoutDate: string;
@@ -309,7 +309,7 @@ export type AdCampaign = {
   status: AdCampaignStatus;
 };
 
-/** GET /admin/branded-quizzes */
+/** GET /admin/branded-rooms */
 export type AdminBrandedQuizzesResponse = {
   items: BrandedQuiz[];
 };

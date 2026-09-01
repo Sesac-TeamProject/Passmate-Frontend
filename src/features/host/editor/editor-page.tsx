@@ -1,13 +1,12 @@
 import type { Question } from "@/features/host/types";
 import { FlowTopBar } from "@/features/host/room-flow/flow-top-bar";
-import type { AiUsageResponse, GenerateQuestionSetRequest } from "@/lib/types/dto";
+import type { GenerateQuestionSetRequest } from "@/lib/types/dto";
 import { GeneratePanel } from "./generate-panel";
 import { QuestionList } from "./question-list";
 
 type Props = {
   title: string;
   questions: Question[];
-  usage?: AiUsageResponse;
   onGenerate: (body: GenerateQuestionSetRequest) => void;
   generating?: boolean;
   generateError?: string | null;
@@ -20,7 +19,6 @@ type Props = {
 export function EditorPage({
   title,
   questions,
-  usage,
   onGenerate,
   generating,
   generateError,
@@ -48,7 +46,6 @@ export function EditorPage({
       </FlowTopBar>
       <main className="flex flex-1 gap-6 px-8 py-6">
         <GeneratePanel
-          usage={usage}
           onGenerate={onGenerate}
           generating={generating}
           errorMessage={generateError}

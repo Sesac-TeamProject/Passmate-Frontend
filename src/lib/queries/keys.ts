@@ -13,7 +13,6 @@ export const qk = {
   coinTransactions: ["me", "coins", "transactions"] as const,
   earnings: ["me", "earnings"] as const,
   settlementAccount: ["me", "settlement-account"] as const,
-  aiUsage: ["me", "ai-usage"] as const,
   hostedRooms: ["rooms", "hosted"] as const,
   publicRooms: (q: PublicRoomsQuery) => ["rooms", "public", q] as const,
   roomByPin: (pin: string) => ["rooms", "pin", pin] as const,

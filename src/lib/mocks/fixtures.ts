@@ -13,13 +13,13 @@ import type {
  * 백엔드 연동 시 lib/mocks 폴더를 통째로 걷어낸다.
  */
 
-/** 로그인 회원 = 이한결(여우, Lv.3). features/me/mock.ts PROFILE. avatarId 6 = fox(AVATAR_KEYS 6번째) */
+/** 로그인 회원 = 이한결(여우, Lv.3). features/me/mock.ts PROFILE */
 export const ME_USER_ID = 1;
 export const ME_PROFILE: UserProfileResponse = {
   nickname: "한결",
   email: "hangyeol@passmate.app",
   joinedAt: "2026-08-01",
-  avatarId: 6,
+  avatarId: "fox",
   level: 3,
   coins: 1200,
   joinedRoomCount: 3,
@@ -52,17 +52,16 @@ export const DEMO_ROOM: RoomInfoResponse = {
 };
 
 /**
- * 아바타 12종 ↔ avatarId 1..12 (components/common/student-avatar.tsx AVATAR_KEYS 순서:
- * cat,dog,bear,panda,rabbit,fox,frog,penguin,owl,tiger,raccoon,dino).
+ * 아바타는 문자열 키다 (lib/types/dto/common.ts AVATAR_KEYS — ERD avatar_id varchar(30)).
  * features/host/mock.ts LIVE_ROOM.students를 옮긴다. participantId는 11부터.
  */
 export const PARTICIPANTS: ParticipantEntry[] = [
-  { participantId: 11, nickname: "준영", avatarId: 1, isGuest: true }, // cat
-  { participantId: 12, nickname: "혜림", avatarId: 5, isGuest: true }, // rabbit
-  { participantId: 13, nickname: "승혁", avatarId: 2, isGuest: true }, // dog
-  { participantId: 14, nickname: "희표", avatarId: 3, isGuest: true }, // bear
-  { participantId: 15, nickname: "민지", avatarId: 6, isGuest: true }, // fox
-  { participantId: 16, nickname: "도윤", avatarId: 8, isGuest: true }, // penguin
+  { participantId: 11, nickname: "준영", avatarId: "cat", isGuest: true },
+  { participantId: 12, nickname: "혜림", avatarId: "rabbit", isGuest: true },
+  { participantId: 13, nickname: "승혁", avatarId: "dog", isGuest: true },
+  { participantId: 14, nickname: "희표", avatarId: "bear", isGuest: true },
+  { participantId: 15, nickname: "민지", avatarId: "fox", isGuest: true },
+  { participantId: 16, nickname: "도윤", avatarId: "penguin", isGuest: true },
 ];
 
 /**

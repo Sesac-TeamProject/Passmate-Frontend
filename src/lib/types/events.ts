@@ -1,3 +1,4 @@
+import type { AvatarKey } from "./dto/common";
 import type { QuestionType, RankingEntry } from "./dto";
 
 /** STOMP 프레임 envelope. type·ts 없으면 폐기 */
@@ -12,7 +13,7 @@ export type ServerEvent =
         participantId: number;
         nickname: string;
         isGuest: boolean;
-        avatarId?: number | null;
+        avatarId?: AvatarKey | null;
         count: number;
       };
     }

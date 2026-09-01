@@ -4,7 +4,7 @@ import {
   getMyReport,
   getMyResult,
   getRoomReport,
-  postHostReview,
+  putHostReview,
 } from "@/lib/api/results";
 import type { HostReviewRequest } from "@/lib/types/dto";
 import { qk } from "./keys";
@@ -36,22 +36,22 @@ export function useRoomReport(roomId: number | null) {
   });
 }
 
-/** GET /rooms/{roomId}/questions/{questionId}/answers */
+/** GET /rooms/{roomId}/answers — questionId로 문항을 좁힌다 */
 export function useEssayAnswers(roomId: number | null, questionId: number | null) {
   return useQuery({
     queryKey: qk.essayAnswers(roomId ?? 0, questionId ?? 0),
-    queryFn: () => getEssayAnswers(roomId as number, questionId as number),
+    queryFn: () => getEssayAnswers(roomId as number, questionId ?? undefined),
     enabled: roomId !== null && questionId !== null,
   });
 }
 
-/** POST /answers/{answerId}/review. 성공 시 서술형 답안 목록과 방 리포트를 갱신한다 */
+/** PUT /rooms/{roomId}/answers/{answerId}/review. 성공 시 답안 목록과 방 리포트를 갱신한다 */
 export function usePostHostReview(roomId: number, questionId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ answerId, body }: { answerId: number; body: HostReviewRequest }) =>
-      postHostReview(answerId, body),
+      putHostReview(roomId, answerId, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.essayAnswers(roomId, questionId) });
       queryClient.invalidateQueries({ queryKey: qk.roomReport(roomId) });

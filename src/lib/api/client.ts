@@ -110,7 +110,7 @@ async function send(url: string, options: RequestOptions, accessToken: string | 
 
 /**
  * 401이면 refresh 후 한 번만 재시도한다. 성공 응답(2xx)만 돌려주고 나머지는 AppError로 던진다.
- * 회원 토큰(store.accessToken)이 있을 때만 refresh를 시도한다 — 게스트·비로그인 401(예: LOGIN_REQUIRED)은
+ * 회원 토큰(store.accessToken)이 있을 때만 refresh를 시도한다 — 게스트·비로그인 401(예: GUEST_NOT_ALLOWED)은
  * refresh 대상이 아니므로 code를 보존한 채 그대로 AppError로 바꾼다.
  */
 async function sendWithRefresh(url: string, path: string, options: RequestOptions) {

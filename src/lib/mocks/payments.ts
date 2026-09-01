@@ -169,7 +169,7 @@ export function mockConfirmCharge(
 export function mockEntryPayment(): EntryPaymentResponse {
   const entryFee = DEMO_ROOM.entryFee ?? 0;
   if (balance < entryFee) {
-    throw new AppError("PaymentRequired", { code: "PAYMENT_REQUIRED" });
+    throw new AppError("PaymentRequired", { code: "INSUFFICIENT_COINS" });
   }
   balance -= entryFee;
   return { paymentNo: `PM-ENTRY-${chargeCounter++}`, balance };

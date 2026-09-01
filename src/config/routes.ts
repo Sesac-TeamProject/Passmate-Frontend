@@ -40,7 +40,7 @@ export const ROUTES: readonly RouteMeta[] = [
     path: "/login",
     sample: "/login",
     title: "로그인",
-    description: "이메일·Google 로그인, 회원가입·비밀번호 찾기, PIN 게스트 입장 링크",
+    description: "Google 로그인(회원가입 겸용), PIN 게스트 입장 링크",
     area: "public",
   },
   {
@@ -98,13 +98,6 @@ export const ROUTES: readonly RouteMeta[] = [
     sample: "/me/account",
     title: "계정 정보 변경",
     description: "프로필 캐릭터·닉네임 변경 (이메일은 로그인 ID라 변경 불가)",
-    area: "member",
-  },
-  {
-    path: "/me/password",
-    sample: "/me/password",
-    title: "비밀번호 변경",
-    description: "현재 비밀번호 확인 후 새 비밀번호 설정",
     area: "member",
   },
   {
