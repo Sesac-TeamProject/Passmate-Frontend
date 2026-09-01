@@ -73,15 +73,6 @@ export function MyPage({
             />
             <SettingsRow
               className={ROW_CLASS}
-              title="비밀번호"
-              action={
-                <Link href="/me/password" className={LINK_CLASS}>
-                  변경 ›
-                </Link>
-              }
-            />
-            <SettingsRow
-              className={ROW_CLASS}
               title="내 캐릭터"
               description={`${AVATAR_LABEL[profile.avatar]} · 대기실·결과 화면에 표시`}
               action={

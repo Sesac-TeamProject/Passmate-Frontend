@@ -23,12 +23,6 @@ export type Profile = {
 /** 유료 방 개설이 열리는 최소 레벨. features/host/room-flow/adapt.ts PAID_ROOM_MIN_LEVEL과 값을 맞춰 여기 복제해 뒀다(공용화 TODO). */
 export const PAID_ROOM_MIN_LEVEL = 3;
 
-/** C-02 v3 카드/계정 — 로그인 방식·비밀번호 변경일. 계약에 없어(DESIGN_GAPS C-1) 지금은 화면에서 쓰지 않는다 */
-export type AccountSettings = {
-  loginProvider: string;
-  passwordChangedAt?: string;
-};
-
 /** C-02 v3 카드/코인 · 결제 */
 export type CoinSummary = {
   /** 보유 코인 (1C = ₩1) */

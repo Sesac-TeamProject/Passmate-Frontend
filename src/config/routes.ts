@@ -101,13 +101,6 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "member",
   },
   {
-    path: "/me/password",
-    sample: "/me/password",
-    title: "비밀번호 변경",
-    description: "현재 비밀번호 확인 후 새 비밀번호 설정",
-    area: "member",
-  },
-  {
     path: "/me/settlement-account",
     sample: "/me/settlement-account",
     title: "정산 계좌 등록",
