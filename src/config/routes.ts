@@ -40,7 +40,7 @@ export const ROUTES: readonly RouteMeta[] = [
     path: "/login",
     sample: "/login",
     title: "로그인",
-    description: "이메일·Google 로그인, 회원가입·비밀번호 찾기, PIN 게스트 입장 링크",
+    description: "Google 로그인(회원가입 겸용), PIN 게스트 입장 링크",
     area: "public",
   },
   {
