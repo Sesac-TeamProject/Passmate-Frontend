@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { avatarIdFromKey, avatarKeyFromId } from "@/components/common/student-avatar";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import {
@@ -85,7 +85,7 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
     setDefaultsApplied(true);
     setValues((prev) =>
       prev.nickname === ""
-        ? { ...prev, nickname: profile.nickname ?? "", avatar: avatarKeyFromId(profile.avatarId) }
+        ? { ...prev, nickname: profile.nickname ?? "", avatar: toAvatarKey(profile.avatarId) }
         : prev,
     );
   }
@@ -135,7 +135,7 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
     setError(null);
 
     const nickname = values.nickname;
-    const avatarId = avatarIdFromKey(values.avatar);
+    const avatarId = values.avatar;
     const saved = pending?.roomId === roomId ? pending : null;
     const paid = paidReceipt?.roomId === roomId ? paidReceipt : null;
 

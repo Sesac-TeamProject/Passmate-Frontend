@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { AppError } from "@/lib/types/app-error";
+import { AVATAR_KEYS, type AvatarKey } from "@/lib/types/dto";
 import type {
   CreateRoomRequest,
   CreateRoomResponse,
@@ -19,8 +20,6 @@ import { emitMockEvent } from "./session";
 /** 방(rooms) 도메인 목 응답. 입장 인원 등 상태가 필요한 값은 모듈 스코프에서 유지한다. */
 
 const HOST_MIN_LEVEL_FOR_PAID = 3;
-/** 아바타 12종(components/common/student-avatar.tsx AVATAR_KEYS) */
-const AVATAR_COUNT = 12;
 
 let hostedRooms: HostedRoomDto[] = [...HOSTED_ROOMS];
 let nextHostedRoomId = 104;
@@ -35,8 +34,8 @@ function randomPin(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-function randomAvatarId(): number {
-  return Math.floor(Math.random() * AVATAR_COUNT) + 1;
+function randomAvatarId(): AvatarKey {
+  return AVATAR_KEYS[Math.floor(Math.random() * AVATAR_KEYS.length)];
 }
 
 /** GET /rooms/pin/{pin} — 404 잘못된 PIN. 계약상 410(종료된 방)은 시연 방에선 재현하지 않는다. */

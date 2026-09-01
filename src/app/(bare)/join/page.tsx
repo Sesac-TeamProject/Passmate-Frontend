@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { avatarIdFromKey } from "@/components/common/student-avatar";
 import { PAID_ROOM_LOGIN_MESSAGE, toJoinErrorMessage } from "@/features/participant/join/adapt";
 import { INITIAL_JOIN_VALUES, type JoinValues } from "@/features/participant/join/join-form";
 import { JoinPage } from "@/features/participant/join/join-page";
@@ -22,7 +21,7 @@ export default function Page() {
     join.mutate(
       {
         pin: values.pin,
-        body: { nickname: values.nickname, avatarId: avatarIdFromKey(values.avatar) },
+        body: { nickname: values.nickname, avatarId: values.avatar },
       },
       {
         onSuccess: (data) => {

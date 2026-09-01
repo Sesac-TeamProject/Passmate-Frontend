@@ -1,4 +1,4 @@
-import { avatarKeyFromId } from "@/components/common/student-avatar";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import { LEVEL_TITLE, levelTitle } from "@/lib/host-level";
 import type { PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
@@ -36,7 +36,7 @@ export function toPaidRoom(room: RoomInfoResponse): PaidRoom {
     host: {
       name: room.host?.nickname ?? "",
       // 계약에 호스트 avatarId가 없다 — 공개 프로필에도 아직 없어 기본 아바타로 접는다.
-      avatar: avatarKeyFromId(null),
+      avatar: toAvatarKey(null),
       level,
       levelTitle: levelTitle(level) ?? LEVEL_TITLE[1],
     },

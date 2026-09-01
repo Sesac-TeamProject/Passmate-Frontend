@@ -1,4 +1,4 @@
-import type { HostLevel } from "./common";
+import type { AvatarKey, HostLevel } from "./common";
 
 /** 관리자 콘솔의 사용자 목록이 보여주는 역할 라벨. 내 프로필에는 역할이 없다(isAdmin만 있다) */
 export type UserRole = "TEACHER" | "STUDENT" | "ADMIN";
@@ -20,7 +20,7 @@ export type UserSummary = {
   email: string | null;
   profileImageUrl: string | null;
   /** 기본 캐릭터 키. ERD user.default_avatar_id varchar(30) */
-  defaultAvatarId: string | null;
+  defaultAvatarId: AvatarKey | null;
   isAdmin: boolean;
 };
 
@@ -51,7 +51,7 @@ export type UserProfileResponse = {
   nickname?: string;
   email?: string | null;
   joinedAt?: string | null;
-  avatarId?: number | null;
+  avatarId?: AvatarKey | null;
   level?: HostLevel | null;
   coins?: number | null;
   joinedRoomCount?: number | null;
@@ -69,4 +69,4 @@ export type MeResponse = UserProfileResponse & {
 };
 
 /** PUT /users/me — 닉네임·기본 캐릭터 부분 수정 */
-export type UpdateProfileRequest = { nickname?: string | null; avatarId?: number | null };
+export type UpdateProfileRequest = { nickname?: string | null; avatarId?: AvatarKey | null };

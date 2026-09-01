@@ -1,5 +1,5 @@
 import type { StatItem } from "@/components/common/stat-cards";
-import { avatarKeyFromId } from "@/components/common/student-avatar";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import { formatShortDate, formatWon } from "@/lib/format";
 import { LEVEL_TITLE, levelTitle } from "@/lib/host-level";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
@@ -62,7 +62,7 @@ export function toProfile(me: MeResponse, grade?: GradeResponse): Profile {
     nickname: me.nickname ?? "",
     email: me.email ?? "",
     joinedLabel: me.joinedAt ? `${me.joinedAt.slice(0, 7)} 가입` : "",
-    avatar: avatarKeyFromId(me.avatarId),
+    avatar: toAvatarKey(me.avatarId),
     level,
     levelTitle: levelTitle(level) ?? LEVEL_TITLE[1],
     levelPerk: level >= PAID_ROOM_MIN_LEVEL ? "유료 방 개설 가능" : "",

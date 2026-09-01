@@ -1,4 +1,4 @@
-import { avatarKeyFromId } from "@/components/common/student-avatar";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import type {
   AnswerFinding,
   EssayAnswer,
@@ -51,7 +51,7 @@ export function toReportStudents(students: RoomReportStudent[]): Student[] {
   return students.map((s) => ({
     id: String(s.participantId ?? 0),
     name: s.nickname ?? "",
-    avatar: avatarKeyFromId(undefined),
+    avatar: toAvatarKey(undefined),
   }));
 }
 

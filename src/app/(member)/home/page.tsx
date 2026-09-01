@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { avatarIdFromKey, avatarKeyFromId } from "@/components/common/student-avatar";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toPopularRooms } from "@/features/home/adapt";
@@ -45,7 +45,7 @@ export default function Page() {
     setDefaultsApplied(true);
     setJoinValues((prev) =>
       prev.nickname === "" && prev.avatar === "cat"
-        ? { ...prev, nickname: profile.nickname ?? "", avatar: avatarKeyFromId(profile.avatarId) }
+        ? { ...prev, nickname: profile.nickname ?? "", avatar: toAvatarKey(profile.avatarId) }
         : prev,
     );
   }
@@ -55,7 +55,7 @@ export default function Page() {
     join.mutate(
       {
         pin: joinValues.pin,
-        body: { nickname: joinValues.nickname, avatarId: avatarIdFromKey(joinValues.avatar) },
+        body: { nickname: joinValues.nickname, avatarId: joinValues.avatar },
       },
       {
         onSuccess: (data) => {

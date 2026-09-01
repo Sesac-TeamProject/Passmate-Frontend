@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { avatarKeyFromId } from "@/components/common/student-avatar";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toMeErrorMessage } from "@/features/me/adapt";
@@ -33,7 +33,7 @@ export default function Page() {
 
   return (
     <AccountPage
-      avatar={avatarKeyFromId(me.data.avatarId)}
+      avatar={toAvatarKey(me.data.avatarId)}
       email={me.data.email ?? ""}
       values={values}
       onChange={setValues}
