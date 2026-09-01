@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
-import { ScreenLoading } from "@/components/common/screen-loading";
 import { toEssayAnswers, toReportStudents, toSessionReport } from "@/features/host/review/adapt";
 import { ReviewPage } from "@/features/host/review/review-page";
+import { ReviewSkeleton } from "@/features/host/review/review-skeleton";
 import { exportRoomReport } from "@/lib/api/results";
 import { useEssayAnswers, useRoomReport } from "@/lib/queries/use-results";
 
@@ -52,7 +52,7 @@ export default function Page() {
     }
   };
 
-  if (report.isPending) return <ScreenLoading />;
+  if (report.isPending) return <ReviewSkeleton />;
   if (report.isError)
     return <ScreenError message={report.error.message} onRetry={() => report.refetch()} />;
 

@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
-import { ScreenLoading } from "@/components/common/screen-loading";
 import { toQuestionSets } from "@/features/host/sets/adapt";
 import { SetsPage } from "@/features/host/sets/sets-page";
+import { SetsSkeleton } from "@/features/host/sets/sets-skeleton";
 import { useDuplicateQuestionSet, useQuestionSets } from "@/lib/queries/use-question-sets";
 
 /** W-08 문제 세트 컨테이너 — 목록을 읽고, 복제 성공 시 에디터로 이동한다 */
@@ -13,7 +13,7 @@ export default function Page() {
   const sets = useQuestionSets();
   const duplicate = useDuplicateQuestionSet();
 
-  if (sets.isPending) return <ScreenLoading />;
+  if (sets.isPending) return <SetsSkeleton />;
   if (sets.isError)
     return <ScreenError message={sets.error.message} onRetry={() => sets.refetch()} />;
 
