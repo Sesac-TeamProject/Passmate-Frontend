@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { BrandLogo } from "@/components/common/brand-logo";
+import { BrandLogo, BrandMark } from "@/components/common/brand-logo";
 import { StudentAvatar } from "@/components/common/student-avatar";
 import { cn } from "@/lib/utils";
 import {
@@ -320,12 +320,7 @@ function LandingFooter() {
     <footer className="bg-card py-10">
       <div className={cn(INNER, "flex items-center justify-between")}>
         <div className="flex items-center gap-2">
-          <span
-            aria-hidden
-            className="flex size-6 items-center justify-center rounded-xl bg-mint text-label-md text-white"
-          >
-            P
-          </span>
+          <BrandMark size={24} />
           <span className="text-label-md text-ink-disabled">© 2026 새싹수들 · PassMate</span>
         </div>
         <nav className="flex gap-5">

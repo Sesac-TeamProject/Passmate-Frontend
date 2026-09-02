@@ -7,6 +7,13 @@ import { LIVE_QUESTION } from "./mock-data";
 /** 흰 플로팅 칩 공통 — r16 · 그림자 (시안 float/*) */
 const CHIP = "absolute flex items-center rounded-2xl bg-card shadow-[0_10px_21px] shadow-ink/15";
 
+/** 남은 초를 시안 표기("00 : 23")로 */
+function formatClock(seconds: number) {
+  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const ss = String(seconds % 60).padStart(2, "0");
+  return `${mm} : ${ss}`;
+}
+
 /**
  * 히어로 오른쪽 "stage"(600×700, 시안 1:1) — 민트 원 위에 학생 폰(M-03 풀이) + 플로팅 칩 5개.
  * 학생 앱은 웹 코드에 없어 시안대로 직접 그린다. 문항 데이터는 진행 화면과 같은 LIVE_QUESTION.
@@ -21,32 +28,34 @@ export function PhoneMockup() {
       {/* 폰 본체 316×660 · 화면 296×640 */}
       <div className="absolute top-5 left-[142px] h-[660px] w-[316px] rounded-[44px] bg-ink shadow-[0_24px_52px] shadow-ink/25">
         <div className="absolute inset-[10px] flex flex-col overflow-hidden rounded-[34px] bg-card pb-[18px]">
-          <div className="flex flex-col gap-2 px-[15px] pt-[46px] pb-[59px]">
-            <div className="flex items-center justify-between text-label-lg text-muted-foreground">
-              <span>
+          <div className="flex flex-col gap-[9px] px-[15px] pt-[33px] pb-[46px]">
+            <div className="flex items-center justify-between text-label-lg">
+              <span className="text-ink">
                 Q{q.index} / {q.total} · 객관식
               </span>
-              <span>나가기</span>
+              <span className="text-muted-foreground">나가기</span>
             </div>
-            <div className="flex gap-[3px]" aria-hidden>
-              {Array.from({ length: q.total }, (_, i) => (
+            {/* 남은 시간 — 시계 + 남은 초 + 옐로 진행 바 (시안 timer) */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <Clock aria-hidden className="size-[14px] text-yellow" strokeWidth={2} />
+                <span className="text-heading-sm font-bold text-ink">
+                  {formatClock(q.remaining)}
+                </span>
+                <span className="ml-auto text-label-md text-muted-foreground">남은 시간</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-yellow-soft">
                 <span
-                  key={i}
-                  className={cn(
-                    "h-[4.5px] rounded-[2px]",
-                    i < q.index ? "w-5 bg-yellow" : "w-[9px] bg-muted",
-                  )}
+                  className="block h-full rounded-full bg-yellow"
+                  style={{ width: `${(q.remaining / q.seconds) * 100}%` }}
                 />
-              ))}
+              </div>
             </div>
           </div>
 
-          {/* 문항 카드 — 헤더와 35px 겹치고 타이머 배지가 경계에 걸린다 */}
+          {/* 문항 카드 — 헤더와 35px 겹친다 */}
           <div className="-mt-[35px] px-[15px]">
             <div className="relative flex flex-col gap-2 rounded-[18px] border bg-card px-[15px] pt-[33px] pb-[17px]">
-              <span className="absolute -top-[23px] left-1/2 flex size-[46px] -translate-x-1/2 items-center justify-center rounded-full border-[4.5px] border-yellow bg-card text-heading-md text-mint-dark">
-                {q.remaining}
-              </span>
               <p className="text-center text-heading-sm text-ink">{q.prompt}</p>
               <span className="h-[76px]" />
               {q.choices.map((c) => {
