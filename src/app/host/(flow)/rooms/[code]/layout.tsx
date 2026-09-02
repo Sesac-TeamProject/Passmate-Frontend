@@ -19,7 +19,7 @@ export default function RoomSessionLayout({ children }: { children: ReactNode })
   const params = useParams<{ code: string }>();
   const room = useRoomByPin(params.code ?? null);
 
-  useSessionConnection(room.data?.roomId ?? null, { isHost: true });
+  useSessionConnection(room.data?.id ?? null, { isHost: true });
 
   return children;
 }

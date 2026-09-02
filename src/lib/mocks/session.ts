@@ -1,4 +1,5 @@
 import { AppError } from "@/lib/types/app-error";
+import { toAvatarKey } from "@/lib/types/dto";
 import type {
   QuestionType,
   RankingEntry,
@@ -142,9 +143,9 @@ function questionStartedData(): {
 function buildMockRanking(): RankingEntry[] {
   return PARTICIPANTS.map((p, i) => ({
     rank: i + 1,
-    participantId: p.participantId,
+    participantId: p.id,
     nickname: p.nickname,
-    avatarId: p.avatarId,
+    avatarId: toAvatarKey(p.avatarId),
     total: Math.max(800 - i * 120, 100),
   }));
 }
@@ -260,9 +261,9 @@ export function mockSubmissions(): SubmissionsResponse {
     accuracyPercent,
     choices: isEssay ? null : buildSubmissionChoices(q),
     participants: PARTICIPANTS.map((p) => ({
-      participantId: p.participantId,
+      participantId: p.id,
       nickname: p.nickname,
-      avatarId: p.avatarId,
+      avatarId: toAvatarKey(p.avatarId),
       submitted: true,
     })),
   };

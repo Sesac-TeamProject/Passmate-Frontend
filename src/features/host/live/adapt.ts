@@ -1,7 +1,7 @@
 import { toAvatarKey } from "@/components/common/student-avatar";
 import type { ChoiceKey, QuestionResult, Student } from "@/features/host/types";
 import type {
-  ParticipantEntry,
+  ParticipantResponse,
   RankingEntry,
   RoomReportResponse,
   SubmissionParticipant,
@@ -16,9 +16,9 @@ import type { SolvingStudent } from "./live-rail";
 const CHOICE_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
 
 /** 참가자 목록 → 대기실·랭킹이 쓰는 학생 뷰 타입 */
-export function toStudents(participants: ParticipantEntry[]): Student[] {
+export function toStudents(participants: ParticipantResponse[]): Student[] {
   return participants.map((p) => ({
-    id: String(p.participantId),
+    id: String(p.id),
     name: p.nickname,
     avatar: toAvatarKey(p.avatarId),
   }));
@@ -158,7 +158,7 @@ export function toHardestQuestion(report: RoomReportResponse | undefined): Harde
  */
 export function toSolvingStudents(
   submissionParticipants: SubmissionParticipant[] | undefined,
-  participants: ParticipantEntry[],
+  participants: ParticipantResponse[],
 ): SolvingStudent[] {
   if (submissionParticipants && submissionParticipants.length > 0) {
     return submissionParticipants.map((p) => ({
@@ -169,7 +169,7 @@ export function toSolvingStudents(
     }));
   }
   return participants.map((p) => ({
-    id: String(p.participantId),
+    id: String(p.id),
     name: p.nickname,
     avatar: toAvatarKey(p.avatarId),
     submitted: false,

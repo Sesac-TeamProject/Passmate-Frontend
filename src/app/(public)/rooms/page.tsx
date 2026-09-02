@@ -7,9 +7,18 @@ import { RoomsPage } from "@/features/participant/rooms/rooms-page";
 import { RoomsSkeleton } from "@/features/participant/rooms/rooms-skeleton";
 import type { PublicRoomFilter } from "@/features/participant/rooms/types";
 import { useInfinitePublicRooms } from "@/lib/queries/use-rooms";
+import type { PublicRoomSearch } from "@/lib/types/dto";
 
 /** 검색어를 글자마다 보내지 않도록 기다리는 시간 */
 const SEARCH_DEBOUNCE_MS = 300;
+
+/** 화면 칩 → 서버 쿼리. enum은 대문자이고, "오늘"은 유형이 아니라 별도 파라미터다 */
+function toFilterQuery(filter: PublicRoomFilter): Pick<PublicRoomSearch, "type" | "today"> {
+  if (filter === "free") return { type: "FREE" };
+  if (filter === "paid") return { type: "PAID" };
+  if (filter === "today") return { today: true };
+  return {};
+}
 
 /**
  * P-Web 공개 방 목록 컨테이너 (시안 프레임 FPbky).
@@ -25,13 +34,13 @@ export default function Page() {
     return () => clearTimeout(timer);
   }, [input]);
 
-  const rooms = useInfinitePublicRooms({ sort: "popular", type: filter, q: search });
+  const rooms = useInfinitePublicRooms({ sort: "POPULAR", q: search, ...toFilterQuery(filter) });
 
   if (rooms.isPending) return <RoomsSkeleton />;
   if (rooms.isError)
     return <ScreenError message={rooms.error.message} onRetry={() => rooms.refetch()} />;
 
-  const items = rooms.data.pages.flatMap((page) => page.items ?? []);
+  const items = rooms.data.pages.flatMap((page) => page.content);
 
   return (
     <RoomsPage

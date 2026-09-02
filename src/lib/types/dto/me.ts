@@ -1,5 +1,4 @@
 import type { HostLevel } from "./common";
-import type { PublicRoomDto } from "./rooms";
 
 export type MyPageSummary = {
   participationCount?: number;
@@ -81,6 +80,22 @@ export type NotificationSettingsDto = {
 };
 
 /** GET /users/{userId}/profile — 호스트 공개 프로필 */
+/**
+ * @draft 호스트 공개 프로필이 함께 주는 방 카드. `GET /users/{userId}/profile`이 백엔드 미구현이라
+ * 필드가 확정되지 않았다 — 공개 방 목록(`PublicRoomResponse`)과 모양이 다를 수 있다.
+ */
+export type HostProfileRoom = {
+  roomId?: number;
+  pin?: string;
+  title?: string;
+  topic?: string | null;
+  status?: string | null;
+  participantCount?: number | null;
+  scheduledAt?: string | null;
+  isPaid?: boolean;
+  entryFee?: number | null;
+};
+
 export type HostProfileResponse = {
   userId?: number;
   nickname?: string;
@@ -91,7 +106,7 @@ export type HostProfileResponse = {
   roomCount?: number;
   totalStudents?: number;
   badges?: BadgeType[];
-  rooms?: PublicRoomDto[];
+  rooms?: HostProfileRoom[];
 };
 
 export type ReportReason =

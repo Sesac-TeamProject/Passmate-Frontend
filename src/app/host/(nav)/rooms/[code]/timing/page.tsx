@@ -11,7 +11,7 @@ import {
 } from "@/features/host/timing/adapt";
 import { TimingPage } from "@/features/host/timing/timing-page";
 import { useQuestionSet, useUpdateQuestion } from "@/lib/queries/use-question-sets";
-import { useRoomByPin } from "@/lib/queries/use-rooms";
+import { useRoom, useRoomByPin } from "@/lib/queries/use-rooms";
 
 /** 방에 확정 세트가 아직 연결돼 있지 않을 때 */
 const NO_SET_MESSAGE = "이 방에 연결된 문제 세트를 찾지 못했어요";
@@ -28,7 +28,9 @@ export default function Page() {
   const pin = params.code;
 
   const room = useRoomByPin(pin);
-  const setId = room.data?.questionSetId ?? null;
+  // PIN 조회에는 연결된 세트가 없다(입장 전 정보) — 호스트용 방 상세에서 읽는다
+  const detail = useRoom(room.data?.id ?? null);
+  const setId = detail.data?.questionSetId ?? null;
   const questionSet = useQuestionSet(setId);
   const updateQuestion = useUpdateQuestion();
 
@@ -36,9 +38,11 @@ export default function Page() {
   const [preset, setPreset] = useState<number | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  if (room.isPending || questionSet.isPending) return <ScreenLoading />;
+  if (room.isPending || detail.isPending || questionSet.isPending) return <ScreenLoading />;
   if (room.isError)
     return <ScreenError message={room.error.message} onRetry={() => room.refetch()} />;
+  if (detail.isError)
+    return <ScreenError message={detail.error.message} onRetry={() => detail.refetch()} />;
   if (setId === null) return <ScreenError message={NO_SET_MESSAGE} />;
   if (questionSet.isError)
     return (
@@ -75,7 +79,7 @@ export default function Page() {
 
   return (
     <TimingPage
-      title={room.data.title}
+      title={detail.data.title}
       rows={rows}
       preset={preset}
       onPreset={setPreset}

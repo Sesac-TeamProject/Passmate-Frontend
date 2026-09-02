@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  checkNickname,
   closeRoom,
   createRoom,
   getHostedRooms,
@@ -14,26 +15,45 @@ import {
   getRoom,
   getRoomByPin,
   joinRoom,
+  kickParticipant,
   leaveRoom,
   updateRoom,
 } from "@/lib/api/rooms";
-import { clearGuestToken, writeGuestToken } from "@/lib/guest-token-storage";
+import { clearGuestToken, writeGuestRecord, writeGuestToken } from "@/lib/guest-token-storage";
 import { writeMyParticipant } from "@/lib/my-participant";
 import { AppError } from "@/lib/types/app-error";
 import type {
   JoinRoomRequest,
-  PublicRoomsQuery,
+  JoinRoomResponse,
+  PublicRoomSearch,
   RoomCreateRequest,
   RoomUpdateRequest,
 } from "@/lib/types/dto";
 import { qk } from "./keys";
 
-/** GET /rooms/pin/{pin}. pin이 없으면 조회하지 않는다 — 404/410은 화면이 error.kind로 분기한다 */
+/**
+ * 대기실 명단 폴링 주기.
+ * 서버가 `PARTICIPANT_JOINED`·`PARTICIPANT_LEFT`를 **발행하지 않아서**(enum에만 있다) 실시간으로
+ * 받을 방법이 없다 — 대기 중에만 주기 조회로 대신한다(`research.md` R-7, 백엔드 질문 B-1).
+ * 백엔드가 발행을 넣으면 이 폴링을 끄면 된다.
+ */
+const PARTICIPANTS_POLL_MS = 3000;
+
+/** GET /rooms/pin/{pin}. pin이 없으면 조회하지 않는다 — 없는 PIN·끝난 방 모두 404다 */
 export function useRoomByPin(pin: string | null) {
   return useQuery({
     queryKey: qk.roomByPin(pin ?? ""),
     queryFn: () => getRoomByPin(pin as string),
     enabled: pin !== null,
+  });
+}
+
+/** GET /rooms/{roomId} — 호스트용 방 상세 */
+export function useRoom(roomId: number | null) {
+  return useQuery({
+    queryKey: qk.room(roomId ?? 0),
+    queryFn: () => getRoom(roomId as number),
+    enabled: roomId !== null,
   });
 }
 
@@ -46,45 +66,57 @@ export function useHostedRooms() {
 }
 
 /** GET /rooms/public. 필터를 바꿔도 이전 결과를 유지해 목록이 깜빡이지 않게 한다 */
-export function usePublicRooms(query: PublicRoomsQuery) {
+export function usePublicRooms(search: PublicRoomSearch) {
   return useQuery({
-    queryKey: qk.publicRooms(query),
-    queryFn: () => getPublicRooms(query),
+    queryKey: qk.publicRooms(search),
+    queryFn: () => getPublicRooms(search),
     placeholderData: keepPreviousData,
   });
 }
 
 /**
- * GET /rooms/public — "더 보기"로 커서를 이어 붙이는 공개 방 목록(P-Web).
+ * GET /rooms/public — "더 보기"로 페이지를 이어 붙이는 공개 방 목록(P-Web).
+ * 커서가 아니라 **오프셋 페이지**라 다음 페이지는 `page + 1`이고, 끝은 `hasNext`가 알려준다.
  * 홈 캐러셀은 첫 페이지만 쓰므로 usePublicRooms를 그대로 둔다.
  */
-export function useInfinitePublicRooms(query: Omit<PublicRoomsQuery, "cursor">) {
+export function useInfinitePublicRooms(search: Omit<PublicRoomSearch, "page">) {
   return useInfiniteQuery({
-    queryKey: qk.publicRoomsInfinite(query),
-    queryFn: ({ pageParam }) => getPublicRooms({ ...query, cursor: pageParam }),
-    initialPageParam: undefined as string | undefined,
-    // hasNext가 없으면 nextCursor 유무로 판단한다 — 목·서버 어느 쪽이 빠뜨려도 멈춘다
-    getNextPageParam: (last) =>
-      last.hasNext === false ? undefined : (last.nextCursor ?? undefined),
+    queryKey: qk.publicRoomsInfinite(search),
+    queryFn: ({ pageParam }) => getPublicRooms({ ...search, page: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.hasNext ? last.page + 1 : undefined),
     placeholderData: keepPreviousData,
   });
 }
 
-/** GET /rooms/{roomId}/participants — 초기 로딩·재접속 복구용 */
-export function useParticipants(roomId: number | null) {
+/**
+ * GET /rooms/{roomId}/participants.
+ * `poll`은 **대기 중일 때만** 켠다 — 진행 중에는 서버 이벤트가 화면을 움직인다.
+ * 창이 뒤에 있으면 폴링을 멈춘다(기본값): 프로젝터를 켜 둔 채 다른 일을 해도 요청이 쌓이지 않는다.
+ */
+export function useParticipants(roomId: number | null, options: { poll?: boolean } = {}) {
   return useQuery({
     queryKey: qk.participants(roomId ?? 0),
     queryFn: () => getParticipants(roomId as number),
     enabled: roomId !== null,
+    refetchInterval: options.poll ? PARTICIPANTS_POLL_MS : false,
   });
 }
 
-/** GET /rooms/{roomId} — 호스트용 방 상세 */
-export function useRoom(roomId: number | null) {
+/**
+ * GET …/participants/nickname-check — 입장 전에 미리 본다.
+ * 닉네임이 비어 있으면 부르지 않고, 글자마다 보내지 않도록 호출부가 debounce한 값을 넘긴다.
+ */
+export function useNicknameCheck(roomId: number | null, nickname: string) {
+  const trimmed = nickname.trim();
+
   return useQuery({
-    queryKey: qk.room(roomId ?? 0),
-    queryFn: () => getRoom(roomId as number),
-    enabled: roomId !== null,
+    queryKey: qk.nicknameCheck(roomId ?? 0, trimmed),
+    queryFn: () => checkNickname(roomId as number, trimmed),
+    enabled: roomId !== null && trimmed !== "",
+    // 같은 닉네임을 다시 물을 이유가 없다 — 결과는 입장 순간 서버가 다시 확인한다
+    staleTime: 10_000,
+    retry: false,
   });
 }
 
@@ -127,7 +159,26 @@ export function useCloseRoom() {
   });
 }
 
-/** POST /rooms/{roomId}/participants. 게스트 토큰을 저장하고 참가자 목록을 갱신한다 */
+/**
+ * 입장 응답의 토큰 둘을 **각자 자리에** 넣는다(R-6).
+ * `accessToken`은 지금 요청에 붙일 Bearer, `guestToken`은 나중에 기록을 옮길 표다.
+ * 회원으로 입장하면 둘 다 오지 않는다(이미 회원 토큰이 있다).
+ */
+function storeJoinResult(roomId: number, res: JoinRoomResponse, nickname: string): void {
+  // 대기실이 "OO 님"으로 부르려면 내가 누구인지 남겨야 한다
+  writeMyParticipant({ participantId: res.participant.id, nickname });
+
+  if (res.accessToken) writeGuestToken(res.accessToken);
+  if (res.guestToken) {
+    writeGuestRecord({
+      guestToken: res.guestToken,
+      roomId,
+      participantId: res.participant.id,
+    });
+  }
+}
+
+/** POST /rooms/{roomId}/participants. 게스트 토큰 2종을 저장하고 참가자 목록을 갱신한다 */
 export function useJoinRoom(roomId: number | null) {
   const queryClient = useQueryClient();
 
@@ -135,21 +186,19 @@ export function useJoinRoom(roomId: number | null) {
     mutationFn: async (body: JoinRoomRequest) => {
       if (roomId === null) throw new AppError("NotFound");
       const res = await joinRoom(roomId, body);
-      // 대기실이 "OO 님"으로 부르려면 방금 쓴 닉네임을 남겨야 한다 — 참여 응답에는 없다
-      writeMyParticipant({ participantId: res.participantId, nickname: body.nickname });
+      storeJoinResult(roomId, res, body.nickname);
       // roomId는 여기서 이미 number로 좁혀져 있다 — onSuccess에 그대로 실어 보내 재검사를 없앤다.
       return { res, roomId };
     },
-    onSuccess: ({ res, roomId }) => {
-      if (res.participantToken) writeGuestToken(res.participantToken);
+    onSuccess: ({ roomId }) => {
       queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
     },
   });
 }
 
 /**
- * PIN 입장 한 번에 처리(/join·홈 PIN 카드 공용): PIN → 방 조회 → 유료면 결제 필요(방 정보만 반환, 화면이 로그인·결제로 안내),
- * 무료면 바로 참가자로 등록하고 게스트 토큰을 저장한다.
+ * PIN 입장 한 번에 처리(/join·홈 PIN 카드 공용): PIN → 방 조회 → 게스트가 못 들어가는 방이면
+ * 방 정보만 돌려주고(화면이 로그인·결제로 안내), 아니면 바로 참가자로 등록한다.
  */
 export function useJoinByPin() {
   const queryClient = useQueryClient();
@@ -157,21 +206,21 @@ export function useJoinByPin() {
   return useMutation({
     mutationFn: async ({ pin, body }: { pin: string; body: JoinRoomRequest }) => {
       const room = await getRoomByPin(pin);
-      if (room.isPaid) return { kind: "paid" as const, room };
-      const res = await joinRoom(room.roomId, body);
-      if (res.participantToken) writeGuestToken(res.participantToken);
-      writeMyParticipant({ participantId: res.participantId, nickname: body.nickname });
+      if (!room.guestAllowed) return { kind: "paid" as const, room };
+
+      const res = await joinRoom(room.id, body);
+      storeJoinResult(room.id, res, body.nickname);
       return { kind: "joined" as const, room, res };
     },
     onSuccess: (data) => {
       if (data.kind === "joined") {
-        queryClient.invalidateQueries({ queryKey: qk.participants(data.room.roomId) });
+        queryClient.invalidateQueries({ queryKey: qk.participants(data.room.id) });
       }
     },
   });
 }
 
-/** DELETE /rooms/{roomId}/participants/me. 게스트 토큰을 지우고 참가자 목록을 갱신한다 */
+/** DELETE /rooms/{roomId}/participants/me. 게스트 Bearer를 지우고 참가자 목록을 갱신한다 */
 export function useLeaveRoom(roomId: number | null) {
   const queryClient = useQueryClient();
 
@@ -183,7 +232,21 @@ export function useLeaveRoom(roomId: number | null) {
       return roomId;
     },
     onSuccess: (roomId) => {
+      // 이관용 기록(guestRecord)은 남긴다 — 나간 뒤에도 7일 안에 가입하면 옮길 수 있다
       clearGuestToken();
+      queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
+    },
+  });
+}
+
+/** DELETE /rooms/{roomId}/participants/{participantId} — 호스트가 내보낸다 */
+export function useKickParticipant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ roomId, participantId }: { roomId: number; participantId: number }) =>
+      kickParticipant(roomId, participantId),
+    onSuccess: (_data, { roomId }) => {
       queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
     },
   });

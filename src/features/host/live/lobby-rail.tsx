@@ -5,11 +5,19 @@ import { cn } from "@/lib/utils";
 /** 접힘 레일에 쌓는 아바타 최대 개수. 넘치면 "+N"으로 접는다 (시안 9개 + "+3") */
 const MINI_LIMIT = 9;
 
+type LobbyRailProps = {
+  students: Student[];
+  /** 내보내기(강퇴). 없으면 버튼을 그리지 않는다 */
+  onKick?: (studentId: string) => void;
+  /** 내보내는 중인 학생 id */
+  kickingId?: string | null;
+};
+
 /**
  * W-04 참여자 레일 (펼침 300px) — 입장한 순서대로 쌓고 마지막에 들어온 학생만 강조한다.
- * 참가자는 스토어에 입장 순서대로 append되므로 배열 끝이 최신이다.
+ * 참가자는 입장 순서대로 오므로 배열 끝이 최신이다.
  */
-export function LobbyRail({ students }: { students: Student[] }) {
+export function LobbyRail({ students, onKick, kickingId }: LobbyRailProps) {
   const newestId = students.at(-1)?.id;
 
   return (
@@ -36,7 +44,17 @@ export function LobbyRail({ students }: { students: Student[] }) {
                 className={cn(isNewest && "ring-2 ring-mint ring-offset-2 ring-offset-mint-bg")}
               />
               <span className="min-w-0 flex-1 truncate text-heading-md">{s.name}</span>
-              {isNewest ? (
+              {onKick ? (
+                <button
+                  type="button"
+                  onClick={() => onKick(s.id)}
+                  disabled={kickingId !== null && kickingId !== undefined}
+                  aria-label={`${s.name} 내보내기`}
+                  className="shrink-0 rounded-full px-2.5 py-1 text-label-md text-muted-foreground hover:bg-destructive-soft hover:text-destructive disabled:opacity-40"
+                >
+                  {kickingId === s.id ? "내보내는 중" : "내보내기"}
+                </button>
+              ) : isNewest ? (
                 <span className="shrink-0 rounded-full bg-mint px-3 py-1 text-label-md font-bold text-white">
                   방금
                 </span>
@@ -48,9 +66,8 @@ export function LobbyRail({ students }: { students: Student[] }) {
         })}
       </ul>
 
-      {/* TODO(API): 내보내기는 계약이 없다 — DESIGN_GAPS D-6(호스트용 방 상세·강퇴)에 묶여 있다 */}
       <p className="px-[26px] pt-4 pb-8 text-body-md text-muted-foreground">
-        이름을 누르면 내보낼 수 있어요
+        {onKick ? "잘못 들어온 학생은 내보낼 수 있어요" : "학생이 들어오면 여기에 쌓여요"}
       </p>
     </div>
   );

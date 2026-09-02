@@ -28,7 +28,7 @@ export function RoomCard({ room, href }: Props) {
             {room.host} 선생님
           </Link>
         )}{" "}
-        · Lv.{room.level}
+        {room.level ? ` · Lv.${room.level}` : ""}
       </p>
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-1 text-label-md text-muted-foreground">

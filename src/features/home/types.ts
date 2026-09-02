@@ -13,8 +13,11 @@ export type PopularRoom = {
   host: string;
   /** 선생님 공개 프로필로 보낼 id. 계약이 안 주면 null이라 이름이 링크가 되지 않는다 */
   hostId: number | null;
-  /** 선생님 명성 레벨 */
-  level: number;
+  /**
+   * 선생님 명성 레벨. **서버가 아직 계산하지 않는다** — 없으면 카드가 "Lv.N"을 그리지 않는다
+   * (1로 채우면 "새싹 등급"이라는 없는 사실을 만든다).
+   */
+  level: number | null;
   /** 현재 참여 중인 인원 */
   participants: number;
 };

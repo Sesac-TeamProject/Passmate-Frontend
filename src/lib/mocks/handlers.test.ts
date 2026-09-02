@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/lib/types/app-error";
 import { MOCK_ROUTES, resolveMock } from "./handlers";
+import { __resetRoomsForTests } from "./rooms";
 import { __resetSessionForTests } from "./session";
 
 const SAMPLE: Record<string, string> = {
@@ -19,9 +20,11 @@ const SAMPLE: Record<string, string> = {
 const ROUTE_SWEEP_TIMEOUT_MS = 30000;
 
 describe("mocks/handlers", () => {
-  // session.ts의 phase 등은 모듈 스코프 상태라 테스트 간에 남는다 — 매 테스트 전에 되돌린다.
+  // session.ts의 phase, rooms.ts의 방·참가자는 모듈 스코프 상태라 테스트 간에 남는다
+  // (예: 라우트 스윕이 방을 닫으면 그 PIN은 이후 404다) — 매 테스트 전에 되돌린다.
   beforeEach(() => {
     __resetSessionForTests();
+    __resetRoomsForTests();
   });
 
   it(
@@ -31,7 +34,7 @@ describe("mocks/handlers", () => {
         const [method, path] = key.split(" ");
         const url =
           path.replace(/:[a-zA-Z]+/g, (m) => SAMPLE[m] ?? "1") +
-          (path === "/rooms/public" ? "?sort=popular&type=all" : "");
+          (path === "/rooms/public" ? "?sort=POPULAR" : "");
 
         try {
           await resolveMock(method, url, {});
@@ -46,10 +49,11 @@ describe("mocks/handlers", () => {
     ROUTE_SWEEP_TIMEOUT_MS,
   );
 
-  it("GET /rooms/pin/482913 은 시연 방을 돌려준다", async () => {
+  it("GET /rooms/pin/482913 은 시연 방 요약을 돌려준다 (PIN은 응답에 없다)", async () => {
     await expect(resolveMock("GET", "/rooms/pin/482913")).resolves.toMatchObject({
-      roomId: 1,
-      pin: "482913",
+      id: 1,
+      title: "Spring 실전 모의고사 4주차",
+      status: "WAITING",
     });
   });
 
@@ -126,10 +130,11 @@ describe("mocks/handlers", () => {
         () => rooms.getRoomByPin("482913"),
         () => rooms.createRoom({ title: "t" }),
         () => rooms.getHostedRooms(),
-        () => rooms.getPublicRooms({ sort: "popular", type: "all" }),
-        () => rooms.joinRoom(1, { nickname: "n" }),
+        () => rooms.getPublicRooms({ sort: "POPULAR" }),
+        () => rooms.joinRoom(1, { nickname: `n${Date.now()}` }),
         () => rooms.getParticipants(1),
         () => rooms.leaveRoom(1),
+        () => rooms.checkNickname(1, "준영"),
         () => sessions.startSession(1),
         () => sessions.getSessionSnapshot(1),
         () => sessions.nextQuestion(1),

@@ -180,7 +180,16 @@ export function mockHostProfile(userId: string): HostProfileResponse {
       roomCount: 24,
       totalStudents: 312,
       badges: ["FIRST_ROOM", "ROOMS_10", "STUDENTS_100", "FIRST_PAID_ROOM"],
-      rooms: PUBLIC_ROOMS.filter((r) => r.hostName === "김민지"),
+      rooms: PUBLIC_ROOMS.filter((r) => r.host.nickname === "김민지").map((r) => ({
+        roomId: r.id,
+        title: r.title,
+        topic: r.topic ?? null,
+        status: r.status,
+        participantCount: r.participantCount,
+        scheduledAt: r.scheduledAt ?? null,
+        isPaid: r.type === "PAID",
+        entryFee: r.fee ?? null,
+      })),
     };
   }
 

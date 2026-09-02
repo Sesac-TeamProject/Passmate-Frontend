@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { mockCreateRoom } from "@/lib/mocks/rooms";
+import {
+  mockCheckNickname,
+  mockCreateRoom,
+  mockJoinRoom,
+  mockParticipants,
+  mockPublicRooms,
+  mockRoomByPin,
+} from "@/lib/mocks/rooms";
 import { expectContract } from "./expect-contract";
 
 /**
@@ -57,5 +64,68 @@ describe("rooms 계약", () => {
     expect(room.questionSetId).toBe(1);
     expect(room.maxParticipants).toBe(30);
     expect(room.isPublic).toBe(true);
+  });
+});
+
+describe("입장 계약", () => {
+  it("GET /rooms/pin/{pin}은 RoomSummaryResponse다 — pin·호스트·문항 수는 없다", () => {
+    const summary = mockRoomByPin("482913");
+
+    expectContract(
+      summary,
+      ["id", "title", "status", "type", "participantCount", "guestAllowed"],
+      ["topic", "fee", "maxParticipants"],
+    );
+    // 입장 전에는 알려주지 않는 값들 — 화면이 이 자리를 지어내면 안 된다
+    expect(summary).not.toHaveProperty("pin");
+    expect(summary).not.toHaveProperty("host");
+    expect(summary).not.toHaveProperty("questionCount");
+  });
+
+  it("없는 PIN·끝난 방 모두 404 ROOM_NOT_FOUND다 (410이 아니다)", () => {
+    expect(() => mockRoomByPin("000000")).toThrowError(
+      expect.objectContaining({ kind: "NotFound", code: "ROOM_NOT_FOUND" }),
+    );
+  });
+
+  it("POST participants는 {participant, accessToken, guestToken} — Bearer는 accessToken이다", () => {
+    const joined = mockJoinRoom("1", { nickname: `게스트${Date.now()}` });
+
+    expectContract(joined, ["participant"], ["accessToken", "guestToken"]);
+    expectContract(joined.participant, ["id", "nickname", "avatarId", "isGuest", "joinedAt"]);
+    // 게스트는 둘 다 받는다 — accessToken은 지금 요청용, guestToken은 나중 기록 이관용
+    expect(typeof joined.accessToken).toBe("string");
+    expect(typeof joined.guestToken).toBe("string");
+    expect(joined).not.toHaveProperty("participantToken");
+  });
+
+  it("GET participants는 배열 그대로다 (래퍼 없음)", () => {
+    const participants = mockParticipants();
+
+    expect(Array.isArray(participants)).toBe(true);
+    expectContract(participants[0], ["id", "nickname", "avatarId", "isGuest", "joinedAt"]);
+    // 접속 여부는 서버가 주지 않는다 — 대기실에서 "접속 중" 표시를 만들 근거가 없다
+    expect(participants[0]).not.toHaveProperty("isConnected");
+  });
+
+  it("닉네임 확인은 {available, suggestions}", () => {
+    expectContract(mockCheckNickname("1", "준영"), ["available", "suggestions"]);
+  });
+
+  it("GET /rooms/public은 PageResponse<PublicRoomResponse>다", () => {
+    const page = mockPublicRooms(new URL("http://x/rooms/public?sort=POPULAR"));
+
+    expectContract(page, ["content", "page", "size", "totalElements", "totalPages", "hasNext"]);
+    expectContract(
+      page.content[0],
+      ["id", "title", "status", "type", "participantCount", "host"],
+      ["topic", "fee", "questionCount", "maxParticipants", "scheduledAt", "startedAt"],
+    );
+    expectContract(page.content[0].host, ["userId", "nickname"]);
+  });
+
+  it("공개 방 필터는 대문자 enum이다", () => {
+    const free = mockPublicRooms(new URL("http://x/rooms/public?type=FREE"));
+    expect(free.content.every((room) => room.type === "FREE")).toBe(true);
   });
 });

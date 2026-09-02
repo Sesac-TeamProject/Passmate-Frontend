@@ -1,5 +1,5 @@
 import type {
-  ParticipantEntry,
+  ParticipantResponse,
   RankingEntry,
   SessionSnapshotResponse,
   SnapshotQuestion,
@@ -12,7 +12,7 @@ export type SessionPhase = "WAITING" | "RUNNING" | "FINISHED";
 export type SessionState = {
   phase: SessionPhase;
   questionCount: number | null;
-  participants: ParticipantEntry[];
+  participants: ParticipantResponse[];
   currentQuestion: SnapshotQuestion | null;
   /** 서버 시각 기준 — 남은 시간은 endsAt − serverTs 로 렌더만 한다 */
   serverTs: string | null;
@@ -52,18 +52,25 @@ export function reduceSessionEvent(state: SessionState, event: ServerEvent): Ses
   switch (event.type) {
     case "PARTICIPANT_JOINED": {
       const { participantId, nickname, isGuest, avatarId } = event.data;
-      const rest = state.participants.filter((p) => p.participantId !== participantId);
+      const rest = state.participants.filter((p) => p.id !== participantId);
       return {
         ...base,
-        participants: [...rest, { participantId, nickname, isGuest, avatarId, isConnected: true }],
+        participants: [
+          ...rest,
+          {
+            id: participantId,
+            nickname,
+            avatarId: avatarId ?? "default",
+            isGuest: isGuest ?? false,
+            joinedAt: event.ts,
+          },
+        ],
       };
     }
     case "PARTICIPANT_LEFT":
       return {
         ...base,
-        participants: state.participants.filter(
-          (p) => p.participantId !== event.data.participantId,
-        ),
+        participants: state.participants.filter((p) => p.id !== event.data.participantId),
       };
     case "SESSION_STARTED":
       return {

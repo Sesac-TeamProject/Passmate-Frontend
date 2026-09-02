@@ -31,8 +31,7 @@ export function useSessionConnection(roomId: number | null, { isHost }: { isHost
 
         if (useSessionStore.getState().phase !== "WAITING") {
           try {
-            const { participants } = await getParticipants(roomId);
-            store.setParticipants(participants ?? []);
+            store.setParticipants(await getParticipants(roomId));
           } catch {
             // 참가자 목록은 부가 정보 — 실패해도 스냅샷 복구 자체는 유지한다
           }
@@ -48,8 +47,7 @@ export function useSessionConnection(roomId: number | null, { isHost }: { isHost
       } catch (e) {
         if (AppError.isAppError(e) && e.kind === "NotFound") {
           store.replaceWithSnapshot(null);
-          const { participants } = await getParticipants(roomId);
-          store.setParticipants(participants ?? []);
+          store.setParticipants(await getParticipants(roomId));
         } else {
           throw e;
         }

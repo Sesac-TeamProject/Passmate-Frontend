@@ -26,7 +26,7 @@ export default function Page() {
   const router = useRouter();
   const status = useAuthStore((s) => s.status);
   const me = useMe();
-  const rooms = usePublicRooms({ sort: "popular", type: "all" });
+  const rooms = usePublicRooms({ sort: "POPULAR" });
   const join = useJoinByPin();
   const sets = useQuestionSets({ status: "CONFIRMED" });
   const grade = useGrade();
@@ -104,7 +104,7 @@ export default function Page() {
     <>
       <HomePage
         name={me.data?.nickname ?? ""}
-        popularRooms={toPopularRooms(rooms.data.items ?? [])}
+        popularRooms={toPopularRooms(rooms.data.content)}
         join={{
           values: joinValues,
           onChange: setJoinValues,

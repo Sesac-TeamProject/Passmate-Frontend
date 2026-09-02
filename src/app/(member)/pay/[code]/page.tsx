@@ -50,7 +50,7 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
   const balanceQuery = useCoinBalance();
   const me = useMe();
 
-  const roomId = room.data?.roomId ?? null;
+  const roomId = room.data?.id ?? null;
 
   const createCharge = useCreateCharge();
   const confirmCharge = useConfirmCharge();
@@ -78,7 +78,7 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
   const [pendingLoaded, setPendingLoaded] = useState(false);
 
   const balance = balanceQuery.data?.balance ?? 0;
-  const fee = room.data?.entryFee ?? 0;
+  const fee = room.data?.fee ?? 0;
   const shortfall = Math.max(0, fee - balance);
 
   // 참가자 기본값(닉네임·캐릭터) — 로그인 프로필이 오면 한 번만 채운다. 이미 입력을 시작했으면 덮어쓰지 않는다.
@@ -110,16 +110,16 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
 
   // 무료 방은 결제가 필요 없다 — 대기실로 보낸다.
   useEffect(() => {
-    if (room.data && !room.data.isPaid) router.replace(`/play/${pin}`);
+    if (room.data && room.data.guestAllowed) router.replace(`/play/${pin}`);
   }, [room.data, pin, router]);
 
   if (room.isPending) return <ScreenLoading />;
   if (room.isError)
     return <ScreenError message={toPayErrorMessage(room.error)} onRetry={() => room.refetch()} />;
   // 무료 방 — 위 effect가 대기실로 보낸다. 그 사이 화면은 로딩으로만 보인다.
-  if (!room.data.isPaid) return <ScreenLoading />;
+  if (room.data.guestAllowed) return <ScreenLoading />;
 
-  const paidRoom = toPaidRoom(room.data);
+  const paidRoom = toPaidRoom(room.data, pin);
 
   /** 단계 진행 상태를 sessionStorage와 화면 state에 함께 남긴다. */
   const savePending = (next: PendingPayment) => {

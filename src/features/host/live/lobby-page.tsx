@@ -57,6 +57,9 @@ type Props = {
   errorMessage?: string | null;
   /** 세트가 연결돼 있으면 null — 연결 UI를 그리지 않는다 */
   setLink?: SetLinkPanel | null;
+  /** 참가자 내보내기(강퇴) */
+  onKick?: (studentId: string) => void;
+  kickingId?: string | null;
 };
 
 /**
@@ -77,6 +80,8 @@ export function LobbyPage({
   starting,
   errorMessage,
   setLink,
+  onKick,
+  kickingId,
 }: Props) {
   const prettyPin = formatPin(pin);
   const steps = toSteps(prettyPin);
@@ -89,7 +94,7 @@ export function LobbyPage({
 
   return (
     <ProjectorShell
-      rail={<LobbyRail students={students} />}
+      rail={<LobbyRail students={students} onKick={onKick} kickingId={kickingId} />}
       railCollapsed={<LobbyRailMini students={students} />}
       top={
         <>

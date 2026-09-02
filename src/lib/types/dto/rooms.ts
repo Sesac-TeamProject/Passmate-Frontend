@@ -1,4 +1,4 @@
-import type { AvatarKey, CursorPage, HostLevel, RoomStatus, RoomType } from "./common";
+import type { CursorPage, RoomStatus, RoomType } from "./common";
 
 /**
  * 방·참가자 — 백엔드 `room/dto/*.kt` 1:1 (`contracts/rest-api.md` §2-5).
@@ -84,53 +84,78 @@ export type RoomSummaryResponse = {
   guestAllowed: boolean;
 };
 
-/* ────────────────────────── 아래는 US2에서 교체 예정 ────────────────────────── */
-
-/** @deprecated US2(T036)에서 `RoomSummaryResponse`로 교체한다 */
-export type RoomInfoHost = {
-  userId?: number | null;
+/** POST /rooms/{roomId}/participants — 인증은 선택. 무인증이면 게스트로 들어간다 */
+export type JoinRoomRequest = {
+  /** ≤30자, 방 안에서 유일해야 한다 */
   nickname: string;
-  level?: HostLevel | null;
-  avgStars?: number | null;
-  ratingCount?: number | null;
-};
-/** @deprecated US2(T036)에서 `RoomSummaryResponse`로 교체한다 */
-export type RoomInfoResponse = {
-  roomId: number;
-  pin: string;
-  title: string;
-  topic?: string | null;
-  status?: RoomStatus | null;
-  questionCount?: number | null;
-  questionSetId?: number | null;
-  estimatedMinutes?: number | null;
-  scheduledAt?: string | null;
-  participantCount?: number | null;
-  maxParticipants?: number | null;
-  isPaid?: boolean;
-  entryFee?: number | null;
-  host?: RoomInfoHost | null;
+  /** 12종 아바타 키. 생략하면 서버가 회원 기본값 또는 `"default"`를 넣는다 */
+  avatarId?: string;
+  /** 같은 기기 재입장 식별용(≤64자). 지금 웹은 보내지 않는다 */
+  deviceKey?: string;
 };
 
-/** @deprecated US2(T036)에서 `JoinRoomRequest{nickname, avatarId?, deviceKey?}`로 교체한다 */
-export type JoinRoomRequest = { nickname: string; avatarId?: AvatarKey | null };
-/** @deprecated US2(T036)에서 `{participant, accessToken?, guestToken?}`로 교체한다 */
+/** 참가자 한 명 — 접속 여부(`isConnected`)는 서버가 주지 않는다 */
+export type ParticipantResponse = {
+  id: number;
+  nickname: string;
+  avatarId: string;
+  isGuest: boolean;
+  joinedAt: string;
+};
+
+/**
+ * POST /rooms/{roomId}/participants 응답.
+ *
+ * **토큰이 둘이다**(게스트만 받는다, `research.md` R-6):
+ * - `accessToken` — 게스트 JWT. 이후 요청·STOMP CONNECT의 **Bearer**다(1시간, refresh 없음)
+ * - `guestToken` — 32자 hex. 나중에 가입할 때 기록을 옮기는 표
+ *
+ * 둘을 하나로 다루면 게스트의 모든 요청이 401이 된다.
+ */
 export type JoinRoomResponse = {
-  participantId: number;
-  participantToken?: string | null;
-  avatarId?: AvatarKey | null;
+  participant: ParticipantResponse;
+  accessToken?: string;
+  guestToken?: string;
 };
 
-/** @deprecated US2(T036)에서 `ParticipantResponse`로 교체한다 */
-export type ParticipantEntry = {
-  participantId: number;
-  nickname: string;
-  avatarId?: AvatarKey | null;
-  isGuest?: boolean;
-  isConnected?: boolean;
+/** GET /rooms/{roomId}/participants/nickname-check?nickname= — 인증 불필요 */
+export type NicknameCheckResponse = { available: boolean; suggestions: string[] };
+
+/** 공개 방 목록의 호스트 — 등급·별점은 없다(서버가 아직 계산하지 않는다) */
+export type PublicRoomHostResponse = { userId: number; nickname: string };
+
+/**
+ * GET /rooms/public 항목 — 인증 불필요.
+ * **PIN이 없다** — 공개 목록으로는 방을 구경만 하고, 입장하려면 PIN·QR을 받아야 한다.
+ */
+export type PublicRoomResponse = {
+  id: number;
+  title: string;
+  topic?: string;
+  status: RoomStatus;
+  type: RoomType;
+  fee?: number;
+  questionCount?: number;
+  participantCount: number;
+  maxParticipants?: number;
+  host: PublicRoomHostResponse;
+  scheduledAt?: string;
+  startedAt?: string;
 };
-/** @deprecated US2(T036)에서 배열 응답으로 교체한다 */
-export type ParticipantsResponse = { participants?: ParticipantEntry[] };
+
+/** GET /rooms/public 쿼리 — enum은 **대문자**, 페이지는 오프셋 */
+export type PublicRoomSearch = {
+  q?: string;
+  type?: "FREE" | "PAID";
+  /** 오늘 열리는 방만 */
+  today?: boolean;
+  status?: "WAITING" | "RUNNING";
+  /** 생략하면 POPULAR */
+  sort?: "POPULAR" | "UPCOMING";
+  page?: number;
+  /** ≤50 */
+  size?: number;
+};
 
 /** @deprecated US9(T092)에서 `{reputation, active, ended}`로 교체한다 */
 export type HostedRoomDto = {
@@ -145,34 +170,3 @@ export type HostedRoomDto = {
 };
 /** @deprecated US9(T092)에서 페이지 없는 응답으로 교체한다 */
 export type HostedRoomsResponse = CursorPage<HostedRoomDto>;
-
-/** @deprecated US2(T036)에서 `PublicRoomResponse`로 교체한다 */
-export type PublicRoomDto = {
-  roomId?: number;
-  pin?: string;
-  title?: string;
-  topic?: string | null;
-  hostId?: number | null;
-  hostName?: string;
-  hostLevel?: HostLevel | null;
-  hostRating?: number | null;
-  status?: RoomStatus | null;
-  participantCount?: number | null;
-  maxParticipants?: number | null;
-  isPaid?: boolean;
-  entryFee?: number | null;
-  scheduledAt?: string | null;
-};
-/** @deprecated US2(T036)에서 `PageResponse<PublicRoomResponse>`로 교체한다 */
-export type PublicRoomPageResponse = CursorPage<PublicRoomDto>;
-/** @deprecated US2(T036)에서 대문자 enum으로 교체한다 */
-export type PublicRoomSort = "popular" | "upcoming";
-/** @deprecated US2(T036)에서 대문자 enum으로 교체한다 */
-export type PublicRoomType = "all" | "free" | "paid";
-/** @deprecated US2(T036)에서 `PublicRoomSearch`로 교체한다 */
-export type PublicRoomsQuery = {
-  sort: PublicRoomSort;
-  type: PublicRoomType;
-  q?: string;
-  cursor?: string;
-};

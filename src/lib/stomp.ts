@@ -1,6 +1,7 @@
 import { Client, ReconnectionTimeMode, type IMessage } from "@stomp/stompjs";
 import { IS_MOCK, WS_URL } from "@/lib/env";
 import { readGuestToken } from "@/lib/guest-token-storage";
+import { toAvatarKey } from "@/lib/types/dto";
 import { PARTICIPANTS } from "@/lib/mocks/fixtures";
 import { emitMockEvent, isMockSessionWaiting, mockSessionEvents } from "@/lib/mocks/session";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -112,10 +113,10 @@ function connectMockStream(
             type: "PARTICIPANT_JOINED",
             ts: new Date().toISOString(),
             data: {
-              participantId: p.participantId,
+              participantId: p.id,
               nickname: p.nickname,
-              isGuest: p.isGuest ?? true,
-              avatarId: p.avatarId,
+              isGuest: p.isGuest,
+              avatarId: toAvatarKey(p.avatarId),
               count: index + 1,
             },
           });

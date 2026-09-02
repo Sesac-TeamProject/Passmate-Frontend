@@ -34,7 +34,7 @@ export default function Page() {
   const router = useRouter();
 
   const room = useRoomByPin(pin);
-  const roomId = room.data?.roomId ?? null;
+  const roomId = room.data?.id ?? null;
 
   const phase = useSessionStore((s) => s.phase);
   const currentQuestion = useSessionStore((s) => s.currentQuestion);

@@ -1,9 +1,9 @@
-import type { PublicRoomDto } from "@/lib/types/dto";
+import type { HostProfileRoom } from "@/lib/types/dto";
 import { formatDotDateWithDay } from "@/lib/format";
 import type { HostRoom } from "./host-profile-page";
 
 /** 공개 방 항목 → 프로필의 "운영 중인 방" 카드 */
-export function toHostRooms(rooms: PublicRoomDto[]): HostRoom[] {
+export function toHostRooms(rooms: HostProfileRoom[]): HostRoom[] {
   return rooms.map((room) => ({
     pin: room.pin ?? "",
     title: room.title ?? "",

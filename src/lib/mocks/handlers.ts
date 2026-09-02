@@ -8,7 +8,6 @@ import type {
   QuestionRequest,
   QuestionSetUpdateRequest,
   RoomCreateRequest,
-  RoomInfoResponse,
   RoomUpdateRequest,
   ScreenLockRequest,
   SettlementAccountDto,
@@ -67,10 +66,12 @@ import {
   mockUpdateQuestionSet,
 } from "./question-sets";
 import {
+  mockCheckNickname,
   mockCloseRoom,
   mockCreateRoom,
   mockHostedRooms,
   mockJoinRoom,
+  mockKickParticipant,
   mockLeaveRoom,
   mockParticipants,
   mockPublicRooms,
@@ -125,7 +126,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "DELETE /users/me": () => mockDeleteMe(),
 
   /* ── 방 ───────────────────────────────────────────── */
-  "GET /rooms/pin/:pin": (ctx): RoomInfoResponse => mockRoomByPin(ctx.params.pin),
+  "GET /rooms/pin/:pin": (ctx) => mockRoomByPin(ctx.params.pin),
   "POST /rooms": (ctx) => mockCreateRoom(asBody<RoomCreateRequest>(ctx)),
   "GET /rooms/:roomId": (ctx) => mockRoom(ctx.params.roomId),
   "PUT /rooms/:roomId": (ctx) => mockUpdateRoom(ctx.params.roomId, asBody<RoomUpdateRequest>(ctx)),
@@ -135,7 +136,11 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /rooms/:roomId/participants": (ctx) =>
     mockJoinRoom(ctx.params.roomId, asBody<JoinRoomRequest>(ctx)),
   "GET /rooms/:roomId/participants": () => mockParticipants(),
+  "GET /rooms/:roomId/participants/nickname-check": (ctx) =>
+    mockCheckNickname(ctx.params.roomId, ctx.url.searchParams.get("nickname") ?? ""),
   "DELETE /rooms/:roomId/participants/me": () => mockLeaveRoom(),
+  "DELETE /rooms/:roomId/participants/:participantId": (ctx) =>
+    mockKickParticipant(ctx.params.roomId, ctx.params.participantId),
 
   /* ── 진행 세션 ────────────────────────────────────── */
   "GET /rooms/:roomId/session": () => mockSnapshot(),

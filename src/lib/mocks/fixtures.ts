@@ -1,8 +1,8 @@
 import type {
   HostedRoomDto,
   MyProfileResponse,
-  ParticipantEntry,
-  PublicRoomDto,
+  ParticipantResponse,
+  PublicRoomResponse,
   QuestionResponse,
   QuestionSetSummaryResponse,
   RoomResponse,
@@ -66,28 +66,16 @@ export const DEMO_ROOM: RoomResponse = {
 };
 
 /**
- * @draft 시연 방 호스트 표시값. 서버 `GET /rooms/pin/{pin}` 응답에는 **호스트 정보가 없다** —
- * 입장 화면이 그리던 이름·등급·별점은 US2(T039)에서 걷어낸다.
- */
-export const DEMO_ROOM_HOST = {
-  userId: 42,
-  nickname: "김민지",
-  level: 3,
-  avgStars: 4.5,
-  ratingCount: 312,
-} as const;
-
-/**
  * 아바타는 문자열 키다 (lib/types/dto/common.ts AVATAR_KEYS — ERD avatar_id varchar(30)).
  * features/host/mock.ts LIVE_ROOM.students를 옮긴다. participantId는 11부터.
  */
-export const PARTICIPANTS: ParticipantEntry[] = [
-  { participantId: 11, nickname: "준영", avatarId: "cat", isGuest: true },
-  { participantId: 12, nickname: "혜림", avatarId: "rabbit", isGuest: true },
-  { participantId: 13, nickname: "승혁", avatarId: "dog", isGuest: true },
-  { participantId: 14, nickname: "희표", avatarId: "bear", isGuest: true },
-  { participantId: 15, nickname: "민지", avatarId: "fox", isGuest: true },
-  { participantId: 16, nickname: "도윤", avatarId: "penguin", isGuest: true },
+export const PARTICIPANTS: ParticipantResponse[] = [
+  { id: 11, nickname: "준영", avatarId: "cat", isGuest: true, joinedAt: "2026-09-02T02:00:11" },
+  { id: 12, nickname: "혜림", avatarId: "rabbit", isGuest: true, joinedAt: "2026-09-02T02:00:24" },
+  { id: 13, nickname: "승혁", avatarId: "dog", isGuest: true, joinedAt: "2026-09-02T02:00:39" },
+  { id: 14, nickname: "희표", avatarId: "bear", isGuest: true, joinedAt: "2026-09-02T02:01:02" },
+  { id: 15, nickname: "민지", avatarId: "fox", isGuest: false, joinedAt: "2026-09-02T02:01:17" },
+  { id: 16, nickname: "도윤", avatarId: "penguin", isGuest: true, joinedAt: "2026-09-02T02:01:45" },
 ];
 
 /**
@@ -146,152 +134,91 @@ function eveningAfter(days: number, hour: number): string {
   const at = new Date();
   at.setDate(at.getDate() + days);
   at.setHours(hour, 0, 0, 0);
-  return at.toISOString();
+  // 서버와 같은 형식(UTC naive)으로 돌려준다 — 화면은 parseServerDateTime으로 읽는다
+  return at.toISOString().slice(0, 19);
 }
 
 const TODAY_EVENING = eveningAfter(0, 20);
 const TOMORROW_EVENING = eveningAfter(1, 19);
 const DAY_AFTER_EVENING = eveningAfter(2, 21);
 
-export const PUBLIC_ROOMS: PublicRoomDto[] = [
+export const PUBLIC_ROOMS: PublicRoomResponse[] = [
   {
-    roomId: DEMO_ROOM_ID,
-    pin: DEMO_PIN,
+    id: DEMO_ROOM_ID,
     title: "Spring 실전 모의고사 4주차",
     topic: "백엔드",
-    hostId: 42,
-    hostName: "김민지",
-    hostLevel: 3,
     status: "WAITING",
+    type: "PAID",
+    fee: 10000,
+    questionCount: 8,
     participantCount: 24,
     maxParticipants: 40,
-    isPaid: true,
-    entryFee: 10000,
+    host: { userId: 42, nickname: "김민지" },
     scheduledAt: DEMO_ROOM.scheduledAt,
   },
   {
-    roomId: 201,
-    pin: "CS0002",
+    id: 201,
     title: "CS 기술면접 라운드 2",
     topic: "CS 면접",
-    hostName: "박세라",
-    hostLevel: 4,
     status: "WAITING",
-    scheduledAt: TODAY_EVENING,
+    type: "FREE",
+    questionCount: 10,
     participantCount: 18,
-    isPaid: false,
+    host: { userId: 43, nickname: "박세라" },
+    scheduledAt: TODAY_EVENING,
   },
   {
-    roomId: 202,
-    pin: "NET001",
+    id: 202,
     title: "네트워크 한 번에 정리",
     topic: "네트워크",
-    hostName: "정우진",
-    hostLevel: 2,
     status: "WAITING",
+    type: "FREE",
+    questionCount: 6,
     participantCount: 9,
-    isPaid: false,
+    host: { userId: 44, nickname: "정우진" },
   },
   {
-    roomId: 203,
-    pin: "JPA003",
+    id: 203,
     title: "JPA 영속성 컨텍스트 뽀개기",
     topic: "백엔드",
-    hostName: "이서준",
-    hostLevel: 3,
     status: "WAITING",
+    type: "FREE",
+    questionCount: 10,
     participantCount: 15,
-    isPaid: false,
+    host: { userId: 45, nickname: "이서준" },
   },
   {
-    roomId: 204,
-    pin: "DB0004",
+    id: 204,
     title: "인덱스와 실행 계획 실전",
     topic: "데이터베이스",
-    hostName: "최유나",
-    hostLevel: 5,
     status: "WAITING",
-    scheduledAt: TOMORROW_EVENING,
+    type: "PAID",
+    fee: 8000,
+    questionCount: 12,
     participantCount: 31,
-    isPaid: true,
+    host: { userId: 46, nickname: "최유나" },
+    scheduledAt: TOMORROW_EVENING,
   },
   {
-    roomId: 205,
-    pin: "OS0005",
+    id: 205,
     title: "운영체제 핵심 30문항",
     topic: "CS 면접",
-    hostName: "한지훈",
-    hostLevel: 2,
     status: "WAITING",
+    type: "FREE",
+    questionCount: 30,
     participantCount: 12,
-    isPaid: false,
+    host: { userId: 47, nickname: "한지훈" },
   },
   {
-    roomId: 206,
-    pin: "ALG006",
+    id: 206,
     title: "코딩테스트 개념 점검",
     topic: "알고리즘",
-    hostName: "오다은",
-    hostLevel: 3,
-    status: "RUNNING",
-    participantCount: 27,
-    isPaid: false,
-  },
-  {
-    roomId: 207,
-    pin: "SEC007",
-    title: "웹 보안 취약점 라운드 1",
-    topic: "보안",
-    hostName: "김민지",
-    hostLevel: 3,
     status: "WAITING",
-    participantCount: 8,
-    isPaid: true,
-  },
-  {
-    roomId: 208,
-    pin: "FE0008",
-    title: "React 렌더링 원리 퀴즈",
-    topic: "프론트엔드",
-    hostName: "장하늘",
-    hostLevel: 4,
-    status: "RUNNING",
-    participantCount: 22,
-    isPaid: false,
-  },
-  {
-    roomId: 209,
-    pin: "DEV009",
-    title: "Docker · K8s 기초 다지기",
-    topic: "DevOps",
-    hostName: "박세라",
-    hostLevel: 4,
-    status: "WAITING",
-    participantCount: 14,
-    isPaid: false,
-  },
-  {
-    roomId: 210,
-    pin: "JAV010",
-    title: "Java 컬렉션 한 방 정리",
-    topic: "백엔드",
-    hostName: "정우진",
-    hostLevel: 2,
-    status: "WAITING",
-    participantCount: 11,
-    isPaid: false,
-  },
-  {
-    roomId: 211,
-    pin: "SYS011",
-    title: "시스템 디자인 첫걸음",
-    topic: "CS 면접",
-    hostName: "최유나",
-    hostLevel: 5,
-    status: "WAITING",
+    type: "FREE",
+    questionCount: 8,
+    participantCount: 21,
+    host: { userId: 48, nickname: "오다은" },
     scheduledAt: DAY_AFTER_EVENING,
-    participantCount: 19,
-    isPaid: true,
   },
 ];
 
