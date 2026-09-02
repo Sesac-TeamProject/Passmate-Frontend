@@ -20,12 +20,11 @@ type Props = {
 export function MyRoomsPage({ rooms, totalStudents, level, levelSubtitle, stats, actions }: Props) {
   return (
     <main className="flex flex-col gap-8 px-[60px] pt-12 pb-10">
-      <header className="flex gap-7">
-        <span aria-hidden className="h-16 w-[3px] shrink-0 bg-ink" />
-        <div className="flex flex-col gap-1.5">
-          <p className="text-label-lg text-mint-dark">누적 학생 수 : {totalStudents}명</p>
-          <h1 className="text-heading-lg text-ink">방 한 번 열면, 출제부터 리포트까지 끝!</h1>
-        </div>
+      {/* 시안은 세로 막대를 본문 칸 왼쪽 바깥(x=272)에 걸어 둔다 — 글자는 아래 카드들과 같은 300에서 시작 */}
+      <header className="relative mb-6 flex flex-col gap-1.5">
+        <span aria-hidden className="absolute top-1 -left-7 h-16 w-[3px] bg-ink" />
+        <p className="text-label-lg text-mint-dark">누적 학생 수 : {totalStudents}명</p>
+        <h1 className="text-heading-lg text-ink">방 한 번 열면, 출제부터 리포트까지 끝!</h1>
       </header>
 
       <div className="flex gap-9">
@@ -34,7 +33,7 @@ export function MyRoomsPage({ rooms, totalStudents, level, levelSubtitle, stats,
         <HubActions actions={actions} />
       </div>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-2">
         <div className="flex items-baseline gap-2.5">
           <h2 className="text-label-lg text-ink">내 방</h2>
           <span className="text-label-md text-ink-disabled">{rooms.length}</span>

@@ -16,8 +16,8 @@ type Props = {
 /** W-09 가운데 요약 — 운영 실적 3줄 + 바로가기 칩 (시안 803:8803~8818) */
 export function HubSummary({ stats, links }: Props) {
   return (
-    <section className="flex min-w-0 flex-1 flex-col justify-between py-3">
-      <dl className="flex flex-col gap-[44px]">
+    <section className="flex min-w-0 flex-1 flex-col justify-between pt-3">
+      <dl className="flex flex-col gap-[42px]">
         {stats.map((stat) => (
           <div key={stat.id} className="flex items-center gap-3.5">
             <span
