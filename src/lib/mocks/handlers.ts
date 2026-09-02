@@ -80,11 +80,14 @@ import {
   mockUpdateRoom,
 } from "./rooms";
 import {
-  mockEssayAnswers,
+  mockMyAnswer,
   mockMyReport,
   mockMyResult,
+  mockParticipantResult,
   mockPostReview,
-  mockRoomReport,
+  mockRequestAnalysis,
+  mockReviewTargets,
+  mockSessionResults,
   mockSubmitRating,
 } from "./results";
 import type { MockContext, MockHandler } from "./router";
@@ -183,8 +186,14 @@ const HANDLERS: Record<string, MockHandler> = {
   /* ── 결과 · 리포트 · 평가 ─────────────────────────── */
   "GET /rooms/:roomId/results/me": () => mockMyResult(),
   "GET /rooms/:roomId/reports/me": () => mockMyReport(),
-  "GET /rooms/:roomId/results": () => mockRoomReport(),
-  "GET /rooms/:roomId/answers": () => mockEssayAnswers(),
+  "GET /rooms/:roomId/results": () => mockSessionResults(),
+  "GET /rooms/:roomId/results/participants/:participantId": (ctx) =>
+    mockParticipantResult(ctx.params.participantId),
+  "GET /rooms/:roomId/session/questions/:questionId/answers/me": (ctx) =>
+    mockMyAnswer(ctx.params.questionId),
+  "POST /rooms/:roomId/session/questions/:questionId/answers/me/analysis": () =>
+    mockRequestAnalysis(),
+  "GET /rooms/:roomId/answers": (ctx) => mockReviewTargets(ctx.url),
   "PUT /rooms/:roomId/answers/:answerId/review": () => mockPostReview(),
   "POST /rooms/:roomId/ratings": () => mockSubmitRating(),
 

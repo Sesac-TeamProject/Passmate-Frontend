@@ -3,12 +3,17 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
-import { toEssayAnswers, toReportStudents, toSessionReport } from "@/features/host/review/adapt";
+import {
+  toEssayAnswers,
+  toReportStudents,
+  toReviewProgressLabel,
+  toSessionReport,
+} from "@/features/host/review/adapt";
 import { ExportFailedDialog } from "@/features/host/review/export-failed-dialog";
 import { ReviewPage } from "@/features/host/review/review-page";
 import { ReviewSkeleton } from "@/features/host/review/review-skeleton";
 import { exportRoomReport } from "@/lib/api/results";
-import { useEssayAnswers, useRoomReport } from "@/lib/queries/use-results";
+import { useReviewTargets, useSessionResults } from "@/lib/queries/use-results";
 
 /** 목 라우트가 없어 목 모드에서는 404가 난다 — 실제 실패도 같은 안내로 접는다 */
 const EXPORT_UNAVAILABLE_MESSAGE = "백엔드 연동 후 제공돼요";
@@ -21,8 +26,8 @@ export default function Page() {
   const params = useParams<{ sessionId: string }>();
   const roomId = Number(params.sessionId);
 
-  const report = useRoomReport(roomId);
-  const questions = report.data ? toSessionReport(report.data, roomId).questions : [];
+  const report = useSessionResults(roomId);
+  const questions = report.data ? toSessionReport(report.data).questions : [];
 
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [syncedRoomId, setSyncedRoomId] = useState<number | null>(null);
@@ -35,7 +40,10 @@ export default function Page() {
 
   const selectedQuestion = questions.find((q) => q.id === selectedQuestionId) ?? null;
   const essayQuestionId = selectedQuestion?.type === "essay" ? Number(selectedQuestion.id) : null;
-  const essayAnswers = useEssayAnswers(roomId, essayQuestionId);
+  const essayAnswers = useReviewTargets(
+    essayQuestionId === null ? null : roomId,
+    essayQuestionId === null ? {} : { questionId: essayQuestionId },
+  );
 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -60,8 +68,9 @@ export default function Page() {
   return (
     <>
       <ReviewPage
-        report={toSessionReport(report.data, roomId)}
-        students={toReportStudents(report.data.students ?? [])}
+        report={toSessionReport(report.data)}
+        students={toReportStudents(report.data.participants)}
+        progressLabel={toReviewProgressLabel(essayAnswers.data)}
         selectedQuestionId={selectedQuestionId}
         onSelectQuestion={setSelectedQuestionId}
         essayAnswers={essayAnswers.data ? toEssayAnswers(essayAnswers.data) : []}

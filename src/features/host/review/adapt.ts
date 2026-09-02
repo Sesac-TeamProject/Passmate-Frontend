@@ -7,77 +7,106 @@ import type {
   SessionReport,
   Student,
 } from "@/features/host/types";
+import { parseServerDateTime } from "@/lib/datetime";
+import { AppError } from "@/lib/types/app-error";
 import type {
-  AiFeedbackDto,
-  EssayAnswerDto,
-  EssayAnswersResponse,
-  RoomReportResponse,
-  RoomReportStudent,
+  EssayAnalysisView,
+  ParticipantResultRow,
+  QuestionType as WireQuestionType,
+  ReviewTargetAnswer,
+  ReviewTargetListResponse,
+  SessionResultsResponse,
 } from "@/lib/types/dto";
 
-const QUESTION_TYPE_MAP: Record<string, QuestionType> = {
+const QUESTION_TYPE_MAP: Record<WireQuestionType, QuestionType> = {
   MCQ: "multiple",
   OX: "ox",
   ESSAY: "essay",
 };
 
-/** GET /rooms/{roomId}/results (호스트) → W-07 상단·문항 목록. roomId는 계약에 없어 컨테이너가 넘겨준다 */
-export function toSessionReport(dto: RoomReportResponse, roomId: number): SessionReport {
-  const questions: ReportQuestion[] = (dto.questions ?? []).map((q) => ({
-    id: String(q.questionId ?? 0),
-    index: q.questionNo ?? 0,
-    title: q.title ?? "",
-    type: QUESTION_TYPE_MAP[q.type ?? "MCQ"] ?? "multiple",
-    accuracy: q.accuracyPercent ?? undefined,
-    aiCount: q.aiFeedbackCount ?? undefined,
+/** 서버 시각(UTC naive) → "8/22 (금)". 값이 없으면 빈 문자열 */
+function toDateLabel(value: string | undefined): string {
+  if (!value) return "";
+  const date = parseServerDateTime(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const weekday = new Intl.DateTimeFormat("ko-KR", { weekday: "short" }).format(date);
+  return `${date.getMonth() + 1}/${date.getDate()} (${weekday})`;
+}
+
+/** GET /rooms/{roomId}/results (호스트) → W-07 상단·문항 목록 */
+export function toSessionReport(dto: SessionResultsResponse): SessionReport {
+  const questions: ReportQuestion[] = dto.questions.map((q) => ({
+    id: String(q.questionId),
+    index: q.orderNo,
+    title: q.content,
+    type: QUESTION_TYPE_MAP[q.type],
+    // 서술형은 정답 개념이 없어 정답률 대신 AI 분석 건수를 보여준다
+    accuracy: q.type === "ESSAY" ? undefined : q.correctRate,
+    aiCount: q.aiAnalysisCount,
   }));
 
   return {
-    id: String(roomId),
-    title: dto.roomTitle ?? "",
-    dateLabel: dto.dateLabel ?? "",
+    id: String(dto.roomId),
+    title: dto.title,
+    dateLabel: toDateLabel(dto.endedAt ?? dto.startedAt),
     stats: {
-      accuracy: dto.summary?.avgAccuracyPercent ?? 0,
-      students: dto.summary?.studentCount ?? 0,
-      questions: dto.summary?.questionCount ?? 0,
-      aiAnalyses: dto.summary?.aiAnalysisCount ?? 0,
+      accuracy: dto.summary.avgCorrectRate,
+      students: dto.summary.participantCount,
+      questions: dto.summary.questionCount,
+      aiAnalyses: dto.summary.aiAnalysisCount,
     },
     questions,
   };
 }
 
-/** RoomReportResponse.students → 분석 패널 학생 이름 조회용 목록. 아바타는 계약에 없어 기본값(cat)으로 접힌다 */
-export function toReportStudents(students: RoomReportStudent[]): Student[] {
+/** 세션 결과의 학생 목록 → 분석 패널 학생 조회용. 아바타가 응답에 있어 그대로 쓴다 */
+export function toReportStudents(students: ParticipantResultRow[]): Student[] {
   return students.map((s) => ({
-    id: String(s.participantId ?? 0),
-    name: s.nickname ?? "",
-    avatar: toAvatarKey(undefined),
+    id: String(s.participantId),
+    name: s.nickname,
+    avatar: toAvatarKey(s.avatarId),
   }));
 }
 
-function toFindings(feedback: AiFeedbackDto | null | undefined): AnswerFinding[] {
-  if (!feedback) return [];
-  const findings: AnswerFinding[] = [];
-  const covered = feedback.coveredConcepts ?? [];
-  const missing = feedback.missingConcepts ?? [];
+function toFindings(analysis: EssayAnalysisView | undefined): AnswerFinding[] {
+  if (!analysis) return [];
 
-  if (covered.length > 0)
-    findings.push({ tone: "good", text: `핵심 포함 — ${covered.join(", ")}` });
-  if (missing.length > 0) findings.push({ tone: "lack", text: `부족 — ${missing.join(", ")}` });
-  if (feedback.improvement) findings.push({ tone: "tip", text: `제안 — ${feedback.improvement}` });
+  const findings: AnswerFinding[] = [];
+  if (analysis.keyPoints.length > 0)
+    findings.push({ tone: "good", text: `핵심 포함 — ${analysis.keyPoints.join(", ")}` });
+  if (analysis.missingPoints.length > 0)
+    findings.push({ tone: "lack", text: `부족 — ${analysis.missingPoints.join(", ")}` });
+  if (analysis.suggestions.length > 0)
+    findings.push({ tone: "tip", text: `제안 — ${analysis.suggestions.join(", ")}` });
 
   return findings;
 }
 
-function toEssayAnswer(dto: EssayAnswerDto): EssayAnswer {
+function toEssayAnswer(answer: ReviewTargetAnswer): EssayAnswer {
   return {
-    studentId: String(dto.participantId),
-    text: dto.content ?? "",
-    findings: toFindings(dto.aiFeedback),
+    studentId: String(answer.participantId),
+    text: answer.submitted,
+    findings: toFindings(answer.analysis),
   };
 }
 
-/** @draft GET /rooms/{roomId}/answers → W-07 분석 패널 서술형 답변 목록 (응답 필드 미확보) */
-export function toEssayAnswers(dto: EssayAnswersResponse): EssayAnswer[] {
-  return (dto.answers ?? []).map(toEssayAnswer);
+/** GET /rooms/{roomId}/answers → W-07 분석 패널의 서술형 답변 목록 */
+export function toEssayAnswers(dto: ReviewTargetListResponse): EssayAnswer[] {
+  return dto.answers.map(toEssayAnswer);
+}
+
+/** "3/6 첨삭 완료" — 진행률 문구 */
+export function toReviewProgressLabel(dto: ReviewTargetListResponse | undefined): string | null {
+  if (!dto || dto.totalCount === 0) return null;
+  return `${dto.reviewedCount}/${dto.totalCount} 첨삭 완료`;
+}
+
+/**
+ * 첨삭 저장 실패 문구.
+ * **저장 API가 아직 백엔드에 없다**(실서버 404) — NotFound는 고장이 아니라 "준비 중"이다.
+ */
+export function toReviewSaveMessage(error: unknown): string {
+  if (!AppError.isAppError(error)) return "저장하지 못했어요. 다시 시도해 주세요";
+  if (error.kind === "NotFound") return "첨삭 저장은 서버 준비 중이에요";
+  return error.message;
 }

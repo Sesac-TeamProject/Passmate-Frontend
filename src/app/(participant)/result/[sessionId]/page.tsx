@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toRankedStudents } from "@/features/host/live/adapt";
+import { toRatingDeadlineLabel } from "@/features/participant/result/adapt";
 import {
   FinalResultPage,
   type PodiumEntry,
@@ -51,15 +52,16 @@ export default function Page() {
     return <ScreenError message={result.error.message} onRetry={() => result.refetch()} />;
 
   // P-Web 별점 시트 — 시안에 [건너뛰기]가 있다는 건 부르지 않아도 스스로 뜬다는 뜻이다.
-  // 계약의 canRate가 문을 지킨다(이미 냈거나 24시간이 지나면 false).
-  if (result.data.canRate && !rateSkipped)
+  // 서버가 주는 `rating.available`이 문을 지킨다(안 냈거나·24시간이 지났거나·이미 냈으면 false).
+  if (result.data.rating.available && !rateSkipped)
     return (
       <RatingSheet
         // TODO(계약): 결과 응답에 호스트 이름이 없다 (DESIGN_GAPS G-8)
         hostName={null}
-        subtitle={[result.data.roomTitle, `${result.data.questionCount ?? 0}문항`]
+        subtitle={[result.data.roomTitle, `${result.data.questionCount}문항`]
           .filter(Boolean)
           .join(" · ")}
+        deadlineLabel={toRatingDeadlineLabel(result.data.rating)}
         onSubmit={(body) => rate.mutate(body, { onSuccess: () => setRateSkipped(true) })}
         onSkip={() => setRateSkipped(true)}
         pending={rate.isPending}
@@ -75,7 +77,7 @@ export default function Page() {
     .map((r, i) => ({ rank: r.rank as PodiumPlace, student: students[i] }));
 
   // 참여 기록이 없으면(다른 탭·새로고침) 내 등수로 대신 찾는다
-  const myRank = result.data.rank ?? null;
+  const myRank = result.data.rank;
   const myParticipantId = myId ?? source.find((r) => r.rank === myRank)?.participantId ?? null;
 
   const rows: RankRow[] = source.slice(0, ROW_LIMIT).map((r, i) => ({
@@ -88,12 +90,12 @@ export default function Page() {
   return (
     <FinalResultPage
       myRank={myRank}
-      myScore={result.data.totalScore ?? 0}
-      myCorrectCount={result.data.correctCount ?? 0}
-      questionCount={result.data.questionCount ?? 0}
+      myScore={result.data.totalScore}
+      myCorrectCount={result.data.correctCount}
+      questionCount={result.data.questionCount}
       podium={podium}
       rows={rows}
-      isGuest={result.data.isGuest ?? false}
+      isGuest={result.data.guest}
       onOpenReport={() => router.push(`/result/${roomId}/report`)}
       onSignUp={() => router.push("/login")}
     />

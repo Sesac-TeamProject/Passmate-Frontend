@@ -36,17 +36,17 @@ export default function Page() {
   if (report.isError)
     return <ScreenError message={report.error.message} onRetry={() => report.refetch()} />;
 
-  const questions = result.data.questions ?? [];
+  const questions = result.data.questions;
 
   return (
     <>
       <ReportPage
-        roomTitle={result.data.roomTitle ?? ""}
-        myRank={result.data.rank ?? null}
-        myScore={result.data.totalScore ?? 0}
-        correctCount={result.data.correctCount ?? 0}
-        questionCount={result.data.questionCount ?? 0}
-        weakTopics={report.data.weakTopics ?? []}
+        roomTitle={result.data.roomTitle}
+        myRank={result.data.rank}
+        myScore={result.data.totalScore}
+        correctCount={result.data.correctCount}
+        questionCount={result.data.questionCount}
+        weakTopics={report.data.weakTopics}
         questions={toReportQuestions(questions)}
         feedback={toReportFeedback(questions)}
         onBack={() => router.push(`/result/${roomId}`)}

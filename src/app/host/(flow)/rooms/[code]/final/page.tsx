@@ -13,7 +13,7 @@ import {
 import { FinalPage } from "@/features/host/live/final-page";
 import type { PodiumEntry } from "@/features/host/live/podium";
 import { useHostRoomId, useRoom } from "@/lib/queries/use-rooms";
-import { useRoomReport } from "@/lib/queries/use-results";
+import { useSessionResults } from "@/lib/queries/use-results";
 import { useSessionStore } from "@/lib/stores/session-store";
 
 /**
@@ -34,7 +34,7 @@ export default function Page() {
   const totalCount = useSessionStore((s) => s.totalCount);
   const snapshotTs = useSessionStore((s) => s.snapshotTs);
 
-  const report = useRoomReport(roomId);
+  const results = useSessionResults(roomId);
   // 끝난 방은 PIN으로 못 찾는다 — 제목은 roomId로 읽는다(캐시해 둔 id가 여기서 쓰인다)
   const detail = useRoom(roomId);
 
@@ -49,8 +49,8 @@ export default function Page() {
 
   // SESSION_ENDED가 finalRanking을 싣지 않으면 마지막 랭킹으로 대신한다
   const source = finalRanking.length > 0 ? finalRanking : ranking;
-  const rows = toFinalRanking(source, report.data);
-  const total = report.data?.summary?.questionCount ?? totalCount;
+  const rows = toFinalRanking(source, results.data);
+  const total = results.data?.summary.questionCount ?? totalCount;
 
   const podium: [PodiumEntry, PodiumEntry, PodiumEntry] | null =
     rows.length >= 3
@@ -67,9 +67,9 @@ export default function Page() {
       questionTotal={total}
       podium={podium}
       rest={podium ? rows.slice(3) : rows}
-      summary={toSessionSummary(report.data, rows.length, total)}
-      accuracyByQuestion={toReportAccuracy(report.data, total)}
-      hardest={toHardestQuestion(report.data)}
+      summary={toSessionSummary(results.data, rows.length, total)}
+      accuracyByQuestion={toReportAccuracy(results.data, total)}
+      hardest={toHardestQuestion(results.data)}
       // TODO(API): 순위 내보내기는 계약이 없다 (DESIGN_GAPS D-8)
       onExport={() => {}}
       onOpenReport={() => roomId !== null && router.push(`/host/sessions/${roomId}/review`)}

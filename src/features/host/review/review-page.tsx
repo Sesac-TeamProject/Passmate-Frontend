@@ -6,6 +6,8 @@ import { PendingLabel } from "@/components/common/pending-label";
 type Props = {
   report: SessionReport;
   students: { id: string; name: string }[];
+  /** "3/6 첨삭 완료" — 서버가 주는 진행률. 대상이 없으면 null */
+  progressLabel?: string | null;
   selectedQuestionId: string | null;
   onSelectQuestion: (id: string) => void;
   essayAnswers: EssayAnswer[];
@@ -17,6 +19,7 @@ type Props = {
 export function ReviewPage({
   report,
   students,
+  progressLabel = null,
   selectedQuestionId,
   onSelectQuestion,
   essayAnswers,
@@ -28,7 +31,9 @@ export function ReviewPage({
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-0.5">
           <h1 className="text-heading-lg text-ink">{report.title}</h1>
-          <p className="text-body-md text-muted-foreground">{report.dateLabel} · 세션 리포트</p>
+          <p className="text-body-md text-muted-foreground">
+            {[report.dateLabel, "세션 리포트", progressLabel].filter(Boolean).join(" · ")}
+          </p>
         </div>
         {/* 내보내기 실패는 04 보드 B 규칙대로 모달로 알린다 — 컨테이너가 소유한다 */}
         <button

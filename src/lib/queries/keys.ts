@@ -55,7 +55,19 @@ export const qk = {
   myResult: (roomId: number) => ["rooms", roomId, "results", "me"] as const,
   myReport: (roomId: number) => ["rooms", roomId, "reports", "me"] as const,
   sessionResults: (roomId: number) => ["rooms", roomId, "results"] as const,
-  essayAnswers: (roomId: number, questionId: number) =>
-    ["rooms", roomId, "questions", questionId, "answers"] as const,
+  participantResult: (roomId: number, participantId: number) =>
+    ["rooms", roomId, "results", "participants", participantId] as const,
+  /** 내 답안 + AI 분석. 분석이 PENDING인 동안 이 키를 폴링한다 */
+  myAnswer: (roomId: number, questionId: number) =>
+    ["rooms", roomId, "questions", questionId, "answers", "me"] as const,
+  /** 첨삭 대상 목록 — 문항·학생 필터까지 키에 넣는다 */
+  reviewTargets: (roomId: number, filter: { questionId?: number; participantId?: number }) =>
+    [
+      "rooms",
+      roomId,
+      "answers",
+      filter.questionId ?? "ALL",
+      filter.participantId ?? "ALL",
+    ] as const,
   hostProfile: (userId: number) => ["users", userId, "profile"] as const,
 };

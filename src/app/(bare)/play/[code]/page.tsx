@@ -36,7 +36,6 @@ export default function Page() {
   const phase = useSessionStore((s) => s.phase);
   const currentQuestion = useSessionStore((s) => s.currentQuestion);
   const submitted = useSessionStore((s) => s.submitted);
-  const ranking = useSessionStore((s) => s.ranking);
   const hints = useSessionStore((s) => s.hints);
   const screenLocked = useSessionStore((s) => s.screenLocked);
   const connection = useSessionStore((s) => s.connection);
