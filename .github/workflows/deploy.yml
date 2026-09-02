@@ -1,0 +1,117 @@
+# main 에 머지되면 자동 배포한다. develop 등 다른 브랜치는 Actions 탭의 Run workflow 로 수동 배포한다.
+#   테스트 → arm64 이미지 ECR 푸시 → SSM 에 태그 기록 → SSM 으로 EC2 에서 배포
+#
+# 배포 대상은 백엔드와 **같은 EC2 한 대**다. nginx 가 passmate.kr 을 이 컨테이너(:3000)로,
+# api.passmate.kr 을 백엔드 컨테이너(:8080)로 넘긴다.
+# compose·nginx 설정과 deploy.sh 는 Passmate-Backend 레포가 소유한다 — 여기서는 부르기만 한다.
+#
+# 필요한 레포 Secrets: AWS_ROLE_ARN · ECR_REPOSITORY · EC2_INSTANCE_ID
+name: deploy
+
+on:
+  push:
+    # main 병합만 자동 배포한다(2026-09-02 결정). develop 은 Run workflow 로 원할 때만
+    branches: [main]
+  # 수동 실행. 이 파일이 기본 브랜치(main)에 있어야 버튼이 보인다
+  workflow_dispatch:
+
+# 서버가 한 대다 — 브랜치가 달라도 배포가 겹치면 안 된다. 전부 한 줄로 세운다
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write   # OIDC 로 AWS 역할을 맡을 때 필요하다
+
+env:
+  AWS_REGION: ap-northeast-2
+  # ⚠️ NEXT_PUBLIC_* 는 빌드 시점에 번들에 박힌다 — 런타임으로는 못 바꾼다.
+  # 주소가 바뀌면 여기를 고치고 다시 배포해야 한다.
+  # WS 주소는 lib/env.ts 가 이 값에서 유도한다(https://api… → wss://api…/ws)
+  API_BASE_URL: https://api.passmate.kr
+
+jobs:
+  deploy:
+    # arm64 러너. 배포 대상이 t4g(arm64)이고, Tailwind 4 의 @tailwindcss/oxide 처럼
+    # 플랫폼별 네이티브 바이너리가 딸려 오므로 amd64 에서 구우면 서버에서 죽는다.
+    # QEMU 에뮬레이션은 몇 배 느리다. 공개 레포는 arm64 러너가 무료다
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # 라우트 표(src/config/routes.ts)와 app 폴더가 어긋나면 죽은 링크가 생긴다
+      - name: 라우트 검증
+        run: pnpm check:routes
+
+      - name: 테스트
+        run: pnpm test
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: docker/setup-buildx-action@v3
+
+      - name: 이미지 빌드·푸시 (linux/arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          # 단일 플랫폼인데 buildx 는 기본으로 인덱스+증명서까지 밀어 올린다.
+          # 배포 1회에 ECR 항목이 3개가 되고, 그중 2개는 태그가 없어
+          # "최근 10개 유지" 규칙이 사실상 3~4회분밖에 못 남긴다
+          provenance: false
+          push: true
+          # 태그 = 커밋 SHA. 롤백은 SSM 의 WEB_IMAGE_TAG 를 이전 SHA 로 되돌리고 배포를 다시 도는 것
+          tags: ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=${{ env.API_BASE_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 태그는 인자가 아니라 SSM 이 원본이다. 백엔드도 같은 EC2 에 자기 컨테이너를 따로 배포하는데,
+      # 양쪽 모두 상대의 태그를 SSM 에서 다시 읽어 쓰기 때문에 서로를 이전 버전으로 되돌리지 않는다
+      - name: 이미지 태그를 SSM 에 기록
+        run: |
+          aws ssm put-parameter --region "$AWS_REGION" \
+            --name /passmate/prod/WEB_IMAGE_TAG \
+            --value "${GITHUB_SHA}" --type String --overwrite >/dev/null
+
+      - name: EC2 배포 (SSM Run Command)
+        run: |
+          set -euo pipefail
+          INSTANCE="${{ secrets.EC2_INSTANCE_ID }}"
+
+          # deploy.sh 는 백엔드 레포가 S3 로 올려 둔 것을 쓴다 — 여기서는 부르기만 한다
+          cid=$(aws ssm send-command \
+            --instance-ids "$INSTANCE" \
+            --document-name AWS-RunShellScript \
+            --comment "web deploy ${GITHUB_SHA::7}" \
+            --timeout-seconds 600 \
+            --parameters commands="/opt/passmate/deploy.sh" \
+            --query 'Command.CommandId' --output text)
+
+          aws ssm wait command-executed --command-id "$cid" --instance-id "$INSTANCE" || true
+
+          echo "── stdout ──"
+          aws ssm get-command-invocation --command-id "$cid" --instance-id "$INSTANCE" \
+            --query 'StandardOutputContent' --output text
+          echo "── stderr ──"
+          aws ssm get-command-invocation --command-id "$cid" --instance-id "$INSTANCE" \
+            --query 'StandardErrorContent' --output text
+
+          status=$(aws ssm get-command-invocation --command-id "$cid" --instance-id "$INSTANCE" \
+            --query 'Status' --output text)
+          echo "SSM 상태: $status"
+          [ "$status" = "Success" ]
