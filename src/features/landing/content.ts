@@ -55,11 +55,12 @@ export type Feature = {
   eyebrow: string;
   title: string;
   body: string;
-  bullets: readonly string[];
   /** 오른쪽/왼쪽에 넣을 실제 화면 (W-03 에디터 · W-05 진행 · W-07 리포트) */
   mockup: MockupKey;
   /** 목업 접근성 설명 */
   mockupLabel: string;
+  /** 화면을 감싸는 카드의 그라데이션 (시안 shot 3장이 서로 다른 초록을 쓴다) */
+  gradient: string;
   /** 목업을 왼쪽에 두는 행 */
   reverse?: boolean;
 };
@@ -69,37 +70,29 @@ export const FEATURES: readonly Feature[] = [
     id: "teacher",
     eyebrow: "AI 출제",
     title: "문제 세트만 고르면\n문제는 AI가 만들어요",
-    body: '"Spring 트랜잭션, 중급, 8문항"처럼 말하듯 적으면 객관식과 서술형이 채워져요. 마음에 안 드는 문항은 바로 고치거나 다시 뽑고요.',
-    bullets: [
-      "객관식 · 서술형 · 코드 빈칸",
-      "난이도 · 문항 수 조절",
-      "세트로 저장해 다음 방에서 재활용",
-    ],
+    body: "주제와 난이도만 정하면 객관식·서술형이 채워져요.\n마음에 안 드는 문항은 바로 고치거나 다시 뽑고요.",
     mockup: "editor",
     mockupLabel: "문제 에디터 — AI로 문제 만들기 화면",
+    gradient: "from-mint to-mint-deep",
   },
   {
     id: "student",
     eyebrow: "실전 모드",
     title: "시험장처럼,\n그런데 다 같이",
-    body: "프로젝터에는 문제와 타이머, 학생 폰에는 답안지. 문항이 끝날 때마다 정답률과 랭킹이 바로 떠서 수업이 늘어지지 않아요.",
-    bullets: ["타이머 링 · 실시간 랭킹", "학생은 회원가입 없이 PIN 입장", "끊겨도 자동 재접속"],
+    body: "프로젝터에는 문제와 타이머, 학생 폰에는 답안지.\n문항이 끝날 때마다 정답률과 랭킹이 바로 떠요.",
     mockup: "live",
     mockupLabel: "진행 화면 — 문항과 타이머가 뜬 프로젝터 화면",
+    gradient: "from-mint-dark to-landing-shot-dark",
     reverse: true,
   },
   {
     id: "report",
     eyebrow: "첨삭 리포트",
     title: "끝나면 바로,\n어디가 약한지",
-    body: "방이 끝나면 문항별 정답률과 서술형 AI 첨삭이 정리돼요. 선생님은 코멘트만 얹으면 되고, 학생은 다음 날 뭘 볼지 알게 돼요.",
-    bullets: [
-      "문항별 정답률 · 학생별 결과",
-      "서술형 AI 첨삭 + 선생님 코멘트",
-      "참여 기록과 뱃지로 남는 성장",
-    ],
+    body: "문항별 정답률과 서술형 AI 첨삭이 정리돼요.\n선생님은 코멘트만 얹으면 됩니다.",
     mockup: "report",
     mockupLabel: "방 리포트 — 문항별 정답률과 서술형 AI 분석 화면",
+    gradient: "from-landing-shot-light to-mint-dark",
   },
 ];
 

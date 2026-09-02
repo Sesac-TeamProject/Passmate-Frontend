@@ -1,4 +1,4 @@
-import { Check, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BrandLogo } from "@/components/common/brand-logo";
@@ -20,7 +20,7 @@ import {
 import { FaqList } from "./faq-list";
 import { PhoneMockup } from "./mockups/phone-mockup";
 import { STEP_VISUALS } from "./mockups/step-visuals";
-import { ScreenMockup } from "./mockups/screen-mockup";
+import { ScreenMockup, ShotCard } from "./mockups/screen-mockup";
 import { EditorMockup, LiveMockup, ReportMockup } from "./mockups/screen-mockups";
 
 /** 시안 폭 1440 안의 콘텐츠 폭 1200 (좌우 여백 120). 패딩 24를 더해 1248 이상에서 콘텐츠가 정확히 1200이 되게 한다 */
@@ -53,9 +53,7 @@ export function LandingPage() {
         <Hero />
         <Stats />
         <HowItWorks />
-        {FEATURES.map((feature, index) => (
-          <FeatureSection key={feature.id} feature={feature} tinted={index % 2 === 0} />
-        ))}
+        <Features />
         <Reviews />
         <Faq />
         <Cta />
@@ -200,29 +198,46 @@ function HowItWorks() {
   );
 }
 
-function FeatureSection({ feature, tinted }: { feature: Feature; tinted: boolean }) {
+/** 시안 기능 섹션은 콘텐츠 폭이 1280이다 (글 560 + 간격 100 + 카드 620) */
+const FEATURE_INNER = "mx-auto w-full max-w-[1328px] px-6";
+
+/** 기능 3종 — 시안은 배경 교대 없이 흰 한 덩어리(1440×1500)에 블록 3개를 80 간격으로 둔다 */
+function Features() {
   return (
-    <section
-      id={feature.id}
-      className={cn("scroll-mt-20 py-24", tinted ? "bg-background" : "bg-card")}
-    >
-      <div className={cn(INNER, "flex items-center gap-16", feature.reverse && "flex-row-reverse")}>
-        <div className="flex w-[440px] shrink-0 flex-col gap-[18px]">
-          <span className="text-label-lg text-mint-dark">{feature.eyebrow}</span>
-          <h2 className="text-display-lg whitespace-pre-line text-ink">{feature.title}</h2>
-          <p className="text-body-lg text-muted-foreground">{feature.body}</p>
-          <ul className="flex flex-col gap-2.5">
-            {feature.bullets.map((bullet) => (
-              <li key={bullet} className="flex items-center gap-2.5">
-                <Check aria-hidden className="size-5 shrink-0 text-mint" strokeWidth={2} />
-                <span className="text-body-lg text-ink">{bullet}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <ScreenMockup label={feature.mockupLabel}>{MOCKUPS[feature.mockup]}</ScreenMockup>
+    <section className="bg-card pt-[60px] pb-20">
+      <div className="flex flex-col gap-20">
+        {FEATURES.map((feature) => (
+          <FeatureBlock key={feature.id} feature={feature} />
+        ))}
       </div>
     </section>
+  );
+}
+
+function FeatureBlock({ feature }: { feature: Feature }) {
+  return (
+    <div id={feature.id} className="scroll-mt-20">
+      <div
+        className={cn(
+          FEATURE_INNER,
+          "flex items-center gap-[100px]",
+          feature.reverse && "flex-row-reverse",
+        )}
+      >
+        <div className="flex w-[560px] shrink-0 flex-col">
+          <span className="text-label-lg font-bold tracking-[0.08em] text-mint-dark">
+            {feature.eyebrow}
+          </span>
+          <h2 className="mt-2.5 text-display-lg whitespace-pre-line text-ink">{feature.title}</h2>
+          <p className="mt-6 text-body-lg leading-[1.7] whitespace-pre-line text-muted-foreground">
+            {feature.body}
+          </p>
+        </div>
+        <ShotCard gradient={feature.gradient}>
+          <ScreenMockup label={feature.mockupLabel}>{MOCKUPS[feature.mockup]}</ScreenMockup>
+        </ShotCard>
+      </div>
+    </div>
   );
 }
 
