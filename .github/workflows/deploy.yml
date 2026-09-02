@@ -1,4 +1,4 @@
-# main 에 머지되면 자동 배포한다. develop 은 백엔드와 연동하는 동안 쓰는 임시 배포 경로다.
+# main 에 머지되면 자동 배포한다. develop 등 다른 브랜치는 Actions 탭의 Run workflow 로 수동 배포한다.
 #   테스트 → arm64 이미지 ECR 푸시 → SSM 에 태그 기록 → SSM 으로 EC2 에서 배포
 #
 # 배포 대상은 백엔드와 **같은 EC2 한 대**다. nginx 가 passmate.kr 을 이 컨테이너(:3000)로,
@@ -10,12 +10,14 @@ name: deploy
 
 on:
   push:
-    branches: [main, develop]
+    # main 병합만 자동 배포한다(2026-09-02 결정). develop 은 Run workflow 로 원할 때만
+    branches: [main]
+  # 수동 실행. 이 파일이 기본 브랜치(main)에 있어야 버튼이 보인다
   workflow_dispatch:
 
-# 배포가 겹치면 뒤 배포가 앞 배포를 덮어써 상태가 꼬인다. 줄 세운다
+# 서버가 한 대다 — 브랜치가 달라도 배포가 겹치면 안 된다. 전부 한 줄로 세운다
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: deploy
   cancel-in-progress: false
 
 permissions:
