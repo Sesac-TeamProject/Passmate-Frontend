@@ -40,7 +40,8 @@ export function RoleSidebar({ nav, user, activePath: forcedActivePath }: Props) 
     matchRoute(pathname)?.nav;
 
   return (
-    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col gap-1 border-r bg-sidebar px-3.5 pt-6 pb-5">
+    // 구분선은 border-r 대신 안쪽 그림자 — border는 240 폭을 먹어 내용 폭이 시안 212에서 211로 줄어든다
+    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col gap-1 bg-sidebar px-3.5 pt-6 pb-5 shadow-[inset_-1px_0_0_0_var(--color-border)]">
       <BrandLogo className="mb-5 pl-2.5" />
       <nav className="flex flex-col gap-1">
         {SIDEBAR_NAV[nav].map((item) => {
@@ -52,7 +53,8 @@ export function RoleSidebar({ nav, user, activePath: forcedActivePath }: Props) 
               href={r.sample}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "rounded-[14px] px-3.5 py-[11px] text-label-lg transition-colors",
+                // 높이는 시안 42 고정 — py로 두면 label-lg 행간(14×1.4=19.6)이 소수점이라 항목마다 0.4px씩 밀린다
+                "flex h-[42px] items-center rounded-[14px] px-3.5 text-label-lg transition-colors",
                 active
                   ? "bg-sidebar-primary text-sidebar-primary-foreground"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
