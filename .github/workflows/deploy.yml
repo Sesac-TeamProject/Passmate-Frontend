@@ -48,10 +48,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # 라우트 표(src/config/routes.ts)와 app 폴더가 어긋나면 죽은 링크가 생긴다
-      - name: 라우트 검증
-        run: pnpm check:routes
-
+      # check:routes 는 여기서 돌리지 않는다 — `pnpm build` 선행 + 서버 기동이 필요해
+      # 배포마다 이중 빌드가 된다. 라우트 검증은 로컬/PR 체크에서 한다
       - name: 테스트
         run: pnpm test
 
