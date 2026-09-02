@@ -103,7 +103,8 @@ export type AdminRoomSummaryCounts = {
 
 export type RoomKind = "FREE" | "PAID" | "BRANDED";
 
-export type RoomStatus = "WAITING" | "RUNNING" | "FINISHED";
+/** @draft 관리자 콘솔 전용 방 상태. 공통 `RoomStatus`(WAITING·RUNNING·ENDED·CANCELED)와 값이 달라 이름을 분리한다 */
+export type AdminRoomStatus = "WAITING" | "RUNNING" | "FINISHED";
 
 export type AdminRoomSummary = {
   pin: string;
@@ -114,7 +115,7 @@ export type AdminRoomSummary = {
   kind: RoomKind;
   /** 유료 방의 참가비(원). 무료·브랜디드는 null */
   entryFeeKrw: number | null;
-  status: RoomStatus;
+  status: AdminRoomStatus;
 };
 
 /** GET /admin/questions/review-queue — AI 생성 문항 중 신고 누적·정답률 이상 */

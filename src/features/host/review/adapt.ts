@@ -16,7 +16,7 @@ import type {
 } from "@/lib/types/dto";
 
 const QUESTION_TYPE_MAP: Record<string, QuestionType> = {
-  MULTIPLE_CHOICE: "multiple",
+  MCQ: "multiple",
   OX: "ox",
   ESSAY: "essay",
 };
@@ -27,7 +27,7 @@ export function toSessionReport(dto: RoomReportResponse, roomId: number): Sessio
     id: String(q.questionId ?? 0),
     index: q.questionNo ?? 0,
     title: q.title ?? "",
-    type: QUESTION_TYPE_MAP[q.type ?? "MULTIPLE_CHOICE"] ?? "multiple",
+    type: QUESTION_TYPE_MAP[q.type ?? "MCQ"] ?? "multiple",
     accuracy: q.accuracyPercent ?? undefined,
     aiCount: q.aiFeedbackCount ?? undefined,
   }));

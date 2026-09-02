@@ -1,6 +1,7 @@
 import type {
+  DevLoginRequest,
   LoginResponse,
-  MeResponse,
+  MyProfileResponse,
   SocialLoginRequest,
   TokenRefreshRequest,
   TokenRefreshResponse,
@@ -27,15 +28,13 @@ export function socialLogin(provider: "google", body: SocialLoginRequest): Promi
  * 같은 key면 같은 계정이 나와 고정 계정으로 붙어볼 수 있다. 운영 프로파일에는 이 API가 없다.
  */
 export function devLogin(key: string, nickname?: string, email?: string): Promise<LoginResponse> {
-  return request<LoginResponse>("/auth/dev-login", {
-    method: "POST",
-    body: { key, nickname, email },
-  });
+  const body: DevLoginRequest = { key, nickname, email };
+  return request<LoginResponse>("/auth/dev-login", { method: "POST", body });
 }
 
-/** GET /users/me — 내 프로필. 명세 우선순위 1이지만 백엔드는 아직 미구현 */
-export function getMe(): Promise<MeResponse> {
-  return request<MeResponse>("/users/me");
+/** GET /users/me — 내 프로필(지표·코인 포함). 게스트 토큰으로 부르면 403 GUEST_NOT_ALLOWED */
+export function getMe(): Promise<MyProfileResponse> {
+  return request<MyProfileResponse>("/users/me");
 }
 
 /** POST /auth/logout — 클라이언트가 토큰을 폐기하는 것이 로그아웃 (서버는 stateless) */

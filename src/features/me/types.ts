@@ -10,14 +10,19 @@ export type Profile = {
   email: string;
   joinedLabel: string;
   avatar: AvatarKey;
-  level: number;
-  levelTitle: string;
+  /**
+   * 호스트 등급. **서버가 아직 계산하지 않는다** — `MyProfileResponse`에 등급·뱃지·별점 자리가
+   * 일부러 비어 있다(백엔드 주석: 0·null로 채우면 "등급 없음"으로 읽혀 오해를 만든다).
+   * 값이 없으면 화면은 뱃지·진행률을 **그리지 않는다**. 0으로 대체하지 말 것.
+   */
+  level?: number;
+  levelTitle?: string;
   /** 현재 레벨로 열리는 권한. 예: "유료 방 개설 가능" */
-  levelPerk: string;
+  levelPerk?: string;
   /** 다음 레벨까지 남은 실적 */
-  nextLevel: { level: number; roomsLeft: number; studentsLeft: number };
+  nextLevel?: { level: number; roomsLeft: number; studentsLeft: number };
   /** 다음 레벨까지 진행률(%) */
-  progress: number;
+  progress?: number;
 };
 
 /** 유료 방 개설이 열리는 최소 레벨. features/host/room-flow/adapt.ts PAID_ROOM_MIN_LEVEL과 값을 맞춰 여기 복제해 뒀다(공용화 TODO). */

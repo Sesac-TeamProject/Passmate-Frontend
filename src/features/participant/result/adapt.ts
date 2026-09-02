@@ -76,7 +76,7 @@ export function toReportFeedback(questions: ResultQuestionDto[]): ReportFeedback
 
 /** 계약의 문항 유형 → 화면 라벨 */
 const TYPE_LABEL: Record<QuestionType, string> = {
-  MULTIPLE_CHOICE: "객관식",
+  MCQ: "객관식",
   OX: "OX",
   ESSAY: "서술형",
 };

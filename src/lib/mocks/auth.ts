@@ -21,13 +21,13 @@ export function mockLogin(): LoginResponse {
     accessToken: MOCK_TOKENS.accessToken,
     refreshToken: MOCK_TOKENS.refreshToken,
     expiresIn: MOCK_TOKENS.expiresIn,
+    // non_null 규약 — 값이 없는 필드는 키를 아예 넣지 않는다(profileImageUrl).
     user: {
       id: ME_USER_ID,
-      nickname: ME_PROFILE.nickname ?? "한결",
-      email: ME_PROFILE.email ?? null,
-      profileImageUrl: null,
-      defaultAvatarId: "fox",
-      isAdmin: true,
+      nickname: ME_PROFILE.nickname,
+      email: ME_PROFILE.email,
+      defaultAvatarId: ME_PROFILE.defaultAvatarId,
+      isAdmin: ME_PROFILE.isAdmin,
     },
   };
 }

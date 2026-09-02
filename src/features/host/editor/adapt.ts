@@ -4,7 +4,7 @@ import { AppError } from "@/lib/types/app-error";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 
 const DRAFT_TYPE_MAP: Record<string, QuestionType> = {
-  MULTIPLE_CHOICE: "multiple",
+  MCQ: "multiple",
   OX: "ox",
   ESSAY: "essay",
 };

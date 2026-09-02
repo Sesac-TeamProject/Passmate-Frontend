@@ -3,7 +3,7 @@ import type { QuestionDraft } from "@/lib/types/dto";
 import type { TimingRow } from "./timing-page";
 
 const TYPE: Record<QuestionDraft["type"], QuestionType> = {
-  MULTIPLE_CHOICE: "multiple",
+  MCQ: "multiple",
   ESSAY: "essay",
   OX: "ox",
 };

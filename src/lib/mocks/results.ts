@@ -158,7 +158,7 @@ const RANKING: RoomReportStudent[] = [
 let rated = false;
 
 function toQuestionType(type: "multiple" | "essay" | "ox"): QuestionType {
-  if (type === "multiple") return "MULTIPLE_CHOICE";
+  if (type === "multiple") return "MCQ";
   if (type === "ox") return "OX";
   return "ESSAY";
 }
@@ -237,7 +237,7 @@ export function mockRoomReport(): RoomReportResponse {
   return {
     roomTitle: DEMO_ROOM.title,
     pin: DEMO_ROOM.pin,
-    status: "FINISHED",
+    status: "ENDED",
     dateLabel: REPORT_DATE_LABEL,
     summary: {
       avgAccuracyPercent: REPORT_STATS.accuracy,

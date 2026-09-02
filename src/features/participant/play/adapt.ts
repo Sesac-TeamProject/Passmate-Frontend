@@ -2,7 +2,7 @@ import type { ChoiceKey, LiveQuestion, QuestionType } from "@/features/host/type
 import type { SnapshotQuestion } from "@/lib/types/dto";
 
 const QUESTION_TYPE_MAP: Record<string, QuestionType> = {
-  MULTIPLE_CHOICE: "multiple",
+  MCQ: "multiple",
   OX: "ox",
   ESSAY: "essay",
 };
@@ -29,7 +29,7 @@ export function toLiveQuestion(
   return {
     index: question.questionNo,
     total: questionCount ?? question.questionNo,
-    type: QUESTION_TYPE_MAP[question.type ?? "MULTIPLE_CHOICE"] ?? "multiple",
+    type: QUESTION_TYPE_MAP[question.type ?? "MCQ"] ?? "multiple",
     prompt: question.body,
     choices: (question.choices ?? []).map((text, i) => ({
       key: CHOICE_KEYS[i] ?? "D",

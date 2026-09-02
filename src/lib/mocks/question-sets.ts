@@ -28,7 +28,7 @@ function toDraftQuestion(q: SnapshotQuestion): QuestionDraft {
   return {
     questionId: q.questionId,
     questionNo: q.questionNo,
-    type: q.type ?? "MULTIPLE_CHOICE",
+    type: q.type ?? "MCQ",
     body: q.body,
     choices: q.choices ?? null,
     answer: null,
@@ -172,7 +172,7 @@ export async function mockGenerateFromFile(form: FormData): Promise<QuestionSetD
   const file = form instanceof FormData ? (form.get("file") as File | null) : null;
   return mockGenerate({
     topic: file?.name ?? "업로드 자료",
-    counts: [{ type: "MULTIPLE_CHOICE", count: 3 }],
+    counts: [{ type: "MCQ", count: 3 }],
     difficulty: "MEDIUM",
   });
 }

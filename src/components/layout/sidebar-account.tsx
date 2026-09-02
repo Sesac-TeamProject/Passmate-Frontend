@@ -8,11 +8,12 @@ const FALLBACK: SidebarUser = { name: "회원", initial: "회", roleLabel: "회�
 /** RoleSidebar에 auth-store의 로그인 회원 프로필을 채워 넣는다. 목 프로필(features/me/mock)을 대체한다. */
 export function SidebarAccount({ nav }: { nav: "member" | "host" }) {
   const profile = useAuthStore((s) => s.profile);
-  const user: SidebarUser = profile?.nickname
+  // 등급(Lv.N)은 서버가 아직 계산하지 않는다 — 자리를 지어내지 않고 "회원"으로 둔다(질문 B-8·G-1).
+  const user: SidebarUser = profile
     ? {
         name: profile.nickname,
         initial: profile.nickname.slice(0, 1),
-        roleLabel: profile.level ? `Lv.${profile.level}` : "회원",
+        roleLabel: "회원",
         tone: "peach",
       }
     : FALLBACK;

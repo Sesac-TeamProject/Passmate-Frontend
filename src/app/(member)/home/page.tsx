@@ -45,7 +45,7 @@ export default function Page() {
     setDefaultsApplied(true);
     setJoinValues((prev) =>
       prev.nickname === "" && prev.avatar === "cat"
-        ? { ...prev, nickname: profile.nickname ?? "", avatar: toAvatarKey(profile.avatarId) }
+        ? { ...prev, nickname: profile.nickname, avatar: toAvatarKey(profile.defaultAvatarId) }
         : prev,
     );
   }

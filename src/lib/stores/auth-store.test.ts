@@ -1,8 +1,22 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { MeResponse } from "@/lib/types/dto";
-import { useAuthStore } from "./auth-store";
+import type { MyProfileResponse } from "@/lib/types/dto";
+import { selectAvatarKey, selectIsAdmin, selectUserId, useAuthStore } from "./auth-store";
 
-const PROFILE: MeResponse = { nickname: "한결", email: "test@example.com", isAdmin: false };
+const PROFILE: MyProfileResponse = {
+  id: 7,
+  nickname: "한결",
+  email: "test@example.com",
+  provider: "GOOGLE",
+  isAdmin: false,
+  joinedAt: "2026-08-01T00:00:00",
+  stats: {
+    joinedRoomCount: 3,
+    hostedRoomCount: 24,
+    hostedSessionCount: 18,
+    totalStudentCount: 312,
+  },
+  coinBalance: 1200,
+};
 
 /**
  * `expired`는 "쓰던 도중에 끊긴 세션"과 "처음부터 미로그인"을 가른다.
@@ -50,5 +64,37 @@ describe("stores/auth-store expired", () => {
     useAuthStore.getState().clearSession();
 
     expect(useAuthStore.getState().expired).toBe(false);
+  });
+});
+
+/**
+ * 파생 selector — 화면이 `defaultAvatarId` 같은 서버 필드명을 직접 읽지 않게 막는 지점이다.
+ * 서버가 12종에 없는 `"default"`를 넣는 일이 실제로 있어(백엔드 질문 B-5) 접기가 필수다.
+ */
+describe("stores/auth-store 파생 selector", () => {
+  beforeEach(() => {
+    useAuthStore.setState({ status: "idle", accessToken: null, profile: null, expired: false });
+  });
+
+  it("비로그인이면 isAdmin false · userId null · 아바타는 기본값", () => {
+    const state = useAuthStore.getState();
+    expect(selectIsAdmin(state)).toBe(false);
+    expect(selectUserId(state)).toBeNull();
+    expect(selectAvatarKey(state)).toBe("cat");
+  });
+
+  it("로그인하면 id·isAdmin을 그대로 돌려준다", () => {
+    useAuthStore.getState().setSession("token", { ...PROFILE, isAdmin: true });
+    const state = useAuthStore.getState();
+    expect(selectIsAdmin(state)).toBe(true);
+    expect(selectUserId(state)).toBe(7);
+  });
+
+  it('아는 아바타 키는 그대로, 서버 기본값 "default"는 cat으로 접는다', () => {
+    useAuthStore.getState().setSession("token", { ...PROFILE, defaultAvatarId: "fox" });
+    expect(selectAvatarKey(useAuthStore.getState())).toBe("fox");
+
+    useAuthStore.getState().setSession("token", { ...PROFILE, defaultAvatarId: "default" });
+    expect(selectAvatarKey(useAuthStore.getState())).toBe("cat");
   });
 });

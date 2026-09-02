@@ -1,4 +1,4 @@
-import type { QuestionType, RoomState } from "./common";
+import type { QuestionType, RoomStatus } from "./common";
 
 export type AnswerVerdict =
   "CORRECT" | "WRONG" | "INCORRECT" | "AI_ANALYZED" | "ANALYZED" | "AI_PENDING" | "PENDING";
@@ -78,7 +78,7 @@ export type RoomReportStudent = {
 export type RoomReportResponse = {
   roomTitle?: string;
   pin?: string;
-  status?: RoomState | null;
+  status?: RoomStatus | null;
   dateLabel?: string | null;
   summary?: RoomReportSummary;
   questions?: RoomReportQuestion[];

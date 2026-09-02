@@ -3,42 +3,42 @@ import type {
   BadgeType,
   GradeResponse,
   HostProfileResponse,
-  MeResponse,
   MyPageResponse,
+  MyProfileResponse,
   NotificationSettingsDto,
-  UpdateProfileRequest,
-  UserProfileResponse,
+  UserProfileUpdateRequest,
 } from "@/lib/types/dto";
-import { DEMO_PIN, DEMO_ROOM_ID, ME_PROFILE, ME_USER_ID, PUBLIC_ROOMS } from "./fixtures";
+import { DEMO_PIN, DEMO_ROOM_ID, ME_PROFILE, PUBLIC_ROOMS } from "./fixtures";
 
 /**
  * 내 프로필(me) 목 응답. features/me/mock.ts·features/me/joined/mock.ts·
  * features/host/my-rooms/mock.ts LEVEL_STATUS·PROMOTION을 DTO 모양으로 옮긴다.
  */
 
-let profile: UserProfileResponse = { ...ME_PROFILE };
+let profile: MyProfileResponse = { ...ME_PROFILE };
 let notificationSettings: NotificationSettingsDto = {
   sessionStart: true,
   ratingRequest: true,
   settlementDone: true,
 };
 
-/** 현재 프로필(mutable). rooms.ts 등 다른 도메인 목이 등급 등을 읽을 때 이 getter로 단일 출처를 쓴다. */
-export function currentProfile(): UserProfileResponse {
+/** 현재 프로필(mutable). 다른 도메인 목이 내 닉네임·아바타를 읽을 때 이 getter로 단일 출처를 쓴다. */
+export function currentProfile(): MyProfileResponse {
   return profile;
 }
 
 /** GET /users/me — isAdmin: true는 관리자 화면 확인용으로 유지한다 */
-export function mockMe(): MeResponse {
-  return { ...profile, userId: ME_USER_ID, name: profile.nickname, isAdmin: true };
+export function mockMe(): MyProfileResponse {
+  return { ...profile };
 }
 
-/** PUT /users/me — 닉네임·기본 캐릭터 부분 수정 */
-export function mockUpdateProfile(body: UpdateProfileRequest): MeResponse {
+/** PUT /users/me — 갱신된 프로필 전체를 돌려준다(서버와 동일) */
+export function mockUpdateProfile(body: UserProfileUpdateRequest): MyProfileResponse {
   profile = {
     ...profile,
-    nickname: body.nickname ?? profile.nickname,
-    avatarId: body.avatarId ?? profile.avatarId,
+    nickname: body.nickname,
+    profileImageUrl: body.profileImageUrl ?? profile.profileImageUrl,
+    defaultAvatarId: body.defaultAvatarId ?? profile.defaultAvatarId,
   };
   return mockMe();
 }

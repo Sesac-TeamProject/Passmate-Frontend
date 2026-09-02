@@ -8,7 +8,7 @@ export function toMyRooms(items: HostedRoomDto[]): MyRoom[] {
   return items.map((r) => ({
     code: r.pin ?? "",
     title: r.title ?? "",
-    status: r.status === "FINISHED" || r.status === "ENDED" ? "ended" : "live",
+    status: r.status === "ENDED" || r.status === "CANCELED" ? "ended" : "live",
     students: r.participantCount ?? 0,
     pin: r.pin ?? undefined,
     startsLabel: r.scheduledAt ?? undefined,

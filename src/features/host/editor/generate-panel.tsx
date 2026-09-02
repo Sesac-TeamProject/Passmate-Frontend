@@ -17,7 +17,7 @@ const DIFFICULTY_OPTIONS: { value: Difficulty; label: string }[] = [
 const COUNT_TYPES: QuestionType[] = ["multiple", "essay", "ox"];
 
 const DTO_TYPE: Record<QuestionType, GenerateQuestionSetRequest["counts"][number]["type"]> = {
-  multiple: "MULTIPLE_CHOICE",
+  multiple: "MCQ",
   essay: "ESSAY",
   ox: "OX",
 };

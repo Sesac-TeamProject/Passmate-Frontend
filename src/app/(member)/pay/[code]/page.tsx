@@ -88,7 +88,7 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
     setDefaultsApplied(true);
     setValues((prev) =>
       prev.nickname === ""
-        ? { ...prev, nickname: profile.nickname ?? "", avatar: toAvatarKey(profile.avatarId) }
+        ? { ...prev, nickname: profile.nickname, avatar: toAvatarKey(profile.defaultAvatarId) }
         : prev,
     );
   }

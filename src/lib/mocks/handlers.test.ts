@@ -165,7 +165,7 @@ describe("mocks/handlers", () => {
         () =>
           qs.generateQuestionSet(1, {
             topic: "Spring",
-            counts: [{ type: "MULTIPLE_CHOICE", count: 1 }],
+            counts: [{ type: "MCQ", count: 1 }],
             difficulty: "MEDIUM",
           }),
       ];

@@ -13,6 +13,11 @@ export type AppErrorKind =
   | "Conflict"
   | "Gone"
   /**
+   * 429 — 서버가 "횟수를 다 썼다"고 명시한 경우. 지금은 AI 문항 생성 무료 5회
+   * (`AI_FREE_LIMIT_EXCEEDED`)뿐이다. 코인 정책이 확정되면 서버가 402로 바꿀 수 있다.
+   */
+  | "RateLimited"
+  /**
    * 503 — 서버가 "지금은 못 받는다"고 명시한 경우(점검·과부하).
    * 500·502·504와 일부러 구분한다: 그쪽은 고장이고 이쪽은 예정된 중단이라
    * 사용자에게 할 말이 다르다("문제가 생겼어요" vs "잠깐 점검 중이에요").
@@ -46,6 +51,7 @@ const USER_MESSAGE: Record<AppErrorKind, string> = {
   NotFound: "찾는 정보가 없어요. 주소가 바뀌었을 수 있어요.",
   Conflict: "이미 처리된 요청이에요.",
   Gone: "이미 끝난 방이에요.",
+  RateLimited: "요청 한도를 넘었어요. 잠시 후 다시 시도해 주세요.",
   ServiceUnavailable: "잠깐 점검 중이에요. 잠시 후 다시 시도해 주세요.",
   Unknown: "잠시 문제가 생겼어요. 다시 시도해 주세요.",
 };
@@ -59,6 +65,7 @@ const KIND_BY_STATUS: Record<number, AppErrorKind> = {
   409: "Conflict",
   410: "Gone",
   422: "ValidationFailed",
+  429: "RateLimited",
   503: "ServiceUnavailable",
 };
 

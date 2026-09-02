@@ -12,7 +12,10 @@ export function ProfileCard({ profile, joinedRooms, hostedRooms }: Props) {
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
           <h2 className="text-heading-md text-ink">{profile.name}</h2>
-          <ReputationBadge level={profile.level} title={profile.levelTitle} />
+          {/* 서버가 등급을 아직 주지 않는다 — 없으면 뱃지를 그리지 않는다(Lv.1로 대체 금지) */}
+          {profile.level ? (
+            <ReputationBadge level={profile.level} title={profile.levelTitle ?? ""} />
+          ) : null}
         </div>
         <span className="text-label-md text-muted-foreground">
           {profile.email} · {profile.joinedLabel}

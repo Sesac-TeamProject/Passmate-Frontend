@@ -14,10 +14,9 @@ import {
 } from "@/lib/api/me";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type {
-  MeResponse,
   NotificationSettingsDto,
   ReportRequest,
-  UpdateProfileRequest,
+  UserProfileUpdateRequest,
 } from "@/lib/types/dto";
 import { qk } from "./keys";
 
@@ -86,19 +85,20 @@ export function useUpdateNotificationSettings() {
   });
 }
 
-/** PUT /users/me — 닉네임·기본 캐릭터 부분 수정. 성공 시 auth-store 프로필에 합치고 내 프로필을 갱신한다 */
+/**
+ * PUT /users/me — 닉네임(필수)·프로필 이미지·기본 캐릭터.
+ * 서버가 갱신된 프로필 **전체**를 돌려주므로 응답을 그대로 auth-store와 캐시에 넣는다
+ * (요청 필드만 합치던 방식은 서버가 계산하는 지표·코인을 놓친다).
+ */
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: UpdateProfileRequest) => updateProfile(body),
-    onSuccess: (_data, variables) => {
-      // 호출자가 실제로 보낸 필드만 합친다 — 생략한 필드까지 undefined로 덮어써 지우지 않도록.
-      const patch: Partial<MeResponse> = {};
-      if (variables.nickname !== undefined) patch.nickname = variables.nickname ?? undefined;
-      if (variables.avatarId !== undefined) patch.avatarId = variables.avatarId;
-      useAuthStore.getState().setProfile(patch);
-      // exact — ["me"]는 코인·수익·정산 계좌·등급·AI 사용량 키의 prefix라 그냥 무효화하면 전부 다시 불린다.
+    mutationFn: (body: UserProfileUpdateRequest) => updateProfile(body),
+    onSuccess: (profile) => {
+      useAuthStore.getState().setProfile(profile);
+      queryClient.setQueryData(qk.me, profile);
+      // exact — ["me"]는 코인·수익·정산 계좌·등급 키의 prefix라 그냥 무효화하면 전부 다시 불린다.
       queryClient.invalidateQueries({ queryKey: qk.me, exact: true });
     },
   });

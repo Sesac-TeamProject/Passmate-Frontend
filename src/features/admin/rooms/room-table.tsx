@@ -1,5 +1,5 @@
 import { formatKrw, formatNumber } from "@/lib/format";
-import type { AdminRoomSummary, RoomStatus } from "@/lib/types/dto";
+import type { AdminRoomStatus, AdminRoomSummary } from "@/lib/types/dto";
 import { AdminTable, type AdminTableColumn } from "../components/admin-table";
 import { StatChip } from "../components/stat-chip";
 import type { Tone } from "../components/tone";
@@ -7,7 +7,7 @@ import type { Tone } from "../components/tone";
 /** 시안(admin/A-03 방 목록) 기준: 방 코드 열만 고정 폭, 나머지 5열 균등. */
 const PIN_COL_W = 98;
 
-const STATUS_CHIP: Record<RoomStatus, { label: string; tone: Tone }> = {
+const STATUS_CHIP: Record<AdminRoomStatus, { label: string; tone: Tone }> = {
   RUNNING: { label: "진행 중", tone: "success" },
   WAITING: { label: "대기실", tone: "info" },
   FINISHED: { label: "종료", tone: "neutral" },

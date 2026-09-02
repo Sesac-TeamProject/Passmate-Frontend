@@ -1,5 +1,5 @@
 import type { AvatarKey } from "./common";
-import type { CursorPage, HostLevel, RoomState } from "./common";
+import type { CursorPage, HostLevel, RoomStatus } from "./common";
 
 /** POST /rooms — questionSetId는 CONFIRMED 세트만 */
 export type CreateRoomRequest = {
@@ -21,7 +21,7 @@ export type HostedRoomDto = {
   roomId?: number;
   pin?: string;
   title?: string;
-  status?: RoomState | null;
+  status?: RoomStatus | null;
   participantCount?: number | null;
   scheduledAt?: string | null;
   endedAtLabel?: string | null;
@@ -61,7 +61,7 @@ export type RoomInfoResponse = {
   pin: string;
   title: string;
   topic?: string | null;
-  status?: RoomState | null;
+  status?: RoomStatus | null;
   questionCount?: number | null;
   /** @draft 계약에 없다 — 방에 붙은 문제 세트. DESIGN_GAPS D-6(호스트용 방 상세)로 요청 중이며
    *  W-02b 문항별 시간 설정이 방 코드에서 세트를 찾는 데 쓴다 */
@@ -85,7 +85,7 @@ export type PublicRoomDto = {
   hostName?: string;
   hostLevel?: HostLevel | null;
   hostRating?: number | null;
-  status?: RoomState | null;
+  status?: RoomStatus | null;
   participantCount?: number | null;
   maxParticipants?: number | null;
   isPaid?: boolean;

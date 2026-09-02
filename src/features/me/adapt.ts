@@ -1,7 +1,7 @@
 import type { StatItem } from "@/components/common/stat-cards";
 import { toAvatarKey } from "@/components/common/student-avatar";
+import { parseServerDateTime } from "@/lib/datetime";
 import { formatShortDate, formatWon } from "@/lib/format";
-import { LEVEL_TITLE, levelTitle } from "@/lib/host-level";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
 import type {
@@ -12,12 +12,11 @@ import type {
   CoinTransactionDto,
   CoinTransactionType,
   EarningsResponse,
-  GradeCriterion,
   GradeResponse,
-  MeResponse,
   MyPageOngoing,
   MyPageResponse,
   MyPageRoom,
+  MyProfileResponse,
   NotificationSettingsDto,
   PaymentMethod,
   SettlementAccountDto,
@@ -45,33 +44,25 @@ import {
   type SettlementSummary,
 } from "./types";
 
-/** GradeResponse.next.criteria에서 라벨이 prefix로 시작하는 항목을 찾아 남은 실적(target-current)을 돌려준다 */
-function criterionLeft(criteria: GradeCriterion[] | undefined, labelPrefix: string): number {
-  const match = criteria?.find((c) => c.label?.startsWith(labelPrefix));
-  if (!match || match.target == null || match.current == null) return 0;
-  return Math.max(0, match.target - match.current);
+/** 서버 가입 시각(UTC naive) → "2026-08 가입". 값이 깨졌으면 빈 문자열 */
+function toJoinedLabel(joinedAt: string): string {
+  const date = parseServerDateTime(joinedAt);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")} 가입`;
 }
 
-/** GET /users/me(+/grade) → 프로필 카드 */
-export function toProfile(me: MeResponse, grade?: GradeResponse): Profile {
-  const level = me.level ?? 1;
-  const next = grade?.next;
-
+/**
+ * GET /users/me → 프로필 카드.
+ * 등급·칭호·다음 레벨은 **채우지 않는다** — 서버가 아직 계산하지 않아 자리를 비워 둔 값이라
+ * Lv.1로 메우면 "새싹 등급"이라는 없는 사실을 만든다(`features/me/types.ts` Profile 주석).
+ */
+export function toProfile(me: MyProfileResponse): Profile {
   return {
-    name: me.nickname ?? "",
-    nickname: me.nickname ?? "",
+    name: me.nickname,
+    nickname: me.nickname,
     email: me.email ?? "",
-    joinedLabel: me.joinedAt ? `${me.joinedAt.slice(0, 7)} 가입` : "",
-    avatar: toAvatarKey(me.avatarId),
-    level,
-    levelTitle: levelTitle(level) ?? LEVEL_TITLE[1],
-    levelPerk: level >= PAID_ROOM_MIN_LEVEL ? "유료 방 개설 가능" : "",
-    nextLevel: {
-      level: next?.level ?? level + 1,
-      roomsLeft: criterionLeft(next?.criteria, "방 운영"),
-      studentsLeft: criterionLeft(next?.criteria, "총 학생"),
-    },
-    progress: next?.progressPercent ?? 0,
+    joinedLabel: toJoinedLabel(me.joinedAt),
+    avatar: toAvatarKey(me.defaultAvatarId),
   };
 }
 
@@ -100,12 +91,16 @@ export function toWireMethod(method: PayMethod): PaymentMethod {
   return WIRE_METHOD_BY_PAY_METHOD[method];
 }
 
-/** GET /users/me/coins → 카드/코인 · 결제 */
-export function toCoinSummary(coins: CoinBalanceResponse): CoinSummary {
+/**
+ * 카드/코인 · 결제.
+ * **잔액은 `GET /users/me`의 `coinBalance`가 원천이다** — `GET /users/me/coins`는 백엔드에 없다
+ * (`CoinWallet` 엔티티만 있고 컨트롤러가 없다). 결제 수단·최근 내역은 아직 목뿐이라 `@draft`.
+ */
+export function toCoinSummary(coins: CoinBalanceResponse, coinBalance: number): CoinSummary {
   const recent = coins.recent;
 
   return {
-    balance: coins.balance ?? 0,
+    balance: coinBalance,
     paymentMethodLabel: coins.defaultMethod
       ? `${PAY_METHOD_LABEL[toPortoneMethod(coins.defaultMethod)]} (기본) · 포트원 안전결제`
       : "등록된 결제 수단 없음",

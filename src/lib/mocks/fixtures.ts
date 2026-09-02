@@ -4,8 +4,8 @@ import type {
   PublicRoomDto,
   QuestionSetDto,
   RoomInfoResponse,
+  MyProfileResponse,
   SnapshotQuestion,
-  UserProfileResponse,
 } from "@/lib/types/dto";
 
 /**
@@ -13,17 +13,28 @@ import type {
  * 백엔드 연동 시 lib/mocks 폴더를 통째로 걷어낸다.
  */
 
-/** 로그인 회원 = 이한결(여우, Lv.3). features/me/mock.ts PROFILE */
+/**
+ * 로그인 회원 = 이한결(여우). features/me/mock.ts PROFILE.
+ * 백엔드 `MyProfileResponse` 형태 그대로다 — **등급·뱃지·별점 필드는 서버에 없으므로 넣지 않는다.**
+ * 시각은 서버와 같은 UTC naive 문자열(`parseServerDateTime`이 읽는 형식).
+ */
 export const ME_USER_ID = 1;
-export const ME_PROFILE: UserProfileResponse = {
+export const ME_PROFILE: MyProfileResponse = {
+  id: ME_USER_ID,
   nickname: "한결",
   email: "hangyeol@passmate.app",
-  joinedAt: "2026-08-01",
-  avatarId: "fox",
-  level: 3,
-  coins: 1200,
-  joinedRoomCount: 3,
-  hostedRoomCount: 24,
+  provider: "GOOGLE",
+  defaultAvatarId: "fox",
+  isAdmin: true,
+  joinedAt: "2026-08-01T00:12:31.284000",
+  lastLoginAt: "2026-09-02T02:12:49.123456",
+  stats: {
+    joinedRoomCount: 3,
+    hostedRoomCount: 24,
+    hostedSessionCount: 18,
+    totalStudentCount: 312,
+  },
+  coinBalance: 1200,
 };
 
 /**
@@ -82,7 +93,7 @@ export const HOSTED_ROOMS: HostedRoomDto[] = [
   {
     roomId: 101,
     title: "네트워크 한 번에 정리",
-    status: "FINISHED",
+    status: "ENDED",
     participantCount: 9,
     scheduledAt: null,
     endedAtLabel: "8/19 종료",
@@ -91,7 +102,7 @@ export const HOSTED_ROOMS: HostedRoomDto[] = [
   {
     roomId: 102,
     title: "CS 기술면접 라운드 2",
-    status: "FINISHED",
+    status: "ENDED",
     participantCount: 21,
     scheduledAt: null,
     endedAtLabel: "8/15 종료",
@@ -100,7 +111,7 @@ export const HOSTED_ROOMS: HostedRoomDto[] = [
   {
     roomId: 103,
     title: "JPA 복습 방",
-    status: "FINISHED",
+    status: "ENDED",
     participantCount: 18,
     scheduledAt: null,
     endedAtLabel: "8/08 종료",
@@ -312,7 +323,7 @@ export const QUESTION_SETS: QuestionSetDto[] = [
  * 진행 문항 8개 — features/host/mock.ts DRAFT_QUESTIONS(type·body·points·seconds) 순서를 기반으로,
  * 2번 문항은 LIVE_QUESTION(실제 choices가 있는 유일한 예시)의 내용으로 채운다(그래서 1·2번 순서를 맞바꿨다).
  * OX 문항의 choices는 계약 주석("OX: O|X")을 그대로 쓴 것으로 화면 값을 지어낸 것이 아니다.
- * 4·5·7번(MULTIPLE_CHOICE)의 choices는 body 질문에 맞춰 채운 보기 4개 — session.ts의
+ * 4·5·7번(MCQ)의 choices는 body 질문에 맞춰 채운 보기 4개 — session.ts의
  * CORRECT_ANSWERS가 그중 하나를 정답으로 표시한다.
  * endsAt은 session.ts가 호출 시점에 계산해 덮어쓰므로 여기서는 자리표시자만 둔다.
  */
@@ -331,7 +342,7 @@ export const LIVE_QUESTIONS: SnapshotQuestion[] = [
   {
     questionId: 2,
     questionNo: 2,
-    type: "MULTIPLE_CHOICE",
+    type: "MCQ",
     body: "@Transactional의 기본 전파(propagation) 속성은 무엇인가?",
     choices: ["REQUIRED", "REQUIRES_NEW", "SUPPORTS", "NESTED"],
     points: 100,
@@ -351,7 +362,7 @@ export const LIVE_QUESTIONS: SnapshotQuestion[] = [
   {
     questionId: 4,
     questionNo: 4,
-    type: "MULTIPLE_CHOICE",
+    type: "MCQ",
     body: "Spring AOP가 기본으로 사용하는 프록시 방식은?",
     choices: ["JDK 동적 프록시", "CGLIB", "ByteBuddy", "AspectJ 위빙"],
     points: 100,
@@ -361,7 +372,7 @@ export const LIVE_QUESTIONS: SnapshotQuestion[] = [
   {
     questionId: 5,
     questionNo: 5,
-    type: "MULTIPLE_CHOICE",
+    type: "MCQ",
     body: "@Autowired 주입 방식 중 권장되는 것은?",
     choices: ["필드 주입", "세터 주입", "생성자 주입", "세터·필드 혼용"],
     points: 100,
@@ -380,7 +391,7 @@ export const LIVE_QUESTIONS: SnapshotQuestion[] = [
   {
     questionId: 7,
     questionNo: 7,
-    type: "MULTIPLE_CHOICE",
+    type: "MCQ",
     body: "JPA에서 지연 로딩(LAZY)의 기본 대상은?",
     choices: [
       "@ManyToOne 연관관계",

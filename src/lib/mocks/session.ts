@@ -151,7 +151,8 @@ export function mockSnapshot(): SessionSnapshotResponse {
   if (phase === "WAITING") throw new AppError("NotFound");
 
   return {
-    status: phase,
+    // 목 phase는 3값(WAITING·RUNNING·FINISHED)이고 서버 RoomStatus는 ENDED다 — 여기서 맞춘다.
+    status: phase === "FINISHED" ? "ENDED" : phase,
     ts: new Date().toISOString(),
     questionCount: LIVE_QUESTIONS.length,
     currentQuestion: phase === "RUNNING" ? buildCurrentQuestion() : null,

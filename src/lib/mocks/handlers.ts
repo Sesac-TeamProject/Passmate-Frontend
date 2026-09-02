@@ -10,7 +10,7 @@ import type {
   ScreenLockRequest,
   SettlementAccountDto,
   SubmitAnswerRequest,
-  UpdateProfileRequest,
+  UserProfileUpdateRequest,
   UpdateQuestionSetRequest,
 } from "@/lib/types/dto";
 import {
@@ -112,7 +112,7 @@ const HANDLERS: Record<string, MockHandler> = {
 
   /* ── 내 프로필 ────────────────────────────────────── */
   "GET /users/me": () => mockMe(),
-  "PUT /users/me": (ctx) => mockUpdateProfile(asBody<UpdateProfileRequest>(ctx)),
+  "PUT /users/me": (ctx) => mockUpdateProfile(asBody<UserProfileUpdateRequest>(ctx)),
   "DELETE /users/me": () => mockDeleteMe(),
 
   /* ── 방 ───────────────────────────────────────────── */

@@ -13,7 +13,7 @@ import {
 } from "@/features/me/adapt";
 import { MyPage } from "@/features/me/my-page";
 import { useLogout } from "@/lib/queries/use-auth";
-import { useGrade, useMe } from "@/lib/queries/use-me";
+import { useMe } from "@/lib/queries/use-me";
 import { useCoinBalance, useEarnings, useSettlementAccount } from "@/lib/queries/use-payments";
 import { AppError } from "@/lib/types/app-error";
 
@@ -24,7 +24,6 @@ export default function Page() {
   const logout = useLogout();
 
   const me = useMe();
-  const grade = useGrade();
   const coins = useCoinBalance();
   const earnings = useEarnings();
   // 정산 계좌는 화면에 은행 · 마스킹 번호 요약만 필요해 이 컨테이너에서도 함께 조회한다(retry:false — 미등록은 404)
@@ -56,10 +55,10 @@ export default function Page() {
   return (
     <>
       <MyPage
-        profile={toProfile(me.data, grade.data)}
-        joinedRooms={me.data.joinedRoomCount ?? 0}
-        hostedRooms={me.data.hostedRoomCount ?? 0}
-        coinSummary={toCoinSummary(coins.data)}
+        profile={toProfile(me.data)}
+        joinedRooms={me.data.stats.joinedRoomCount}
+        hostedRooms={me.data.stats.hostedRoomCount}
+        coinSummary={toCoinSummary(coins.data, me.data.coinBalance)}
         settlementSummary={toSettlementSummary(earnings.data)}
         settlementAccount={account.isSuccess ? toSettlementAccount(account.data) : null}
         onLogout={() => setLogoutOpen(true)}

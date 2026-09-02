@@ -1,5 +1,5 @@
 import type { AvatarKey } from "./common";
-import type { QuestionType, RoomState } from "./common";
+import type { QuestionType, RoomStatus } from "./common";
 
 /** 진행 문항 — 정답은 절대 포함하지 않는다 */
 export type SnapshotQuestion = {
@@ -30,7 +30,7 @@ export type RankingEntry = {
 
 /** GET /rooms/{roomId}/session — 재접속 스냅샷. 404 = 세션 미시작(WAITING) */
 export type SessionSnapshotResponse = {
-  status?: RoomState | null;
+  status?: RoomStatus | null;
   /** 서버 시각. 이 ts 이전 STOMP 프레임은 폐기 */
   ts: string;
   questionCount?: number | null;

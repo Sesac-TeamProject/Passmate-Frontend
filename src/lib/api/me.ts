@@ -4,15 +4,16 @@ import type {
   GradeResponse,
   HostProfileResponse,
   MyPageResponse,
+  MyProfileResponse,
   NotificationSettingsDto,
   ReportRequest,
-  UpdateProfileRequest,
+  UserProfileUpdateRequest,
 } from "@/lib/types/dto";
 import { request } from "./client";
 
-/** PUT /users/me — 닉네임·기본 캐릭터 부분 수정 */
-export function updateProfile(body: UpdateProfileRequest): Promise<void> {
-  return request<void>("/users/me", { method: "PUT", body });
+/** PUT /users/me — 닉네임(필수)·프로필 이미지·기본 캐릭터. 응답은 갱신된 프로필 전체 */
+export function updateProfile(body: UserProfileUpdateRequest): Promise<MyProfileResponse> {
+  return request<MyProfileResponse>("/users/me", { method: "PUT", body });
 }
 
 /** DELETE /users/me */

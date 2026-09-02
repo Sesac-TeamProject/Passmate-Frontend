@@ -20,12 +20,16 @@ export default function Page() {
 
   if (!seeded && me.data) {
     setSeeded(true);
-    setSelected(toAvatarKey(me.data.avatarId));
+    setSelected(toAvatarKey(me.data.defaultAvatarId));
   }
 
   const handleSubmit = () => {
-    if (update.isPending) return;
-    update.mutate({ avatarId: selected }, { onSuccess: () => router.push("/me") });
+    if (update.isPending || !me.data) return;
+    // PUT /users/me 는 nickname이 필수다(@NotBlank) — 캐릭터만 바꿔도 현재 닉네임을 같이 보낸다.
+    update.mutate(
+      { nickname: me.data.nickname, defaultAvatarId: selected },
+      { onSuccess: () => router.push("/me") },
+    );
   };
 
   if (me.isPending) return <ScreenLoading />;

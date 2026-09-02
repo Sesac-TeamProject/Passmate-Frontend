@@ -46,6 +46,23 @@ async function loadClient() {
   return { request, useAuthStore, AppError };
 }
 
+/** GET /users/me 응답 최소형 — 백엔드 MyProfileResponse 필수 필드만 채운다 */
+const TEST_PROFILE = {
+  id: 1,
+  nickname: "n",
+  email: "e",
+  provider: "GOOGLE",
+  isAdmin: true,
+  joinedAt: "2026-08-01T00:00:00",
+  stats: {
+    joinedRoomCount: 0,
+    hostedRoomCount: 0,
+    hostedSessionCount: 0,
+    totalStudentCount: 0,
+  },
+  coinBalance: 0,
+} as const;
+
 describe("api/client", () => {
   let fetchMock: FetchMock;
 
@@ -109,11 +126,7 @@ describe("api/client", () => {
       .mockResolvedValueOnce(jsonResponse(401, { code: "TOKEN_EXPIRED", message: "만료" }))
       .mockResolvedValueOnce(jsonResponse(401, { code: "REFRESH_EXPIRED", message: "만료" }));
     const { request, useAuthStore, AppError } = await loadClient();
-    useAuthStore.getState().setSession("old-access", {
-      nickname: "n",
-      email: "e",
-      isAdmin: true,
-    });
+    useAuthStore.getState().setSession("old-access", TEST_PROFILE);
 
     const error = await request("/me").catch((e: unknown) => e);
 
@@ -151,6 +164,21 @@ describe("api/client", () => {
     await expect(
       request("/rooms/1/entry-payments", { method: "POST", body: {} }),
     ).rejects.toMatchObject({ kind: "PaymentRequired", code: "INSUFFICIENT_COINS" });
+  });
+
+  it("429는 RateLimited가 되고 code를 보존한다 (AI 생성 무료 횟수 소진)", async () => {
+    stubLocalStorage({});
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(429, {
+        code: "AI_FREE_LIMIT_EXCEEDED",
+        message: "AI 문항 생성 무료 횟수를 모두 사용했습니다.",
+      }),
+    );
+    const { request } = await loadClient();
+
+    await expect(
+      request("/question-sets/1/questions/generate", { method: "POST", body: {} }),
+    ).rejects.toMatchObject({ kind: "RateLimited", code: "AI_FREE_LIMIT_EXCEEDED" });
   });
 
   it("회원 토큰이 없으면 401에 refresh를 시도하지 않고 code를 보존한다 (게스트 유료 방)", async () => {
@@ -217,11 +245,7 @@ describe("api/client", () => {
       .mockResolvedValueOnce(jsonResponse(401, { code: "TOKEN_EXPIRED", message: "만료" }))
       .mockResolvedValueOnce(jsonResponse(500, { code: "INTERNAL_ERROR", message: "서버 오류" }));
     const { request, useAuthStore, AppError } = await loadClient();
-    useAuthStore.getState().setSession("old-access", {
-      nickname: "n",
-      email: "e",
-      isAdmin: true,
-    });
+    useAuthStore.getState().setSession("old-access", TEST_PROFILE);
 
     const error = await request("/users/me").catch((e: unknown) => e);
 

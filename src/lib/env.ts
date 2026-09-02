@@ -7,13 +7,17 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 export const IS_MOCK = API_BASE_URL === "";
 
 /**
- * STOMP 엔드포인트. 비우면 API base에서 유도한다 (http://h:8080/api/v1 → ws://h:8080/ws).
+ * STOMP 엔드포인트. 비우면 API base에서 유도한다 (http://h:8080 → ws://h:8080/ws).
  * `??`가 아니라 `||`인 이유: .env.example이 `NEXT_PUBLIC_WS_URL=`(빈 문자열)로 배포돼 있어
  * `??`면 빈 문자열이 그대로 남고, 실서버 연동 중에도 WS_URL이 ""이 된다.
  */
 export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || deriveWsUrl(API_BASE_URL);
 
-/** http(s)://host[/api/v{n}] → ws(s)://host/ws. 빈 입력은 빈 문자열. */
+/**
+ * http(s)://host → ws(s)://host/ws. 빈 입력은 빈 문자열.
+ * 백엔드는 URL prefix가 없다(contracts/rest-api.md §0). 낡은 `/api/v{n}` 값이 남아 있어도
+ * 떼어 내고 유도하도록 남겨 둔다.
+ */
 export function deriveWsUrl(apiBase: string): string {
   if (!apiBase) return "";
   return (

@@ -46,9 +46,15 @@ export function mockRoomByPin(pin: string): RoomInfoResponse {
   return { ...created };
 }
 
+/**
+ * @draft 목 전용 호스트 등급. 서버 `MyProfileResponse`에는 등급이 없다(아직 계산하지 않는다) —
+ * 실서버에서 유료 방은 등급이 아니라 400 `UNSUPPORTED_ROOM_TYPE`으로 막힌다.
+ */
+const MOCK_HOST_LEVEL = 3;
+
 /** POST /rooms — 유료 방은 Lv.3 이상만 개설 가능 */
 export function mockCreateRoom(body: CreateRoomRequest): CreateRoomResponse {
-  if (body.isPaid && (currentProfile().level ?? 0) < HOST_MIN_LEVEL_FOR_PAID) {
+  if (body.isPaid && MOCK_HOST_LEVEL < HOST_MIN_LEVEL_FOR_PAID) {
     throw new AppError("PermissionDenied", { code: "HOST_LEVEL_REQUIRED" });
   }
 
@@ -68,7 +74,7 @@ export function mockCreateRoom(body: CreateRoomRequest): CreateRoomResponse {
       scheduledAt: body.scheduledAt ?? null,
       isPaid: body.isPaid ?? false,
       entryFee: body.entryFee ?? null,
-      host: { nickname: currentProfile().nickname ?? "나", level: currentProfile().level ?? null },
+      host: { nickname: currentProfile().nickname, level: MOCK_HOST_LEVEL },
     },
     ...createdRooms,
   ];
