@@ -1,13 +1,14 @@
-import { Check, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { BrandLogo } from "@/components/common/brand-logo";
+import { BrandLogo, BrandMark } from "@/components/common/brand-logo";
 import { StudentAvatar } from "@/components/common/student-avatar";
 import { cn } from "@/lib/utils";
 import {
   FAQS,
   FEATURES,
   FOOTER_LINKS,
+  HOW,
   NAV_LINKS,
   PROOF_AVATARS,
   REVIEWS,
@@ -18,7 +19,8 @@ import {
 } from "./content";
 import { FaqList } from "./faq-list";
 import { PhoneMockup } from "./mockups/phone-mockup";
-import { ScreenMockup } from "./mockups/screen-mockup";
+import { STEP_VISUALS } from "./mockups/step-visuals";
+import { ScreenMockup, ShotCard } from "./mockups/screen-mockup";
 import { EditorMockup, LiveMockup, ReportMockup } from "./mockups/screen-mockups";
 
 /** 시안 폭 1440 안의 콘텐츠 폭 1200 (좌우 여백 120). 패딩 24를 더해 1248 이상에서 콘텐츠가 정확히 1200이 되게 한다 */
@@ -51,9 +53,7 @@ export function LandingPage() {
         <Hero />
         <Stats />
         <HowItWorks />
-        {FEATURES.map((feature, index) => (
-          <FeatureSection key={feature.id} feature={feature} tinted={index % 2 === 0} />
-        ))}
+        <Features />
         <Reviews />
         <Faq />
         <Cta />
@@ -151,20 +151,45 @@ function Stats() {
   );
 }
 
+/** HOW·후기 섹션은 콘텐츠 폭이 1260이다 (카드 404 × 3 + 간격 24). 히어로·네비는 INNER(1200) */
+const WIDE_INNER = "mx-auto w-full max-w-[1308px] px-6";
+
 function HowItWorks() {
   return (
-    <section id="how" className="scroll-mt-20 bg-card py-28">
-      <div className={cn(INNER, "flex flex-col gap-12")}>
-        <h2 className="text-display-lg whitespace-pre-line text-ink">
-          {"방 열고, 문제 받고, 같이 풀기.\n딱 세 단계예요."}
-        </h2>
-        <ol className="grid grid-cols-3 gap-8">
-          {STEPS.map((step) => (
-            <li key={step.no} className="flex flex-col gap-3">
-              <span aria-hidden className="h-[3px] w-full bg-mint" />
-              <span className="text-display-md text-mint">{step.no}</span>
-              <h3 className="text-heading-md text-ink">{step.title}</h3>
-              <p className="text-body-lg text-muted-foreground">{step.body}</p>
+    <section
+      id="how"
+      className="relative scroll-mt-20 overflow-hidden bg-linear-to-b from-landing-green to-landing-green-deep pt-[76px] pb-[60px]"
+    >
+      {/* 민트 글로우 — 섹션 위로 넘겨 자른다 (시안 900×900, y −300) */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -top-[300px] left-[270px] size-[900px] rounded-full bg-[radial-gradient(circle,var(--landing-glow)_0%,transparent_70%)] opacity-20"
+      />
+      <div className={cn(WIDE_INNER, "relative flex flex-col items-center")}>
+        <span className="text-label-md font-bold tracking-[0.2em] text-landing-glow">
+          {HOW.kicker}
+        </span>
+        <h2 className="mt-4 text-display-xl text-white">{HOW.title}</h2>
+        <p className="mt-3 text-body-lg text-white/80">{HOW.subtitle}</p>
+
+        <ol className="mt-[50px] flex w-full gap-6">
+          {STEPS.map((step, index) => (
+            <li key={step.no} className="relative flex flex-1 flex-col">
+              {/* 앞 단계에서 넘어오는 화살표 — 열 사이 24 간격 한가운데, 카드 세로 가운데 */}
+              {index > 0 && (
+                <span
+                  aria-hidden
+                  className="absolute top-[198px] -left-[18px] w-3 text-center text-heading-md text-white/80"
+                >
+                  ›
+                </span>
+              )}
+              <span className="text-display-2xl text-landing-glow/90">{step.no}</span>
+              <div className="mt-3">{STEP_VISUALS[step.visual]}</div>
+              <h3 className="mt-[30px] text-display-sm text-white">{step.title}</h3>
+              <p className="mt-2.5 text-body-lg leading-[1.75] whitespace-pre-line text-white/80">
+                {step.body}
+              </p>
             </li>
           ))}
         </ol>
@@ -173,41 +198,61 @@ function HowItWorks() {
   );
 }
 
-function FeatureSection({ feature, tinted }: { feature: Feature; tinted: boolean }) {
+/** 시안 기능 섹션은 콘텐츠 폭이 1280이다 (글 560 + 간격 100 + 카드 620) */
+const FEATURE_INNER = "mx-auto w-full max-w-[1328px] px-6";
+
+/** 기능 3종 — 시안은 배경 교대 없이 흰 한 덩어리(1440×1500)에 블록 3개를 80 간격으로 둔다 */
+function Features() {
   return (
-    <section
-      id={feature.id}
-      className={cn("scroll-mt-20 py-24", tinted ? "bg-background" : "bg-card")}
-    >
-      <div className={cn(INNER, "flex items-center gap-16", feature.reverse && "flex-row-reverse")}>
-        <div className="flex w-[440px] shrink-0 flex-col gap-[18px]">
-          <span className="text-label-lg text-mint-dark">{feature.eyebrow}</span>
-          <h2 className="text-display-lg whitespace-pre-line text-ink">{feature.title}</h2>
-          <p className="text-body-lg text-muted-foreground">{feature.body}</p>
-          <ul className="flex flex-col gap-2.5">
-            {feature.bullets.map((bullet) => (
-              <li key={bullet} className="flex items-center gap-2.5">
-                <Check aria-hidden className="size-5 shrink-0 text-mint" strokeWidth={2} />
-                <span className="text-body-lg text-ink">{bullet}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <ScreenMockup label={feature.mockupLabel}>{MOCKUPS[feature.mockup]}</ScreenMockup>
+    <section className="bg-card pt-[60px] pb-20">
+      <div className="flex flex-col gap-20">
+        {FEATURES.map((feature) => (
+          <FeatureBlock key={feature.id} feature={feature} />
+        ))}
       </div>
     </section>
   );
 }
 
+function FeatureBlock({ feature }: { feature: Feature }) {
+  return (
+    <div id={feature.id} className="scroll-mt-20">
+      <div
+        className={cn(
+          FEATURE_INNER,
+          "flex items-center gap-[100px]",
+          feature.reverse && "flex-row-reverse",
+        )}
+      >
+        <div className="flex w-[560px] shrink-0 flex-col">
+          <span className="text-label-lg font-bold tracking-[0.08em] text-mint-dark">
+            {feature.eyebrow}
+          </span>
+          <h2 className="mt-2.5 text-display-lg whitespace-pre-line text-ink">{feature.title}</h2>
+          <p className="mt-6 text-body-lg leading-[1.7] whitespace-pre-line text-muted-foreground">
+            {feature.body}
+          </p>
+        </div>
+        <ShotCard gradient={feature.gradient}>
+          <ScreenMockup label={feature.mockupLabel}>{MOCKUPS[feature.mockup]}</ScreenMockup>
+        </ShotCard>
+      </div>
+    </div>
+  );
+}
+
 function Reviews() {
   return (
-    <section className="bg-card py-28">
-      <div className={cn(INNER, "flex flex-col items-center gap-10")}>
+    <section className="bg-background pt-16 pb-[90px]">
+      <div className={cn(WIDE_INNER, "flex flex-col items-center")}>
         <h2 className="text-display-lg text-ink">먼저 써본 사람들</h2>
-        <ul className="grid w-full grid-cols-3 gap-6">
+        <ul className="mt-[38px] flex w-full gap-6">
           {REVIEWS.map((review) => (
-            <li key={review.name} className="flex flex-col gap-4 rounded-[20px] bg-background p-7">
-              <div className="flex gap-0.5" aria-label="별점 5점">
+            <li
+              key={review.name}
+              className="flex h-[280px] flex-1 flex-col rounded-3xl bg-card p-7 shadow-[0_8px_17px] shadow-ink/6"
+            >
+              <div className="flex gap-1" aria-label="별점 5점">
                 {Array.from({ length: 5 }, (_, i) => (
                   <Star
                     key={i}
@@ -217,11 +262,13 @@ function Reviews() {
                   />
                 ))}
               </div>
-              <blockquote className="text-body-lg text-ink">{review.quote}</blockquote>
-              <div className="flex items-center gap-2.5">
+              <blockquote className="mt-6 text-body-lg leading-[1.65] font-medium text-ink">
+                {review.quote}
+              </blockquote>
+              <div className="mt-auto flex items-center gap-2.5">
                 <StudentAvatar avatar={review.avatar} size={36} />
                 <div className="flex flex-col">
-                  <span className="text-label-lg text-ink">{review.name}</span>
+                  <span className="text-label-lg font-bold text-ink">{review.name}</span>
                   <span className="text-label-md text-muted-foreground">{review.role}</span>
                 </div>
               </div>
@@ -235,10 +282,13 @@ function Reviews() {
 
 function Faq() {
   return (
-    <section id="faq" className="scroll-mt-20 bg-background py-24">
-      <div className={cn(INNER, "flex flex-col gap-8")}>
-        <h2 className="text-display-lg text-ink">자주 묻는 질문</h2>
-        <FaqList items={FAQS} />
+    <section id="faq" className="scroll-mt-20 bg-card pt-[60px] pb-[90px]">
+      <div className={cn(INNER, "flex flex-col items-center")}>
+        <span className="text-label-md font-bold tracking-[0.22em] text-mint-dark">FAQ</span>
+        <h2 className="mt-2 text-display-lg text-ink">자주 묻는 질문</h2>
+        <div className="mt-12 w-[960px] max-w-full">
+          <FaqList items={FAQS} />
+        </div>
       </div>
     </section>
   );
@@ -270,12 +320,7 @@ function LandingFooter() {
     <footer className="bg-card py-10">
       <div className={cn(INNER, "flex items-center justify-between")}>
         <div className="flex items-center gap-2">
-          <span
-            aria-hidden
-            className="flex size-6 items-center justify-center rounded-xl bg-mint text-label-md text-white"
-          >
-            P
-          </span>
+          <BrandMark size={24} />
           <span className="text-label-md text-ink-disabled">© 2026 새싹수들 · PassMate</span>
         </div>
         <nav className="flex gap-5">

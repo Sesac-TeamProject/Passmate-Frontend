@@ -1,4 +1,5 @@
 // 랜딩 목업은 실제 데이터가 아니라 시안 스냅숏이므로 정적 상수를 그대로 둔다 (API 연동 대상 아님).
+import type { AvatarKey } from "@/components/common/student-avatar";
 import type { SidebarUser } from "@/components/layout/role-sidebar";
 import type {
   EssayAnswer,
@@ -190,3 +191,36 @@ export const REPORT_ESSAY_ANSWERS_MOCK: EssayAnswer[] = [
 
 /** ReviewPage 목업이 쓰는 학생 이름 목록 — LIVE_ROOM.students에서 id·name만 추린다 */
 export const REPORT_STUDENTS_MOCK: Student[] = LIVE_ROOM.students;
+
+/* --- HOW 섹션 미니 일러스트(visual/01~03) 스냅숏 --- */
+
+/** 01 방 열기 — PIN 6칸. null은 아직 안 친 칸, 커서는 첫 null에 온다 */
+export const STEP_PIN: readonly (string | null)[] = ["4", "8", "2", null, null, null];
+
+/** 02 문제 받기 — AI가 채운 문항 3줄. pending은 아직 만드는 중인 줄 */
+export const STEP_GENERATED: readonly {
+  type: "객관식" | "서술형";
+  prompt: string;
+  pending?: boolean;
+}[] = [
+  { type: "객관식", prompt: "@Transactional의 기본 전파 속성은?" },
+  { type: "서술형", prompt: "영속성 컨텍스트를 설명하세요" },
+  { type: "객관식", prompt: "Bean의 기본 스코프는?", pending: true },
+];
+
+/** 03 같이 풀기 — 접속한 학생 6명. 뒤 2명은 아직 안 들어와 흐리게 */
+export const STEP_PARTICIPANTS: readonly { avatar: AvatarKey; joined: boolean }[] = [
+  { avatar: "tiger", joined: true },
+  { avatar: "bear", joined: true },
+  { avatar: "dog", joined: true },
+  { avatar: "panda", joined: true },
+  { avatar: "rabbit", joined: false },
+  { avatar: "fox", joined: false },
+];
+
+/** 03 같이 풀기 — 랭킹 보드 3행 */
+export const STEP_RANKING: readonly { name: string; score: string; avatar: AvatarKey }[] = [
+  { name: "준영", score: "990점", avatar: "tiger" },
+  { name: "채원", score: "950점", avatar: "bear" },
+  { name: "승현", score: "880점", avatar: "dog" },
+];
