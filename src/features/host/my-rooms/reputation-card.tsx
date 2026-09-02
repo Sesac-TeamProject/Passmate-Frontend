@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mascot } from "@/components/common/mascot";
+import Image from "next/image";
 import type { LevelStatus } from "./types";
 
 type Props = {
@@ -69,7 +69,15 @@ function MascotBand() {
         <MetricRow width="w-12" fill="bg-mint/45" />
       </div>
 
-      <Mascot className="absolute top-[9px] left-[107px] h-[138px] w-[126px]" />
+      {/* 공용 Mascot(PNG)은 눈을 감은 상태다 — 시안 W-09는 눈 뜬 Default라 그 벡터를 쓴다 */}
+      <Image
+        src="/mascot/passy-default.svg"
+        alt=""
+        width={126}
+        height={139}
+        unoptimized
+        className="absolute top-[9px] left-[107px] h-[138.6px] w-[126px]"
+      />
     </div>
   );
 }
