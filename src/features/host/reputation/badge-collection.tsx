@@ -42,7 +42,8 @@ export function BadgeCollection({ earned }: Props) {
         </span>
       </div>
 
-      <div className="flex flex-col gap-6 rounded-2xl border bg-card px-6 py-6">
+      {/* 시안 810:8800 — 위 23 · 아래 15, 목록과 안내문 사이 16 */}
+      <div className="flex flex-col gap-4 rounded-2xl border bg-card px-6 pt-[23px] pb-[15px]">
         <ul className="flex justify-between">
           {ORDER.map((type) => (
             <BadgeItem key={type} type={type} earned={earned.has(type)} />

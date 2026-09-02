@@ -28,27 +28,34 @@ export function ReputationPage({
   earnedBadges,
 }: Props) {
   return (
-    <main className="flex min-h-screen flex-col gap-6 bg-background px-[60px] pt-10 pb-10">
-      <div className="flex flex-col gap-2">
-        <Link
-          href="/host/rooms"
-          className="self-start text-label-md text-muted-foreground transition-colors hover:text-foreground"
-        >
-          ‹ 내가 만든 방으로
-        </Link>
-        <h1 className="text-heading-lg text-ink">명성 · 뱃지</h1>
+    // 시안 W-14는 본문 1090 (좌 60 · 우 50) — 넓은 화면에서 카드가 늘어나지 않게 폭을 묶는다
+    <main className="min-h-screen bg-background pt-10 pr-[50px] pb-10 pl-[60px]">
+      <div className="flex max-w-[1090px] flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <Link
+            href="/host/rooms"
+            className="self-start text-label-md text-muted-foreground transition-colors hover:text-foreground"
+          >
+            ‹ 내가 만든 방으로
+          </Link>
+          <h1 className="text-heading-lg text-ink">명성 · 뱃지</h1>
+        </div>
+
+        <LevelLadder
+          currentLevel={currentLevel}
+          progress={progress}
+          achievedLabel={achievedLabel}
+        />
+
+        <NextLevelCard
+          targetLevel={nextLevel}
+          targetTitle={nextTitle}
+          criteria={criteria}
+          note={note}
+        />
+
+        <BadgeCollection earned={earnedBadges} />
       </div>
-
-      <LevelLadder currentLevel={currentLevel} progress={progress} achievedLabel={achievedLabel} />
-
-      <NextLevelCard
-        targetLevel={nextLevel}
-        targetTitle={nextTitle}
-        criteria={criteria}
-        note={note}
-      />
-
-      <BadgeCollection earned={earnedBadges} />
     </main>
   );
 }

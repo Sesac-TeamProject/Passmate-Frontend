@@ -27,21 +27,22 @@ export function LevelLadder({ currentLevel, progress, achievedLabel }: Props) {
   const filled = Math.min(100, (currentLevel - 1) * step + (progress / 100) * step);
 
   return (
-    <section className="flex flex-col gap-6 rounded-2xl border bg-card px-6 pt-16 pb-5">
-      <div className="relative">
-        <span className="absolute top-[26px] right-[10%] left-[10%] h-1.5 rounded-full bg-line-soft">
+    <section className="flex flex-col gap-6 rounded-2xl border bg-card pt-16 pb-5">
+      {/* 시안은 엠블럼 5개의 중심이 진행선 양끝(카드 좌우 89)에 정확히 얹힌다 — 칸을 폭 0으로 두고 양끝 정렬 */}
+      <div className="relative mx-[89px]">
+        <span className="absolute top-[26px] right-0 left-0 h-1.5 rounded-full bg-line-soft">
           <span className="block h-full rounded-full bg-mint" style={{ width: `${filled}%` }} />
         </span>
         <span
           className="absolute -top-2.5 flex h-5.5 w-[42px] -translate-x-1/2 items-center justify-center rounded-[7px] bg-mint text-label-md text-white"
-          style={{ left: `${10 + (filled / 100) * 80}%` }}
+          style={{ left: `${filled}%` }}
         >
           {progress}%
         </span>
 
         <ol className="relative flex items-start justify-between">
           {LEVELS.map((level) => (
-            <li key={level} className="flex w-40 flex-col items-center gap-2">
+            <li key={level} className="flex w-0 flex-col items-center gap-2">
               <span
                 className={cn(
                   "flex size-18 items-center justify-center rounded-full",
@@ -60,7 +61,7 @@ export function LevelLadder({ currentLevel, progress, achievedLabel }: Props) {
               </span>
               <span
                 className={cn(
-                  "text-label-md",
+                  "-mx-20 w-40 text-center text-label-md",
                   level === currentLevel
                     ? "text-ink"
                     : level < currentLevel
@@ -72,7 +73,7 @@ export function LevelLadder({ currentLevel, progress, achievedLabel }: Props) {
               </span>
               <span
                 className={cn(
-                  "text-label-md",
+                  "-mx-20 w-40 text-center text-label-md",
                   level > currentLevel ? "text-ink-disabled" : "text-mint-dark",
                 )}
               >
@@ -83,7 +84,7 @@ export function LevelLadder({ currentLevel, progress, achievedLabel }: Props) {
         </ol>
       </div>
 
-      <p className="text-center text-label-md text-ink-disabled">{achievedLabel}</p>
+      <p className="px-6 text-center text-label-md text-ink-disabled">{achievedLabel}</p>
     </section>
   );
 }
