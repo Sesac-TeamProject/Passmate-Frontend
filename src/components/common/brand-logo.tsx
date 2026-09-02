@@ -20,10 +20,10 @@ type Tone = "mint" | "tint";
 const TONE: Record<Tone, { box: string; glyph: string; notch: string }> = {
   /** 민트 바탕 + 흰 심볼 — 랜딩·로그인·게스트 입장 */
   mint: { box: "fill-mint", glyph: "fill-white", notch: "fill-mint stroke-mint" },
-  /** 옅은 민트 바탕 + 진한 심볼 — 사이드바·상단바처럼 작게 놓이는 자리 */
+  /** 옅은 민트 바탕 + 민트 심볼 — 사이드바·상단바처럼 작게 놓이는 자리 (시안 W-01 349:5055) */
   tint: {
     box: "fill-mint-tint",
-    glyph: "fill-mint-dark",
+    glyph: "fill-mint",
     notch: "fill-mint-tint stroke-mint-tint",
   },
 };
