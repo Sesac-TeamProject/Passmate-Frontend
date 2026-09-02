@@ -151,8 +151,8 @@ function Stats() {
   );
 }
 
-/** 시안 HOW 섹션만 콘텐츠 폭이 1260이다 (카드 404 × 3 + 간격 24). 다른 섹션은 INNER(1200) */
-const HOW_INNER = "mx-auto w-full max-w-[1308px] px-6";
+/** HOW·후기 섹션은 콘텐츠 폭이 1260이다 (카드 404 × 3 + 간격 24). 히어로·네비는 INNER(1200) */
+const WIDE_INNER = "mx-auto w-full max-w-[1308px] px-6";
 
 function HowItWorks() {
   return (
@@ -165,7 +165,7 @@ function HowItWorks() {
         aria-hidden
         className="pointer-events-none absolute -top-[300px] left-[270px] size-[900px] rounded-full bg-[radial-gradient(circle,var(--landing-glow)_0%,transparent_70%)] opacity-20"
       />
-      <div className={cn(HOW_INNER, "relative flex flex-col items-center")}>
+      <div className={cn(WIDE_INNER, "relative flex flex-col items-center")}>
         <span className="text-label-md font-bold tracking-[0.2em] text-landing-glow">
           {HOW.kicker}
         </span>
@@ -243,13 +243,16 @@ function FeatureBlock({ feature }: { feature: Feature }) {
 
 function Reviews() {
   return (
-    <section className="bg-card py-28">
-      <div className={cn(INNER, "flex flex-col items-center gap-10")}>
+    <section className="bg-background pt-16 pb-[90px]">
+      <div className={cn(WIDE_INNER, "flex flex-col items-center")}>
         <h2 className="text-display-lg text-ink">먼저 써본 사람들</h2>
-        <ul className="grid w-full grid-cols-3 gap-6">
+        <ul className="mt-[38px] flex w-full gap-6">
           {REVIEWS.map((review) => (
-            <li key={review.name} className="flex flex-col gap-4 rounded-[20px] bg-background p-7">
-              <div className="flex gap-0.5" aria-label="별점 5점">
+            <li
+              key={review.name}
+              className="flex h-[280px] flex-1 flex-col rounded-3xl bg-card p-7 shadow-[0_8px_17px] shadow-ink/6"
+            >
+              <div className="flex gap-1" aria-label="별점 5점">
                 {Array.from({ length: 5 }, (_, i) => (
                   <Star
                     key={i}
@@ -259,11 +262,13 @@ function Reviews() {
                   />
                 ))}
               </div>
-              <blockquote className="text-body-lg text-ink">{review.quote}</blockquote>
-              <div className="flex items-center gap-2.5">
+              <blockquote className="mt-6 text-body-lg leading-[1.65] font-medium text-ink">
+                {review.quote}
+              </blockquote>
+              <div className="mt-auto flex items-center gap-2.5">
                 <StudentAvatar avatar={review.avatar} size={36} />
                 <div className="flex flex-col">
-                  <span className="text-label-lg text-ink">{review.name}</span>
+                  <span className="text-label-lg font-bold text-ink">{review.name}</span>
                   <span className="text-label-md text-muted-foreground">{review.role}</span>
                 </div>
               </div>
@@ -277,10 +282,13 @@ function Reviews() {
 
 function Faq() {
   return (
-    <section id="faq" className="scroll-mt-20 bg-background py-24">
-      <div className={cn(INNER, "flex flex-col gap-8")}>
-        <h2 className="text-display-lg text-ink">자주 묻는 질문</h2>
-        <FaqList items={FAQS} />
+    <section id="faq" className="scroll-mt-20 bg-card pt-[60px] pb-[90px]">
+      <div className={cn(INNER, "flex flex-col items-center")}>
+        <span className="text-label-md font-bold tracking-[0.22em] text-mint-dark">FAQ</span>
+        <h2 className="mt-2 text-display-lg text-ink">자주 묻는 질문</h2>
+        <div className="mt-12 w-[960px] max-w-full">
+          <FaqList items={FAQS} />
+        </div>
       </div>
     </section>
   );
