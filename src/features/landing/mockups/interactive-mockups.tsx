@@ -7,9 +7,8 @@ import {
   ACCOUNT,
   EDITOR_MOCK_QUESTIONS,
   EDITOR_MOCK_TITLE,
-  REPORT_ESSAY_ANSWERS_MOCK,
+  REPORT_INSIGHT_MOCK,
   REPORT_SELECTED_QUESTION_ID,
-  REPORT_STUDENTS_MOCK,
   SESSION_REPORT_MOCK,
 } from "./mock-data";
 
@@ -42,10 +41,11 @@ export function ReportMockup() {
       <div className="min-w-0 flex-1">
         <ReviewPage
           report={SESSION_REPORT_MOCK}
-          students={REPORT_STUDENTS_MOCK}
           selectedQuestionId={REPORT_SELECTED_QUESTION_ID}
           onSelectQuestion={noop}
-          essayAnswers={REPORT_ESSAY_ANSWERS_MOCK}
+          insight={REPORT_INSIGHT_MOCK}
+          canSaveComment={false}
+          onSaveComment={noop}
           onExport={noop}
         />
       </div>

@@ -1,53 +1,118 @@
-import type { EssayAnswer, SessionReport } from "@/features/host/types";
+"use client";
+
+import { useState } from "react";
+import type { QuestionInsight, SessionReport } from "@/features/host/types";
+import { PendingLabel } from "@/components/common/pending-label";
+import { cn } from "@/lib/utils";
 import { ReportBody } from "./report-body";
 import { ReportStats } from "./report-stats";
-import { PendingLabel } from "@/components/common/pending-label";
+
+const TABS = ["개요", "문항별", "학생별"] as const;
+type Tab = (typeof TABS)[number];
+
+export type ExportFormat = "CSV" | "PDF";
 
 type Props = {
   report: SessionReport;
-  students: { id: string; name: string }[];
   selectedQuestionId: string | null;
   onSelectQuestion: (id: string) => void;
-  essayAnswers: EssayAnswer[];
-  onExport: () => void;
+  insight: QuestionInsight | null;
+  canSaveComment: boolean;
+  onSaveComment: (text: string) => void;
+  onExport: (format: ExportFormat) => void;
   exporting?: boolean;
 };
 
-/** W-07 방 리포트 — 내가 만든 방 › 종료 카드 › "상세 보기". 방 하나 = 세션 하나라 부제는 시안대로 "세션 리포트" */
+/** W-07 방 리포트 — 내가 만든 방 › 종료 카드 › "상세 보기" (시안 784:8825). 렌더 전용 */
 export function ReviewPage({
   report,
-  students,
   selectedQuestionId,
   onSelectQuestion,
-  essayAnswers,
+  insight,
+  canSaveComment,
+  onSaveComment,
   onExport,
   exporting,
 }: Props) {
+  const [tab, setTab] = useState<Tab>("문항별");
+
+  const meta = [
+    report.dateLabel,
+    `학생 ${report.stats.students}명`,
+    `문항 ${report.stats.questions}개`,
+    "종료됨",
+  ]
+    .filter((part) => part !== "")
+    .join(" · ");
+  // 최저 문항은 저장하지 않고 문항 목록에서 그때그때 고른다 (규칙 문서 §6 파생 값)
+  const lowest = [...report.questions]
+    .filter((question) => question.accuracy !== undefined)
+    .sort((a, b) => (a.accuracy ?? 0) - (b.accuracy ?? 0))[0];
+
   return (
-    <main className="flex min-h-screen flex-col gap-4 px-8 py-[26px]">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-heading-lg text-ink">{report.title}</h1>
-          <p className="text-body-md text-muted-foreground">{report.dateLabel} · 세션 리포트</p>
-        </div>
-        {/* 내보내기 실패는 04 보드 B 규칙대로 모달로 알린다 — 컨테이너가 소유한다 */}
-        <button
-          type="button"
-          onClick={onExport}
-          disabled={exporting}
-          className="flex h-10 items-center rounded-[14px] bg-card px-[18px] text-label-lg text-mint-dark transition-colors hover:bg-mint-tint disabled:opacity-60"
-        >
-          {exporting ? <PendingLabel>내보내는 중…</PendingLabel> : "내보내기"}
-        </button>
+    <main className="flex min-h-screen flex-col gap-3 px-8 pt-6 pb-7">
+      <div className="flex flex-col gap-0.5">
+        <h1 className="text-heading-lg text-ink">{report.title}</h1>
+        <p className="text-label-md text-muted-foreground">{meta}</p>
       </div>
-      <ReportStats stats={report.stats} />
-      <ReportBody
-        report={report}
-        students={students}
-        selectedQuestionId={selectedQuestionId}
-        onSelectQuestion={onSelectQuestion}
-        essayAnswers={essayAnswers}
+
+      <div className="flex items-center justify-between">
+        <div role="tablist" className="flex gap-2">
+          {TABS.map((name) => (
+            <button
+              key={name}
+              role="tab"
+              type="button"
+              aria-selected={tab === name}
+              onClick={() => setTab(name)}
+              className={cn(
+                "h-[34px] rounded-lg px-4 text-label-lg transition-colors",
+                tab === name ? "bg-ink text-white" : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          {(["CSV", "PDF"] as const).map((format) => (
+            <button
+              key={format}
+              type="button"
+              onClick={() => onExport(format)}
+              disabled={exporting}
+              className="h-[34px] w-16 rounded-lg border bg-card text-label-md text-ink transition-colors hover:bg-muted disabled:opacity-60"
+            >
+              {exporting ? <PendingLabel>…</PendingLabel> : format}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <ReportStats
+        stats={report.stats}
+        lowest={
+          lowest === undefined
+            ? null
+            : { label: `Q${lowest.index}`, accuracyPercent: lowest.accuracy ?? 0 }
+        }
       />
+
+      {tab === "문항별" ? (
+        <ReportBody
+          report={report}
+          selectedQuestionId={selectedQuestionId}
+          onSelectQuestion={onSelectQuestion}
+          insight={insight}
+          canSaveComment={canSaveComment}
+          onSaveComment={onSaveComment}
+        />
+      ) : (
+        <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed text-body-md text-muted-foreground">
+          {tab} 탭은 계약이 오면 채운다
+        </div>
+      )}
     </main>
   );
 }
