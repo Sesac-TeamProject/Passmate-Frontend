@@ -239,11 +239,13 @@ export function toActiveSession(rooms: JoinedRoom[]): ActiveSession | null {
 function toAttendedSession(room: JoinedRoom): AttendedSession {
   return {
     id: String(room.roomId),
-    rank: room.myRank ?? 0,
+    // 아직 안 끝난 방은 등수·점수가 없다 — 0으로 채우지 않는다
+    rank: room.myRank ?? null,
     title: room.title,
     dateLabel: toSessionDateLabel(room),
     questionCount: room.questionCount,
-    score: room.myScore ?? 0,
+    score: room.myScore ?? null,
+    hasReport: room.hasReport,
   };
 }
 

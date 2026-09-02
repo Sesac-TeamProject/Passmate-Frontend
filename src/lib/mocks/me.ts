@@ -62,7 +62,7 @@ const JOINED_ROOMS: JoinedRoomsResponse["rooms"]["content"] = [
     hasReport: false,
   },
   {
-    roomId: 1,
+    roomId: 11,
     title: "8월 4주차 Spring 스터디",
     hostNickname: "김선생",
     status: "ENDED",
@@ -75,7 +75,7 @@ const JOINED_ROOMS: JoinedRoomsResponse["rooms"]["content"] = [
     hasReport: true,
   },
   {
-    roomId: 2,
+    roomId: 12,
     title: "CS 모의면접 3회차",
     hostNickname: "박세라",
     status: "ENDED",
@@ -88,7 +88,7 @@ const JOINED_ROOMS: JoinedRoomsResponse["rooms"]["content"] = [
     hasReport: true,
   },
   {
-    roomId: 3,
+    roomId: 13,
     title: "JPA 복습 세션",
     hostNickname: "이서준",
     status: "ENDED",

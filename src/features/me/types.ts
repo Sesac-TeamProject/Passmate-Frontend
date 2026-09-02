@@ -98,11 +98,18 @@ export type HostRecord = {
 
 export type AttendedSession = {
   id: string;
-  rank: number;
+  /**
+   * 내 등수. **아직 안 끝난 방은 값이 없다** — 0으로 채우면 "0위"라는 없는 사실이 된다
+   * (서버가 `myRank`를 아예 주지 않는다).
+   */
+  rank: number | null;
   title: string;
   dateLabel: string;
   questionCount: number;
-  score: number;
+  /** 내 점수. 채점 전이면 없다 */
+  score: number | null;
+  /** 학습 리포트가 만들어졌는가 — false면 리포트 링크를 걸지 않는다 */
+  hasReport: boolean;
 };
 
 /** 참여한 방(client) 학습 기록 */
