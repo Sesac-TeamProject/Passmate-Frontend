@@ -17,6 +17,10 @@ type Props = {
   onSelectQuestion: (id: string) => void;
   /** 선택된 문항의 서술형 답변 (객관식·OX면 빈 배열) */
   essayAnswers: EssayAnswer[];
+  /** 첨삭 저장 — 서버에 저장 API가 아직 없어 실패할 수 있다 */
+  onSaveComment?: (answerId: number, comment: string) => void;
+  savingAnswerId?: number | null;
+  saveError?: string | null;
 };
 
 /** W-07 본문 — 탭 · 문항 목록 · 우측 AI 분석/첨삭 패널 */
@@ -26,6 +30,9 @@ export function ReportBody({
   selectedQuestionId,
   onSelectQuestion,
   essayAnswers,
+  onSaveComment,
+  savingAnswerId,
+  saveError,
 }: Props) {
   const [tab, setTab] = useState<Tab>("문항별");
   const selected =
@@ -67,7 +74,14 @@ export function ReportBody({
             ))}
           </ol>
           {selected ? (
-            <AnalysisPanel question={selected} answers={essayAnswers} students={students} />
+            <AnalysisPanel
+              question={selected}
+              answers={essayAnswers}
+              students={students}
+              onSaveComment={onSaveComment}
+              savingAnswerId={savingAnswerId}
+              saveError={saveError}
+            />
           ) : (
             <div className="flex w-[430px] shrink-0 items-center justify-center rounded-[20px] border border-dashed text-body-md text-muted-foreground">
               문항이 없어요

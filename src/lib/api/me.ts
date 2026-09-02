@@ -62,8 +62,11 @@ export function postReport(body: ReportRequest): Promise<void> {
   return request<void>("/reports", { method: "POST", body });
 }
 
-/** POST /guest-records/claim — 가입 후 7일 내, 경과 시 410 RECORD_PURGED */
-export function claimGuestRecord(participantId: number): Promise<void> {
-  const body: ClaimGuestRecordRequest = { participantId };
+/**
+ * @draft POST /guest-records/claim — **백엔드 미구현**(실서버 404).
+ * 가입 후 7일 안에 게스트 기록을 계정으로 옮긴다. 키는 입장 때 받은 `guestToken`이다.
+ */
+export function claimGuestRecord(guestToken: string): Promise<void> {
+  const body: ClaimGuestRecordRequest = { guestToken };
   return request<void>("/guest-records/claim", { method: "POST", body });
 }

@@ -1,4 +1,4 @@
-import type { CursorPage, RoomStatus, RoomType } from "./common";
+import type { RoomStatus, RoomType } from "./common";
 
 /**
  * 방·참가자 — 백엔드 `room/dto/*.kt` 1:1 (`contracts/rest-api.md` §2-5).
@@ -157,16 +157,48 @@ export type PublicRoomSearch = {
   size?: number;
 };
 
-/** @deprecated US9(T092)에서 `{reputation, active, ended}`로 교체한다 */
-export type HostedRoomDto = {
-  roomId?: number;
-  pin?: string;
-  title?: string;
-  status?: RoomStatus | null;
-  participantCount?: number | null;
-  scheduledAt?: string | null;
-  endedAtLabel?: string | null;
-  avgAccuracyPercent?: number | null;
+/**
+ * 호스트 명성 — **등급(`level`)·진행률·평균 별점은 서버가 아직 계산하지 않는다**(값이 빠져 온다).
+ * 없으면 등급 UI를 그리지 않는다: 0·Lv.1로 채우면 "새싹 등급"이라는 없는 사실이 된다.
+ */
+export type HostReputation = {
+  level?: number;
+  /** 0~1 */
+  nextLevelProgress?: number;
+  hostedSessionCount: number;
+  totalStudentCount: number;
+  averageStars?: number;
+  ratingCount: number;
 };
-/** @deprecated US9(T092)에서 페이지 없는 응답으로 교체한다 */
-export type HostedRoomsResponse = CursorPage<HostedRoomDto>;
+
+/** 아직 열려 있는 방 — PIN이 있어 바로 대기실로 갈 수 있다 */
+export type ActiveHostedRoom = {
+  roomId: number;
+  title: string;
+  pin: string;
+  status: RoomStatus;
+  scheduledAt?: string;
+  startedAt?: string;
+  participantCount: number;
+  /** 0이면 아직 시작 전 */
+  currentQuestionNo: number;
+};
+
+/** 끝난 방 — PIN은 없다(활성 방 사이에서만 유일하고 종료 후 재사용된다) */
+export type EndedHostedRoom = {
+  roomId: number;
+  title: string;
+  endedAt?: string;
+  studentCount: number;
+  /** 0~100 */
+  correctRate?: number;
+  averageStars?: number;
+  ratingCount: number;
+};
+
+/** GET /users/me/rooms/hosted — **페이지가 없다**. 진행 중·종료를 나눠서 준다 */
+export type HostedRoomsResponse = {
+  reputation: HostReputation;
+  active: ActiveHostedRoom[];
+  ended: EndedHostedRoom[];
+};

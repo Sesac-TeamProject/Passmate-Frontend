@@ -143,5 +143,10 @@ export type ReportRequest = {
   reason: ReportReason;
   detail?: string | null;
 };
-/** POST /guest-records/claim — 가입 후 7일 내, 경과 시 410 RECORD_PURGED */
-export type ClaimGuestRecordRequest = { participantId: number };
+/**
+ * @draft POST /guest-records/claim — **백엔드 미구현**(실서버 404).
+ *
+ * 연동 키는 입장할 때 받은 `guestToken`이다(ERD `participant.guest_token`) — `participantId`가
+ * 아니다. 웹은 그 값을 방별로 7일간 들고 있다(`lib/guest-token-storage`).
+ */
+export type ClaimGuestRecordRequest = { guestToken: string };

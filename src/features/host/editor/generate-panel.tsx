@@ -29,6 +29,9 @@ const WIRE_TYPE: Record<QuestionType, WireQuestionType> = {
 /** 서버가 한 번에 만들 수 있는 최대 문항 수 (`AiGenerateRequest.MAX_GENERATE_COUNT`) */
 const MAX_GENERATE_COUNT = 20;
 
+/** 강의자료 본문 최대 길이 (`AiGenerateRequest.MATERIAL_MAX_LENGTH`) */
+const MATERIAL_MAX_LENGTH = 5000;
+
 type Props = {
   onGenerate: (body: AiGenerateRequest) => void;
   onAddManual: () => void;
@@ -50,6 +53,7 @@ export function GeneratePanel({
   disabled,
 }: Props) {
   const [topic, setTopic] = useState("");
+  const [material, setMaterial] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("NORMAL");
   const [counts, setCounts] = useState<Record<QuestionType, number>>({
     multiple: 5,
@@ -79,6 +83,8 @@ export function GeneratePanel({
       topic: topic.trim(),
       counts: wireCounts,
       difficulty,
+      // 자료를 넣으면 그 범위 안에서 출제한다. 비어 있으면 키를 아예 빼서 보낸다
+      ...(material.trim() ? { material: material.trim() } : {}),
       timeLimitSec: DEFAULT_QUESTION_SECONDS,
       points: DEFAULT_QUESTION_POINTS,
     });
@@ -120,6 +126,18 @@ export function GeneratePanel({
           ))}
         </div>
       </Field>
+      <Field label="강의자료 붙여넣기 (선택)">
+        <textarea
+          value={material}
+          onChange={(e) => setMaterial(e.target.value.slice(0, MATERIAL_MAX_LENGTH))}
+          rows={3}
+          placeholder="수업 자료를 붙여 넣으면 이 범위 안에서 출제해요"
+          className="w-full resize-y rounded-xl bg-muted px-3.5 py-2.5 text-label-lg text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+        <span className="self-end text-label-md text-muted-foreground">
+          {material.length} / {MATERIAL_MAX_LENGTH}자
+        </span>
+      </Field>
       <Field label="난이도">
         <select
           className={`${FIELD} appearance-none`}
@@ -155,6 +173,8 @@ export function GeneratePanel({
       {/*
         남은 무료 횟수 표시는 아직 못 넣는다 — 잔여 횟수를 주는 응답이 서버에 없다.
         429 AI_FREE_LIMIT_EXCEEDED로 소진을 알 뿐이다(백엔드 질문 B-8 · DESIGN_GAPS G-1).
+
+        PDF 업로드(`generate-from-file`)도 백엔드에 없다 — 위 텍스트 붙여넣기가 그 자리를 대신한다.
       */}
       <button
         type="button"

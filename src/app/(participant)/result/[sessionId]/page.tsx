@@ -5,7 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toRankedStudents } from "@/features/host/live/adapt";
-import { toRatingDeadlineLabel } from "@/features/participant/result/adapt";
+import {
+  toRatingDeadlineLabel,
+  toRatingNotice,
+  toRatingSubmitMessage,
+} from "@/features/participant/result/adapt";
 import {
   FinalResultPage,
   type PodiumEntry,
@@ -17,6 +21,9 @@ import { readMyParticipant } from "@/lib/my-participant";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
 import { useSubmitRating } from "@/lib/queries/use-ratings";
 import { useMyResult } from "@/lib/queries/use-results";
+import { readGuestRecord } from "@/lib/guest-token-storage";
+import { useClaimGuestRecord } from "@/lib/queries/use-me";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { useSessionStore } from "@/lib/stores/session-store";
 
 /** 순위 카드에 담는 행 수 — 시안은 3줄(1·2위 + 나) */
@@ -25,6 +32,7 @@ const ROW_LIMIT = 3;
 const NO_SUBSCRIBE = () => () => {};
 const readMyId = () => readMyParticipant()?.participantId ?? null;
 const readMyIdOnServer = () => null;
+const readGuestRecordOnServer = () => null;
 
 /**
  * M-05 최종 결과 컨테이너.
@@ -42,10 +50,31 @@ export default function Page() {
   const ranking = useSessionStore((s) => s.ranking);
   const result = useMyResult(Number.isFinite(roomId) ? roomId : null);
   const rate = useSubmitRating(roomId);
+  const isMember = useAuthStore((s) => s.status) === "authenticated";
   const [rateSkipped, setRateSkipped] = useState(false);
 
   // sessionStorage는 서버 렌더에 없다 — 서버 스냅샷을 null로 둬 하이드레이션을 맞춘다
   const myId = useSyncExternalStore(NO_SUBSCRIBE, readMyId, readMyIdOnServer);
+  /**
+   * 게스트로 풀었을 때 받아 둔 이관용 표(7일). localStorage라 서버 렌더에 없다.
+   * 회원으로 돌아오면 이 표로 기록 이관을 한 번 시도한다 — 서버에 API가 아직 없어(404)
+   * 실패해도 표를 지우지 않는다(다음 로그인에서 다시 시도된다).
+   */
+  const guestRecord = useSyncExternalStore(
+    NO_SUBSCRIBE,
+    () => (Number.isFinite(roomId) ? readGuestRecord(roomId) : null),
+    readGuestRecordOnServer,
+  );
+  const claim = useClaimGuestRecord();
+  const [claimTried, setClaimTried] = useState(false);
+
+  if (!claimTried && isMember && guestRecord && !claim.isPending) {
+    setClaimTried(true);
+    claim.mutate(
+      { guestToken: guestRecord.guestToken, roomId: guestRecord.roomId },
+      { onError: () => undefined },
+    );
+  }
 
   if (result.isPending) return <ScreenLoading />;
   if (result.isError)
@@ -65,7 +94,7 @@ export default function Page() {
         onSubmit={(body) => rate.mutate(body, { onSuccess: () => setRateSkipped(true) })}
         onSkip={() => setRateSkipped(true)}
         pending={rate.isPending}
-        errorMessage={rate.isError ? rate.error.message : null}
+        errorMessage={rate.isError ? toRatingSubmitMessage(rate.error) : null}
       />
     );
 
@@ -96,8 +125,16 @@ export default function Page() {
       podium={podium}
       rows={rows}
       isGuest={result.data.guest}
+      // 7일 보관 사실을 눈으로 확인시킨다 — 표가 없으면(만료·다른 기기) 약속하지 않는다
+      // 별점을 못 남기는 이유(이미 냄·기간 지남 등)를 한 줄로 알린다
+      ratingNotice={toRatingNotice(result.data.rating)}
+      guestRecordNotice={
+        result.data.guest && guestRecord !== null
+          ? "7일 안에 가입하면 이 기록을 계정으로 옮길 수 있어요"
+          : null
+      }
       onOpenReport={() => router.push(`/result/${roomId}/report`)}
-      onSignUp={() => router.push("/login")}
+      onSignUp={() => router.push(`/login?next=${encodeURIComponent(`/result/${roomId}`)}`)}
     />
   );
 }

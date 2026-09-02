@@ -4,7 +4,6 @@ import { AppError } from "@/lib/types/app-error";
 import { AVATAR_KEYS, type AvatarKey } from "@/lib/types/dto";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 import type {
-  HostedRoomDto,
   HostedRoomsResponse,
   JoinRoomRequest,
   JoinRoomResponse,
@@ -22,7 +21,11 @@ import { currentProfile } from "./me";
 
 /** 방(rooms) 도메인 목 응답. 입장 인원 등 상태가 필요한 값은 모듈 스코프에서 유지한다. */
 
-let hostedRooms: HostedRoomDto[] = [...HOSTED_ROOMS];
+let hostedRooms: HostedRoomsResponse = {
+  reputation: HOSTED_ROOMS.reputation,
+  active: [...HOSTED_ROOMS.active],
+  ended: [...HOSTED_ROOMS.ended],
+};
 let nextHostedRoomId = 104;
 
 /** 만들어진 방 — 서버와 같은 `RoomResponse` 형태로 들고 있는다(PIN 조회·상세·수정이 같은 출처를 본다) */
@@ -95,19 +98,21 @@ export function mockCreateRoom(body: RoomCreateRequest): RoomResponse {
   };
 
   rooms = [room, ...rooms];
-  hostedRooms = [
-    {
-      roomId: room.id,
-      pin: room.pin,
-      title: room.title,
-      status: "WAITING",
-      participantCount: 0,
-      scheduledAt: room.scheduledAt ?? null,
-      endedAtLabel: null,
-      avgAccuracyPercent: null,
-    },
+  hostedRooms = {
     ...hostedRooms,
-  ];
+    active: [
+      {
+        roomId: room.id,
+        title: room.title,
+        pin: room.pin,
+        status: "WAITING",
+        ...(room.scheduledAt ? { scheduledAt: room.scheduledAt } : {}),
+        participantCount: 0,
+        currentQuestionNo: 0,
+      },
+      ...hostedRooms.active,
+    ],
+  };
 
   return room;
 }
@@ -149,9 +154,9 @@ export function mockCloseRoom(roomId: string): RoomResponse {
   return closed;
 }
 
-/** GET /users/me/rooms/hosted */
+/** GET /users/me/rooms/hosted — 페이지 없이 명성 요약 + 진행 중·종료 방 */
 export function mockHostedRooms(): HostedRoomsResponse {
-  return { items: hostedRooms, nextCursor: null, hasNext: false };
+  return hostedRooms;
 }
 
 /** /rooms 목록 한 페이지 — 시안이 카드 6장 뒤에 "더 보기"를 두므로 목도 6개씩 끊는다 */
@@ -272,7 +277,11 @@ export function mockKickParticipant(_roomId: string, participantId: string): und
  */
 export function __resetRoomsForTests(): void {
   rooms = [{ ...DEMO_ROOM }];
-  hostedRooms = [...HOSTED_ROOMS];
+  hostedRooms = {
+    reputation: HOSTED_ROOMS.reputation,
+    active: [...HOSTED_ROOMS.active],
+    ended: [...HOSTED_ROOMS.ended],
+  };
   participants = [...PARTICIPANTS];
   nextHostedRoomId = 104;
   nextParticipantId = 17;

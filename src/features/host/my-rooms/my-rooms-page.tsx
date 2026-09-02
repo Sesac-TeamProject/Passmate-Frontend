@@ -9,8 +9,9 @@ import type { LevelStatus, MyRoom, Promotion } from "./types";
 type Props = {
   rooms: MyRoom[];
   stats: StatItem[];
-  level: LevelStatus;
-  promotion: Promotion;
+  /** 등급은 서버가 아직 계산하지 않는다 — 없으면 카드를 그리지 않는다 */
+  level: LevelStatus | null;
+  promotion: Promotion | null;
 };
 
 const NEW_ROOM_ACTION = (
@@ -37,14 +38,20 @@ export function MyRoomsPage({ rooms, stats, level, promotion }: Props) {
 
       <StatCards stats={stats} />
 
-      <div className="flex gap-4">
-        <LevelCard status={level} />
-        <PromotionCard
-          targetLevel={promotion.targetLevel}
-          rules={promotion.rules}
-          note={promotion.note}
-        />
-      </div>
+      {/*
+        등급·승급 카드는 서버가 등급을 계산할 때까지 그리지 않는다.
+        Lv.1·0%로 채우면 "새싹 등급을 받았고 진행률이 0"이라는 없는 사실이 된다.
+      */}
+      {level && promotion ? (
+        <div className="flex gap-4">
+          <LevelCard status={level} />
+          <PromotionCard
+            targetLevel={promotion.targetLevel}
+            rules={promotion.rules}
+            note={promotion.note}
+          />
+        </div>
+      ) : null}
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">

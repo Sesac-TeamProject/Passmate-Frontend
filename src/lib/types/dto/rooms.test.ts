@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   mockCheckNickname,
   mockCreateRoom,
+  mockHostedRooms,
   mockJoinRoom,
   mockParticipants,
   mockPublicRooms,
@@ -127,5 +128,44 @@ describe("입장 계약", () => {
   it("공개 방 필터는 대문자 enum이다", () => {
     const free = mockPublicRooms(new URL("http://x/rooms/public?type=FREE"));
     expect(free.content.every((room) => room.type === "FREE")).toBe(true);
+  });
+});
+
+describe("내가 만든 방 계약", () => {
+  it("페이지가 아니라 {reputation, active, ended} 세 덩이다", () => {
+    const hosted = mockHostedRooms();
+
+    expectContract(hosted, ["reputation", "active", "ended"]);
+    // 커서 페이지가 아니다 — 예전 응답의 items/nextCursor는 없다
+    expect(hosted).not.toHaveProperty("items");
+    expect(hosted).not.toHaveProperty("nextCursor");
+  });
+
+  it("명성 요약에서 등급·별점은 서버가 아직 안 준다", () => {
+    const { reputation } = mockHostedRooms();
+
+    expectContract(
+      reputation,
+      ["hostedSessionCount", "totalStudentCount", "ratingCount"],
+      ["level", "nextLevelProgress", "averageStars"],
+    );
+    // 화면이 Lv.1·0%로 채우면 없는 사실이 된다 — 목도 비워 둔다
+    expect(reputation.level).toBeUndefined();
+  });
+
+  it("끝난 방에는 PIN이 없다 — 종료 후 재사용되는 값이다", () => {
+    const hosted = mockHostedRooms();
+
+    expectContract(
+      hosted.active[0],
+      ["roomId", "title", "pin", "status", "participantCount", "currentQuestionNo"],
+      ["scheduledAt", "startedAt"],
+    );
+    expectContract(
+      hosted.ended[0],
+      ["roomId", "title", "studentCount", "ratingCount"],
+      ["endedAt", "correctRate", "averageStars"],
+    );
+    expect(hosted.ended[0]).not.toHaveProperty("pin");
   });
 });

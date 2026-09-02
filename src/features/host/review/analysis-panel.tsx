@@ -9,16 +9,30 @@ type Props = {
   question: ReportQuestion;
   answers: EssayAnswer[];
   students: { id: string; name: string }[];
+  /** 첨삭 저장. 서버에 저장 API가 아직 없어 실패할 수 있다 */
+  onSaveComment?: (answerId: number, comment: string) => void;
+  savingAnswerId?: number | null;
+  saveError?: string | null;
 };
 
 const DOT = { good: "bg-mint-light", lack: "bg-yellow", tip: "bg-muted-foreground" } as const;
 
 /** W-07 우측 패널 — 서술형 답변별 AI 분석 확인, 코멘트 입력 */
-export function AnalysisPanel({ question, answers, students }: Props) {
+export function AnalysisPanel({
+  question,
+  answers,
+  students,
+  onSaveComment,
+  savingAnswerId = null,
+  saveError = null,
+}: Props) {
   const [cursor, setCursor] = useState(0);
-  const [comment, setComment] = useState("");
+  const [draft, setDraft] = useState<{ answerId: number; comment: string } | null>(null);
+
   const answer = answers[Math.min(cursor, Math.max(answers.length - 1, 0))];
   const name = answer ? (students.find((s) => s.id === answer.studentId)?.name ?? "학생") : "";
+  // 답변을 넘기면 그 답변의 기존 첨삭을 보여 준다 — 내가 고쳐 쓰던 중이면 그 값을 지키고
+  const comment = draft?.answerId === answer?.answerId ? draft.comment : (answer?.comment ?? "");
 
   return (
     <aside className="flex w-[430px] shrink-0 flex-col overflow-hidden rounded-[20px] border bg-card">
@@ -33,6 +47,11 @@ export function AnalysisPanel({ question, answers, students }: Props) {
               {name.charAt(0)}
             </span>
             <span className="text-label-lg text-ink">{name}의 답변</span>
+            {answer.reviewed ? (
+              <span className="rounded-full bg-mint-tint px-2 py-0.5 text-label-md text-mint-dark">
+                첨삭함
+              </span>
+            ) : null}
             <button
               type="button"
               onClick={() => setCursor((c) => (c + 1) % answers.length)}
@@ -55,16 +74,23 @@ export function AnalysisPanel({ question, answers, students }: Props) {
           </ul>
           <input
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={(e) => setDraft({ answerId: answer.answerId, comment: e.target.value })}
             placeholder="코멘트를 남겨 첨삭을 마무리하세요"
             className="h-[46px] rounded-xl bg-muted px-3.5 text-body-md text-ink outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
           />
           <button
             type="button"
-            className="h-[42px] rounded-xl bg-mint text-label-lg text-white transition-colors hover:bg-mint-dark"
+            onClick={() => onSaveComment?.(answer.answerId, comment)}
+            disabled={savingAnswerId !== null || comment.trim() === ""}
+            className="h-[42px] rounded-xl bg-mint text-label-lg text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
           >
-            코멘트 저장
+            {savingAnswerId === answer.answerId ? "저장하는 중…" : "코멘트 저장"}
           </button>
+          {saveError ? (
+            <p role="alert" className="text-label-md text-negative">
+              {saveError}
+            </p>
+          ) : null}
         </div>
       ) : (
         <p className="px-[22px] py-6 text-body-md text-muted-foreground">

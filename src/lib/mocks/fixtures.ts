@@ -1,5 +1,5 @@
 import type {
-  HostedRoomDto,
+  HostedRoomsResponse,
   MyProfileResponse,
   ParticipantResponse,
   PublicRoomResponse,
@@ -81,45 +81,54 @@ export const PARTICIPANTS: ParticipantResponse[] = [
  * features/host/my-rooms/mock.ts MY_ROOMS → roomId 100+, status live→RUNNING·ended→FINISHED,
  * averageScore→avgAccuracyPercent, endedLabel→endedAtLabel, startsLabel→scheduledAt(그대로).
  */
-export const HOSTED_ROOMS: HostedRoomDto[] = [
-  {
-    roomId: 100,
-    pin: "482913",
-    title: "Spring 실전 모의고사 4주차",
-    status: "RUNNING",
-    participantCount: 24,
-    scheduledAt: "20:00 시작",
-    avgAccuracyPercent: null,
-    endedAtLabel: null,
+export const HOSTED_ROOMS: HostedRoomsResponse = {
+  /**
+   * 등급(level)·진행률·평균 별점은 **서버가 아직 계산하지 않아 비워 둔다** —
+   * 목에서 채우면 화면이 "등급 준비 중"으로 도는지 확인할 수 없다.
+   */
+  reputation: {
+    hostedSessionCount: 18,
+    totalStudentCount: 312,
+    ratingCount: 0,
   },
-  {
-    roomId: 101,
-    title: "네트워크 한 번에 정리",
-    status: "ENDED",
-    participantCount: 9,
-    scheduledAt: null,
-    endedAtLabel: "8/19 종료",
-    avgAccuracyPercent: 77,
-  },
-  {
-    roomId: 102,
-    title: "CS 기술면접 라운드 2",
-    status: "ENDED",
-    participantCount: 21,
-    scheduledAt: null,
-    endedAtLabel: "8/15 종료",
-    avgAccuracyPercent: 68,
-  },
-  {
-    roomId: 103,
-    title: "JPA 복습 방",
-    status: "ENDED",
-    participantCount: 18,
-    scheduledAt: null,
-    endedAtLabel: "8/08 종료",
-    avgAccuracyPercent: 64,
-  },
-];
+  active: [
+    {
+      roomId: 100,
+      title: "Spring 실전 모의고사 4주차",
+      pin: "482913",
+      status: "RUNNING",
+      startedAt: "2026-09-02T02:00:00",
+      participantCount: 24,
+      currentQuestionNo: 3,
+    },
+  ],
+  ended: [
+    {
+      roomId: 101,
+      title: "네트워크 한 번에 정리",
+      endedAt: "2026-08-19T11:00:00",
+      studentCount: 9,
+      correctRate: 77,
+      ratingCount: 0,
+    },
+    {
+      roomId: 102,
+      title: "CS 기술면접 라운드 2",
+      endedAt: "2026-08-15T12:00:00",
+      studentCount: 21,
+      correctRate: 68,
+      ratingCount: 0,
+    },
+    {
+      roomId: 103,
+      title: "JPA 복습 방",
+      endedAt: "2026-08-08T10:00:00",
+      studentCount: 18,
+      correctRate: 64,
+      ratingCount: 0,
+    },
+  ],
+};
 
 /**
  * 구 features/home/mock.ts(삭제됨)의 POPULAR_ROOMS 값 — hostName=host, hostLevel=level,

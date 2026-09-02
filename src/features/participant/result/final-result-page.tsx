@@ -49,6 +49,10 @@ type Props = {
   rows: RankRow[];
   /** 게스트면 가입 유도 버튼을 보여 준다 */
   isGuest: boolean;
+  /** 기록 보관 안내("7일 안에…"). 보관 표가 없으면 null — 지키지 못할 약속은 하지 않는다 */
+  guestRecordNotice?: string | null;
+  /** 별점을 못 남기는 이유. 남길 수 있으면 null */
+  ratingNotice?: string | null;
   /** 리포트로 이동. 없으면 버튼을 비활성으로 둔다 */
   onOpenReport?: () => void;
   onSignUp: () => void;
@@ -66,6 +70,8 @@ export function FinalResultPage({
   podium,
   rows,
   isGuest,
+  guestRecordNotice = null,
+  ratingNotice = null,
   onOpenReport,
   onSignUp,
 }: Props) {
@@ -157,14 +163,22 @@ export function FinalResultPage({
         >
           내 리포트 보기
         </button>
+        {ratingNotice ? (
+          <p className="text-center text-label-md text-muted-foreground">{ratingNotice}</p>
+        ) : null}
         {isGuest && (
-          <button
-            type="button"
-            onClick={onSignUp}
-            className="h-[50px] rounded-2xl border bg-card text-label-lg text-mint-dark transition-colors hover:bg-muted"
-          >
-            가입하고 이 기록 저장하기
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={onSignUp}
+              className="h-[50px] rounded-2xl border bg-card text-label-lg text-mint-dark transition-colors hover:bg-muted"
+            >
+              가입하고 이 기록 저장하기
+            </button>
+            {guestRecordNotice ? (
+              <p className="text-center text-label-md text-muted-foreground">{guestRecordNotice}</p>
+            ) : null}
+          </>
         )}
       </div>
     </main>

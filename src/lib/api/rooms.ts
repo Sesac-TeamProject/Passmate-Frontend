@@ -42,9 +42,9 @@ export function closeRoom(roomId: number): Promise<RoomResponse> {
   return request<RoomResponse>(`/rooms/${roomId}/close`, { method: "POST" });
 }
 
-/** GET /users/me/rooms/hosted */
-export function getHostedRooms(cursor?: string): Promise<HostedRoomsResponse> {
-  return request<HostedRoomsResponse>("/users/me/rooms/hosted", { query: { cursor } });
+/** GET /users/me/rooms/hosted — **페이지 없음**. 명성 요약 + 진행 중·종료 방 목록 */
+export function getHostedRooms(): Promise<HostedRoomsResponse> {
+  return request<HostedRoomsResponse>("/users/me/rooms/hosted");
 }
 
 /**

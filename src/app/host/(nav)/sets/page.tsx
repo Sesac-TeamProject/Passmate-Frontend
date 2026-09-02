@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
-import { toQuestionSets } from "@/features/host/sets/adapt";
+import { toCloneErrorMessage, toQuestionSets } from "@/features/host/sets/adapt";
 import { SetsPage } from "@/features/host/sets/sets-page";
 import { SetsSkeleton } from "@/features/host/sets/sets-skeleton";
 import { useDuplicateQuestionSet, useQuestionSets } from "@/lib/queries/use-question-sets";
@@ -30,6 +30,7 @@ export default function Page() {
       sets={toQuestionSets(sets.data.content)}
       onClone={handleClone}
       cloning={duplicate.isPending}
+      cloneError={duplicate.isError ? toCloneErrorMessage(duplicate.error) : null}
     />
   );
 }

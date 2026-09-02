@@ -98,9 +98,14 @@ export type ReportQuestion = {
 export type AnswerFinding = { tone: "good" | "lack" | "tip"; text: string };
 
 export type EssayAnswer = {
+  /** 서버 답안 id — 첨삭 저장(PUT …/answers/{answerId}/review)이 이 값을 쓴다 */
+  answerId: number;
   studentId: string;
   text: string;
   findings: AnswerFinding[];
+  /** 이미 남긴 첨삭 코멘트. 없으면 빈 문자열 */
+  comment: string;
+  reviewed: boolean;
 };
 
 export type SessionReport = {

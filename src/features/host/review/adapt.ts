@@ -84,9 +84,12 @@ function toFindings(analysis: EssayAnalysisView | undefined): AnswerFinding[] {
 
 function toEssayAnswer(answer: ReviewTargetAnswer): EssayAnswer {
   return {
+    answerId: answer.answerId,
     studentId: String(answer.participantId),
     text: answer.submitted,
     findings: toFindings(answer.analysis),
+    comment: answer.teacherReview?.comment ?? "",
+    reviewed: answer.reviewed,
   };
 }
 

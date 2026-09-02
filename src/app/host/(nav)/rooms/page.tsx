@@ -9,29 +9,31 @@ import {
 } from "@/features/host/my-rooms/adapt";
 import { MyRoomsPage } from "@/features/host/my-rooms/my-rooms-page";
 import { MyRoomsSkeleton } from "@/features/host/my-rooms/my-rooms-skeleton";
-import { useGrade } from "@/lib/queries/use-me";
 import { useHostedRooms } from "@/lib/queries/use-rooms";
 
-/** W-09 내가 만든 방 컨테이너 — 내가 만든 방·명성 등급을 읽어 화면 뷰 타입으로 바꾼다 */
+/**
+ * W-09 내가 만든 방 컨테이너.
+ * 명성 요약(등급·누적 학생·별점)이 방 목록과 **같은 응답**에 들어 있다 —
+ * 별도 등급 API(`/users/me/grade`)는 백엔드에 없어 부르지 않는다.
+ */
 export default function Page() {
   const hostedRooms = useHostedRooms();
-  const grade = useGrade();
 
-  if (hostedRooms.isPending || grade.isPending) return <MyRoomsSkeleton />;
+  if (hostedRooms.isPending) return <MyRoomsSkeleton />;
   if (hostedRooms.isError)
     return (
       <ScreenError message={hostedRooms.error.message} onRetry={() => hostedRooms.refetch()} />
     );
 
-  // 등급 조회가 실패해도 방 목록은 보여준다 — 레벨·승급 카드만 기본값(Lv.1)으로 접힌다.
-  const rooms = toMyRooms(hostedRooms.data.items ?? []);
+  const { reputation } = hostedRooms.data;
+  const rooms = toMyRooms(hostedRooms.data);
 
   return (
     <MyRoomsPage
       rooms={rooms}
-      stats={toMyRoomStats(rooms, grade.data)}
-      level={toLevelStatus(grade.data)}
-      promotion={toPromotion(grade.data)}
+      stats={toMyRoomStats(rooms, reputation)}
+      level={toLevelStatus(reputation)}
+      promotion={toPromotion(reputation)}
     />
   );
 }

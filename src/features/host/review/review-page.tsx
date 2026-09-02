@@ -11,6 +11,9 @@ type Props = {
   selectedQuestionId: string | null;
   onSelectQuestion: (id: string) => void;
   essayAnswers: EssayAnswer[];
+  onSaveComment?: (answerId: number, comment: string) => void;
+  savingAnswerId?: number | null;
+  saveError?: string | null;
   onExport: () => void;
   exporting?: boolean;
 };
@@ -23,6 +26,9 @@ export function ReviewPage({
   selectedQuestionId,
   onSelectQuestion,
   essayAnswers,
+  onSaveComment,
+  savingAnswerId,
+  saveError,
   onExport,
   exporting,
 }: Props) {
@@ -52,6 +58,9 @@ export function ReviewPage({
         selectedQuestionId={selectedQuestionId}
         onSelectQuestion={onSelectQuestion}
         essayAnswers={essayAnswers}
+        onSaveComment={onSaveComment}
+        savingAnswerId={savingAnswerId}
+        saveError={saveError}
       />
     </main>
   );

@@ -13,6 +13,7 @@ import {
   putNotificationSettings,
   updateProfile,
 } from "@/lib/api/me";
+import { clearGuestRecord } from "@/lib/guest-token-storage";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type {
   NotificationSettingsDto,
@@ -140,9 +141,16 @@ export function useReport() {
   });
 }
 
-/** POST /guest-records/claim — 가입 후 7일 내, 경과 시 410 RECORD_PURGED */
+/**
+ * @draft POST /guest-records/claim — **백엔드 미구현**(실서버 404).
+ * 성공하면 보관하던 표를 지운다. 아직 없는 API라 실패는 조용히 삼키고 표를 그대로 둔다 —
+ * 서버가 생기면 다음 로그인에서 다시 시도된다.
+ */
 export function useClaimGuestRecord() {
   return useMutation({
-    mutationFn: (participantId: number) => claimGuestRecord(participantId),
+    mutationFn: async ({ guestToken, roomId }: { guestToken: string; roomId: number }) => {
+      await claimGuestRecord(guestToken);
+      clearGuestRecord(roomId);
+    },
   });
 }

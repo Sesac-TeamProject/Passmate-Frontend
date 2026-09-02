@@ -7,13 +7,14 @@ import {
   toEssayAnswers,
   toReportStudents,
   toReviewProgressLabel,
+  toReviewSaveMessage,
   toSessionReport,
 } from "@/features/host/review/adapt";
 import { ExportFailedDialog } from "@/features/host/review/export-failed-dialog";
 import { ReviewPage } from "@/features/host/review/review-page";
 import { ReviewSkeleton } from "@/features/host/review/review-skeleton";
 import { exportRoomReport } from "@/lib/api/results";
-import { useReviewTargets, useSessionResults } from "@/lib/queries/use-results";
+import { usePostHostReview, useReviewTargets, useSessionResults } from "@/lib/queries/use-results";
 
 /** 목 라우트가 없어 목 모드에서는 404가 난다 — 실제 실패도 같은 안내로 접는다 */
 const EXPORT_UNAVAILABLE_MESSAGE = "백엔드 연동 후 제공돼요";
@@ -45,6 +46,12 @@ export default function Page() {
     essayQuestionId === null ? {} : { questionId: essayQuestionId },
   );
 
+  /**
+   * 첨삭 저장 — **서버에 저장 API가 아직 없다**(실서버 404). 목에서는 성공하고,
+   * 실서버에서는 NotFound를 "준비 중"으로 접어 알린다.
+   */
+  const saveReview = usePostHostReview(roomId, essayQuestionId ?? 0);
+
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -74,6 +81,9 @@ export default function Page() {
         selectedQuestionId={selectedQuestionId}
         onSelectQuestion={setSelectedQuestionId}
         essayAnswers={essayAnswers.data ? toEssayAnswers(essayAnswers.data) : []}
+        onSaveComment={(answerId, comment) => saveReview.mutate({ answerId, body: { comment } })}
+        savingAnswerId={saveReview.isPending ? saveReview.variables.answerId : null}
+        saveError={saveReview.isError ? toReviewSaveMessage(saveReview.error) : null}
         onExport={handleExport}
         exporting={exporting}
       />
