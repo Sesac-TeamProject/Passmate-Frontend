@@ -3,19 +3,19 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
-import { toEssayAnswers, toReportStudents, toSessionReport } from "@/features/host/review/adapt";
+import { toQuestionInsights, toSessionReport } from "@/features/host/review/adapt";
 import { ExportFailedDialog } from "@/features/host/review/export-failed-dialog";
 import { ReviewPage } from "@/features/host/review/review-page";
 import { ReviewSkeleton } from "@/features/host/review/review-skeleton";
 import { exportRoomReport } from "@/lib/api/results";
-import { useEssayAnswers, useRoomReport } from "@/lib/queries/use-results";
+import { useRoomReport } from "@/lib/queries/use-results";
 
 /** 목 라우트가 없어 목 모드에서는 404가 난다 — 실제 실패도 같은 안내로 접는다 */
 const EXPORT_UNAVAILABLE_MESSAGE = "백엔드 연동 후 제공돼요";
 
 /**
  * W-07 방 리포트 컨테이너. [sessionId]는 roomId다(사전 판정).
- * 우측 분석 패널이 볼 문항 id를 여기서 들고 있다가 서술형 답변 조회를 구동한다.
+ * 우측 상세 패널이 볼 문항 id를 여기서 들고 있는다.
  */
 export default function Page() {
   const params = useParams<{ sessionId: string }>();
@@ -32,10 +32,6 @@ export default function Page() {
     setSyncedRoomId(roomId);
     setSelectedQuestionId((questions.find((q) => q.type === "essay") ?? questions[0]).id);
   }
-
-  const selectedQuestion = questions.find((q) => q.id === selectedQuestionId) ?? null;
-  const essayQuestionId = selectedQuestion?.type === "essay" ? Number(selectedQuestion.id) : null;
-  const essayAnswers = useEssayAnswers(roomId, essayQuestionId);
 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -61,10 +57,12 @@ export default function Page() {
     <>
       <ReviewPage
         report={toSessionReport(report.data, roomId)}
-        students={toReportStudents(report.data.students ?? [])}
         selectedQuestionId={selectedQuestionId}
         onSelectQuestion={setSelectedQuestionId}
-        essayAnswers={essayAnswers.data ? toEssayAnswers(essayAnswers.data) : []}
+        insight={toQuestionInsights(report.data).get(selectedQuestionId ?? "") ?? null}
+        // @draft 문항 단위 코멘트 저장 계약이 없다 — 계약이 오면 뮤테이션을 붙이고 true로 연다
+        canSaveComment={false}
+        onSaveComment={() => undefined}
         onExport={handleExport}
         exporting={exporting}
       />

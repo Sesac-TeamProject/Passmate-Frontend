@@ -23,17 +23,83 @@ type ReportQuestionSource = {
   type: "multiple" | "essay" | "ox";
   accuracy?: number;
   aiCount?: number;
+  /** @draft 우측 상세 패널이 쓰는 문항 전문 — 없으면 title을 쓴다 */
+  prompt?: string;
+  /** @draft 리포트 표 "개념" 열 */
+  concept: string;
+  /** @draft 리포트 표 "소요" 열(초) */
+  elapsedSeconds: number;
 };
 
 const REPORT_QUESTIONS: ReportQuestionSource[] = [
-  { no: 1, title: "DI 컨테이너 개념", type: "multiple", accuracy: 100 },
-  { no: 2, title: "@Transactional 전파", type: "multiple", accuracy: 67 },
-  { no: 3, title: "JPA 영속성 컨텍스트", type: "essay", aiCount: 6 },
-  { no: 4, title: "AOP 프록시 방식", type: "multiple", accuracy: 50 },
-  { no: 5, title: "Bean 기본 스코프", type: "ox", accuracy: 83 },
-  { no: 6, title: "N+1 문제", type: "essay", aiCount: 6 },
-  { no: 7, title: "지연 로딩 기본 대상", type: "multiple", accuracy: 67 },
-  { no: 8, title: "Security 필터 체인", type: "essay", aiCount: 6 },
+  {
+    no: 1,
+    title: "DI 컨테이너 개념",
+    type: "multiple",
+    accuracy: 100,
+    concept: "DI · AOP",
+    elapsedSeconds: 18,
+  },
+  {
+    no: 2,
+    title: "@Transactional 전파",
+    type: "multiple",
+    accuracy: 67,
+    concept: "트랜잭션",
+    elapsedSeconds: 52,
+  },
+  {
+    no: 3,
+    title: "JPA 영속성 컨텍스트",
+    prompt: "JPA 영속성 컨텍스트를 1차 캐시 관점에서 설명하세요.",
+    type: "essay",
+    accuracy: 38,
+    aiCount: 6,
+    concept: "JPA 영속성",
+    elapsedSeconds: 160,
+  },
+  {
+    no: 4,
+    title: "AOP 프록시 방식",
+    type: "multiple",
+    accuracy: 50,
+    concept: "DI · AOP",
+    elapsedSeconds: 34,
+  },
+  {
+    no: 5,
+    title: "Bean 기본 스코프",
+    type: "ox",
+    accuracy: 83,
+    concept: "DI · AOP",
+    elapsedSeconds: 28,
+  },
+  {
+    no: 6,
+    title: "N+1 문제",
+    type: "essay",
+    accuracy: 46,
+    aiCount: 6,
+    concept: "JPA 영속성",
+    elapsedSeconds: 48,
+  },
+  {
+    no: 7,
+    title: "지연 로딩 기본 대상",
+    type: "multiple",
+    accuracy: 67,
+    concept: "JPA 영속성",
+    elapsedSeconds: 21,
+  },
+  {
+    no: 8,
+    title: "Security 필터 체인",
+    type: "essay",
+    accuracy: 58,
+    aiCount: 6,
+    concept: "트랜잭션",
+    elapsedSeconds: 39,
+  },
 ];
 
 const REPORT_STATS = { accuracy: 71, students: 6, questions: 8, aiAnalyses: 18 };
@@ -180,6 +246,9 @@ function buildResultQuestion(q: ReportQuestionSource): ResultQuestionDto {
       earnedScore: 0,
       aiFeedback: mine.aiFeedback,
       hostReview: null,
+      concept: q.concept,
+      classAccuracyPercent: q.accuracy ?? null,
+      elapsedSeconds: q.elapsedSeconds,
     };
   }
 
@@ -188,6 +257,9 @@ function buildResultQuestion(q: ReportQuestionSource): ResultQuestionDto {
   // 보기 원문이 목에 없어 번호로 대신한다 — 계약이 오면 실제 보기 텍스트가 들어온다.
   const correctChoice = "1번";
   const myChoice = verdict === "CORRECT" ? correctChoice : "2번";
+  // @draft 보기별 응답 인원 — 방 인원 6명을 정답률에 맞춰 나눈다 (시안 "다른 학생들은")
+  const correctPeople = Math.round((REPORT_STATS.students * (q.accuracy ?? 0)) / 100);
+  const rest = REPORT_STATS.students - correctPeople;
 
   return {
     questionId: q.no,
@@ -202,6 +274,15 @@ function buildResultQuestion(q: ReportQuestionSource): ResultQuestionDto {
     earnedScore: verdict === "CORRECT" ? 1 : 0,
     aiFeedback: null,
     hostReview: null,
+    concept: q.concept,
+    classAccuracyPercent: q.accuracy ?? null,
+    elapsedSeconds: q.elapsedSeconds,
+    choiceDistribution: [
+      { label: "1번", count: correctPeople, isCorrect: true },
+      { label: "2번", count: Math.ceil(rest / 2) },
+      { label: "3번", count: Math.floor(rest / 2) },
+      { label: "4번", count: 0 },
+    ],
   };
 }
 
@@ -222,12 +303,28 @@ export function mockMyResult(): SessionResultResponse {
 /** GET /rooms/{roomId}/reports/me — AI 학습 리포트 */
 export function mockMyReport(): LearningReportResponse {
   return {
-    accuracyPercent: REPORT_STATS.accuracy,
+    // 방 평균(REPORT_STATS.accuracy=71)이 아니라 나의 정답률 — 비교 카드 myPercent와 같은 값
+    accuracyPercent: 75,
     weakTopics: ["JPA 영속성", "트랜잭션", "인덱스"],
     improvementPoints: [
       "flush 시점을 예시와 함께 보강",
       "트랜잭션 범위와 함께 설명",
       "준영속·삭제 상태까지 생명주기로 정리",
+    ],
+    dateLabel: REPORT_DATE_LABEL,
+    attemptCount: 3,
+    participantCount: 24,
+    elapsedSeconds: 700,
+    comparison: { myPercent: 75, classAveragePercent: 68, topPercent: 100 },
+    trend: [
+      { label: "1회차", accuracyPercent: 58 },
+      { label: "2회차", accuracyPercent: 63 },
+      { label: "3회차 (이번)", accuracyPercent: 75 },
+    ],
+    concepts: [
+      { name: "JPA 영속성", correctCount: 1, questionCount: 3 },
+      { name: "트랜잭션", correctCount: 2, questionCount: 3 },
+      { name: "DI · AOP", correctCount: 2, questionCount: 2 },
     ],
   };
 }
@@ -246,6 +343,12 @@ export function mockRoomReport(): RoomReportResponse {
       aiAnalysisCount: REPORT_STATS.aiAnalyses,
       avgScore: null,
       topScore: RANKING[0]?.totalScore ?? null,
+      // 이 목의 방 인원은 6명이다 — 시안 숫자(24명/22명)를 그대로 쓰면 KPI끼리 어긋난다
+      submittedCount: 5,
+      completionPercent: 83,
+      avgElapsedSeconds: 252,
+      essayGradedCount: 6,
+      essayTotalCount: 6,
     },
     questions: REPORT_QUESTIONS.map((q) => ({
       questionId: q.no,
@@ -254,8 +357,23 @@ export function mockRoomReport(): RoomReportResponse {
       type: toQuestionType(q.type),
       accuracyPercent: q.accuracy ?? null,
       aiFeedbackCount: q.aiCount ?? null,
+      // @draft 오답 인원은 정답률의 나머지로 만든다 — 계약이 오면 서버 값이 들어온다
+      wrongCount: Math.round((REPORT_STATS.students * (100 - (q.accuracy ?? 0))) / 100),
+      prompt: q.prompt ?? q.title,
     })),
-    students: RANKING,
+    students: RANKING.map((student, i) => ({ ...student, isMissing: i === RANKING.length - 1 })),
+    insights: REPORT_QUESTIONS.filter((q) => q.type === "essay").map((q) => ({
+      questionId: q.no,
+      gradingBreakdown: [
+        { label: "핵심 포함", count: 3 },
+        { label: "부분 점수", count: 2 },
+        { label: "핵심 누락", count: 1 },
+      ],
+      strengths: "1차 캐시와 동일성 보장을 짚은 답이 3명",
+      commonMisses: "쓰기 지연 · 변경 감지를 언급한 답이 2명뿐",
+      nextRoomSuggestion: "같은 개념을 객관식으로 한 번 더 확인",
+      hostComment: null,
+    })),
   };
 }
 

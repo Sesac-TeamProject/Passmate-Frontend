@@ -12,6 +12,9 @@ export type QuestionDetailFeedback = {
   improvement: string | null;
 };
 
+/** @draft 계약 없음 — 보기 하나에 몇 명이 답했는지 (시안 "다른 학생들은") */
+export type QuestionDetailChoice = { label: string; count: number; isCorrect: boolean };
+
 export type QuestionDetail = {
   no: number;
   total: number;
@@ -26,6 +29,8 @@ export type QuestionDetail = {
   correctAnswer: string | null;
   explanation: string | null;
   feedback: QuestionDetailFeedback | null;
+  /** 비면 "다른 학생들은" 칸을 감춘다 */
+  choices: QuestionDetailChoice[];
 };
 
 type Props = {
@@ -36,9 +41,9 @@ type Props = {
 };
 
 /**
- * P-Web 리포트 — 문항 상세 (design.pen 프레임 HZ1Mr).
- * 리포트의 문항 행에서 들어온다. 시안의 "다른 학생들은"(보기별 응답 분포)은 계약에
- * 그 필드가 없어 그리지 않았다 — DESIGN_GAPS G-8 옆에 같이 물어야 한다.
+ * P-Web 리포트 — 문항 상세 (시안 620:8221).
+ * 리포트의 문항 행에서 들어온다. "다른 학생들은"(보기별 응답 분포)은 계약에 아직 없어
+ * @draft 필드로 받는다 — 서버가 안 주면 그 칸만 사라진다.
  */
 export function QuestionDetailPage({ detail, backHref, prevHref, nextHref }: Props) {
   return (
@@ -83,6 +88,15 @@ export function QuestionDetailPage({ detail, backHref, prevHref, nextHref }: Pro
           <p className="text-body-lg text-muted-foreground">{detail.explanation}</p>
         ) : null}
 
+        {detail.choices.length > 0 ? (
+          <section className="flex flex-col gap-2">
+            <h2 className="text-label-md text-muted-foreground">다른 학생들은</h2>
+            {detail.choices.map((choice) => (
+              <ChoiceRow key={choice.label} choice={choice} people={detail.choices} />
+            ))}
+          </section>
+        ) : null}
+
         {detail.feedback ? (
           <section className="flex flex-col gap-3">
             <h2 className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
@@ -94,9 +108,6 @@ export function QuestionDetailPage({ detail, backHref, prevHref, nextHref }: Pro
           </section>
         ) : null}
       </div>
-
-      {/* TODO(계약): 시안에는 "다른 학생들은"(보기별 응답 분포)이 있는데
-          GET /rooms/{id}/results/me가 보기별 인원을 주지 않아 그리지 않았다 */}
 
       <div className="mt-auto flex items-center justify-between px-20 py-8">
         <NavLink href={prevHref}>‹ 이전 문항</NavLink>
@@ -141,6 +152,39 @@ function AnswerBox({
         {value}
       </span>
     </div>
+  );
+}
+
+/** 보기 한 줄 — 정답 보기만 민트로 세운다 (시안 620:8221 "다른 학생들은") */
+function ChoiceRow({
+  choice,
+  people,
+}: {
+  choice: QuestionDetailChoice;
+  people: QuestionDetailChoice[];
+}) {
+  const peak = Math.max(...people.map((c) => c.count), 1);
+
+  return (
+    <p className="flex items-center gap-3">
+      <span
+        className={cn(
+          "w-40 shrink-0 truncate text-label-md",
+          choice.isCorrect ? "text-mint-dark" : "text-muted-foreground",
+        )}
+      >
+        {choice.label}
+      </span>
+      <span className="h-2 flex-1 overflow-hidden rounded-full bg-line-soft">
+        <span
+          className={cn("block h-full rounded-full", choice.isCorrect ? "bg-mint" : "bg-muted")}
+          style={{ width: `${(choice.count / peak) * 100}%` }}
+        />
+      </span>
+      <span className="w-12 shrink-0 text-right text-label-md text-muted-foreground">
+        {choice.count}명
+      </span>
+    </p>
   );
 }
 
