@@ -137,6 +137,20 @@
   --color-skeleton: var(--skeleton);
   /* 보조 — 캡션·부제처럼 옅게 깔리는 줄 */
   --color-skeleton-soft: var(--skeleton-soft);
+
+  /* --- 랜딩(L-01) 전용 (design.pen "L-01 랜딩 (웹)") ---
+     초록 섹션과 기능 카드의 그라데이션은 기존 --mint 계열과 값이 미묘하게 달라 따로 둔다.
+     소개 페이지 안에서만 쓴다 — 제품 화면에는 쓰지 않는다. */
+  /* HOW 섹션 배경 그라데이션 (위 → 아래) */
+  --color-landing-green: var(--landing-green);
+  --color-landing-green-deep: var(--landing-green-deep);
+  /* 초록 배경 위 강조 — kicker·단계 번호·랭킹 1위·아바타 링 */
+  --color-landing-glow: var(--landing-glow);
+  /* 기능 카드 그라데이션 양 끝 (가운데 두 장은 --mint·--mint-dark·--mint-deep을 쓴다) */
+  --color-landing-shot-light: var(--landing-shot-light);
+  --color-landing-shot-dark: var(--landing-shot-dark);
+  /* LIVE 점 — --negative(#e03131)보다 밝아 초록 위에서 살아난다 */
+  --color-landing-live: var(--landing-live);
 }
 
 /* --- 타이포그래피 v5 (design/design.pen "Typography — 10 styles") + 랜딩 전용 display-xl·2xl ---
@@ -276,6 +290,14 @@
   /* 스켈레톤 블록 */
   --skeleton: #e7e9ec;
   --skeleton-soft: #f1f3f5;
+
+  /* 랜딩 전용 */
+  --landing-green: #2c9273;
+  --landing-green-deep: #17624e;
+  --landing-glow: #5be0a8;
+  --landing-shot-light: #22c39a;
+  --landing-shot-dark: #0c4133;
+  --landing-live: #ff6b6b;
 
   /* shadcn 변수 → v5 매핑 */
   --background: #f6f6f7; /* bg/page-web */

@@ -8,6 +8,7 @@ import {
   FAQS,
   FEATURES,
   FOOTER_LINKS,
+  HOW,
   NAV_LINKS,
   PROOF_AVATARS,
   REVIEWS,
@@ -18,6 +19,7 @@ import {
 } from "./content";
 import { FaqList } from "./faq-list";
 import { PhoneMockup } from "./mockups/phone-mockup";
+import { STEP_VISUALS } from "./mockups/step-visuals";
 import { ScreenMockup } from "./mockups/screen-mockup";
 import { EditorMockup, LiveMockup, ReportMockup } from "./mockups/screen-mockups";
 
@@ -151,20 +153,45 @@ function Stats() {
   );
 }
 
+/** 시안 HOW 섹션만 콘텐츠 폭이 1260이다 (카드 404 × 3 + 간격 24). 다른 섹션은 INNER(1200) */
+const HOW_INNER = "mx-auto w-full max-w-[1308px] px-6";
+
 function HowItWorks() {
   return (
-    <section id="how" className="scroll-mt-20 bg-card py-28">
-      <div className={cn(INNER, "flex flex-col gap-12")}>
-        <h2 className="text-display-lg whitespace-pre-line text-ink">
-          {"방 열고, 문제 받고, 같이 풀기.\n딱 세 단계예요."}
-        </h2>
-        <ol className="grid grid-cols-3 gap-8">
-          {STEPS.map((step) => (
-            <li key={step.no} className="flex flex-col gap-3">
-              <span aria-hidden className="h-[3px] w-full bg-mint" />
-              <span className="text-display-md text-mint">{step.no}</span>
-              <h3 className="text-heading-md text-ink">{step.title}</h3>
-              <p className="text-body-lg text-muted-foreground">{step.body}</p>
+    <section
+      id="how"
+      className="relative scroll-mt-20 overflow-hidden bg-linear-to-b from-landing-green to-landing-green-deep pt-[76px] pb-[60px]"
+    >
+      {/* 민트 글로우 — 섹션 위로 넘겨 자른다 (시안 900×900, y −300) */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -top-[300px] left-[270px] size-[900px] rounded-full bg-[radial-gradient(circle,var(--landing-glow)_0%,transparent_70%)] opacity-20"
+      />
+      <div className={cn(HOW_INNER, "relative flex flex-col items-center")}>
+        <span className="text-label-md font-bold tracking-[0.2em] text-landing-glow">
+          {HOW.kicker}
+        </span>
+        <h2 className="mt-4 text-display-xl text-white">{HOW.title}</h2>
+        <p className="mt-3 text-body-lg text-white/80">{HOW.subtitle}</p>
+
+        <ol className="mt-[50px] flex w-full gap-6">
+          {STEPS.map((step, index) => (
+            <li key={step.no} className="relative flex flex-1 flex-col">
+              {/* 앞 단계에서 넘어오는 화살표 — 열 사이 24 간격 한가운데, 카드 세로 가운데 */}
+              {index > 0 && (
+                <span
+                  aria-hidden
+                  className="absolute top-[198px] -left-[18px] w-3 text-center text-heading-md text-white/80"
+                >
+                  ›
+                </span>
+              )}
+              <span className="text-display-2xl text-landing-glow/90">{step.no}</span>
+              <div className="mt-3">{STEP_VISUALS[step.visual]}</div>
+              <h3 className="mt-[30px] text-display-sm text-white">{step.title}</h3>
+              <p className="mt-2.5 text-body-lg leading-[1.75] whitespace-pre-line text-white/80">
+                {step.body}
+              </p>
             </li>
           ))}
         </ol>

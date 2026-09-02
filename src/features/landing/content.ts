@@ -18,23 +18,35 @@ export const STATS = [
   { value: "12종", label: "학생이 고르는 캐릭터" },
 ] as const;
 
+/** HOW 섹션 머리말 (시안 초록 섹션 상단, 가운데 정렬) */
+export const HOW = {
+  kicker: "HOW IT WORKS",
+  title: "방 열고, 문제 받고, 같이 풀기.",
+  subtitle: "딱 세 단계예요. 준비물은 문제 세트 하나와 PIN 6자리뿐.",
+} as const;
+
+export type StepVisualKey = "pin" | "generate" | "live";
+
 export const STEPS = [
   {
     no: "01",
     title: "방 열기",
-    body: "문제 세트를 고르면 PIN 6자리가 바로 나와요. 프로젝터에 띄우면 준비 끝.",
+    body: "문제 세트를 고르면 PIN 6자리가 바로 나와요.\n프로젝터에 띄우면 준비 끝.",
+    visual: "pin",
   },
   {
     no: "02",
     title: "문제 받기",
-    body: "주제와 난이도만 정하면 객관식 · 서술형이 자동으로 채워져요. 고쳐 쓰는 것도 자유.",
+    body: "주제와 난이도만 정하면 객관식·서술형이\n자동으로 채워져요.",
+    visual: "generate",
   },
   {
     no: "03",
     title: "같이 풀기",
-    body: "타이머가 돌고 랭킹이 바뀌고, 문항마다 정답률이 뜨는 화면을 모두가 함께 봐요.",
+    body: "타이머가 돌고 랭킹이 바뀌는 화면을\n교실 전체가 함께 봐요.",
+    visual: "live",
   },
-] as const;
+] as const satisfies readonly { no: string; title: string; body: string; visual: StepVisualKey }[];
 
 export type MockupKey = "editor" | "live" | "report";
 
