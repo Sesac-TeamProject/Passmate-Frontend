@@ -5,7 +5,9 @@ import type { PublicRoomSearch, QuestionSetListQuery } from "@/lib/types/dto";
  */
 export const qk = {
   me: ["me"] as const,
-  myPage: ["me", "joined"] as const,
+  joinedRooms: (page: number) => ["me", "joined", page] as const,
+  /** 누적 학습 리포트 */
+  cumulativeReport: ["me", "report"] as const,
   grade: ["me", "grade"] as const,
   badges: ["me", "badges"] as const,
   notifications: ["me", "notifications"] as const,

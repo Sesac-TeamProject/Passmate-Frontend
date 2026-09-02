@@ -13,9 +13,9 @@ import type {
   CoinTransactionType,
   EarningsResponse,
   GradeResponse,
-  MyPageOngoing,
-  MyPageResponse,
-  MyPageRoom,
+  CumulativeReportResponse,
+  JoinedRoom,
+  JoinedRoomsResponse,
   MyProfileResponse,
   NotificationSettingsDto,
   PaymentMethod,
@@ -218,53 +218,73 @@ export function toSettlementAccount(dto: SettlementAccountDto): SettlementAccoun
   };
 }
 
-/** ActiveSession.progress — "3/8" → {current:3, total:8} */
-function parseProgress(label: string | null | undefined): { current: number; total: number } {
-  if (!label) return { current: 0, total: 0 };
-  const [current, total] = label.split("/").map(Number);
-  return {
-    current: Number.isFinite(current) ? current : 0,
-    total: Number.isFinite(total) ? total : 0,
-  };
-}
-
-/** MyPageResponse.ongoing → 참여한 방의 "다시 들어가기" 카드. 없으면 null */
-export function toActiveSession(ongoing: MyPageOngoing | null | undefined): ActiveSession | null {
+/**
+ * 지금 들어갈 수 있는 방 → "다시 들어가기" 카드. 없으면 null.
+ *
+ * 서버 응답에 **PIN이 없다** — 참여한 방 목록은 `roomId`만 준다. 진행률(3/8)도 없다.
+ * 그래서 카드는 방 이름·선생님만 보여 주고, 들어가는 길은 PIN 입력 화면으로 보낸다.
+ */
+export function toActiveSession(rooms: JoinedRoom[]): ActiveSession | null {
+  const ongoing = rooms.find((r) => r.status === "WAITING" || r.status === "RUNNING");
   if (!ongoing) return null;
 
   return {
-    code: ongoing.pin,
-    pin: ongoing.pin,
+    roomId: ongoing.roomId,
     title: ongoing.title,
-    hostName: ongoing.hostNickname ?? "",
-    progress: parseProgress(ongoing.progressLabel),
+    hostName: ongoing.hostNickname,
+    isRunning: ongoing.status === "RUNNING",
   };
 }
 
-function toAttendedSession(room: MyPageRoom): AttendedSession {
+function toAttendedSession(room: JoinedRoom): AttendedSession {
   return {
     id: String(room.roomId),
     rank: room.myRank ?? 0,
     title: room.title,
-    dateLabel: room.dateLabel ?? "",
-    questionCount: room.questionCount ?? 0,
+    dateLabel: toSessionDateLabel(room),
+    questionCount: room.questionCount,
     score: room.myScore ?? 0,
   };
 }
 
-/** GET /users/me/rooms/joined → W-13 참여한 방 · 참여 기록 */
-export function toLearningRecord(page: MyPageResponse): LearningRecord {
-  const summary = page.summary;
+/** 종료 시각이 있으면 그 날짜, 없으면 시작 시각. 둘 다 없으면 빈 문자열 */
+function toSessionDateLabel(room: JoinedRoom): string {
+  const source = room.endedAt ?? room.startedAt;
+  if (!source) return "";
 
+  const date = parseServerDateTime(source);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const weekday = new Intl.DateTimeFormat("ko-KR", { weekday: "short" }).format(date);
+  return `${date.getMonth() + 1}/${date.getDate()} (${weekday})`;
+}
+
+/** GET /users/me/rooms/joined → W-13 참여한 방 · 참여 기록 */
+export function toLearningRecord(page: JoinedRoomsResponse): LearningRecord {
   return {
     stats: {
-      sessions: summary?.participationCount ?? 0,
-      accuracy: summary?.accuracyPercent ?? 0,
-      averageRank: summary?.avgRank ?? 0,
+      sessions: page.summary.completedSessionCount,
+      accuracy: page.summary.averageAccuracy,
+      averageRank: page.summary.averageRank,
     },
-    weakTopics: summary?.weakTopics ?? [],
-    sessions: (page.rooms ?? []).map(toAttendedSession),
+    weakTopics: page.summary.weakTopics,
+    sessions: page.rooms.content.map(toAttendedSession),
   };
+}
+
+/**
+ * "지난주보다 4.2%p 올랐어요" — 비교할 지난주가 없으면 null.
+ *
+ * 누적 리포트에는 세션별 추이(`trend`)도 오지만 **그릴 자리가 시안에 없다** — 없는 차트를
+ * 지어내는 대신 변화 한 줄만 쓴다(추이 그래프는 디자인이 정해지면 붙인다).
+ */
+export function toAccuracyChangeLabel(report: CumulativeReportResponse): string | null {
+  const change = report.accuracyChangeFromLastWeek;
+  if (change === undefined || change === 0) return null;
+
+  return change > 0
+    ? `지난주보다 ${change.toFixed(1)}%p 올랐어요`
+    : `지난주보다 ${Math.abs(change).toFixed(1)}%p 내렸어요`;
 }
 
 const BADGE_META: Record<BadgeType, { kind: AchievementBadgeKind; label?: string; title: string }> =

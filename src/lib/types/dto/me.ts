@@ -1,34 +1,59 @@
-import type { HostLevel } from "./common";
+import type { HostLevel, PageResponse, RoomStatus } from "./common";
 
-export type MyPageSummary = {
-  participationCount?: number;
-  accuracyPercent?: number;
-  avgRank?: number | null;
-  trendText?: string | null;
-  weakTopics?: string[];
-};
-export type MyPageOngoing = {
-  roomId: number;
-  pin: string;
-  title: string;
-  hostNickname?: string | null;
-  progressLabel?: string | null;
-};
-export type MyPageRoom = {
+/** 참여한 방 한 줄 — 백엔드 `report/dto/JoinedRoomResponses.kt` 1:1 */
+export type JoinedRoom = {
   roomId: number;
   title: string;
-  dateLabel?: string;
-  questionCount?: number;
-  myScore?: number | null;
-  myRank?: number | null;
-  hasReport?: boolean;
+  /** 방을 연 선생님 닉네임 */
+  hostNickname: string;
+  status: RoomStatus;
+  startedAt?: string;
+  endedAt?: string;
+  questionCount: number;
+  fee?: number;
+  /** 내 성적. 아직 안 풀었거나 채점 전이면 빠진다 */
+  myScore?: number;
+  myRank?: number;
+  /** 0~100 */
+  myAccuracy?: number;
+  /** 학습 리포트가 만들어졌는가 — false면 리포트 링크를 걸지 않는다 */
+  hasReport: boolean;
 };
-/** GET /users/me/rooms/joined — 요약+진행 중+참여 방 (FR-032·033) */
-export type MyPageResponse = {
-  summary?: MyPageSummary;
-  ongoing?: MyPageOngoing | null;
-  rooms?: MyPageRoom[];
-  nextCursor?: string | null;
+
+/** 참여한 방 목록 위의 요약 지표 */
+export type JoinedSummary = {
+  completedSessionCount: number;
+  averageAccuracy: number;
+  averageRank: number;
+  weakTopics: string[];
+};
+
+/** GET /users/me/rooms/joined?page&size — 요약 + **오프셋 페이지** */
+export type JoinedRoomsResponse = {
+  summary: JoinedSummary;
+  rooms: PageResponse<JoinedRoom>;
+};
+
+/** 누적 리포트의 추이 한 점 — 세션 하나 */
+export type SessionTrendPoint = {
+  roomId: number;
+  roomTitle: string;
+  totalScore: number;
+  accuracy: number;
+  finalRank: number;
+  playedAt: string;
+};
+
+/** GET /users/me/report — 누적 학습 리포트 */
+export type CumulativeReportResponse = {
+  joinedRoomCount: number;
+  completedSessionCount: number;
+  averageAccuracy: number;
+  averageRank: number;
+  /** 지난주 대비 정답률 변화(%p). 비교할 지난주가 없으면 빠진다 */
+  accuracyChangeFromLastWeek?: number;
+  trend: SessionTrendPoint[];
+  weakTopics: string[];
 };
 
 export type GradeStats = {

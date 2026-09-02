@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMe } from "@/lib/api/auth";
 import {
   claimGuestRecord,
@@ -6,7 +6,8 @@ import {
   getBadges,
   getGrade,
   getHostProfile,
-  getMyPage,
+  getCumulativeReport,
+  getJoinedRooms,
   getNotificationSettings,
   postReport,
   putNotificationSettings,
@@ -32,11 +33,23 @@ export function useMe() {
   });
 }
 
-/** GET /users/me/rooms/joined — 요약+진행 중+참여 방 (FR-032·033) */
-export function useMyPage() {
+/**
+ * GET /users/me/rooms/joined — 요약 + 참여한 방 페이지.
+ * 페이지를 넘겨도 목록이 깜빡이지 않게 이전 결과를 유지한다.
+ */
+export function useJoinedRooms(page = 0) {
   return useQuery({
-    queryKey: qk.myPage,
-    queryFn: () => getMyPage(),
+    queryKey: qk.joinedRooms(page),
+    queryFn: () => getJoinedRooms(page),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** GET /users/me/report — 누적 학습 리포트(추이 그래프·취약 주제) */
+export function useCumulativeReport() {
+  return useQuery({
+    queryKey: qk.cumulativeReport,
+    queryFn: () => getCumulativeReport(),
   });
 }
 

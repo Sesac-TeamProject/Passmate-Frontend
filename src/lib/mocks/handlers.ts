@@ -33,7 +33,8 @@ import {
   mockGrade,
   mockHostProfile,
   mockMe,
-  mockMyPage,
+  mockCumulativeReport,
+  mockJoinedRooms,
   mockBadges as mockMyBadges,
   mockNotificationSettings,
   mockPutNotificationSettings,
@@ -198,7 +199,8 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /rooms/:roomId/ratings": () => mockSubmitRating(),
 
   /* ── 마이페이지 ───────────────────────────────────── */
-  "GET /users/me/rooms/joined": () => mockMyPage(),
+  "GET /users/me/rooms/joined": (ctx) => mockJoinedRooms(ctx.url),
+  "GET /users/me/report": () => mockCumulativeReport(),
   "GET /users/me/grade": () => mockGrade(),
   "GET /users/me/badges": () => mockMyBadges(),
   "GET /users/me/notification-settings": () => mockNotificationSettings(),

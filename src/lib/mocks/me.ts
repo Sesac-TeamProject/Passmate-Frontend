@@ -3,12 +3,13 @@ import type {
   BadgeType,
   GradeResponse,
   HostProfileResponse,
-  MyPageResponse,
+  CumulativeReportResponse,
+  JoinedRoomsResponse,
   MyProfileResponse,
   NotificationSettingsDto,
   UserProfileUpdateRequest,
 } from "@/lib/types/dto";
-import { DEMO_PIN, DEMO_ROOM_ID, ME_PROFILE, PUBLIC_ROOMS } from "./fixtures";
+import { DEMO_ROOM_ID, ME_PROFILE, PUBLIC_ROOMS } from "./fixtures";
 
 /**
  * 내 프로필(me) 목 응답. features/me/mock.ts·features/me/joined/mock.ts·
@@ -48,53 +49,120 @@ export function mockDeleteMe(): undefined {
   return undefined;
 }
 
-/** GET /users/me/rooms/joined — 요약+진행 중+참여 방. features/me/joined/mock.ts ACTIVE_SESSION */
-export function mockMyPage(): MyPageResponse {
+/** 참여한 방 목 데이터 — 진행 중 1개 + 종료 3개 */
+const JOINED_ROOMS: JoinedRoomsResponse["rooms"]["content"] = [
+  {
+    roomId: DEMO_ROOM_ID,
+    title: "Spring 실전 모의고사 4주차",
+    hostNickname: "김민지",
+    status: "RUNNING",
+    startedAt: "2026-09-02T02:00:00",
+    questionCount: 8,
+    fee: 10000,
+    hasReport: false,
+  },
+  {
+    roomId: 1,
+    title: "8월 4주차 Spring 스터디",
+    hostNickname: "김선생",
+    status: "ENDED",
+    startedAt: "2026-08-22T10:00:00",
+    endedAt: "2026-08-22T11:00:00",
+    questionCount: 8,
+    myScore: 990,
+    myRank: 3,
+    myAccuracy: 75,
+    hasReport: true,
+  },
+  {
+    roomId: 2,
+    title: "CS 모의면접 3회차",
+    hostNickname: "박세라",
+    status: "ENDED",
+    startedAt: "2026-08-20T11:00:00",
+    endedAt: "2026-08-20T12:00:00",
+    questionCount: 10,
+    myScore: 1120,
+    myRank: 2,
+    myAccuracy: 80,
+    hasReport: true,
+  },
+  {
+    roomId: 3,
+    title: "JPA 복습 세션",
+    hostNickname: "이서준",
+    status: "ENDED",
+    startedAt: "2026-08-17T08:00:00",
+    endedAt: "2026-08-17T09:00:00",
+    questionCount: 6,
+    myScore: 640,
+    myRank: 5,
+    myAccuracy: 50,
+    hasReport: true,
+  },
+];
+
+const JOINED_PAGE_SIZE = 20;
+
+/** GET /users/me/rooms/joined?page&size — 요약 + 오프셋 페이지 */
+export function mockJoinedRooms(url: URL): JoinedRoomsResponse {
+  const page = Number(url.searchParams.get("page") ?? 0) || 0;
+  const size = Number(url.searchParams.get("size") ?? JOINED_PAGE_SIZE) || JOINED_PAGE_SIZE;
+  const content = JOINED_ROOMS.slice(page * size, page * size + size);
+
   return {
     summary: {
-      participationCount: 3,
-      accuracyPercent: 71,
-      avgRank: 3.3,
-      trendText: null,
+      completedSessionCount: 3,
+      averageAccuracy: 71,
+      averageRank: 3.3,
       weakTopics: ["JPA 영속성", "트랜잭션", "인덱스"],
     },
-    ongoing: {
-      roomId: DEMO_ROOM_ID,
-      pin: DEMO_PIN,
-      title: "Spring 실전 모의고사 4주차",
-      hostNickname: "김선생",
-      progressLabel: "3/8",
+    rooms: {
+      content,
+      page,
+      size,
+      totalElements: JOINED_ROOMS.length,
+      totalPages: Math.max(1, Math.ceil(JOINED_ROOMS.length / size)),
+      hasNext: (page + 1) * size < JOINED_ROOMS.length,
     },
-    rooms: [
+  };
+}
+
+/** GET /users/me/report — 누적 학습 리포트 */
+export function mockCumulativeReport(): CumulativeReportResponse {
+  return {
+    joinedRoomCount: 4,
+    completedSessionCount: 3,
+    averageAccuracy: 71,
+    averageRank: 3.3,
+    accuracyChangeFromLastWeek: 4.2,
+    trend: [
       {
-        roomId: 1,
-        title: "8월 4주차 Spring 스터디",
-        dateLabel: "8/22 (금)",
-        questionCount: 8,
-        myScore: 990,
-        myRank: 3,
-        hasReport: true,
+        roomId: 3,
+        roomTitle: "JPA 복습 세션",
+        totalScore: 640,
+        accuracy: 50,
+        finalRank: 5,
+        playedAt: "2026-08-17T09:00:00",
       },
       {
         roomId: 2,
-        title: "CS 모의면접 3회차",
-        dateLabel: "8/20 (수)",
-        questionCount: 10,
-        myScore: 1120,
-        myRank: 2,
-        hasReport: true,
+        roomTitle: "CS 모의면접 3회차",
+        totalScore: 1120,
+        accuracy: 80,
+        finalRank: 2,
+        playedAt: "2026-08-20T12:00:00",
       },
       {
-        roomId: 3,
-        title: "JPA 복습 세션",
-        dateLabel: "8/17 (일)",
-        questionCount: 6,
-        myScore: 640,
-        myRank: 5,
-        hasReport: true,
+        roomId: 1,
+        roomTitle: "8월 4주차 Spring 스터디",
+        totalScore: 990,
+        accuracy: 75,
+        finalRank: 3,
+        playedAt: "2026-08-22T11:00:00",
       },
     ],
-    nextCursor: null,
+    weakTopics: ["JPA 영속성", "트랜잭션", "인덱스"],
   };
 }
 

@@ -3,7 +3,8 @@ import type {
   ClaimGuestRecordRequest,
   GradeResponse,
   HostProfileResponse,
-  MyPageResponse,
+  CumulativeReportResponse,
+  JoinedRoomsResponse,
   MyProfileResponse,
   NotificationSettingsDto,
   ReportRequest,
@@ -21,9 +22,14 @@ export function deleteMe(): Promise<void> {
   return request<void>("/users/me", { method: "DELETE" });
 }
 
-/** GET /users/me/rooms/joined — 요약+진행 중+참여 방 (FR-032·033) */
-export function getMyPage(cursor?: string): Promise<MyPageResponse> {
-  return request<MyPageResponse>("/users/me/rooms/joined", { query: { cursor } });
+/** GET /users/me/rooms/joined?page&size — 요약 + 참여한 방 오프셋 페이지 */
+export function getJoinedRooms(page = 0, size?: number): Promise<JoinedRoomsResponse> {
+  return request<JoinedRoomsResponse>("/users/me/rooms/joined", { query: { page, size } });
+}
+
+/** GET /users/me/report — 누적 학습 리포트(추이·취약 주제) */
+export function getCumulativeReport(): Promise<CumulativeReportResponse> {
+  return request<CumulativeReportResponse>("/users/me/report");
 }
 
 /** GET /users/me/grade */
