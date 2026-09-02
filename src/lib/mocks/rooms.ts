@@ -1,9 +1,8 @@
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { AppError } from "@/lib/types/app-error";
 import { AVATAR_KEYS, type AvatarKey } from "@/lib/types/dto";
+import { ERROR_CODES } from "@/lib/types/error-codes";
 import type {
-  CreateRoomRequest,
-  CreateRoomResponse,
   HostedRoomDto,
   HostedRoomsResponse,
   JoinRoomRequest,
@@ -11,21 +10,22 @@ import type {
   ParticipantEntry,
   ParticipantsResponse,
   PublicRoomPageResponse,
+  RoomCreateRequest,
   RoomInfoResponse,
+  RoomResponse,
+  RoomUpdateRequest,
 } from "@/lib/types/dto";
-import { DEMO_PIN, DEMO_ROOM, HOSTED_ROOMS, PARTICIPANTS, PUBLIC_ROOMS } from "./fixtures";
+import { DEMO_ROOM, DEMO_ROOM_HOST, HOSTED_ROOMS, PARTICIPANTS, PUBLIC_ROOMS } from "./fixtures";
 import { currentProfile } from "./me";
 import { emitMockEvent } from "./session";
 
 /** 방(rooms) 도메인 목 응답. 입장 인원 등 상태가 필요한 값은 모듈 스코프에서 유지한다. */
 
-const HOST_MIN_LEVEL_FOR_PAID = 3;
-
 let hostedRooms: HostedRoomDto[] = [...HOSTED_ROOMS];
 let nextHostedRoomId = 104;
 
-/** 이번 세션에 새로 만든 방 — 발급한 PIN으로 다시 조회할 수 있어야 대기실로 들어간다 */
-let createdRooms: RoomInfoResponse[] = [];
+/** 만들어진 방 — 서버와 같은 `RoomResponse` 형태로 들고 있는다(PIN 조회·상세·수정이 같은 출처를 본다) */
+let rooms: RoomResponse[] = [{ ...DEMO_ROOM }];
 
 let participants: ParticipantEntry[] = [...PARTICIPANTS];
 let nextParticipantId = 17;
@@ -38,62 +38,125 @@ function randomAvatarId(): AvatarKey {
   return AVATAR_KEYS[Math.floor(Math.random() * AVATAR_KEYS.length)];
 }
 
-/** GET /rooms/pin/{pin} — 404 잘못된 PIN. 계약상 410(종료된 방)은 시연 방에선 재현하지 않는다. */
-export function mockRoomByPin(pin: string): RoomInfoResponse {
-  if (pin === DEMO_PIN) return { ...DEMO_ROOM };
-  const created = createdRooms.find((room) => room.pin === pin);
-  if (!created) throw new AppError("NotFound");
-  return { ...created };
+function findRoom(roomId: string): RoomResponse {
+  const found = rooms.find((r) => r.id === Number(roomId));
+  if (!found) throw new AppError("NotFound", { code: ERROR_CODES.ROOM_NOT_FOUND });
+  return found;
 }
 
 /**
- * @draft 목 전용 호스트 등급. 서버 `MyProfileResponse`에는 등급이 없다(아직 계산하지 않는다) —
- * 실서버에서 유료 방은 등급이 아니라 400 `UNSUPPORTED_ROOM_TYPE`으로 막힌다.
+ * @draft 입장 화면이 아직 기대하는 옛 형태로 접어 준다.
+ * 서버 `GET /rooms/pin/{pin}`은 `RoomSummaryResponse`(호스트·문항 수 없음)를 준다 —
+ * US2(T036·T044)에서 이 변환을 걷어낸다.
  */
-const MOCK_HOST_LEVEL = 3;
+function toRoomInfo(room: RoomResponse): RoomInfoResponse {
+  return {
+    roomId: room.id,
+    pin: room.pin,
+    title: room.title,
+    topic: room.topic ?? null,
+    status: room.status,
+    questionCount: null,
+    questionSetId: room.questionSetId ?? null,
+    estimatedMinutes: null,
+    scheduledAt: room.scheduledAt ?? null,
+    participantCount: room.participantCount,
+    maxParticipants: room.maxParticipants ?? null,
+    isPaid: room.type === "PAID",
+    entryFee: room.fee ?? null,
+    host: room.hostUserId === DEMO_ROOM_HOST.userId ? { ...DEMO_ROOM_HOST } : null,
+  };
+}
 
-/** POST /rooms — 유료 방은 Lv.3 이상만 개설 가능 */
-export function mockCreateRoom(body: CreateRoomRequest): CreateRoomResponse {
-  if (body.isPaid && MOCK_HOST_LEVEL < HOST_MIN_LEVEL_FOR_PAID) {
-    throw new AppError("PermissionDenied", { code: "HOST_LEVEL_REQUIRED" });
+/**
+ * GET /rooms/pin/{pin} — 없는 PIN·끝난 방 모두 404 `ROOM_NOT_FOUND`(410이 아니다).
+ */
+export function mockRoomByPin(pin: string): RoomInfoResponse {
+  const found = rooms.find((room) => room.pin === pin);
+  if (!found) throw new AppError("NotFound", { code: ERROR_CODES.ROOM_NOT_FOUND });
+  return toRoomInfo(found);
+}
+
+/**
+ * POST /rooms — 서버는 무료 방만 연다. PAID·BRANDED는 400 `UNSUPPORTED_ROOM_TYPE`이다
+ * (등급으로 막는 게 아니다 — 유료 방 자체가 아직 없다).
+ */
+export function mockCreateRoom(body: RoomCreateRequest): RoomResponse {
+  if (body.type && body.type !== "FREE") {
+    throw new AppError("ValidationFailed", { code: ERROR_CODES.UNSUPPORTED_ROOM_TYPE });
   }
 
-  const roomId = nextHostedRoomId++;
-  const pin = randomPin();
+  const room: RoomResponse = {
+    id: nextHostedRoomId++,
+    title: body.title,
+    ...(body.description ? { description: body.description } : {}),
+    ...(body.topic ? { topic: body.topic } : {}),
+    pin: randomPin(),
+    status: "WAITING",
+    type: "FREE",
+    ...(body.questionSetId ? { questionSetId: body.questionSetId } : {}),
+    hostUserId: currentProfile().id,
+    ...(body.maxParticipants ? { maxParticipants: body.maxParticipants } : {}),
+    participantCount: 0,
+    isPublic: body.isPublic ?? false,
+    screenLocked: false,
+    currentQuestionNo: 0,
+    ...(body.scheduledAt ? { scheduledAt: body.scheduledAt } : {}),
+  };
 
-  createdRooms = [
-    {
-      roomId,
-      pin,
-      title: body.title,
-      topic: body.topic ?? null,
-      status: "WAITING",
-      questionCount: null,
-      participantCount: 0,
-      maxParticipants: body.maxParticipants ?? null,
-      scheduledAt: body.scheduledAt ?? null,
-      isPaid: body.isPaid ?? false,
-      entryFee: body.entryFee ?? null,
-      host: { nickname: currentProfile().nickname, level: MOCK_HOST_LEVEL },
-    },
-    ...createdRooms,
-  ];
-
+  rooms = [room, ...rooms];
   hostedRooms = [
     {
-      roomId,
-      pin,
-      title: body.title,
+      roomId: room.id,
+      pin: room.pin,
+      title: room.title,
       status: "WAITING",
       participantCount: 0,
-      scheduledAt: body.scheduledAt ?? null,
+      scheduledAt: room.scheduledAt ?? null,
       endedAtLabel: null,
       avgAccuracyPercent: null,
     },
     ...hostedRooms,
   ];
 
-  return { roomId, pin, qrUrl: null };
+  return room;
+}
+
+/** GET /rooms/{roomId} — 호스트용 방 상세 */
+export function mockRoom(roomId: string): RoomResponse {
+  return { ...findRoom(roomId) };
+}
+
+/** PUT /rooms/{roomId} — WAITING일 때만 */
+export function mockUpdateRoom(roomId: string, body: RoomUpdateRequest): RoomResponse {
+  const room = findRoom(roomId);
+  if (room.status !== "WAITING")
+    throw new AppError("Conflict", { code: ERROR_CODES.ROOM_NOT_JOINABLE });
+
+  const updated: RoomResponse = {
+    ...room,
+    title: body.title,
+    ...(body.description !== undefined ? { description: body.description } : {}),
+    ...(body.topic !== undefined ? { topic: body.topic } : {}),
+    ...(body.questionSetId !== undefined ? { questionSetId: body.questionSetId } : {}),
+    ...(body.maxParticipants !== undefined ? { maxParticipants: body.maxParticipants } : {}),
+    isPublic: body.isPublic ?? room.isPublic,
+    ...(body.scheduledAt !== undefined ? { scheduledAt: body.scheduledAt } : {}),
+  };
+  rooms = rooms.map((r) => (r.id === room.id ? updated : r));
+  return updated;
+}
+
+/** POST /rooms/{roomId}/close — WAITING이면 CANCELED, RUNNING이면 ENDED */
+export function mockCloseRoom(roomId: string): RoomResponse {
+  const room = findRoom(roomId);
+  const closed: RoomResponse = {
+    ...room,
+    status: room.status === "RUNNING" ? "ENDED" : "CANCELED",
+    endedAt: new Date().toISOString().slice(0, 19),
+  };
+  rooms = rooms.map((r) => (r.id === room.id ? closed : r));
+  return closed;
 }
 
 /** GET /users/me/rooms/hosted */

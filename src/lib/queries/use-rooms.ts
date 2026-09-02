@@ -6,18 +6,26 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  closeRoom,
   createRoom,
   getHostedRooms,
   getParticipants,
   getPublicRooms,
+  getRoom,
   getRoomByPin,
   joinRoom,
   leaveRoom,
+  updateRoom,
 } from "@/lib/api/rooms";
 import { clearGuestToken, writeGuestToken } from "@/lib/guest-token-storage";
 import { writeMyParticipant } from "@/lib/my-participant";
 import { AppError } from "@/lib/types/app-error";
-import type { CreateRoomRequest, JoinRoomRequest, PublicRoomsQuery } from "@/lib/types/dto";
+import type {
+  JoinRoomRequest,
+  PublicRoomsQuery,
+  RoomCreateRequest,
+  RoomUpdateRequest,
+} from "@/lib/types/dto";
 import { qk } from "./keys";
 
 /** GET /rooms/pin/{pin}. pin이 없으면 조회하지 않는다 — 404/410은 화면이 error.kind로 분기한다 */
@@ -71,13 +79,49 @@ export function useParticipants(roomId: number | null) {
   });
 }
 
+/** GET /rooms/{roomId} — 호스트용 방 상세 */
+export function useRoom(roomId: number | null) {
+  return useQuery({
+    queryKey: qk.room(roomId ?? 0),
+    queryFn: () => getRoom(roomId as number),
+    enabled: roomId !== null,
+  });
+}
+
 /** POST /rooms. 성공 시 내가 개설한 방 목록을 갱신한다 */
 export function useCreateRoom() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: CreateRoomRequest) => createRoom(body),
+    mutationFn: (body: RoomCreateRequest) => createRoom(body),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.hostedRooms });
+    },
+  });
+}
+
+/** PUT /rooms/{roomId} — WAITING일 때만. 로비에서 세트를 연결할 때 쓴다 */
+export function useUpdateRoom() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ roomId, body }: { roomId: number; body: RoomUpdateRequest }) =>
+      updateRoom(roomId, body),
+    onSuccess: (_data, { roomId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.room(roomId) });
+      queryClient.invalidateQueries({ queryKey: qk.hostedRooms });
+    },
+  });
+}
+
+/** POST /rooms/{roomId}/close — 대기 중이면 취소, 진행 중이면 종료 */
+export function useCloseRoom() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (roomId: number) => closeRoom(roomId),
+    onSuccess: (_data, roomId) => {
+      queryClient.invalidateQueries({ queryKey: qk.room(roomId) });
       queryClient.invalidateQueries({ queryKey: qk.hostedRooms });
     },
   });

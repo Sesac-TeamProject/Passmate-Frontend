@@ -7,14 +7,16 @@ import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
 import { LobbyPage } from "@/features/host/live/lobby-page";
+import { toQuestionSetOptions } from "@/features/host/room-flow/adapt";
 import { formatDotDateWithDay } from "@/lib/format";
-import { useRoomByPin } from "@/lib/queries/use-rooms";
+import { useQuestionSets } from "@/lib/queries/use-question-sets";
+import { useRoom, useRoomByPin, useUpdateRoom } from "@/lib/queries/use-rooms";
 import { useStartSession } from "@/lib/queries/use-session-control";
 import { useSessionStore } from "@/lib/stores/session-store";
 import { AppError } from "@/lib/types/app-error";
 
-/** 문제 세트가 확정되지 않아 시작할 수 없을 때 (409) */
-const SET_NOT_CONFIRMED_MESSAGE = "문제 세트를 먼저 확정해 주세요";
+/** 확정 세트가 연결되지 않아 시작할 수 없을 때 (409 QUESTION_SET_REQUIRED) */
+const SET_REQUIRED_MESSAGE = "확정한 문제 세트를 먼저 연결해 주세요";
 
 /**
  * W-04 대기실 컨테이너. 실시간 연결은 상위 [code] 레이아웃이 잡고, 여기서는 스토어를 읽어
@@ -27,6 +29,11 @@ export default function Page() {
 
   const room = useRoomByPin(pin);
   const roomId = room.data?.roomId ?? null;
+  // PIN 조회 응답에는 호스트용 정보(연결된 세트·정원)가 없다 — 방 상세를 따로 읽는다
+  const detail = useRoom(roomId);
+  const confirmedSets = useQuestionSets({ status: "CONFIRMED" });
+  const linkSet = useUpdateRoom();
+  const [setIdToLink, setSetIdToLink] = useState("");
 
   const phase = useSessionStore((s) => s.phase);
   const participants = useSessionStore((s) => s.participants);
@@ -64,9 +71,22 @@ export default function Page() {
 
   const errorMessage = start.isError
     ? AppError.isAppError(start.error) && start.error.kind === "Conflict"
-      ? SET_NOT_CONFIRMED_MESSAGE
+      ? SET_REQUIRED_MESSAGE
       : start.error.message
     : null;
+
+  const needsSet = detail.data !== undefined && detail.data.questionSetId === undefined;
+  const handleLinkSet = () => {
+    if (!detail.data || setIdToLink === "" || linkSet.isPending) return;
+    linkSet.mutate({
+      roomId: detail.data.id,
+      body: {
+        title: detail.data.title,
+        questionSetId: Number(setIdToLink),
+        isPublic: detail.data.isPublic,
+      },
+    });
+  };
 
   return (
     <>
@@ -85,6 +105,18 @@ export default function Page() {
         onStart={handleStart}
         starting={start.isPending}
         errorMessage={errorMessage}
+        setLink={
+          needsSet
+            ? {
+                options: toQuestionSetOptions(confirmedSets.data?.content ?? []),
+                value: setIdToLink,
+                onChange: setSetIdToLink,
+                onSubmit: handleLinkSet,
+                pending: linkSet.isPending,
+                errorMessage: linkSet.isError ? linkSet.error.message : null,
+              }
+            : null
+        }
       />
       <ConfirmDialog
         open={confirmEmptyStart}

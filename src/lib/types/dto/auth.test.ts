@@ -1,20 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { MOCK_TOKENS, mockLogin } from "@/lib/mocks/auth";
 import { mockMe } from "@/lib/mocks/me";
+import { expectContract } from "./expect-contract";
 
 /**
  * 백엔드 `auth/dto/*.kt`·`user/dto/UserResponses.kt` (develop @ 5f433d2) 필드와 1:1인지
- * 목이 돌려주는 값으로 고정한다. 타입만 검사하면(expectTypeOf) 런타임에는 no-op이라
- * 목이 어긋나도 초록으로 지나간다 — 실제 값의 키를 비교해야 계약이 흔들릴 때 잡힌다.
- *
- * 서버는 `non_null` 직렬화라 **값이 없는 필드는 응답에서 빠진다.** 그래서 "정확히 같은 키"가 아니라
- * "필수 키는 모두 있고, 서버에 없는 키는 하나도 없다"로 본다.
+ * 목이 돌려주는 값으로 고정한다.
  */
-function expectContract(value: object, required: string[], optional: string[] = []) {
-  const keys = Object.keys(value);
-  expect(required.filter((k) => !keys.includes(k))).toEqual([]);
-  expect(keys.filter((k) => !required.includes(k) && !optional.includes(k))).toEqual([]);
-}
 
 describe("auth 계약", () => {
   it("LoginResponse는 백엔드 LoginResponse.kt와 같은 필드를 갖는다", () => {

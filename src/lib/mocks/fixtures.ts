@@ -1,10 +1,11 @@
 import type {
   HostedRoomDto,
+  MyProfileResponse,
   ParticipantEntry,
   PublicRoomDto,
-  QuestionSetDto,
-  RoomInfoResponse,
-  MyProfileResponse,
+  QuestionResponse,
+  QuestionSetSummaryResponse,
+  RoomResponse,
   SnapshotQuestion,
 } from "@/lib/types/dto";
 
@@ -45,22 +46,36 @@ export const ME_PROFILE: MyProfileResponse = {
  */
 export const DEMO_ROOM_ID = 1;
 export const DEMO_PIN = "482913";
-export const DEMO_ROOM: RoomInfoResponse = {
-  roomId: DEMO_ROOM_ID,
-  pin: DEMO_PIN,
+export const DEMO_ROOM: RoomResponse = {
+  id: DEMO_ROOM_ID,
   title: "Spring 실전 모의고사 4주차",
   topic: "백엔드",
+  pin: DEMO_PIN,
   status: "WAITING",
-  questionCount: 8,
+  type: "PAID",
+  fee: 10000,
   questionSetId: 1,
-  estimatedMinutes: 40,
-  scheduledAt: "2026-08-28T20:00:00+09:00",
-  participantCount: 24,
+  hostUserId: 42,
   maxParticipants: 40,
-  isPaid: true,
-  entryFee: 10000,
-  host: { userId: 42, nickname: "김민지", level: 3, avgStars: 4.5, ratingCount: 312 },
+  participantCount: 24,
+  isPublic: true,
+  screenLocked: false,
+  currentQuestionNo: 0,
+  // UTC naive — KST 20:00에 해당한다(서버가 UTC로 돈다)
+  scheduledAt: "2026-08-28T11:00:00",
 };
+
+/**
+ * @draft 시연 방 호스트 표시값. 서버 `GET /rooms/pin/{pin}` 응답에는 **호스트 정보가 없다** —
+ * 입장 화면이 그리던 이름·등급·별점은 US2(T039)에서 걷어낸다.
+ */
+export const DEMO_ROOM_HOST = {
+  userId: 42,
+  nickname: "김민지",
+  level: 3,
+  avgStars: 4.5,
+  ratingCount: 312,
+} as const;
 
 /**
  * 아바타는 문자열 키다 (lib/types/dto/common.ts AVATAR_KEYS — ERD avatar_id varchar(30)).
@@ -281,41 +296,60 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
 ];
 
 /**
- * features/host/mock.ts QUESTION_SETS → setId, status "CONFIRMED"(확정 세트만 목록에 노출),
- * usedCount=usage.count, lastUsedAt=usage.lastUsed.
+ * features/host/mock.ts QUESTION_SETS → 백엔드 `QuestionSetSummaryResponse` 형태.
+ * 시각은 서버와 같은 UTC naive 문자열이다.
  */
-export const QUESTION_SETS: QuestionSetDto[] = [
+export const QUESTION_SETS: QuestionSetSummaryResponse[] = [
   {
-    setId: 1,
+    id: 1,
     title: "Spring 기술면접",
     status: "CONFIRMED",
+    source: "AI",
     questionCount: 8,
-    usedCount: 2,
-    lastUsedAt: "8/22",
+    totalPoints: 800,
+    estimatedSeconds: 480,
+    usageCount: 2,
+    lastUsedAt: "2026-08-22T05:00:00",
+    confirmedAt: "2026-08-20T02:10:00",
+    createdAt: "2026-08-19T09:30:00",
   },
   {
-    setId: 2,
+    id: 2,
     title: "JPA 심화",
     status: "CONFIRMED",
+    source: "MIXED",
     questionCount: 10,
-    usedCount: 1,
-    lastUsedAt: "8/20",
+    totalPoints: 1000,
+    estimatedSeconds: 600,
+    usageCount: 1,
+    lastUsedAt: "2026-08-20T04:00:00",
+    confirmedAt: "2026-08-18T01:00:00",
+    createdAt: "2026-08-17T23:00:00",
   },
   {
-    setId: 3,
+    id: 3,
     title: "CS 기초 다지기",
     status: "CONFIRMED",
+    source: "AI",
     questionCount: 10,
-    usedCount: 3,
-    lastUsedAt: "8/17",
+    totalPoints: 1000,
+    estimatedSeconds: 540,
+    usageCount: 3,
+    lastUsedAt: "2026-08-17T07:20:00",
+    confirmedAt: "2026-08-10T02:00:00",
+    createdAt: "2026-08-09T12:00:00",
   },
   {
-    setId: 4,
+    id: 4,
     title: "네트워크 면접 대비",
     status: "CONFIRMED",
+    source: "MANUAL",
     questionCount: 6,
-    usedCount: null,
-    lastUsedAt: null,
+    totalPoints: 600,
+    estimatedSeconds: 360,
+    usageCount: 0,
+    confirmedAt: "2026-08-05T06:00:00",
+    createdAt: "2026-08-04T13:00:00",
   },
 ];
 
@@ -329,87 +363,141 @@ export const QUESTION_SETS: QuestionSetDto[] = [
  */
 const ENDS_AT_PLACEHOLDER = new Date(0).toISOString();
 
-export const LIVE_QUESTIONS: SnapshotQuestion[] = [
+/**
+ * 세트 문항 8개 — 목의 **단일 출처**다. 백엔드 `QuestionResponse` 형태로 두고,
+ * 세션 진행용 스냅샷(`LIVE_QUESTIONS`)은 여기서 파생시킨다(정답은 진행 중에 내려가지 않는다).
+ *
+ * 4·5·7번(MCQ)의 보기는 지문에 맞춰 채운 4개이고, 정답은 `answer`에 **보기 원문**으로 둔다.
+ * OX 보기는 계약 주석("OX: O|X")을 그대로 쓴 것이라 화면 값을 지어낸 것이 아니다.
+ */
+export const SET_QUESTIONS: QuestionResponse[] = [
   {
-    questionId: 1,
-    questionNo: 1,
+    id: 1,
+    orderNo: 1,
     type: "ESSAY",
-    body: "JPA 영속성 컨텍스트의 1차 캐시 동작을 설명하세요.",
+    content: "JPA 영속성 컨텍스트의 1차 캐시 동작을 설명하세요.",
+    answer:
+      "같은 트랜잭션 안에서 조회한 엔티티를 식별자 기준으로 보관해 재조회 시 SQL 없이 돌려준다.",
+    topic: "JPA",
+    difficulty: "NORMAL",
     points: 100,
     timeLimitSec: 120,
-    endsAt: ENDS_AT_PLACEHOLDER,
+    source: "AI",
   },
   {
-    questionId: 2,
-    questionNo: 2,
+    id: 2,
+    orderNo: 2,
     type: "MCQ",
-    body: "@Transactional의 기본 전파(propagation) 속성은 무엇인가?",
+    content: "@Transactional의 기본 전파(propagation) 속성은 무엇인가?",
     choices: ["REQUIRED", "REQUIRES_NEW", "SUPPORTS", "NESTED"],
+    answer: "REQUIRED",
+    explanation: "진행 중인 트랜잭션이 있으면 참여하고, 없으면 새로 만든다.",
+    topic: "Spring",
+    difficulty: "NORMAL",
     points: 100,
     timeLimitSec: 30,
-    endsAt: ENDS_AT_PLACEHOLDER,
+    source: "AI",
   },
   {
-    questionId: 3,
-    questionNo: 3,
+    id: 3,
+    orderNo: 3,
     type: "OX",
-    body: "Spring Bean의 기본 스코프는 prototype이다.",
+    content: "Spring Bean의 기본 스코프는 prototype이다.",
     choices: ["O", "X"],
+    answer: "X",
+    explanation: "기본 스코프는 singleton이다.",
+    topic: "Spring",
+    difficulty: "EASY",
     points: 100,
     timeLimitSec: 20,
-    endsAt: ENDS_AT_PLACEHOLDER,
+    source: "AI",
   },
   {
-    questionId: 4,
-    questionNo: 4,
+    id: 4,
+    orderNo: 4,
     type: "MCQ",
-    body: "Spring AOP가 기본으로 사용하는 프록시 방식은?",
+    content: "Spring AOP가 기본으로 사용하는 프록시 방식은?",
     choices: ["JDK 동적 프록시", "CGLIB", "ByteBuddy", "AspectJ 위빙"],
+    answer: "CGLIB",
+    explanation: "스프링 부트는 proxyTargetClass=true가 기본이라 CGLIB 프록시를 쓴다.",
+    topic: "Spring",
+    difficulty: "HARD",
     points: 100,
     timeLimitSec: 30,
-    endsAt: ENDS_AT_PLACEHOLDER,
+    source: "AI",
   },
   {
-    questionId: 5,
-    questionNo: 5,
+    id: 5,
+    orderNo: 5,
     type: "MCQ",
-    body: "@Autowired 주입 방식 중 권장되는 것은?",
+    content: "@Autowired 주입 방식 중 권장되는 것은?",
     choices: ["필드 주입", "세터 주입", "생성자 주입", "세터·필드 혼용"],
+    answer: "생성자 주입",
+    explanation: "순환 참조를 컴파일 시점에 막을 수 있어 스프링 공식 문서가 권장한다.",
+    topic: "Spring",
+    difficulty: "NORMAL",
     points: 100,
     timeLimitSec: 30,
-    endsAt: ENDS_AT_PLACEHOLDER,
+    source: "AI",
   },
   {
-    questionId: 6,
-    questionNo: 6,
+    id: 6,
+    orderNo: 6,
     type: "ESSAY",
-    body: "N+1 문제가 발생하는 원인과 해결 방법을 설명하세요.",
+    content: "N+1 문제가 발생하는 원인과 해결 방법을 설명하세요.",
+    answer:
+      "지연 로딩된 연관관계를 반복 조회할 때 생긴다. fetch join·@EntityGraph·batch size로 줄인다.",
+    topic: "JPA",
+    difficulty: "HARD",
     points: 100,
     timeLimitSec: 120,
-    endsAt: ENDS_AT_PLACEHOLDER,
+    source: "AI",
   },
   {
-    questionId: 7,
-    questionNo: 7,
+    id: 7,
+    orderNo: 7,
     type: "MCQ",
-    body: "JPA에서 지연 로딩(LAZY)의 기본 대상은?",
+    content: "JPA에서 지연 로딩(LAZY)의 기본 대상은?",
     choices: [
       "@ManyToOne 연관관계",
       "@OneToOne 연관관계",
       "@OneToMany·@ManyToMany 연관관계",
       "모든 연관관계",
     ],
+    answer: "@OneToMany·@ManyToMany 연관관계",
+    explanation: "ManyToOne·OneToOne은 기본 EAGER, 컬렉션 연관관계만 기본 LAZY다.",
+    topic: "JPA",
+    difficulty: "NORMAL",
     points: 100,
     timeLimitSec: 30,
-    endsAt: ENDS_AT_PLACEHOLDER,
+    source: "AI",
   },
   {
-    questionId: 8,
-    questionNo: 8,
+    id: 8,
+    orderNo: 8,
     type: "ESSAY",
-    body: "Spring Security 필터 체인의 동작 순서를 설명하세요.",
+    content: "Spring Security 필터 체인의 동작 순서를 설명하세요.",
+    answer:
+      "서블릿 필터 체인 앞단의 DelegatingFilterProxy가 SecurityFilterChain으로 위임해 순서대로 실행한다.",
+    topic: "Spring",
+    difficulty: "HARD",
     points: 100,
     timeLimitSec: 120,
-    endsAt: ENDS_AT_PLACEHOLDER,
+    source: "AI",
   },
 ];
+
+/**
+ * 진행 문항 — 스냅샷·이벤트용. `SET_QUESTIONS`에서 **정답을 뺀** 형태다.
+ * endsAt은 session.ts가 호출 시점에 계산해 덮어쓰므로 여기서는 자리표시자만 둔다.
+ */
+export const LIVE_QUESTIONS: SnapshotQuestion[] = SET_QUESTIONS.map((q) => ({
+  questionId: q.id,
+  questionNo: q.orderNo,
+  type: q.type,
+  body: q.content,
+  choices: q.choices ?? null,
+  points: q.points,
+  timeLimitSec: q.timeLimitSec,
+  endsAt: ENDS_AT_PLACEHOLDER,
+}));

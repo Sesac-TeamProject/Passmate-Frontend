@@ -10,7 +10,8 @@ import { useDuplicateQuestionSet, useQuestionSets } from "@/lib/queries/use-ques
 /** W-08 문제 세트 컨테이너 — 목록을 읽고, 복제 성공 시 에디터로 이동한다 */
 export default function Page() {
   const router = useRouter();
-  const sets = useQuestionSets();
+  // 세트 목록은 확정·초안을 모두 보여준다(카드에 DRAFT 배지가 있다)
+  const sets = useQuestionSets({ page: 0 });
   const duplicate = useDuplicateQuestionSet();
 
   if (sets.isPending) return <SetsSkeleton />;
@@ -20,13 +21,13 @@ export default function Page() {
   const handleClone = (setId: string) => {
     if (duplicate.isPending) return;
     duplicate.mutate(Number(setId), {
-      onSuccess: (res) => router.push(`/host/editor?set=${res.setId}`),
+      onSuccess: (res) => router.push(`/host/editor?set=${res.id}`),
     });
   };
 
   return (
     <SetsPage
-      sets={toQuestionSets(sets.data.items ?? [])}
+      sets={toQuestionSets(sets.data.content)}
       onClone={handleClone}
       cloning={duplicate.isPending}
     />

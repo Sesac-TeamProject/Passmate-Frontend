@@ -26,9 +26,22 @@ export function EditorMockup() {
       <EditorPage
         title={EDITOR_MOCK_TITLE}
         questions={EDITOR_MOCK_QUESTIONS}
+        readOnly={false}
         onGenerate={noop}
+        generating={false}
+        generateError={null}
+        form={null}
+        onAddManual={noop}
+        onEdit={noop}
+        onRegenerate={noop}
+        onDelete={noop}
+        onMove={noop}
+        busyQuestionId={null}
+        listError={null}
         onConfirm={noop}
+        confirming={false}
         canConfirm
+        confirmError={null}
       />
     </div>
   );

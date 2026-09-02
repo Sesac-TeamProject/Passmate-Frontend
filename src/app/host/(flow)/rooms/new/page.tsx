@@ -16,7 +16,7 @@ import { NewRoomPage } from "@/features/host/room-flow/new-room-page";
 import { useGrade } from "@/lib/queries/use-me";
 import { useQuestionSets } from "@/lib/queries/use-question-sets";
 import { useCreateRoom } from "@/lib/queries/use-rooms";
-import type { CreateRoomRequest } from "@/lib/types/dto";
+import type { RoomCreateRequest } from "@/lib/types/dto";
 
 /** PIN 없이 만들어진 방은 대기실로 갈 수 없다 — 목록에서 다시 찾도록 안내한다 */
 const PIN_MISSING_MESSAGE =
@@ -25,14 +25,14 @@ const PIN_MISSING_MESSAGE =
 /** W-02 방 만들기 컨테이너 — 확정 세트 목록·명성 등급을 읽고 POST /rooms 후 대기실로 보낸다. */
 export default function Page() {
   const router = useRouter();
-  const sets = useQuestionSets("CONFIRMED");
+  const sets = useQuestionSets({ status: "CONFIRMED" });
   const grade = useGrade();
   const create = useCreateRoom();
   const [pinMissing, setPinMissing] = useState(false);
   // W-02e가 "입력한 설정은 그대로 남아 있어요"라고 약속하므로 보낸 값을 들고 있는다
-  const [lastBody, setLastBody] = useState<CreateRoomRequest | null>(null);
+  const [lastBody, setLastBody] = useState<RoomCreateRequest | null>(null);
 
-  const handleSubmit = (body: CreateRoomRequest) => {
+  const handleSubmit = (body: RoomCreateRequest) => {
     setPinMissing(false);
     setLastBody(body);
     create.mutate(body, {
@@ -47,7 +47,7 @@ export default function Page() {
   if (sets.isError)
     return <ScreenError message={sets.error.message} onRetry={() => sets.refetch()} />;
 
-  const options = toQuestionSetOptions(sets.data.items ?? []);
+  const options = toQuestionSetOptions(sets.data.content);
 
   // 서버·네트워크 때문에 깨진 실패만 전체 화면으로 알린다 (04 보드 A/B 규칙)
   if (create.isError && lastBody && !isFormLevelCreateError(create.error))

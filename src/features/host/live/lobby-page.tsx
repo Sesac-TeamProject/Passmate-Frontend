@@ -24,6 +24,19 @@ function toSteps(prettyPin: string): string[] {
   return ["passmate.app 접속", `코드 ${prettyPin} 입력`, "닉네임 · 캐릭터 고르기"];
 }
 
+/**
+ * 방에 확정 세트가 아직 연결되지 않았을 때 대기실에서 바로 붙이는 셀렉트.
+ * 서버는 세트 없이 세션을 시작하면 409 `QUESTION_SET_REQUIRED`로 막는다.
+ */
+export type SetLinkPanel = {
+  options: { id: string; title: string; questionCount: number }[];
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+  pending: boolean;
+  errorMessage: string | null;
+};
+
 type Props = {
   /** 6자리 참여 PIN */
   pin: string;
@@ -42,6 +55,8 @@ type Props = {
   /** 세션 시작 요청 중 */
   starting?: boolean;
   errorMessage?: string | null;
+  /** 세트가 연결돼 있으면 null — 연결 UI를 그리지 않는다 */
+  setLink?: SetLinkPanel | null;
 };
 
 /**
@@ -61,6 +76,7 @@ export function LobbyPage({
   onStart,
   starting,
   errorMessage,
+  setLink,
 }: Props) {
   const prettyPin = formatPin(pin);
   const steps = toSteps(prettyPin);
@@ -98,15 +114,42 @@ export function LobbyPage({
             <p role="alert" className="text-body-md text-negative">
               {errorMessage}
             </p>
+          ) : setLink ? (
+            <p className="text-body-md text-negative">확정한 문제 세트를 먼저 연결해 주세요</p>
           ) : (
             <p className="text-body-md text-muted-foreground">
               학생이 들어오는 대로 오른쪽에 쌓여요
             </p>
           )}
+          {setLink ? (
+            <span className="flex items-center gap-2">
+              <select
+                aria-label="연결할 문제 세트"
+                value={setLink.value}
+                onChange={(e) => setLink.onChange(e.target.value)}
+                className="h-13 rounded-2xl bg-muted px-4 text-body-md text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">세트 고르기</option>
+                {setLink.options.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.title} — {option.questionCount}문항
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={setLink.onSubmit}
+                disabled={setLink.pending || setLink.value === ""}
+                className="h-13 rounded-2xl bg-mint-tint px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint hover:text-white disabled:opacity-60"
+              >
+                {setLink.pending ? <PendingLabel>연결 중…</PendingLabel> : "세트 연결"}
+              </button>
+            </span>
+          ) : null}
           <button
             type="button"
             onClick={onStart}
-            disabled={starting}
+            disabled={starting || Boolean(setLink)}
             className="h-13 w-[180px] rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
           >
             {starting ? <PendingLabel>시작하는 중…</PendingLabel> : "시험 시작"}

@@ -1,13 +1,14 @@
 import type {
-  CreateRoomRequest,
-  CreateRoomResponse,
   HostedRoomsResponse,
   JoinRoomRequest,
   JoinRoomResponse,
   ParticipantsResponse,
   PublicRoomPageResponse,
   PublicRoomsQuery,
+  RoomCreateRequest,
   RoomInfoResponse,
+  RoomResponse,
+  RoomUpdateRequest,
 } from "@/lib/types/dto";
 import { request } from "./client";
 
@@ -16,9 +17,24 @@ export function getRoomByPin(pin: string): Promise<RoomInfoResponse> {
   return request<RoomInfoResponse>(`/rooms/pin/${pin}`);
 }
 
-/** POST /rooms — questionSetId는 CONFIRMED 세트만 */
-export function createRoom(body: CreateRoomRequest): Promise<CreateRoomResponse> {
-  return request<CreateRoomResponse>("/rooms", { method: "POST", body });
+/** POST /rooms — questionSetId는 CONFIRMED 세트만. 응답에 PIN·roomId가 들어 있다 */
+export function createRoom(body: RoomCreateRequest): Promise<RoomResponse> {
+  return request<RoomResponse>("/rooms", { method: "POST", body });
+}
+
+/** GET /rooms/{roomId} — 호스트용 방 상세(PIN·연결된 세트·잠금 상태). 인증 필요 */
+export function getRoom(roomId: number): Promise<RoomResponse> {
+  return request<RoomResponse>(`/rooms/${roomId}`);
+}
+
+/** PUT /rooms/{roomId} — WAITING일 때만. 세트 연결·정원·공개 여부를 고친다 */
+export function updateRoom(roomId: number, body: RoomUpdateRequest): Promise<RoomResponse> {
+  return request<RoomResponse>(`/rooms/${roomId}`, { method: "PUT", body });
+}
+
+/** POST /rooms/{roomId}/close — WAITING이면 CANCELED, RUNNING이면 ENDED */
+export function closeRoom(roomId: number): Promise<RoomResponse> {
+  return request<RoomResponse>(`/rooms/${roomId}/close`, { method: "POST" });
 }
 
 /** GET /users/me/rooms/hosted */

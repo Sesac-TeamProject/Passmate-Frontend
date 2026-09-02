@@ -1,17 +1,19 @@
 import { AppError } from "@/lib/types/app-error";
 import type {
+  AiGenerateRequest,
   ConfirmChargeRequest,
   CreateChargeRequest,
-  CreateRoomRequest,
-  GenerateQuestionSetRequest,
   JoinRoomRequest,
   NotificationSettingsDto,
+  QuestionRequest,
+  QuestionSetUpdateRequest,
+  RoomCreateRequest,
   RoomInfoResponse,
+  RoomUpdateRequest,
   ScreenLockRequest,
   SettlementAccountDto,
   SubmitAnswerRequest,
   UserProfileUpdateRequest,
-  UpdateQuestionSetRequest,
 } from "@/lib/types/dto";
 import {
   mockAdminAdCampaigns,
@@ -51,23 +53,30 @@ import {
   mockSettlementAccount,
 } from "./payments";
 import {
-  mockDuplicateQuestionSet,
+  mockAddQuestion,
   mockConfirmQuestionSet,
   mockCreateQuestionSet,
+  mockDeleteQuestion,
+  mockDuplicateQuestionSet,
   mockGenerate,
   mockGenerateFromFile,
   mockQuestionSetDetail,
   mockQuestionSets,
+  mockRegenerateQuestion,
+  mockUpdateQuestion,
   mockUpdateQuestionSet,
 } from "./question-sets";
 import {
+  mockCloseRoom,
   mockCreateRoom,
   mockHostedRooms,
   mockJoinRoom,
   mockLeaveRoom,
   mockParticipants,
   mockPublicRooms,
+  mockRoom,
   mockRoomByPin,
+  mockUpdateRoom,
 } from "./rooms";
 import {
   mockEssayAnswers,
@@ -117,7 +126,10 @@ const HANDLERS: Record<string, MockHandler> = {
 
   /* ── 방 ───────────────────────────────────────────── */
   "GET /rooms/pin/:pin": (ctx): RoomInfoResponse => mockRoomByPin(ctx.params.pin),
-  "POST /rooms": (ctx) => mockCreateRoom(asBody<CreateRoomRequest>(ctx)),
+  "POST /rooms": (ctx) => mockCreateRoom(asBody<RoomCreateRequest>(ctx)),
+  "GET /rooms/:roomId": (ctx) => mockRoom(ctx.params.roomId),
+  "PUT /rooms/:roomId": (ctx) => mockUpdateRoom(ctx.params.roomId, asBody<RoomUpdateRequest>(ctx)),
+  "POST /rooms/:roomId/close": (ctx) => mockCloseRoom(ctx.params.roomId),
   "GET /users/me/rooms/hosted": () => mockHostedRooms(),
   "GET /rooms/public": (ctx) => mockPublicRooms(ctx.url),
   "POST /rooms/:roomId/participants": (ctx) =>
@@ -143,13 +155,21 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /question-sets": (ctx) => mockCreateQuestionSet(ctx.body),
   "GET /question-sets/:id": (ctx) => mockQuestionSetDetail(ctx.params.id),
   "PUT /question-sets/:id": (ctx) =>
-    mockUpdateQuestionSet(ctx.params.id, asBody<UpdateQuestionSetRequest>(ctx)),
+    mockUpdateQuestionSet(ctx.params.id, asBody<QuestionSetUpdateRequest>(ctx)),
   "POST /question-sets/:id/confirm": (ctx) => mockConfirmQuestionSet(ctx.params.id),
   "POST /question-sets/:id/duplicate": (ctx) => mockDuplicateQuestionSet(ctx.params.id),
+  "POST /question-sets/:setId/questions": (ctx) =>
+    mockAddQuestion(ctx.params.setId, asBody<QuestionRequest>(ctx)),
+  "PUT /question-sets/:setId/questions/:questionId": (ctx) =>
+    mockUpdateQuestion(ctx.params.setId, ctx.params.questionId, asBody<QuestionRequest>(ctx)),
+  "DELETE /question-sets/:setId/questions/:questionId": (ctx) =>
+    mockDeleteQuestion(ctx.params.setId, ctx.params.questionId),
+  "POST /question-sets/:setId/questions/:questionId/regenerate": (ctx) =>
+    mockRegenerateQuestion(ctx.params.setId, ctx.params.questionId),
   "POST /question-sets/:setId/questions/generate": (ctx) =>
-    mockGenerate(asBody<GenerateQuestionSetRequest>(ctx)),
+    mockGenerate(ctx.params.setId, asBody<AiGenerateRequest>(ctx)),
   "POST /question-sets/:setId/questions/generate-from-file": (ctx) =>
-    mockGenerateFromFile(asBody<FormData>(ctx)),
+    mockGenerateFromFile(ctx.params.setId, asBody<FormData>(ctx)),
 
   /* ── 결과 · 리포트 · 평가 ─────────────────────────── */
   "GET /rooms/:roomId/results/me": () => mockMyResult(),

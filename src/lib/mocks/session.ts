@@ -14,7 +14,7 @@ import type {
   VoiceHintsResponse,
 } from "@/lib/types/dto";
 import type { ServerEvent } from "@/lib/types/events";
-import { DEMO_ROOM_ID, LIVE_QUESTIONS, PARTICIPANTS } from "./fixtures";
+import { DEMO_ROOM_ID, LIVE_QUESTIONS, PARTICIPANTS, SET_QUESTIONS } from "./fixtures";
 
 /**
  * 진행 세션(session) 목 상태 머신 — phase WAITING→RUNNING→FINISHED, 현재 문항 인덱스,
@@ -24,13 +24,16 @@ import { DEMO_ROOM_ID, LIVE_QUESTIONS, PARTICIPANTS } from "./fixtures";
 type SessionPhase = "WAITING" | "RUNNING" | "FINISHED";
 
 /** 채점용 정답 — SnapshotQuestion에는 절대 담지 않고 여기서만 쓴다. 응답 분포·정답 수 계산이 모두 이 표를 근거로 삼는다. */
-const CORRECT_ANSWERS: Record<number, string> = {
-  2: "REQUIRED", // @Transactional 기본 전파 속성
-  3: "X", // Bean 기본 스코프는 singleton이라 "prototype이다"는 거짓
-  4: "CGLIB", // 스프링 부트는 proxyTargetClass=true가 기본이라 CGLIB 프록시를 쓴다
-  5: "생성자 주입", // 순환 참조를 컴파일 시점에 막을 수 있어 스프링 공식 문서가 권장
-  7: "@OneToMany·@ManyToMany 연관관계", // ManyToOne·OneToOne은 기본 EAGER, 컬렉션 연관관계만 기본 LAZY
-};
+/**
+ * 문항 정답 — 픽스처(`SET_QUESTIONS.answer`)에서 파생한다. 목 안에서 정답 출처는 하나여야
+ * 채점·분포·결과가 서로 어긋나지 않는다. 서술형은 자동 채점하지 않으므로 뺀다.
+ */
+const CORRECT_ANSWERS: Record<number, string> = Object.fromEntries(
+  SET_QUESTIONS.filter((q) => q.type !== "ESSAY" && q.answer).map((q) => [
+    q.id,
+    q.answer as string,
+  ]),
+);
 
 /**
  * 문항 보기별 제출 수 — CORRECT_ANSWERS를 유일한 정답 출처로 삼아 정답 보기에 다수표를 몰아준다.

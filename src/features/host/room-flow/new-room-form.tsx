@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import type { CreateRoomRequest } from "@/lib/types/dto";
+import type { RoomCreateRequest } from "@/lib/types/dto";
 import {
   DEFAULT_ENTRY_FEE,
   HOST_SHARE,
@@ -28,7 +28,7 @@ type Props = {
   sets: QuestionSetOption[];
   /** 명성 레벨. 유료 탭 잠금·명성 행에 쓴다 */
   level: number;
-  onSubmit: (body: CreateRoomRequest) => void;
+  onSubmit: (body: RoomCreateRequest) => void;
   pending?: boolean;
   errorMessage?: string | null;
   editorHref: string;
@@ -65,12 +65,13 @@ export function NewRoomForm({
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (pending) return;
+    // 값이 없는 필드는 키를 빼서 보낸다 — 서버가 null을 검증에 걸 수 있다(R-4)
     onSubmit({
       title: name.trim(),
-      questionSetId: setId ? Number(setId) : null,
-      isPaid,
-      entryFee: isPaid ? fee : null,
-      isListed: true,
+      type: isPaid ? "PAID" : "FREE",
+      ...(setId ? { questionSetId: Number(setId) } : {}),
+      ...(isPaid ? { fee } : {}),
+      isPublic: true,
     });
   }
 

@@ -1,4 +1,4 @@
-import type { CreateRoomRequest } from "@/lib/types/dto";
+import type { RoomCreateRequest } from "@/lib/types/dto";
 import type { QuestionSetOption } from "./adapt";
 import { FlowTopBar } from "./flow-top-bar";
 import { NewRoomForm, type NewRoomInitialValues } from "./new-room-form";
@@ -7,7 +7,7 @@ import { StepPills } from "./step-pills";
 type Props = {
   sets: QuestionSetOption[];
   level: number;
-  onSubmit: (body: CreateRoomRequest) => void;
+  onSubmit: (body: RoomCreateRequest) => void;
   pending?: boolean;
   errorMessage?: string | null;
   /** 실패 화면(W-02e)에서 돌아왔을 때 복원할 입력값 */

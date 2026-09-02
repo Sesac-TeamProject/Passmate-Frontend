@@ -158,7 +158,7 @@ export function mockConfirmCharge(
 
   let entryPayment: EntryPaymentResponse | null = null;
   if (body.roomId != null) {
-    balance -= DEMO_ROOM.entryFee ?? 0;
+    balance -= DEMO_ROOM.fee ?? 0;
     entryPayment = { paymentNo: `PM-ENTRY-${chargeCounter++}`, balance };
   }
 
@@ -167,7 +167,7 @@ export function mockConfirmCharge(
 
 /** POST /rooms/{roomId}/entry-payments — 참가비 코인 차감. 402 잔액 부족 */
 export function mockEntryPayment(): EntryPaymentResponse {
-  const entryFee = DEMO_ROOM.entryFee ?? 0;
+  const entryFee = DEMO_ROOM.fee ?? 0;
   if (balance < entryFee) {
     throw new AppError("PaymentRequired", { code: "INSUFFICIENT_COINS" });
   }
