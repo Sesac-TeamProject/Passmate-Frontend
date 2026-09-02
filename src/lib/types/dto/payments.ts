@@ -1,3 +1,9 @@
+/**
+ * @draft 코인·결제·정산 — **백엔드에 컨트롤러가 없다**(실서버 404). 목에서만 돈다.
+ *
+ * 잔액만 예외로 실제 값이 있다: `GET /users/me`의 `coinBalance`.
+ * 여기 필드는 ERD 후보값이라 스웨거가 열리면 `contracts/rest-api.md` §3-4부터 대조한다.
+ */
 import type { AvatarKey } from "./common";
 import type { CursorPage, PaymentMethod } from "./common";
 

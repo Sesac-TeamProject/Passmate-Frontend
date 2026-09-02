@@ -1,3 +1,7 @@
+/**
+ * @draft 코인·결제·정산 API — **백엔드 미구현**(실서버 404). 목 모드에서만 응답이 온다.
+ * 화면은 NotFound를 "준비 중"으로 접어 안내한다.
+ */
 import type {
   ChargeCheckoutResponse,
   CoinBalanceResponse,

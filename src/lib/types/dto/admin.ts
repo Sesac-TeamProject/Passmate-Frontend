@@ -1,3 +1,7 @@
+/**
+ * @draft 관리자 콘솔 — **백엔드에 컨트롤러가 없다**(실서버 404, 10개 경로). 목에서만 돈다.
+ * 필드는 ERD 후보값이라 스웨거가 열리면 `contracts/rest-api.md` §3-4부터 대조한다.
+ */
 import type { UserRole } from "./auth";
 
 /* ── A-01 관리자 대시보드: GET /admin/dashboard ───────── */
