@@ -5,6 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useSyncExternalStore } from "react";
 import {
   checkNickname,
   closeRoom,
@@ -20,6 +21,7 @@ import {
   updateRoom,
 } from "@/lib/api/rooms";
 import { clearGuestToken, writeGuestRecord, writeGuestToken } from "@/lib/guest-token-storage";
+import { readHostRoomId, writeHostRoomId } from "@/lib/host-room-cache";
 import { writeMyParticipant } from "@/lib/my-participant";
 import { AppError } from "@/lib/types/app-error";
 import type {
@@ -46,6 +48,42 @@ export function useRoomByPin(pin: string | null) {
     queryFn: () => getRoomByPin(pin as string),
     enabled: pin !== null,
   });
+}
+
+const NO_SUBSCRIBE = () => () => {};
+const readCachedOnServer = () => null;
+
+/**
+ * 호스트 화면의 PIN → roomId.
+ *
+ * `GET /rooms/pin/{pin}`은 **끝난 방을 404로 답한다** — 세션을 끝내는 순간 최종 리포트 화면이
+ * 방을 잃어버린다. 그래서 한 번 알아낸 값을 탭에 남겨 두고(`host-room-cache`) 조회가 실패하면
+ * 그 값으로 이어 간다.
+ *
+ * sessionStorage는 서버 렌더에 없다 — 렌더 중 그냥 읽으면 하이드레이션이 어긋나므로
+ * 서버 스냅샷을 null로 둔다(값은 한 번 쓰이고 바뀌지 않아 구독은 빈 함수로 충분하다).
+ */
+export function useHostRoomId(pin: string | null): {
+  roomId: number | null;
+  isPending: boolean;
+  error: Error | null;
+} {
+  const room = useRoomByPin(pin);
+  const cached = useSyncExternalStore(
+    NO_SUBSCRIBE,
+    () => (pin ? readHostRoomId(pin) : null),
+    readCachedOnServer,
+  );
+
+  if (pin && room.data) writeHostRoomId(pin, room.data.id);
+
+  const roomId = room.data?.id ?? cached;
+  return {
+    roomId,
+    // 캐시로 이미 방을 알고 있으면 조회를 기다리지 않는다
+    isPending: roomId === null && room.isPending,
+    error: roomId === null && room.isError ? room.error : null,
+  };
 }
 
 /** GET /rooms/{roomId} — 호스트용 방 상세 */

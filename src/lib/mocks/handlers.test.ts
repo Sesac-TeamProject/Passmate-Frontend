@@ -92,9 +92,12 @@ describe("mocks/handlers", () => {
     });
   });
 
-  it("WAITING 상태의 스냅샷은 NotFound(404=미시작)", async () => {
-    await expect(resolveMock("GET", "/rooms/1/session")).rejects.toMatchObject({
-      kind: "NotFound",
+  it("WAITING 상태의 스냅샷도 200이다 — 404가 아니다", async () => {
+    // 예전 계약은 "404 = 세션 미시작"이었다. 서버는 WAITING에도 정상 응답을 준다(ws-events.md §6)
+    await expect(resolveMock("GET", "/rooms/1/session")).resolves.toMatchObject({
+      status: "WAITING",
+      currentQuestionNo: 0,
+      submitted: false,
     });
   });
 
@@ -142,7 +145,9 @@ describe("mocks/handlers", () => {
         () => sessions.endSession(1),
         () => sessions.lockScreen(1, true),
         () => sessions.getSubmissions(1),
-        () => sessions.submitAnswer(1, 1, "A"),
+        () => sessions.getRanking(1),
+        () => sessions.getQuestionResult(1, 1),
+        () => sessions.submitAnswer(1, 1, "REQUIRED"),
         () => sessions.getVoiceHints(1),
         () => sessions.uploadVoiceHint(1, new Blob(["x"], { type: "audio/webm" }), 1200),
         () => qs.getQuestionSets(),

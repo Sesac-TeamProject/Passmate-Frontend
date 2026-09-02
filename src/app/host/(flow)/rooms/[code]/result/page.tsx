@@ -12,8 +12,8 @@ import {
   toStudents,
 } from "@/features/host/live/adapt";
 import { ResultPage } from "@/features/host/live/result-page";
-import { useRoomByPin } from "@/lib/queries/use-rooms";
-import { useEndSession, useNextQuestion, useSubmissions } from "@/lib/queries/use-session-control";
+import { useHostRoomId } from "@/lib/queries/use-rooms";
+import { useEndSession, useNextQuestion } from "@/lib/queries/use-session-control";
 import { useSessionStore } from "@/lib/stores/session-store";
 
 /**
@@ -25,18 +25,17 @@ export default function Page() {
   const pin = params.code;
   const router = useRouter();
 
-  const room = useRoomByPin(pin);
-  const roomId = room.data?.id ?? null;
+  const room = useHostRoomId(pin);
+  const roomId = room.roomId;
 
   const phase = useSessionStore((s) => s.phase);
   const reveal = useSessionStore((s) => s.reveal);
   const ranking = useSessionStore((s) => s.ranking);
   const participants = useSessionStore((s) => s.participants);
   const currentQuestion = useSessionStore((s) => s.currentQuestion);
-  const questionCount = useSessionStore((s) => s.questionCount);
+  const totalCount = useSessionStore((s) => s.totalCount);
   const snapshotTs = useSessionStore((s) => s.snapshotTs);
 
-  const submissions = useSubmissions(roomId, phase === "RUNNING");
   const next = useNextQuestion(roomId ?? 0);
   const end = useEndSession(roomId ?? 0);
 
@@ -50,26 +49,26 @@ export default function Page() {
   }, [phase, reveal, snapshotTs, roomId, pin, router]);
 
   if (room.isPending) return <ScreenLoading />;
-  if (room.isError)
-    return <ScreenError message={room.error.message} onRetry={() => room.refetch()} />;
+  if (room.error) return <ScreenError message={room.error.message} />;
 
   // 공개할 정답이 없으면 위 effect가 진행 화면·리포트로 보낸다
   if (reveal === null) return <ScreenLoading />;
 
   const students = ranking.length > 0 ? toRankedStudents(ranking) : toStudents(participants);
-  const result = toQuestionResult(reveal, submissions.data, ranking, currentQuestion);
-  const total = questionCount ?? reveal.questionNo;
+  // 정답·해설·보기 분포는 QUESTION_ENDED 페이로드에 다 들어 있다 — 따로 조회하지 않는다
+  const result = toQuestionResult(reveal, ranking, currentQuestion);
+  const total = totalCount || reveal.orderNo;
 
   return (
     <ResultPage
-      questionIndex={reveal.questionNo}
+      questionIndex={reveal.orderNo}
       questionTotal={total}
       result={result}
       students={students}
       // TODO(API): 문항별 오답자 목록이 계약에 없다 (DESIGN_GAPS D-17). 빈 배열이면 화면이 섹션을 감춘다.
       wrongStudents={[]}
-      accuracyByQuestion={toAccuracyByQuestion(total, reveal.questionNo, result.accuracy)}
-      isLastQuestion={questionCount !== null && reveal.questionNo === questionCount}
+      accuracyByQuestion={toAccuracyByQuestion(total, reveal.orderNo, result.accuracy)}
+      isLastQuestion={totalCount > 0 && reveal.orderNo === totalCount}
       onNext={() => next.mutate()}
       onEndSession={() => end.mutate()}
       pending={next.isPending || end.isPending}

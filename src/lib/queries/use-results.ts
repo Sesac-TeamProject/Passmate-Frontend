@@ -30,7 +30,7 @@ export function useMyReport(roomId: number | null) {
 /** GET /rooms/{roomId}/results (호스트) */
 export function useRoomReport(roomId: number | null) {
   return useQuery({
-    queryKey: qk.roomReport(roomId ?? 0),
+    queryKey: qk.sessionResults(roomId ?? 0),
     queryFn: () => getRoomReport(roomId as number),
     enabled: roomId !== null,
   });
@@ -54,7 +54,7 @@ export function usePostHostReview(roomId: number, questionId: number) {
       putHostReview(roomId, answerId, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.essayAnswers(roomId, questionId) });
-      queryClient.invalidateQueries({ queryKey: qk.roomReport(roomId) });
+      queryClient.invalidateQueries({ queryKey: qk.sessionResults(roomId) });
     },
   });
 }

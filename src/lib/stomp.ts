@@ -1,13 +1,12 @@
 import { Client, ReconnectionTimeMode, type IMessage } from "@stomp/stompjs";
 import { IS_MOCK, WS_URL } from "@/lib/env";
 import { readGuestToken } from "@/lib/guest-token-storage";
-import { toAvatarKey } from "@/lib/types/dto";
 import { PARTICIPANTS } from "@/lib/mocks/fixtures";
 import { emitMockEvent, isMockSessionWaiting, mockSessionEvents } from "@/lib/mocks/session";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { parseServerEvent, type ServerEvent } from "@/lib/types/events";
 
-type Status = "connecting" | "connected" | "reconnecting";
+type Status = "connecting" | "connected" | "reconnecting" | "forbidden";
 type Options = {
   roomId: number;
   isHost: boolean;
@@ -21,7 +20,10 @@ const LOBBY_FILL_DELAY_MS = 300;
 const LOBBY_FILL_STAGGER_MS = 200;
 
 /**
- * 방 이벤트 스트림(계약 websocket-events). 구독: /topic/rooms/{id} (+ /host), /user/queue/feedback, /user/queue/errors.
+ * 방 이벤트 스트림(`contracts/ws-events.md`). 구독은 `/topic/rooms/{id}`와, 호스트면 `/host`까지.
+ *
+ * 서버는 `/user/queue/*`로 **아무것도 보내지 않는다**(보내는 코드가 없다) — 구독해 봐야 빈 채널이라
+ * 걷어냈다. 클라이언트 → 서버 메시지도 없다(`@MessageMapping` 없음): 제어는 전부 REST다.
  * 재연결은 stompjs 내장 지수 백오프(1s → 최대 5s). 재연결 후 스냅샷 재조회는 use-session-connection이 onStatus("connected")로 한다.
  * 목 모드(IS_MOCK)만 연결 없이 즉시 connected — 목 세션 제어(mockStartSession 등)가 흘려보내는
  * 이벤트를 그대로 전달한다(connectMockStream). 프로덕션·목 분기는 서로 섞이지 않는다.
@@ -63,9 +65,8 @@ export function connectRoomStream({ roomId, isHost, onEvent, onStatus }: Options
         if (event) onEvent(event);
       };
       client.subscribe(`/topic/rooms/${roomId}`, handle);
+      // 제출 집계(SUBMISSION_UPDATED)는 호스트 토픽에만 온다. 게스트가 구독하면 서버가 연결을 끊는다
       if (isHost) client.subscribe(`/topic/rooms/${roomId}/host`, handle);
-      client.subscribe("/user/queue/feedback", handle);
-      client.subscribe("/user/queue/errors", handle);
       onStatus("connected");
     },
     onWebSocketClose: () => {
@@ -73,8 +74,10 @@ export function connectRoomStream({ roomId, isHost, onEvent, onStatus }: Options
     },
     onStompError: (frame) => {
       // 브로커가 거절(토큰 만료·구독 권한 없음 등) — stompjs는 조용히 재연결만 반복하므로 여기서 남긴다.
-      console.warn("[stomp] 브로커 오류", frame.headers.message ?? "", frame.body);
-      onStatus("reconnecting");
+      const message = frame.headers.message ?? "";
+      console.warn("[stomp] 브로커 오류", message, frame.body);
+      // 권한 거부는 재시도해도 똑같이 거부된다 — 화면이 "연결 중"으로 영원히 도는 대신 사실을 알린다
+      onStatus(/권한|forbidden|denied/i.test(message) ? "forbidden" : "reconnecting");
     },
     onWebSocketError: (event) => {
       console.warn("[stomp] 소켓 오류 — 주소·프로토콜을 확인하세요", WS_URL, event);
@@ -111,14 +114,9 @@ function connectMockStream(
         setTimeout(() => {
           emitMockEvent({
             type: "PARTICIPANT_JOINED",
-            ts: new Date().toISOString(),
-            data: {
-              participantId: p.id,
-              nickname: p.nickname,
-              isGuest: p.isGuest,
-              avatarId: toAvatarKey(p.avatarId),
-              count: index + 1,
-            },
+            roomId: 0,
+            occurredAt: nowServerTime(),
+            payload: p,
           });
         }, index * LOBBY_FILL_STAGGER_MS),
       );
@@ -142,6 +140,11 @@ function connectMockStream(
 function authHeaders(): Record<string, string> {
   const token = useAuthStore.getState().accessToken ?? readGuestToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+/** 목 이벤트도 서버와 같은 형식(UTC naive)으로 시각을 만든다 */
+function nowServerTime(): string {
+  return new Date().toISOString().slice(0, 19);
 }
 
 function safeJson(text: string): unknown {

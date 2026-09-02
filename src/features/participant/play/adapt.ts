@@ -1,7 +1,8 @@
 import type { ChoiceKey, LiveQuestion, QuestionType } from "@/features/host/types";
-import type { SnapshotQuestion } from "@/lib/types/dto";
+import { remainingMs } from "@/lib/datetime";
+import type { QuestionStartedPayload, QuestionType as WireQuestionType } from "@/lib/types/dto";
 
-const QUESTION_TYPE_MAP: Record<string, QuestionType> = {
+const QUESTION_TYPE_MAP: Record<WireQuestionType, QuestionType> = {
   MCQ: "multiple",
   OX: "ox",
   ESSAY: "essay",
@@ -10,33 +11,38 @@ const QUESTION_TYPE_MAP: Record<string, QuestionType> = {
 const CHOICE_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
 
 /**
- * 세션 스냅샷의 진행 문항 → 풀이 화면 뷰 타입.
- * remaining은 항상 서버 시각(endsAt − serverTs) 기준으로 렌더 시점에 다시 계산한다 — 로컬 타이머가 만료를 판정하지 않는다.
+ * 진행 문항(`QUESTION_STARTED` 페이로드 = 스냅샷의 현재 문항) → 풀이 화면 뷰 타입.
+ *
+ * 남은 시간은 **서버가 준 `endsAt`에서 렌더 시점마다 다시 계산**한다 — 로컬 타이머가 만료를
+ * 판정하지 않는다(규칙 §9). 스냅샷에 서버 시각이 없어져서 기준은 지금 시각이다.
  */
 export function toLiveQuestion(
-  question: SnapshotQuestion,
-  questionCount: number | null,
-  serverTs: string | null,
-  submitted: { submittedCount: number; totalCount: number },
+  question: QuestionStartedPayload,
+  submittedCount: number,
 ): LiveQuestion {
-  const endsAtMs = Date.parse(question.endsAt);
-  const serverMs = serverTs ? Date.parse(serverTs) : NaN;
-  const remaining =
-    Number.isNaN(endsAtMs) || Number.isNaN(serverMs)
-      ? 0
-      : Math.max(0, Math.round((endsAtMs - serverMs) / 1000));
-
   return {
-    index: question.questionNo,
-    total: questionCount ?? question.questionNo,
-    type: QUESTION_TYPE_MAP[question.type ?? "MCQ"] ?? "multiple",
-    prompt: question.body,
+    index: question.orderNo,
+    total: question.totalCount,
+    type: QUESTION_TYPE_MAP[question.type],
+    prompt: question.content,
     choices: (question.choices ?? []).map((text, i) => ({
       key: CHOICE_KEYS[i] ?? "D",
       text,
     })),
-    seconds: question.timeLimitSec ?? 0,
-    remaining,
-    submitted: submitted.submittedCount,
+    points: question.points,
+    seconds: question.timeLimitSec,
+    remaining: Math.round(remainingMs(question.endsAt) / 1000),
+    submitted: submittedCount,
   };
+}
+
+/**
+ * 보기 키(A·B·C·D) → 서버에 보낼 값.
+ * 서버는 **보기 원문**을 받는다(인덱스가 아니다). OX는 "O"/"X", 서술형은 본문 그대로.
+ */
+export function toSubmittedValue(question: LiveQuestion, choiceKeyOrText: string): string {
+  if (question.type === "essay") return choiceKeyOrText;
+
+  const choice = question.choices.find((c) => c.key === choiceKeyOrText);
+  return choice ? choice.text : choiceKeyOrText;
 }

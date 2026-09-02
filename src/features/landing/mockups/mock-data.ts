@@ -44,6 +44,7 @@ export const LIVE_QUESTION: LiveQuestion = {
     { key: "C", text: "SUPPORTS" },
     { key: "D", text: "NESTED" },
   ],
+  points: 100,
   seconds: 30,
   remaining: 23,
   submitted: 4,

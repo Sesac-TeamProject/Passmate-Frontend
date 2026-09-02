@@ -62,6 +62,8 @@ export type LiveQuestion = {
   type: QuestionType;
   prompt: string;
   choices: Choice[];
+  /** 배점. 서버 문항의 points 그대로 */
+  points: number;
   /** 제한 시간(초) */
   seconds: number;
   /** 남은 시간(초) — 서버 시각(endsAt − ts) 기준으로 렌더 시점에 계산한 값 */

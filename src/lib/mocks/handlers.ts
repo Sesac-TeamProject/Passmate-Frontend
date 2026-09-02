@@ -11,7 +11,7 @@ import type {
   RoomUpdateRequest,
   ScreenLockRequest,
   SettlementAccountDto,
-  SubmitAnswerRequest,
+  AnswerSubmitRequest,
   UserProfileUpdateRequest,
 } from "@/lib/types/dto";
 import {
@@ -95,6 +95,8 @@ import {
   mockHints,
   mockLock,
   mockNext,
+  mockQuestionResult,
+  mockRanking,
   mockSnapshot,
   mockStartSession,
   mockSubmissions,
@@ -150,8 +152,10 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /rooms/:roomId/session/end": () => mockEndSession(),
   "PUT /rooms/:roomId/session/lock": (ctx) => mockLock(asBody<ScreenLockRequest>(ctx)),
   "GET /rooms/:roomId/session/current/submissions": () => mockSubmissions(),
+  "GET /rooms/:roomId/session/ranking": () => mockRanking(),
+  "GET /rooms/:roomId/session/questions/:questionId/result": () => mockQuestionResult(),
   "POST /rooms/:roomId/session/questions/:questionId/answers": (ctx) =>
-    mockSubmitAnswer(asBody<SubmitAnswerRequest>(ctx)),
+    mockSubmitAnswer(asBody<AnswerSubmitRequest>(ctx)),
   "GET /rooms/:roomId/session/hints": () => mockHints(),
   "POST /rooms/:roomId/session/hints": (ctx) => mockUploadHint(asBody<FormData>(ctx)),
 

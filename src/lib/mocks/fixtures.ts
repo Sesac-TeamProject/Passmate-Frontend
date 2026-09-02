@@ -6,7 +6,6 @@ import type {
   QuestionResponse,
   QuestionSetSummaryResponse,
   RoomResponse,
-  SnapshotQuestion,
 } from "@/lib/types/dto";
 
 /**
@@ -281,18 +280,9 @@ export const QUESTION_SETS: QuestionSetSummaryResponse[] = [
 ];
 
 /**
- * 진행 문항 8개 — features/host/mock.ts DRAFT_QUESTIONS(type·body·points·seconds) 순서를 기반으로,
- * 2번 문항은 LIVE_QUESTION(실제 choices가 있는 유일한 예시)의 내용으로 채운다(그래서 1·2번 순서를 맞바꿨다).
- * OX 문항의 choices는 계약 주석("OX: O|X")을 그대로 쓴 것으로 화면 값을 지어낸 것이 아니다.
- * 4·5·7번(MCQ)의 choices는 body 질문에 맞춰 채운 보기 4개 — session.ts의
- * CORRECT_ANSWERS가 그중 하나를 정답으로 표시한다.
- * endsAt은 session.ts가 호출 시점에 계산해 덮어쓰므로 여기서는 자리표시자만 둔다.
- */
-const ENDS_AT_PLACEHOLDER = new Date(0).toISOString();
-
-/**
  * 세트 문항 8개 — 목의 **단일 출처**다. 백엔드 `QuestionResponse` 형태로 두고,
- * 세션 진행용 스냅샷(`LIVE_QUESTIONS`)은 여기서 파생시킨다(정답은 진행 중에 내려가지 않는다).
+ * 세션 진행 화면이 쓰는 문항 정보도 여기서 파생한다 — 진행 중에는 `answer`를 빼고 내보낸다
+ * (`mocks/session.ts`의 `buildCurrentQuestion`).
  *
  * 4·5·7번(MCQ)의 보기는 지문에 맞춰 채운 4개이고, 정답은 `answer`에 **보기 원문**으로 둔다.
  * OX 보기는 계약 주석("OX: O|X")을 그대로 쓴 것이라 화면 값을 지어낸 것이 아니다.
@@ -413,18 +403,3 @@ export const SET_QUESTIONS: QuestionResponse[] = [
     source: "AI",
   },
 ];
-
-/**
- * 진행 문항 — 스냅샷·이벤트용. `SET_QUESTIONS`에서 **정답을 뺀** 형태다.
- * endsAt은 session.ts가 호출 시점에 계산해 덮어쓰므로 여기서는 자리표시자만 둔다.
- */
-export const LIVE_QUESTIONS: SnapshotQuestion[] = SET_QUESTIONS.map((q) => ({
-  questionId: q.id,
-  questionNo: q.orderNo,
-  type: q.type,
-  body: q.content,
-  choices: q.choices ?? null,
-  points: q.points,
-  timeLimitSec: q.timeLimitSec,
-  endsAt: ENDS_AT_PLACEHOLDER,
-}));

@@ -81,7 +81,7 @@ export default function Page() {
   const rows: RankRow[] = source.slice(0, ROW_LIMIT).map((r, i) => ({
     rank: r.rank,
     student: students[i],
-    score: r.total,
+    score: r.totalScore,
     isMe: myParticipantId !== null && r.participantId === myParticipantId,
   }));
 

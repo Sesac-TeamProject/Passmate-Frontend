@@ -149,7 +149,7 @@ export function LivePage({
             {QUESTION_TYPE_LABEL[q.type]}
           </span>
           <span aria-hidden className="h-4 w-px bg-line-soft" />
-          <span>1점</span>
+          <span>{q.points}점</span>
           <span aria-hidden className="h-4 w-px bg-line-soft" />
           <span>
             {q.total}문항 중 {q.index}번째
