@@ -74,10 +74,21 @@ export const ERROR_CODES = {
   AI_ANALYSIS_FAILED: "AI_ANALYSIS_FAILED",
   EXTERNAL_API_ERROR: "EXTERNAL_API_ERROR",
 
-  /** @draft 서버 enum에 아직 없다 — 별점 기능(우선순위 3) 미구현. 구현 시 서버가 추가한다 */
+  // 별점·평가 — 조회(`RatingAvailability.blockedReason`)와 제출이 같은 판정을 쓴다
+  /** 403 — 답안을 한 개도 내지 않은 사람이 평가하려 했다 */
+  RATING_NOT_ALLOWED: "RATING_NOT_ALLOWED",
+  /** 409 — 아직 끝나지 않은 세션을 평가하려 했다 */
+  SESSION_NOT_ENDED: "SESSION_NOT_ENDED",
+  /** 409 — 이미 평가한 세션 */
   ALREADY_RATED: "ALREADY_RATED",
-  /** @draft 서버 enum에 아직 없다 — 게스트 기록 전환(우선순위 3) 미구현 */
-  RECORD_PURGED: "RECORD_PURGED",
+  /** 409 — 종료 후 평가 기간(24h)이 지났다 */
+  RATING_WINDOW_CLOSED: "RATING_WINDOW_CLOSED",
+
+  // 게스트 기록 전환
+  /** 409 — 보관 기한이 지나 기록이 파기됐다 */
+  GUEST_RECORD_EXPIRED: "GUEST_RECORD_EXPIRED",
+  /** 409 — 이미 다른 계정에 연동된 기록 */
+  GUEST_RECORD_ALREADY_CLAIMED: "GUEST_RECORD_ALREADY_CLAIMED",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

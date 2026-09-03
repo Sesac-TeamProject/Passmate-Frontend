@@ -5,7 +5,7 @@ import type {
   AiGenerateRequest,
   CreateChargeRequest,
   JoinRoomRequest,
-  NotificationSettingsDto,
+  NotificationSettingsUpdate,
   PaymentMethodRequest,
   QuestionRequest,
   QuestionSetUpdateRequest,
@@ -13,6 +13,7 @@ import type {
   RoomUpdateRequest,
   ScreenLockRequest,
   SettlementAccountRequest,
+  SubmitRatingRequest,
   AnswerSubmitRequest,
   UserProfileUpdateRequest,
 } from "@/lib/types/dto";
@@ -165,7 +166,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /rooms/:roomId/session/questions/:questionId/answers": (ctx) =>
     mockSubmitAnswer(asBody<AnswerSubmitRequest>(ctx)),
   "GET /rooms/:roomId/session/hints": () => mockHints(),
-  "POST /rooms/:roomId/session/hints": (ctx) => mockUploadHint(asBody<FormData>(ctx)),
+  "POST /rooms/:roomId/session/hints": (ctx) => mockUploadHint(ctx.url),
 
   /* ── 문제 세트 ────────────────────────────────────── */
   "GET /question-sets": (ctx) => mockQuestionSets(ctx.url),
@@ -202,7 +203,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /rooms/:roomId/answers": (ctx) => mockReviewTargets(ctx.url),
   "PUT /rooms/:roomId/answers/:answerId/review": (ctx) =>
     mockPostReview(Number(ctx.params.answerId), asBody<HostReviewRequest>(ctx)),
-  "POST /rooms/:roomId/ratings": () => mockSubmitRating(),
+  "POST /rooms/:roomId/ratings": (ctx) => mockSubmitRating(asBody<SubmitRatingRequest>(ctx)),
 
   /* ── 마이페이지 ───────────────────────────────────── */
   "GET /users/me/rooms/joined": (ctx) => mockJoinedRooms(ctx.url),
@@ -211,7 +212,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /users/me/badges": () => mockMyBadges(),
   "GET /users/me/notification-settings": () => mockNotificationSettings(),
   "PUT /users/me/notification-settings": (ctx) =>
-    mockPutNotificationSettings(asBody<NotificationSettingsDto>(ctx)),
+    mockPutNotificationSettings(asBody<NotificationSettingsUpdate>(ctx)),
   "GET /users/:userId/profile": (ctx) => mockHostProfile(ctx.params.userId),
   "POST /reports": (ctx) => mockReport(asBody<ReportRequest>(ctx)),
   "POST /guest-records/claim": () => mockClaim(),

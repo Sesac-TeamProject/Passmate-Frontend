@@ -17,6 +17,7 @@ import { clearGuestRecord } from "@/lib/guest-token-storage";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type {
   NotificationSettingsDto,
+  NotificationSettingsUpdate,
   ReportRequest,
   UserProfileUpdateRequest,
 } from "@/lib/types/dto";
@@ -83,7 +84,7 @@ export function useUpdateNotificationSettings() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (next: NotificationSettingsDto) => putNotificationSettings(next),
+    mutationFn: (next: NotificationSettingsUpdate) => putNotificationSettings(next),
     onMutate: async (next) => {
       await queryClient.cancelQueries({ queryKey: qk.notifications });
       const previous = queryClient.getQueryData<NotificationSettingsDto>(qk.notifications);

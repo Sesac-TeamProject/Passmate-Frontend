@@ -18,7 +18,7 @@ export type EssayAnalysisView = {
   completedAt?: string;
 };
 
-/** 선생님 첨삭. 조회는 되지만 **저장 API가 아직 없다**(US7에서 `@draft`로 남긴다) */
+/** 선생님 첨삭. 저장은 `PUT /rooms/{roomId}/answers/{answerId}/review`(upsert) */
 export type TeacherReviewView = {
   comment?: string;
   /** 보정 점수. 서술형 최종 점수는 이 값이 우선한다 */
@@ -221,10 +221,6 @@ export type ReviewTargetListResponse = {
   answers: ReviewTargetAnswer[];
 };
 
-/**
- * @draft PUT /rooms/{roomId}/answers/{answerId}/review — **백엔드 미구현**(실서버 404).
- * 필드는 `TeacherReview` 엔티티 기준이라 저장 API가 오면 그대로 맞을 가능성이 높다.
- */
 /** PUT …/review 응답 — 보정이 반영된 최종 점수를 함께 돌려준다 */
 export type TeacherReviewResponse = {
   answerId: number;

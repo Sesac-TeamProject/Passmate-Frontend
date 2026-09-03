@@ -147,6 +147,29 @@ React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다.
 `POST /users/me/devices`(푸시 토큰, 웹은 해당 없을 수 있음) ·
 `POST /admin/grades/evaluate`(관리자)
 
-## 6. 계속 `@draft`인 17개 (백엔드에도 없음)
+## 6. 계속 `@draft`인 11개 (백엔드에도 없음)
 
-관리자 10 · 코인/결제 6 · 파일 기반 출제 1. 실서버 404가 정상이고 화면은 "준비 중"으로 접는다.
+관리자 10 · 파일 기반 출제 1. 실서버 404가 정상이고 화면은 "준비 중"으로 접는다.
+
+**2026-09-04 갱신** — 코인/결제 6은 PR #18로 붙었고, 그때까지 `@draft`였던 13경로(평가 제출 ·
+게스트 기록 이관 · 첨삭 저장 · 세트 복제 · 음성 힌트 2 · 마이페이지 확장 5 · 신고)도 백엔드에
+구현돼 실계약 대조를 마쳤다. 대조에서 나온 어긋남은 아래 F-9~F-11로 적고 모두 고쳤다.
+
+### ✅ F-9. 별점 태그 enum 3개가 서버와 다름 — **해결(2026-09-04)**
+
+목을 보고 짠 이름이라 `GOOD_DIFFICULTY`·`HELPFUL_HINTS`·`GOOD_QUALITY`가 서버의
+`FAIR_DIFFICULTY`·`HELPFUL_HINT`·`GOOD_QUESTIONS`와 어긋나 있었다. 태그를 고르고 별점을 내면
+400이 났고 `CLEAR_EXPLANATION`·`GOOD_PACING`만 우연히 통과했다. 문구도 서버 enum의 label로 맞췄다.
+계약 테스트: `src/lib/types/dto/ratings.test.ts`.
+
+### ✅ F-10. 음성 힌트 업로드가 서버 시그니처와 다름 — **해결(2026-09-04)**
+
+multipart 파트 이름이 `audio`였는데 서버는 `@RequestPart("file")`이고(→ 400),
+`durationMs`는 `@RequestParam`이라 쿼리인데 폼에 담고 있었다(→ 길이가 빈 채 저장).
+`requestMultipart`에 쿼리 인자를 더해 고쳤다. 계약 테스트: `src/lib/api/sessions.test.ts`.
+
+### ✅ F-11. 오류 코드 6개 어긋남 — **해결(2026-09-04)**
+
+`RECORD_PURGED`는 서버에 없는 이름이었고(실제는 `GUEST_RECORD_EXPIRED`) 화면이 영영 타지 않는
+분기를 들고 있었다. `RATING_NOT_ALLOWED`·`RATING_WINDOW_CLOSED`·`SESSION_NOT_ENDED`·
+`GUEST_RECORD_ALREADY_CLAIMED`가 빠져 있었다. 서버 enum은 47개 → **53개**다.

@@ -10,6 +10,7 @@ import type {
   JoinedRoomsResponse,
   MyProfileResponse,
   NotificationSettingsDto,
+  NotificationSettingsUpdate,
   UserProfileUpdateRequest,
 } from "@/lib/types/dto";
 import { DEMO_ROOM_ID, ME_PROFILE, PUBLIC_ROOMS } from "./fixtures";
@@ -252,7 +253,7 @@ export function mockNotificationSettings(): NotificationSettingsDto {
 
 /** PUT /users/me/notification-settings — 서버는 바뀐 설정을 그대로 돌려준다 */
 export function mockPutNotificationSettings(
-  body: NotificationSettingsDto,
+  body: NotificationSettingsUpdate,
 ): NotificationSettingsDto {
   notificationSettings = { ...notificationSettings, ...body };
   return notificationSettings;

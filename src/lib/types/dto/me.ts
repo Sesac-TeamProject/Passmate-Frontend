@@ -142,12 +142,21 @@ export type BadgesResponse = {
   badges: BadgeResponse[];
 };
 
-/** GET/PUT /users/me/notification-settings — 3종뿐(마케팅 없음, DESIGN_GAPS C-5) */
+/**
+ * GET·PUT /users/me/notification-settings 응답 — 3종뿐(마케팅 없음, DESIGN_GAPS C-5).
+ * **셋 다 반드시 온다** — 서버가 현재 설정을 통째로 돌려주기 때문에 optional이 아니다.
+ */
 export type NotificationSettingsDto = {
-  sessionStart?: boolean;
-  ratingRequest?: boolean;
-  settlementDone?: boolean;
+  sessionStart: boolean;
+  ratingRequest: boolean;
+  settlementDone: boolean;
 };
+
+/**
+ * PUT /users/me/notification-settings 요청 — **바꿀 것만 보낸다**(부분 수정).
+ * 응답 타입과 같게 두면 토글 하나 바꿀 때마다 나머지 둘을 실어 보내야 한다.
+ */
+export type NotificationSettingsUpdate = Partial<NotificationSettingsDto>;
 
 /**
  * GET /users/{userId}/profile — 선생님 공개 프로필.

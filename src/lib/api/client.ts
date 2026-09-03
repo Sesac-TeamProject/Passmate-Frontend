@@ -68,9 +68,18 @@ export async function downloadFile(path: string, filename: string): Promise<void
   URL.revokeObjectURL(objectUrl);
 }
 
-/** multipart/form-data (PTT 클립·자료 업로드). Content-Type은 브라우저가 boundary와 함께 붙인다. */
-export async function requestMultipart<T>(path: string, form: FormData): Promise<T> {
-  const url = buildUrl(path);
+/**
+ * multipart/form-data (PTT 클립·자료 업로드). Content-Type은 브라우저가 boundary와 함께 붙인다.
+ *
+ * `query`가 따로 있는 이유 — 스프링의 `@RequestParam`은 multipart 본문이 아니라 **주소의 쿼리**에서
+ * 읽는다. 폼에 같이 담으면 서버가 못 받고 조용히 빈 값이 된다(음성 힌트 `durationMs`가 그랬다).
+ */
+export async function requestMultipart<T>(
+  path: string,
+  form: FormData,
+  query?: Record<string, QueryValue>,
+): Promise<T> {
+  const url = buildUrl(path, query);
 
   if (IS_MOCK) return resolveMock<T>("POST", url, form);
 

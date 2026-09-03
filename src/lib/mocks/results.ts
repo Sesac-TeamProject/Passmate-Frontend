@@ -11,9 +11,11 @@ import type {
   ParticipantResultRow,
   QuestionResponse,
   HostReviewRequest,
+  RoomRatingResponse,
   ReviewTargetAnswer,
   ReviewTargetListResponse,
   SessionResultsResponse,
+  SubmitRatingRequest,
   TeacherReviewResponse,
 } from "@/lib/types/dto";
 import { DEMO_ROOM, DEMO_ROOM_ID, PARTICIPANTS, SET_QUESTIONS } from "./fixtures";
@@ -337,7 +339,7 @@ export function mockReviewTargets(url: URL): ReviewTargetListResponse {
   };
 }
 
-/** @draft PUT /rooms/{roomId}/answers/{answerId}/review — 백엔드 미구현. 목에서만 성공한다 */
+/** PUT /rooms/{roomId}/answers/{answerId}/review — 첨삭 등록·수정(upsert) */
 export function mockPostReview(answerId: number, body: HostReviewRequest): TeacherReviewResponse {
   return {
     answerId,
@@ -353,11 +355,17 @@ export function mockPostReview(answerId: number, body: HostReviewRequest): Teach
   };
 }
 
-/** @draft POST /rooms/{roomId}/ratings — 백엔드 미구현. 세션당 1회만 받는다 */
-export function mockSubmitRating(): undefined {
+/** POST /rooms/{roomId}/ratings — 세션당 1회. 201로 접수된 평가를 돌려준다 */
+export function mockSubmitRating(body: SubmitRatingRequest): RoomRatingResponse {
   if (rated) throw new AppError("Conflict", { code: ERROR_CODES.ALREADY_RATED });
   rated = true;
-  return undefined;
+  return {
+    id: 1,
+    stars: body.stars,
+    tags: body.tags ?? [],
+    ...(body.comment ? { comment: body.comment } : {}),
+    createdAt: new Date().toISOString().slice(0, 19),
+  };
 }
 
 /** 테스트 전용 — 결과 목의 모듈 상태를 되돌린다 */
