@@ -67,11 +67,15 @@ export function getReviewTargets(
   });
 }
 
-/** GET /rooms/{roomId}/reports/export?format=csv — 첨부 파일로 내려받는다 (호스트) */
-export function exportRoomReport(roomId: number): Promise<void> {
+/**
+ * GET /rooms/{roomId}/reports/export — 첨부 파일로 내려받는다 (호스트).
+ * 형식은 **서버가 CSV만 받는다** — PDF를 넘기면 400 `INVALID_INPUT`으로 이유를 돌려준다.
+ */
+export function exportRoomReport(roomId: number, format = "CSV"): Promise<void> {
+  const lower = format.toLowerCase();
   return downloadFile(
-    `/rooms/${roomId}/reports/export?format=csv`,
-    `passmate-report-${roomId}.csv`,
+    `/rooms/${roomId}/reports/export?format=${lower}`,
+    `passmate-report-${roomId}.${lower}`,
   );
 }
 

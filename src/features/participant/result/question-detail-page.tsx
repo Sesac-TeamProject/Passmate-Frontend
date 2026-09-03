@@ -14,6 +14,9 @@ export type QuestionDetailAnalysis = {
   summary: string;
 };
 
+/** 보기 하나에 몇 명이 답했는지 — 문항 결과 API의 보기별 분포 (마감된 문항만) */
+export type QuestionDetailChoice = { text: string; count: number; isAnswer: boolean };
+
 export type QuestionDetail = {
   no: number;
   total: number;
@@ -32,7 +35,7 @@ export type QuestionDetail = {
   /** 선생님 첨삭 코멘트 */
   teacherComment: string | null;
   /** 보기별 응답 분포(마감된 문항만). 서술형·미마감이면 빈 배열 */
-  distribution: { text: string; count: number; isAnswer: boolean }[];
+  distribution: QuestionDetailChoice[];
 };
 
 /** "AI 분석 요청" 버튼. 게스트이거나 서술형이 아니면 컨테이너가 null을 넘긴다 */
@@ -125,23 +128,9 @@ export function QuestionDetailPage({
             <h2 className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
               다른 학생들은
             </h2>
-            <ul className="flex flex-col gap-1.5">
-              {detail.distribution.map((row) => (
-                <li key={row.text} className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      "min-w-0 flex-1 truncate text-body-md",
-                      row.isAnswer ? "text-mint-dark" : "text-muted-foreground",
-                    )}
-                  >
-                    {row.text}
-                  </span>
-                  <span className="shrink-0 text-label-lg text-muted-foreground">
-                    {row.count}명
-                  </span>
-                </li>
-              ))}
-            </ul>
+            {detail.distribution.map((row) => (
+              <ChoiceRow key={row.text} choice={row} people={detail.distribution} />
+            ))}
           </section>
         ) : null}
       </div>
@@ -153,6 +142,39 @@ export function QuestionDetailPage({
         </NavLink>
       </div>
     </main>
+  );
+}
+
+/** 보기 한 줄 — 정답 보기만 민트로 세운다 (시안 620:8221 "다른 학생들은") */
+function ChoiceRow({
+  choice,
+  people,
+}: {
+  choice: QuestionDetailChoice;
+  people: QuestionDetailChoice[];
+}) {
+  const peak = Math.max(...people.map((c) => c.count), 1);
+
+  return (
+    <p className="flex items-center gap-3">
+      <span
+        className={cn(
+          "w-40 shrink-0 truncate text-label-md",
+          choice.isAnswer ? "text-mint-dark" : "text-muted-foreground",
+        )}
+      >
+        {choice.text}
+      </span>
+      <span className="h-2 flex-1 overflow-hidden rounded-full bg-line-soft">
+        <span
+          className={cn("block h-full rounded-full", choice.isAnswer ? "bg-mint" : "bg-muted")}
+          style={{ width: `${(choice.count / peak) * 100}%` }}
+        />
+      </span>
+      <span className="w-12 shrink-0 text-right text-label-md text-muted-foreground">
+        {choice.count}명
+      </span>
+    </p>
   );
 }
 

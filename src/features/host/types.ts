@@ -93,6 +93,27 @@ export type ReportQuestion = {
   accuracy?: number;
   /** 서술형 AI 분석 건수 */
   aiCount?: number;
+  /** @draft 이 문항을 틀린 학생 수 — 표 "오답" 열 */
+  wrongCount?: number;
+  /** @draft 문항 전문 — 우측 상세 패널 머리글 (표 제목은 줄임말) */
+  prompt?: string;
+};
+
+/** @draft 많이 틀린 학생 한 줄 — 미제출이면 correctCount가 null (시안 784:8963) */
+export type Struggler = {
+  id: string;
+  name: string;
+  correctCount: number | null;
+  questionCount: number;
+};
+
+/** @draft 문항 하나의 채점 분포·AI 총평 — W-07 우측 상세 패널 (시안 784:8983) */
+export type QuestionInsight = {
+  gradingBreakdown: { label: string; count: number }[];
+  strengths: string | null;
+  commonMisses: string | null;
+  nextRoomSuggestion: string | null;
+  hostComment: string | null;
 };
 
 export type AnswerFinding = { tone: "good" | "lack" | "tip"; text: string };
@@ -112,8 +133,20 @@ export type SessionReport = {
   id: string;
   title: string;
   dateLabel: string;
-  stats: { accuracy: number; students: number; questions: number; aiAnalyses: number };
+  stats: {
+    accuracy: number;
+    students: number;
+    questions: number;
+    aiAnalyses: number;
+    /** @draft W-07 KPI 6칸 — 없으면 "—" */
+    submittedCount: number | null;
+    completionPercent: number | null;
+    avgElapsedSeconds: number | null;
+    essayGradedCount: number | null;
+    essayTotalCount: number | null;
+  };
   questions: ReportQuestion[];
+  strugglers: Struggler[];
 };
 
 export type Question = {

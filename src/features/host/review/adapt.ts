@@ -2,9 +2,11 @@ import { toAvatarKey } from "@/components/common/student-avatar";
 import type {
   AnswerFinding,
   EssayAnswer,
+  QuestionInsight,
   QuestionType,
   ReportQuestion,
   SessionReport,
+  Struggler,
   Student,
 } from "@/features/host/types";
 import { parseServerDateTime } from "@/lib/datetime";
@@ -43,7 +45,11 @@ export function toSessionReport(dto: SessionResultsResponse): SessionReport {
     // 서술형은 정답 개념이 없어 정답률 대신 AI 분석 건수를 보여준다
     accuracy: q.type === "ESSAY" ? undefined : q.correctRate,
     aiCount: q.aiAnalysisCount,
+    // 표 "오답" 열 — 낸 사람 중 못 맞힌 수. 계약이 둘 다 주므로 빼서 쓴다
+    wrongCount: q.submitCount - q.correctCount,
   }));
+
+  const questionCount = dto.summary?.questionCount ?? questions.length;
 
   return {
     id: String(dto.roomId),
@@ -54,9 +60,41 @@ export function toSessionReport(dto: SessionResultsResponse): SessionReport {
       students: dto.summary.participantCount,
       questions: dto.summary.questionCount,
       aiAnalyses: dto.summary.aiAnalysisCount,
+      // @draft KPI 6칸 중 계약에 없는 값들 — 지어내지 않고 비우면 표가 "—"로 그린다
+      submittedCount: null,
+      completionPercent: null,
+      avgElapsedSeconds: null,
+      essayGradedCount: null,
+      essayTotalCount: null,
     },
     questions,
+    strugglers: toStrugglers(dto.participants, questionCount),
   };
+}
+
+/**
+ * "많이 틀린 학생" 5줄 — 정답 수가 적은 순. 한 문항도 안 낸 사람은 정답 수를 null로 두고 맨 앞에 세운다.
+ * 정렬만 하고 점수를 다시 계산하지는 않는다 (채점은 서버 권위 — 규칙 문서 §1).
+ */
+function toStrugglers(students: ParticipantResultRow[], questionCount: number): Struggler[] {
+  return [...students]
+    .map((student) => ({
+      id: String(student.participantId),
+      name: student.nickname,
+      // 미제출과 "0점"은 다르다 — 낸 게 없으면 정답 수를 비운다
+      correctCount: student.submitCount === 0 ? null : student.correctCount,
+      questionCount,
+    }))
+    .sort((a, b) => (a.correctCount ?? -1) - (b.correctCount ?? -1))
+    .slice(0, 5);
+}
+
+/**
+ * @draft 문항별 채점 분포·AI 총평 — **계약에 없다.**
+ * 빈 표를 넘기면 패널이 그 칸만 접는다. 서버가 주기 시작하면 여기만 채우면 된다.
+ */
+export function toQuestionInsights(): Map<string, QuestionInsight> {
+  return new Map();
 }
 
 /** 세션 결과의 학생 목록 → 분석 패널 학생 조회용. 아바타가 응답에 있어 그대로 쓴다 */

@@ -1,8 +1,10 @@
-import type { StatItem } from "@/components/common/stat-cards";
+import { formatPin, formatWon } from "@/lib/format";
 import { parseServerDateTime } from "@/lib/datetime";
 import { LEVEL_TITLE, levelTitle } from "@/lib/host-level";
 import type { HostedRoomsResponse, HostReputation } from "@/lib/types/dto";
-import { type LevelStatus, type MyRoom, type Promotion, type PromotionRule } from "./types";
+import type { HubAction } from "./hub-actions";
+import type { HubStat } from "./hub-summary";
+import { type LevelStatus, type MyRoom } from "./types";
 
 /** 서버 시각(UTC naive) → "8/19 종료" 같은 짧은 라벨. 값이 없으면 undefined */
 function toShortLabel(value: string | undefined, suffix: string): string | undefined {
@@ -51,8 +53,6 @@ export function toMyRooms(hosted: HostedRoomsResponse): MyRoom[] {
   return [...active, ...ended];
 }
 
-const PROMOTION_NOTE = "승급 조건은 서버가 아직 판정하지 않아요. 지금까지의 실적만 보여드립니다.";
-
 /** 레벨 카드 혜택 칩 — 필요 레벨 이상이면 획득 처리 */
 const LEVEL_PERK_DEFS: { label: string; requiredLevel: number }[] = [
   { label: "유료 방 개설 (Lv.3)", requiredLevel: 3 },
@@ -89,58 +89,76 @@ export function toLevelStatus(reputation: HostReputation): LevelStatus | null {
 }
 
 /**
- * 명성 요약 → 다음 레벨 승급 조건 카드.
- *
- * 승급 조건(몇 회·몇 명)은 **서버가 주지 않는다** — 등급 판정 자체가 아직 없다.
- * 대신 지금까지의 실적(진행 세션·누적 학생·별점)을 그대로 보여 준다: 지어낸 목표선을 그리지 않는다.
+ * 명성 카드 부제 "방 운영 24회 · 평균 평가 4.6" — 없는 조각은 뺀다.
+ * 값은 `/users/me/rooms/hosted`의 명성 요약에서 온다 — 방 목록과 같은 응답이라 더 부르지 않는다.
  */
-export function toPromotion(reputation: HostReputation): Promotion | null {
-  if (reputation.level === undefined) return null;
+export function toLevelSubtitle(reputation: HostReputation): string {
+  const avgStars = reputation.averageStars;
 
-  const rules: PromotionRule[] = [
-    { label: "진행한 세션", value: `${reputation.hostedSessionCount}회`, met: false },
-    { label: "누적 학생", value: `${reputation.totalStudentCount}명`, met: false },
-    ...(reputation.averageStars !== undefined
-      ? [
-          {
-            label: "평균 별점",
-            value: `${reputation.averageStars.toFixed(1)} (${reputation.ratingCount}개)`,
-            met: false,
-          },
-        ]
-      : []),
-  ];
-
-  return { targetLevel: Math.min(5, reputation.level + 1), rules, note: PROMOTION_NOTE };
+  return [
+    `방 운영 ${reputation.hostedSessionCount}회`,
+    // 받은 평가가 없으면 서버가 필드를 빼고 보낸다 — 0.0으로 채우면 "0점을 받았다"가 된다
+    avgStars === undefined ? null : `평균 평가 ${avgStars}`,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(" · ");
 }
 
-/**
- * W-09 상단 통계 3장.
- * 누적 학생 수는 **명성 요약**에서 온다 — 등급 API(`/users/me/grade`)는 백엔드에 없다.
- */
-export function toMyRoomStats(rooms: MyRoom[], reputation: HostReputation): StatItem[] {
-  const liveCount = rooms.filter((r) => r.status === "live").length;
-  const endedCount = rooms.filter((r) => r.status === "ended").length;
-  const totalStudents = reputation.totalStudentCount;
+/** W-09 가운데 운영 실적 3줄 — 방 운영 횟수 · 평균 평가 · 이번 달 정산 예정 (시안 803:8803~8814) */
+export function toHubStats(
+  reputation: HostReputation,
+  monthlyTotal: number | undefined,
+): HubStat[] {
+  const avgStars = reputation.averageStars;
 
   return [
     {
-      id: "live",
-      label: "진행 중인 방",
-      value: `${liveCount}개`,
-      tile: { label: "R", tone: "mint" },
+      id: "rooms",
+      icon: "▦",
+      value: `${reputation.hostedSessionCount}회`,
+      description: "지금까지 방을 연 횟수예요",
     },
     {
-      id: "ended",
-      label: "종료된 방",
-      value: `${endedCount}개`,
-      tile: { label: "E", tone: "blue" },
+      id: "stars",
+      icon: "★",
+      value: avgStars === undefined ? "—" : `${avgStars} / 5`,
+      description: "학생들이 남긴 평균 평가예요",
     },
     {
-      id: "students",
-      label: "누적 학생 수",
-      value: `${totalStudents}명`,
-      tile: { label: "U", tone: "orange" },
+      id: "settlement",
+      icon: "₩",
+      value: monthlyTotal === undefined ? "—" : formatWon(monthlyTotal),
+      description: "이번 달 정산 예정 금액이에요",
+    },
+  ];
+}
+
+/** W-09 오른쪽 행동 카드 3장 — 진행 중인 방이 없으면 힌트만 바뀐다 (시안 803:8821~8831) */
+export function toHubActions(rooms: MyRoom[]): HubAction[] {
+  const live = rooms.filter((room) => room.status === "live");
+  const ended = rooms.filter((room) => room.status === "ended");
+  const firstLive = live[0];
+  const livePin = firstLive?.pin;
+
+  return [
+    { label: "새 방 만들기", href: "/host/rooms/new", primary: true },
+    {
+      label: "진행 중인 방 열기",
+      hint:
+        live.length === 0
+          ? "진행 중인 방이 없어요"
+          : [`${live.length}개`, livePin === undefined ? null : `PIN ${formatPin(livePin)}`]
+              .filter((part): part is string => part !== null)
+              .join(" · "),
+      href: firstLive === undefined ? "/host/rooms/new" : `/host/rooms/${firstLive.code}/live`,
+    },
+    {
+      label: "종료된 방 리포트",
+      hint: `${ended.length}개`,
+      href:
+        ended[0] === undefined
+          ? "/host/rooms"
+          : `/host/sessions/${ended[0].reportId ?? ended[0].code}/review`,
     },
   ];
 }

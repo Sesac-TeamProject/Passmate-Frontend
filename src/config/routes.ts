@@ -206,8 +206,17 @@ export const ROUTES: readonly RouteMeta[] = [
     path: "/host/rooms",
     sample: "/host/rooms",
     title: "내가 만든 방",
-    description: "명성 등급·승급 조건, 진행 중 방(진행 화면 열기)·종료된 방(상세 리포트) 목록",
+    description: "허브 — 헤드라인·명성 카드·운영 실적·행동 카드 3장·내 방 목록",
     area: "host",
+  },
+  {
+    path: "/host/reputation",
+    sample: "/host/reputation",
+    title: "명성 · 뱃지",
+    description:
+      "레벨 사다리 5단계 · 다음 레벨 승급 조건 · 뱃지 컬렉션 8종 (내가 만든 방 › 명성 상세)",
+    area: "host",
+    nav: "/host/rooms",
   },
   {
     path: "/host/sets",

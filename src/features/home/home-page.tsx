@@ -27,7 +27,8 @@ type Props = {
  */
 export function HomePage({ name, popularRooms, join, onCreateRoom }: Props) {
   return (
-    <main className="flex flex-col gap-5 px-24 py-5">
+    // 시안 W-01: 좌우 96 · 위 28 · 섹션 사이 24 (아래는 잘린 프레임이라 위와 맞춘다)
+    <main className="flex flex-col gap-6 px-24 py-7">
       <HeroBanner
         title={`안녕하세요, ${name} 님!`}
         description="오늘도 스터디원들과 실전처럼 연습해 보세요"

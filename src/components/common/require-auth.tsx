@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { AppBoot } from "@/components/common/app-boot";
 import { SessionExpired } from "@/components/common/session-expired";
 import { ScreenError } from "@/components/common/screen-error";
+import { ScreenLoading } from "@/components/common/screen-loading";
 import { Button } from "@/components/ui/button";
 import { useRestoreSession } from "@/lib/queries/use-restore-session";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -46,8 +46,8 @@ export function RequireAuth({ adminOnly, children }: Props) {
   if (expired && status === "unauthenticated")
     return <SessionExpired onLogin={() => router.replace(loginHref)} />;
 
-  // 로그인 판정 전 첫 페인트 — W-00. 화면별 스켈레톤은 판정이 끝난 뒤 각 page가 그린다.
-  if (!isAuthenticated) return <AppBoot />;
+  // 로그인 판정 전 첫 페인트. 화면별 스켈레톤은 판정이 끝난 뒤 각 page가 그린다.
+  if (!isAuthenticated) return <ScreenLoading />;
   if (!hasRole) {
     return (
       <ScreenError message={new AppError("PermissionDenied").message}>

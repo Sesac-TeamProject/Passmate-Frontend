@@ -99,3 +99,13 @@ export function formatPin(pin: string): string {
 export function formatWon(value: number, spaced = false): string {
   return `${spaced ? "₩ " : "₩"}${formatNumber(value)}`;
 }
+
+/** 초 → "18초" / "2분 40초" / "11분 40초" (리포트 소요 시간). 0초는 "0초" */
+export function formatDuration(seconds: number): string {
+  const whole = Math.max(0, Math.round(seconds));
+  const minutes = Math.floor(whole / 60);
+  const rest = whole % 60;
+  if (minutes === 0) return `${rest}초`;
+  if (rest === 0) return `${minutes}분`;
+  return `${minutes}분 ${rest}초`;
+}

@@ -6,6 +6,7 @@ import type {
   EssayAnswer,
   LiveQuestion,
   LiveRoom,
+  QuestionInsight,
   SessionReport,
   Student,
 } from "@/features/host/types";
@@ -157,7 +158,17 @@ export const SESSION_REPORT_MOCK: SessionReport = {
   id: "1",
   title: "8월 4주차 Spring 스터디",
   dateLabel: "8/22 (금) 진행",
-  stats: { accuracy: 71, students: 6, questions: 8, aiAnalyses: 18 },
+  stats: {
+    accuracy: 71,
+    students: 6,
+    questions: 8,
+    aiAnalyses: 18,
+    submittedCount: 5,
+    completionPercent: 83,
+    avgElapsedSeconds: 252,
+    essayGradedCount: 6,
+    essayTotalCount: 6,
+  },
   questions: [
     { id: "q1", index: 1, title: "DI 컨테이너 개념", type: "multiple", accuracy: 100 },
     { id: "q2", index: 2, title: "@Transactional 전파", type: "multiple", accuracy: 67 },
@@ -168,10 +179,30 @@ export const SESSION_REPORT_MOCK: SessionReport = {
     { id: "q7", index: 7, title: "지연 로딩 기본 대상", type: "multiple", accuracy: 67 },
     { id: "q8", index: 8, title: "Security 필터 체인", type: "essay", aiCount: 6 },
   ],
+  strugglers: [
+    { id: "s1", name: "도윤", correctCount: null, questionCount: 8 },
+    { id: "s2", name: "희표", correctCount: 3, questionCount: 8 },
+    { id: "s3", name: "승혁", correctCount: 4, questionCount: 8 },
+    { id: "s4", name: "민지", correctCount: 5, questionCount: 8 },
+    { id: "s5", name: "혜림", correctCount: 6, questionCount: 8 },
+  ],
 };
 
 /** SESSION_REPORT_MOCK의 기본 선택 문항(q3, 서술형) — 분석 패널 목업이 이 문항의 답변을 보여준다 */
 export const REPORT_SELECTED_QUESTION_ID = "q3";
+
+/** @draft W-07 우측 상세 패널 목업 (계약 없음) */
+export const REPORT_INSIGHT_MOCK: QuestionInsight = {
+  gradingBreakdown: [
+    { label: "핵심 포함", count: 3 },
+    { label: "부분 점수", count: 2 },
+    { label: "핵심 누락", count: 1 },
+  ],
+  strengths: "1차 캐시와 동일성 보장을 짚은 답이 3명",
+  commonMisses: "쓰기 지연 · 변경 감지를 언급한 답이 2명뿐",
+  nextRoomSuggestion: "같은 개념을 객관식으로 한 번 더 확인",
+  hostComment: null,
+};
 
 export const REPORT_ESSAY_ANSWERS_MOCK: EssayAnswer[] = [
   {

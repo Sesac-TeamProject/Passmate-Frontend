@@ -1,42 +1,71 @@
 import type { SessionReport } from "@/features/host/types";
+import { formatDuration } from "@/lib/format";
 
-type Props = { stats: SessionReport["stats"] };
+type Props = {
+  stats: SessionReport["stats"];
+  /** 정답률이 가장 낮은 문항. 없으면 그 칸을 "—"로 둔다 */
+  lowest: { label: string; accuracyPercent: number } | null;
+};
 
-const TILE = {
-  accuracy: "bg-success-soft text-success",
-  students: "bg-blue-soft text-blue",
-  questions: "bg-orange-soft text-orange",
-  aiAnalyses: "bg-muted text-mint-dark",
-} as const;
-
-/** W-07 상단 통계 4장 (정답률·학생·문항·AI 분석) */
-export function ReportStats({ stats }: Props) {
-  const items = [
-    { key: "accuracy", label: "평균 정답률", value: `${stats.accuracy}%` },
-    { key: "students", label: "학생", value: `${stats.students}명` },
-    { key: "questions", label: "문항", value: `${stats.questions}개` },
-    { key: "aiAnalyses", label: "AI 분석", value: `${stats.aiAnalyses}건` },
-  ] as const;
+/** W-07 상단 KPI 6칸 — 평균 정답률·제출·완주율·평균 소요·서술형 채점·최저 문항 (시안 784:8863) */
+export function ReportStats({ stats, lowest }: Props) {
+  const submitted =
+    stats.submittedCount === null ? "—" : `${stats.submittedCount} / ${stats.students}`;
+  const completion = stats.completionPercent === null ? "—" : `${stats.completionPercent}%`;
+  const avgElapsed =
+    stats.avgElapsedSeconds === null ? "—" : formatDuration(stats.avgElapsedSeconds);
+  const essay =
+    stats.essayGradedCount === null || stats.essayTotalCount === null
+      ? "—"
+      : `${stats.essayGradedCount} / ${stats.essayTotalCount}`;
 
   return (
-    <div className="grid grid-cols-4 gap-3.5">
-      {items.map((it) => (
-        <div
-          key={it.key}
-          className="flex items-center gap-3 rounded-[18px] border bg-card px-4 py-3.5"
-        >
-          <span
-            aria-hidden
-            className={`flex size-[38px] shrink-0 items-center justify-center rounded-xl text-label-lg ${TILE[it.key]}`}
-          >
-            {it.value.charAt(0)}
-          </span>
-          <div className="flex flex-col gap-px">
-            <span className="text-label-lg text-muted-foreground">{it.label}</span>
-            <span className="text-heading-md text-ink">{it.value}</span>
-          </div>
-        </div>
-      ))}
+    <dl className="flex h-15 items-center rounded-lg border bg-card px-4">
+      <Cell label="평균 정답률" value={`${stats.accuracy}%`} />
+      <Cell label="제출" value={submitted} divided />
+      <Cell label="완주율" value={completion} divided />
+      <Cell label="평균 소요" value={avgElapsed} divided />
+      <Cell label="서술형 채점" value={essay} divided />
+      <Cell
+        label="최저 문항"
+        value={lowest === null ? "—" : `${lowest.label} · ${lowest.accuracyPercent}%`}
+        divided
+        alert
+      />
+    </dl>
+  );
+}
+
+/** KPI 한 칸. divided면 왼쪽에 세로 구분선, alert면 값을 경고색으로 (시안 최저 문항) */
+function Cell({
+  label,
+  value,
+  divided,
+  alert,
+}: {
+  label: string;
+  value: string;
+  divided?: boolean;
+  alert?: boolean;
+}) {
+  return (
+    <div
+      className={
+        divided
+          ? "flex min-w-0 flex-1 flex-col gap-0.5 border-l border-line-soft pl-4"
+          : "flex min-w-0 flex-1 flex-col gap-0.5"
+      }
+    >
+      <dt className="text-label-md text-muted-foreground">{label}</dt>
+      <dd
+        className={
+          alert
+            ? "truncate text-heading-sm text-negative-soft-foreground"
+            : "truncate text-heading-sm text-ink"
+        }
+      >
+        {value}
+      </dd>
     </div>
   );
 }

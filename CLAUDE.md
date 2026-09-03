@@ -40,7 +40,7 @@ Next.js 16(App Router, TS) + Tailwind v4 + shadcn/ui + TanStack Query + Zustand.
 
 ## 검증
 
-커밋 전 `pnpm format && pnpm lint && pnpm test && pnpm build`. 라우트를 건드렸으면 `pnpm check:routes`까지 — 45개 라우트(+ 리다이렉트)를 기대한다.
+커밋 전 `pnpm format && pnpm lint && pnpm test && pnpm build`. 라우트를 건드렸으면 `pnpm check:routes`까지 — 46개 라우트(+ 리다이렉트)를 기대한다.
 
 ## 디자인
 

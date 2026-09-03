@@ -11,7 +11,7 @@ import type {
   RatingAvailability,
 } from "@/lib/types/dto";
 import type { QuestionDetail, QuestionDetailAnalysis } from "./question-detail-page";
-import type { ReportFeedback, ReportQuestion, ReportVerdict } from "./report-page";
+import type { ReportKind, ReportRow, ReportVerdict } from "./report-question-table";
 
 /** 계약의 문항 유형 → 화면 라벨 */
 const TYPE_LABEL: Record<QuestionType, string> = {
@@ -20,11 +20,11 @@ const TYPE_LABEL: Record<QuestionType, string> = {
   ESSAY: "서술형",
 };
 
-/** 판정 칩 문구 — report-page의 VERDICT 표와 같은 말을 쓴다 */
+/** 판정 칩 문구 — report-question-table의 VERDICT 표와 같은 말을 쓴다 */
 const VERDICT_LABEL: Record<ReportVerdict, string> = {
   CORRECT: "정답",
   WRONG: "오답",
-  AI_ANALYZED: "AI 분석",
+  PARTIAL: "부분",
   PENDING: "분석 중",
   UNKNOWN: "미채점",
 };
@@ -35,47 +35,49 @@ const VERDICT_LABEL: Record<ReportVerdict, string> = {
  * 서버는 `isCorrect`를 **서술형에 주지 않는다**(자동 채점하지 않는다) — 그 자리는 AI 분석 상태로
  * 대신한다. 안 낸 문항은 정오가 아니라 "미채점"이다.
  */
-function toVerdict(question: AnswerResultView): ReportVerdict {
+function toVerdict(
+  question: Pick<AnswerResultView, "submitted" | "isCorrect" | "analysisStatus">,
+): ReportVerdict {
   if (question.submitted === undefined) return "UNKNOWN";
   if (question.isCorrect === true) return "CORRECT";
   if (question.isCorrect === false) return "WRONG";
-  if (question.analysisStatus === "DONE") return "AI_ANALYZED";
+  // 서술형이 AI 채점을 마친 상태 — 표는 이 자리를 "부분"이라 부른다(부분 점수 판정은 서버 몫)
+  if (question.analysisStatus === "DONE") return "PARTIAL";
   if (question.analysisStatus === "PENDING") return "PENDING";
   return "UNKNOWN";
 }
 
-/** 개인 결과의 문항 목록 → 리포트 문항 행 */
-export function toReportQuestions(questions: AnswerResultView[]): ReportQuestion[] {
-  return questions.map((question) => ({
-    questionId: question.questionId,
-    no: question.orderNo,
-    title: question.content,
-    verdict: toVerdict(question),
-  }));
-}
+/** 계약의 문항 유형 → 표 "유형" 칩 */
+const KIND: Record<QuestionType, ReportKind> = {
+  MCQ: "MULTIPLE",
+  OX: "OX",
+  ESSAY: "ESSAY",
+};
 
 /**
- * 하단 AI 분석 카드에 세울 문항을 고른다 — 분석이 끝난 첫 문항, 없으면 요청 중인 첫 문항.
- * 시안에는 서술형 한 문항만 열려 있고 문항을 바꿀 방법이 없다(셰브론이 갈 곳이 없다).
+ * 개인 결과의 문항 목록 → 리포트 표 행 (시안 787:8905).
+ * 서술형은 답안 원문 대신 "작성 142자"로 줄인다 — 표 한 줄에 들어가지 않는다.
+ *
+ * 개념·반 정답률·소요 시간은 **계약에 없다**(@draft). 지어내지 않고 비워 두면
+ * 표가 그 칸을 "—"로 그린다.
  */
-export function toReportFeedback(questions: AnswerResultView[]): ReportFeedback | null {
-  const done = questions.find((q) => q.analysisStatus === "DONE" && q.analysis);
-  const pending = questions.find((q) => q.analysisStatus === "PENDING");
-  const target = done ?? pending;
-  if (target === undefined) return null;
+export function toReportRows(questions: AnswerResultView[]): ReportRow[] {
+  return questions.map((question) => {
+    const kind = KIND[question.type];
+    const answer = question.submitted ?? "";
 
-  return {
-    heading: `Q${target.orderNo} · AI 분석 (참고 의견)`,
-    isPending: done === undefined,
-    covered: joinPoints(target.analysis?.keyPoints),
-    missing: joinPoints(target.analysis?.missingPoints),
-    improvement: joinPoints(target.analysis?.suggestions),
-    hostComment: target.teacherReview?.comment ?? null,
-  };
-}
-
-function joinPoints(points: string[] | undefined): string | null {
-  return points && points.length > 0 ? points.join(", ") : null;
+    return {
+      questionId: question.questionId,
+      no: question.orderNo,
+      kind,
+      concept: "",
+      title: question.content,
+      myAnswer: kind === "ESSAY" && answer !== "" ? `작성 ${answer.length}자` : answer,
+      verdict: toVerdict(question),
+      classAccuracyPercent: null,
+      elapsedSeconds: null,
+    };
+  });
 }
 
 function toAnalysis(
@@ -100,16 +102,8 @@ export function toQuestionDetail(
   total: number,
   result: QuestionResultResponse | undefined,
 ): QuestionDetail {
-  const verdict =
-    answer.isCorrect === true
-      ? "CORRECT"
-      : answer.isCorrect === false
-        ? "WRONG"
-        : answer.analysisStatus === "DONE"
-          ? "AI_ANALYZED"
-          : answer.analysisStatus === "PENDING"
-            ? "PENDING"
-            : "UNKNOWN";
+  // 표와 같은 판정 규칙을 쓴다 — 두 화면이 같은 문항을 다르게 부르면 안 된다
+  const verdict = toVerdict(answer);
 
   return {
     no: answer.orderNo,
