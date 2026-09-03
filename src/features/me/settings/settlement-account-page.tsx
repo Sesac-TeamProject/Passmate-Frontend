@@ -33,8 +33,15 @@ export function SettlementAccountPage({
   pending = false,
   errorMessage,
 }: Props) {
+  /**
+   * 서버는 **넘긴 값 그대로 저장한다** — 빈 계좌번호를 보내면 등록된 계좌가 지워진다.
+   * 조회는 마스킹된 번호만 주므로 폼이 비어 시작하는 것이 정상이고, 그래서 여기서 막아야 한다.
+   */
+  const canSubmit = values.accountNumber.trim() !== "" && values.holder.trim() !== "";
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!canSubmit) return;
     onSubmit();
   };
 
@@ -107,7 +114,7 @@ export function SettlementAccountPage({
         </p>
 
         <div className="flex justify-end">
-          <Button type="submit" size="xl" disabled={pending}>
+          <Button type="submit" size="xl" disabled={pending || !canSubmit}>
             등록하기
           </Button>
         </div>

@@ -49,7 +49,6 @@ import {
   mockConfirmCharge,
   mockCreateCharge,
   mockEarnings,
-  mockExportEarnings,
   mockEntryPayment,
   mockPutPaymentMethod,
   mockPutSettlementAccount,
@@ -224,7 +223,6 @@ const HANDLERS: Record<string, MockHandler> = {
     mockConfirmCharge(ctx.params.chargeId, asBody<ConfirmChargeRequest>(ctx)),
   "POST /rooms/:roomId/entry-payments": () => mockEntryPayment(),
   "GET /users/me/earnings": () => mockEarnings(),
-  "GET /users/me/earnings/export": () => mockExportEarnings(),
   "GET /users/me/settlement-account": () => mockSettlementAccount(),
   "PUT /users/me/settlement-account": (ctx) =>
     mockPutSettlementAccount(asBody<SettlementAccountRequest>(ctx)),

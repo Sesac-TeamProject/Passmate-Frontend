@@ -3,9 +3,6 @@ import { toAvatarKey } from "@/components/common/student-avatar";
 import { parseServerDateTime } from "@/lib/datetime";
 import { formatShortDate, formatWon } from "@/lib/format";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
-
-/** 플랫폼 수수료 20% — 호스트 몫. 백엔드 `HostEarningRow.net` 주석과 같은 값 */
-const HOST_SHARE_PERCENT = 80;
 import { AppError } from "@/lib/types/app-error";
 import type {
   BadgeResponse,
@@ -35,6 +32,9 @@ import {
 } from "./notifications/types";
 import type { PaymentMethodItem } from "./payment-methods/types";
 import type { SettlementRow, SettlementStatus } from "./settlement/types";
+
+/** 플랫폼 수수료 20% — 호스트 몫. 백엔드 `HostEarningRow.net` 주석과 같은 값 */
+const HOST_SHARE_PERCENT = 80;
 import {
   type Achievement,
   type AchievementBadgeKind,
@@ -356,7 +356,7 @@ export function toHostRecord(
     stats: {
       rooms: grade?.roomsHosted ?? 0,
       // 받은 평가가 없으면 서버가 필드를 뺀다 — 0으로 채우면 "0점을 받았다"가 된다
-      rating: grade?.avgRating ?? 0,
+      rating: grade?.avgRating ?? null,
       students: grade?.totalStudents ?? 0,
     },
     badges: {

@@ -173,11 +173,6 @@ export function mockEarnings(): EarningsResponse {
   };
 }
 
-/** GET /users/me/earnings/export — 목은 파일을 만들지 않는다(다운로드는 실서버에서 확인한다) */
-export function mockExportEarnings(): undefined {
-  return undefined;
-}
-
 /** GET /users/me/settlement-account — 미등록도 200이다(목에서는 항상 등록됨) */
 export function mockSettlementAccount(): SettlementAccountResponse {
   return { registered: true, account: settlementAccount };

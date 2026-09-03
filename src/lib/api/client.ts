@@ -4,6 +4,7 @@ import { resolveMock } from "@/lib/mocks/handlers";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { clearRefreshToken, readRefreshToken, writeRefreshToken } from "@/lib/token-storage";
 import { AppError } from "@/lib/types/app-error";
+import { ERROR_CODES } from "@/lib/types/error-codes";
 import type { ApiErrorBody, TokenRefreshRequest, TokenRefreshResponse } from "@/lib/types/dto";
 
 /**
@@ -44,8 +45,17 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   return (await response.json()) as T;
 }
 
-/** 인증 헤더를 실어 blob을 받아 저장한다 (설계 문서 §7, FR-063). */
+/**
+ * 인증 헤더를 실어 blob을 받아 저장한다 (설계 문서 §7, FR-063).
+ *
+ * **목 계층을 타지 않는다** — 목은 파일을 만들 수 없다. 목 모드에서는 라우트가 있는 척하지 않고
+ * NotFound로 알려, 화면이 다른 미구현 API와 같은 "준비 중" 안내로 접게 한다.
+ */
 export async function downloadFile(path: string, filename: string): Promise<void> {
+  if (IS_MOCK) {
+    throw new AppError("NotFound", { code: ERROR_CODES.NOT_FOUND, serverMessage: null });
+  }
+
   const url = buildUrl(path);
   const response = await sendWithRefresh(url, path, {});
   const blob = await response.blob();

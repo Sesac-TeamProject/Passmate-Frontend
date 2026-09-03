@@ -15,10 +15,13 @@ import { ExportFailedDialog } from "@/features/host/review/export-failed-dialog"
 import { ReviewPage, type ExportFormat } from "@/features/host/review/review-page";
 import { ReviewSkeleton } from "@/features/host/review/review-skeleton";
 import { exportRoomReport } from "@/lib/api/results";
+import { AppError } from "@/lib/types/app-error";
 import { usePostHostReview, useReviewTargets, useSessionResults } from "@/lib/queries/use-results";
 
-/** 목 라우트가 없어 목 모드에서는 404가 난다 — 실제 실패도 같은 안내로 접는다 */
+/** 목 모드는 파일을 만들지 못한다(`downloadFile`이 목 계층을 타지 않는다) */
 const EXPORT_UNAVAILABLE_MESSAGE = "백엔드 연동 후 제공돼요";
+/** 서버는 CSV만 내보낸다 — PDF는 400으로 막힌다 */
+const PDF_UNSUPPORTED_MESSAGE = "지금은 CSV로만 내보낼 수 있어요";
 
 /**
  * W-07 방 리포트 컨테이너. [sessionId]는 roomId다(사전 판정).
@@ -52,14 +55,19 @@ export default function Page() {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
+  // 실패한 형식을 기억한다 — 다시 시도가 엉뚱한 형식으로 가지 않게 한다
+  const [failedFormat, setFailedFormat] = useState<ExportFormat>("CSV");
+
   const handleExport = async (format: ExportFormat) => {
     setExportError(null);
+    setFailedFormat(format);
     setExporting(true);
     try {
       await exportRoomReport(roomId, format);
-    } catch {
-      // 목 모드에서는 라우트가 없어 404(AppError)가 난다 — 실제 실패도 같은 안내로 접는다.
-      setExportError(EXPORT_UNAVAILABLE_MESSAGE);
+    } catch (error) {
+      // 서버가 지원하지 않는 형식은 400으로 막는다 — 백엔드 연동 문제가 아니라 형식 문제다
+      const unsupported = AppError.isAppError(error) && error.kind === "ValidationFailed";
+      setExportError(unsupported ? PDF_UNSUPPORTED_MESSAGE : EXPORT_UNAVAILABLE_MESSAGE);
     } finally {
       setExporting(false);
     }
@@ -104,7 +112,7 @@ export default function Page() {
         open={exportError !== null}
         onOpenChange={(open) => !open && setExportError(null)}
         description={exportError ?? undefined}
-        onRetry={() => handleExport("CSV")}
+        onRetry={() => handleExport(failedFormat)}
         retrying={exporting}
       />
     </>
