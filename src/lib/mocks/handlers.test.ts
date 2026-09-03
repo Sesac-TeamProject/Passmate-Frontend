@@ -183,7 +183,12 @@ describe("mocks/handlers", () => {
         () => me.getGrade(),
         () => me.getBadges(),
         () => me.getNotificationSettings(),
-        () => me.putNotificationSettings({ sessionStart: true }),
+        () =>
+          me.putNotificationSettings({
+            sessionStart: true,
+            ratingRequest: true,
+            settlementDone: false,
+          }),
         () => me.getHostProfile(42),
         () => me.postReport({ targetType: "USER", targetId: 42, type: "SPAM", reason: "도배해요" }),
         () => me.claimGuestRecord("mock-guest-record-token"),

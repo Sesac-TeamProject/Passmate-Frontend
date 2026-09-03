@@ -13,6 +13,8 @@ import type {
   NotificationSettingsUpdate,
   UserProfileUpdateRequest,
 } from "@/lib/types/dto";
+import { AppError } from "@/lib/types/app-error";
+import { ERROR_CODES } from "@/lib/types/error-codes";
 import { DEMO_ROOM_ID, ME_PROFILE, PUBLIC_ROOMS } from "./fixtures";
 
 /**
@@ -251,10 +253,24 @@ export function mockNotificationSettings(): NotificationSettingsDto {
   return notificationSettings;
 }
 
-/** PUT /users/me/notification-settings — 서버는 바뀐 설정을 그대로 돌려준다 */
+/**
+ * PUT /users/me/notification-settings — 바뀐 설정을 그대로 돌려준다.
+ *
+ * 서버처럼 **세 항목이 다 와야 한다**(`@NotNull` 셋). 하나라도 빠지면 400이다 —
+ * 목이 부분 갱신을 받아 주면 목에서만 통과하고 실서버에서 400이 난다.
+ */
 export function mockPutNotificationSettings(
   body: NotificationSettingsUpdate,
 ): NotificationSettingsDto {
+  const missing = (["sessionStart", "ratingRequest", "settlementDone"] as const).filter(
+    (k) => typeof body?.[k] !== "boolean",
+  );
+  if (missing.length > 0) {
+    throw new AppError("ValidationFailed", {
+      code: ERROR_CODES.INVALID_INPUT,
+      serverMessage: `${missing.join("·")} 는 필수입니다.`,
+    });
+  }
   notificationSettings = { ...notificationSettings, ...body };
   return notificationSettings;
 }

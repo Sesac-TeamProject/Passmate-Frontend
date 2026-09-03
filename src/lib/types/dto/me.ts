@@ -153,10 +153,13 @@ export type NotificationSettingsDto = {
 };
 
 /**
- * PUT /users/me/notification-settings 요청 — **바꿀 것만 보낸다**(부분 수정).
- * 응답 타입과 같게 두면 토글 하나 바꿀 때마다 나머지 둘을 실어 보내야 한다.
+ * PUT /users/me/notification-settings 요청 — **세 항목을 모두 보낸다.**
+ *
+ * 부분 수정이 아니다. 서버가 일부러 셋 다 `@NotNull`로 받는다(`NotificationSettingRequest`) —
+ * 부분 갱신을 허용하면 토글 하나를 끄면서 나머지를 실수로 되돌릴 수 있기 때문이다.
+ * 하나라도 빼면 400이다. 화면은 현재 값을 얹어서 통째로 보낸다.
  */
-export type NotificationSettingsUpdate = Partial<NotificationSettingsDto>;
+export type NotificationSettingsUpdate = NotificationSettingsDto;
 
 /**
  * GET /users/{userId}/profile — 선생님 공개 프로필.
