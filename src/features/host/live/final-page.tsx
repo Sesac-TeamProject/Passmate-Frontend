@@ -1,4 +1,5 @@
 import { StudentAvatar } from "@/components/common/student-avatar";
+import { PendingLabel } from "@/components/common/pending-label";
 import type { Student } from "@/features/host/types";
 import { FinalRail, FinalRailMini, type HardestQuestion, type SessionSummary } from "./final-rail";
 import { Podium, type PodiumEntry } from "./podium";
@@ -81,7 +82,7 @@ export function FinalPage({
               disabled={exporting}
               className="h-13 w-44 rounded-2xl border-[1.5px] text-heading-sm font-bold transition-colors hover:bg-muted disabled:opacity-60"
             >
-              {exporting ? "내보내는 중…" : "순위 내보내기"}
+              {exporting ? <PendingLabel>내보내는 중…</PendingLabel> : "순위 내보내기"}
             </button>
             <button
               type="button"

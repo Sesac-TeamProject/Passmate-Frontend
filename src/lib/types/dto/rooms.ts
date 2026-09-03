@@ -1,3 +1,4 @@
+import type { AvatarKey } from "./common";
 import type { CursorPage, HostLevel, RoomState } from "./common";
 
 /** POST /rooms — questionSetId는 CONFIRMED 세트만 */
@@ -29,18 +30,18 @@ export type HostedRoomDto = {
 export type HostedRoomsResponse = CursorPage<HostedRoomDto>;
 
 /** POST /rooms/{roomId}/participants — 닉네임 1~12자, avatarId 없으면 서버 랜덤 */
-export type JoinRoomRequest = { nickname: string; avatarId?: number | null };
+export type JoinRoomRequest = { nickname: string; avatarId?: AvatarKey | null };
 /** participantToken은 게스트에게만 발급 */
 export type JoinRoomResponse = {
   participantId: number;
   participantToken?: string | null;
-  avatarId?: number | null;
+  avatarId?: AvatarKey | null;
 };
 
 export type ParticipantEntry = {
   participantId: number;
   nickname: string;
-  avatarId?: number | null;
+  avatarId?: AvatarKey | null;
   isGuest?: boolean;
   isConnected?: boolean;
 };

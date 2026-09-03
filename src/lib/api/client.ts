@@ -110,7 +110,7 @@ async function send(url: string, options: RequestOptions, accessToken: string | 
 
 /**
  * 401이면 refresh 후 한 번만 재시도한다. 성공 응답(2xx)만 돌려주고 나머지는 AppError로 던진다.
- * 회원 토큰(store.accessToken)이 있을 때만 refresh를 시도한다 — 게스트·비로그인 401(예: LOGIN_REQUIRED)은
+ * 회원 토큰(store.accessToken)이 있을 때만 refresh를 시도한다 — 게스트·비로그인 401(예: GUEST_NOT_ALLOWED)은
  * refresh 대상이 아니므로 code를 보존한 채 그대로 AppError로 바꾼다.
  */
 async function sendWithRefresh(url: string, path: string, options: RequestOptions) {
@@ -162,8 +162,9 @@ async function doRefresh(): Promise<string | null> {
   const store = useAuthStore.getState();
   const refreshToken = readRefreshToken();
 
+  // 여기까지 왔다는 건 access 토큰이 있던 살아 있는 세션이었다는 뜻이다 — 만료로 표시한다.
   if (!refreshToken) {
-    store.clearSession();
+    store.expireSession();
     return null;
   }
 
@@ -174,7 +175,7 @@ async function doRefresh(): Promise<string | null> {
     // 리프레시 토큰이 실제로 죽은 응답(400·401·403)에서만 세션을 비운다 — KMP ApiClient와 같은 기준.
     // 5xx·게이트웨이 오류에도 지우면 배포 중 한 번의 500으로 열린 탭이 전부 로그아웃된다(복구 불가).
     if (SESSION_KILLING_STATUSES.includes(response.status)) {
-      store.clearSession();
+      store.expireSession();
       clearRefreshToken();
     }
     return null;

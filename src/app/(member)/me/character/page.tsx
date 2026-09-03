@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  avatarIdFromKey,
-  avatarKeyFromId,
-  type AvatarKey,
-} from "@/components/common/student-avatar";
+import { toAvatarKey, type AvatarKey } from "@/components/common/student-avatar";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toMeErrorMessage } from "@/features/me/adapt";
@@ -24,12 +20,12 @@ export default function Page() {
 
   if (!seeded && me.data) {
     setSeeded(true);
-    setSelected(avatarKeyFromId(me.data.avatarId));
+    setSelected(toAvatarKey(me.data.avatarId));
   }
 
   const handleSubmit = () => {
     if (update.isPending) return;
-    update.mutate({ avatarId: avatarIdFromKey(selected) }, { onSuccess: () => router.push("/me") });
+    update.mutate({ avatarId: selected }, { onSuccess: () => router.push("/me") });
   };
 
   if (me.isPending) return <ScreenLoading />;

@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { AppError } from "@/lib/types/app-error";
+import { AVATAR_KEYS, type AvatarKey } from "@/lib/types/dto";
 import type {
   CreateRoomRequest,
   CreateRoomResponse,
@@ -19,8 +20,6 @@ import { emitMockEvent } from "./session";
 /** 방(rooms) 도메인 목 응답. 입장 인원 등 상태가 필요한 값은 모듈 스코프에서 유지한다. */
 
 const HOST_MIN_LEVEL_FOR_PAID = 3;
-/** 아바타 12종(components/common/student-avatar.tsx AVATAR_KEYS) */
-const AVATAR_COUNT = 12;
 
 let hostedRooms: HostedRoomDto[] = [...HOSTED_ROOMS];
 let nextHostedRoomId = 104;
@@ -35,8 +34,8 @@ function randomPin(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-function randomAvatarId(): number {
-  return Math.floor(Math.random() * AVATAR_COUNT) + 1;
+function randomAvatarId(): AvatarKey {
+  return AVATAR_KEYS[Math.floor(Math.random() * AVATAR_KEYS.length)];
 }
 
 /** GET /rooms/pin/{pin} — 404 잘못된 PIN. 계약상 410(종료된 방)은 시연 방에선 재현하지 않는다. */
@@ -96,11 +95,18 @@ export function mockHostedRooms(): HostedRoomsResponse {
   return { items: hostedRooms, nextCursor: null, hasNext: false };
 }
 
-/** GET /rooms/public — type=free|paid 필터, q 부분 일치, sort=popular면 참여 인원 내림차순 */
+/** /rooms 목록 한 페이지 — 시안이 카드 6장 뒤에 "더 보기"를 두므로 목도 6개씩 끊는다 */
+const PUBLIC_PAGE_SIZE = 6;
+
+/**
+ * GET /rooms/public — type=free|paid 필터, q 부분 일치, sort=popular면 참여 인원 내림차순.
+ * cursor는 다음 페이지의 시작 인덱스를 문자열로 담는다(서버 커서 형식은 계약에 없다).
+ */
 export function mockPublicRooms(url: URL): PublicRoomPageResponse {
   const type = url.searchParams.get("type") ?? "all";
   const sort = url.searchParams.get("sort") ?? "popular";
   const q = url.searchParams.get("q");
+  const cursor = Number(url.searchParams.get("cursor") ?? 0) || 0;
 
   let items = PUBLIC_ROOMS.filter((room) => {
     if (type === "free" && room.isPaid) return false;
@@ -113,16 +119,20 @@ export function mockPublicRooms(url: URL): PublicRoomPageResponse {
     items = [...items].sort((a, b) => (b.participantCount ?? 0) - (a.participantCount ?? 0));
   }
 
-  return { items, nextCursor: null, hasNext: false };
+  const page = items.slice(cursor, cursor + PUBLIC_PAGE_SIZE);
+  const next = cursor + PUBLIC_PAGE_SIZE;
+  const hasNext = next < items.length;
+
+  return { items: page, nextCursor: hasNext ? String(next) : null, hasNext };
 }
 
 /**
- * POST /rooms/{roomId}/participants — 닉네임 중복이면 Conflict(NICKNAME_TAKEN).
+ * POST /rooms/{roomId}/participants — 닉네임 중복이면 Conflict(NICKNAME_DUPLICATED).
  * 회원(access 토큰 있음)이면 participantToken 없음, 게스트면 "mock-guest-token".
  */
 export function mockJoinRoom(_roomId: string, body: JoinRoomRequest): JoinRoomResponse {
   if (participants.some((p) => p.nickname === body.nickname)) {
-    throw new AppError("Conflict", { code: "NICKNAME_TAKEN" });
+    throw new AppError("Conflict", { code: "NICKNAME_DUPLICATED" });
   }
 
   const participantId = nextParticipantId++;

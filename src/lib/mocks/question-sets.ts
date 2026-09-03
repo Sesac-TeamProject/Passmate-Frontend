@@ -1,8 +1,6 @@
 import { AppError } from "@/lib/types/app-error";
 import type {
-  AiUsageResponse,
   GenerateQuestionSetRequest,
-  MaterialUploadResponse,
   QuestionDraft,
   QuestionSetDetailResponse,
   QuestionSetDto,
@@ -66,7 +64,7 @@ export function mockCreateQuestionSet(body: unknown): QuestionSetDetailResponse 
   return detail;
 }
 
-/** @draft POST /question-sets/generate — AI 생성은 시간이 걸린다 */
+/** @draft POST /question-sets/{setId}/questions/generate — AI 생성은 시간이 걸린다 */
 export async function mockGenerate(
   body: GenerateQuestionSetRequest,
 ): Promise<QuestionSetDetailResponse> {
@@ -141,8 +139,8 @@ export function mockConfirmQuestionSet(id: string): QuestionSetDetailResponse {
   return confirmed;
 }
 
-/** @draft POST /question-sets/{id}/clone */
-export function mockCloneQuestionSet(id: string): QuestionSetDetailResponse {
+/** @draft POST /question-sets/{setId}/duplicate */
+export function mockDuplicateQuestionSet(id: string): QuestionSetDetailResponse {
   const source = mockQuestionSetDetail(id);
   const clone: QuestionSetDetailResponse = {
     ...source,
@@ -165,22 +163,16 @@ export function mockCloneQuestionSet(id: string): QuestionSetDetailResponse {
   return clone;
 }
 
-/** @draft GET /me/ai-usage */
-export function mockAiUsage(): AiUsageResponse {
-  return { generationLeft: 3, generationLimit: 5, analysisLeft: 5, analysisLimit: 5 };
-}
-
-const DEFAULT_EXTRACTED_CHARS = 12000;
-
 /**
- * @draft POST /materials — 자료(PDF 등) 업로드. 라우트 스윕이 실제 FormData가 아닌 `{}`로도
- * 호출하므로 `instanceof` 가드 없이 `form.get(...)`을 부르면 raw TypeError가 났다.
+ * @draft POST /question-sets/{setId}/questions/generate-from-file — 자료(PDF 등) 기반 문항 생성.
+ * 경로만 확정이고 응답 필드는 미확보라, 조건 생성과 같은 세트 상세를 돌려준다.
+ * 라우트 스윕이 실제 FormData가 아닌 `{}`로도 호출하므로 `instanceof` 가드를 둔다.
  */
-export function mockUploadMaterial(form: FormData): MaterialUploadResponse {
+export async function mockGenerateFromFile(form: FormData): Promise<QuestionSetDetailResponse> {
   const file = form instanceof FormData ? (form.get("file") as File | null) : null;
-  return {
-    materialFileId: 1,
-    fileName: file?.name ?? "material.pdf",
-    extractedChars: DEFAULT_EXTRACTED_CHARS,
-  };
+  return mockGenerate({
+    topic: file?.name ?? "업로드 자료",
+    counts: [{ type: "MULTIPLE_CHOICE", count: 3 }],
+    difficulty: "MEDIUM",
+  });
 }

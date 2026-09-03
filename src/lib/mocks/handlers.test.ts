@@ -8,12 +8,14 @@ const SAMPLE: Record<string, string> = {
   ":roomId": "1",
   ":questionId": "1",
   ":id": "1",
+  ":setId": "1",
   ":answerId": "1",
   ":userId": "42",
   ":chargeId": "chg-1",
+  ":provider": "google",
 };
 
-// 라우트마다 지연(250ms)이 있고 /question-sets/generate는 1.5초 더 걸린다 — 기본 5초 타임아웃을 늘린다.
+// 라우트마다 지연(250ms)이 있고 /question-sets/:setId/questions/generate는 1.5초 더 걸린다 — 기본 5초 타임아웃을 늘린다.
 const ROUTE_SWEEP_TIMEOUT_MS = 30000;
 
 describe("mocks/handlers", () => {
@@ -71,13 +73,15 @@ describe("mocks/handlers", () => {
     });
   });
 
+  // 예외 하나: results.exportRoomReport(GET /rooms/{roomId}/reports/export)는 일부러 목 라우트가 없다.
+  // CSV 바이너리를 목으로 흉내 낼 값이 없어, 화면이 404를 잡아 "백엔드 연동 후 제공돼요"로 접는다.
   it(
     "네트워크를 타는 api 함수 전부가 목 라우트를 갖는다",
     async () => {
       vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "");
       vi.resetModules();
 
-      const [rooms, sessions, qs, results, me, payments, ratings, auth] = await Promise.all([
+      const [rooms, sessions, qs, results, me, payments, ratings, auth, admin] = await Promise.all([
         import("@/lib/api/rooms"),
         import("@/lib/api/sessions"),
         import("@/lib/api/question-sets"),
@@ -86,6 +90,7 @@ describe("mocks/handlers", () => {
         import("@/lib/api/payments"),
         import("@/lib/api/ratings"),
         import("@/lib/api/auth"),
+        import("@/lib/api/admin"),
       ]);
       // generateQuestionSet은 목 지연이 1.5초 더 걸려 맨 끝에 둔다(ROUTE_SWEEP_TIMEOUT_MS로 흡수).
       const calls: (() => Promise<unknown>)[] = [
@@ -110,14 +115,14 @@ describe("mocks/handlers", () => {
         () => qs.getQuestionSet(1),
         () => qs.updateQuestionSet(1, { title: "t" }),
         () => qs.confirmQuestionSet(1),
-        () => qs.cloneQuestionSet(1),
-        () => qs.getAiUsage(),
-        () => qs.uploadMaterial(new File(["x"], "a.pdf", { type: "application/pdf" })),
+        () => qs.duplicateQuestionSet(1),
+        () => qs.createQuestionSet({ title: "t" }),
+        () => qs.generateFromFile(1, new File(["x"], "a.pdf", { type: "application/pdf" })),
         () => results.getMyResult(1),
         () => results.getMyReport(1),
         () => results.getRoomReport(1),
         () => results.getEssayAnswers(1, 1),
-        () => results.postHostReview(1, { comment: "c" }),
+        () => results.putHostReview(1, 1, { comment: "c" }),
         () => me.updateProfile({ nickname: "n" }),
         () => me.getMyPage(),
         () => me.getGrade(),
@@ -142,11 +147,23 @@ describe("mocks/handlers", () => {
           }),
         () => payments.putPaymentMethod("CARD"),
         () => ratings.submitRating(1, { stars: 5, tags: [] }),
+        () => admin.getAdminDashboard(),
+        () => admin.getAdminUsers("ALL"),
+        () => admin.getAdminRooms(),
+        () => admin.getAdminReviewQueue(),
+        () => admin.getAdminReports(),
+        () => admin.getAdminSanctions(),
+        () => admin.getAdminPayments(),
+        () => admin.getAdminSettlements(),
+        () => admin.getAdminAdCampaigns(),
+        () => admin.getAdminBrandedQuizzes(),
         () => auth.getMe(),
+        () => auth.socialLogin("google", { idToken: "tok" }),
+        () => auth.devLogin("web-dev"),
         () => auth.logout(),
         () => me.deleteMe(),
         () =>
-          qs.generateQuestionSet({
+          qs.generateQuestionSet(1, {
             topic: "Spring",
             counts: [{ type: "MULTIPLE_CHOICE", count: 1 }],
             difficulty: "MEDIUM",

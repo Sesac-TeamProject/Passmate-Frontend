@@ -40,7 +40,7 @@ export const ROUTES: readonly RouteMeta[] = [
     path: "/login",
     sample: "/login",
     title: "로그인",
-    description: "이메일·Google 로그인, 회원가입·비밀번호 찾기, PIN 게스트 입장 링크",
+    description: "Google 로그인(회원가입 겸용), PIN 게스트 입장 링크",
     area: "public",
   },
   {
@@ -98,13 +98,6 @@ export const ROUTES: readonly RouteMeta[] = [
     sample: "/me/account",
     title: "계정 정보 변경",
     description: "프로필 캐릭터·닉네임 변경 (이메일은 로그인 ID라 변경 불가)",
-    area: "member",
-  },
-  {
-    path: "/me/password",
-    sample: "/me/password",
-    title: "비밀번호 변경",
-    description: "현재 비밀번호 확인 후 새 비밀번호 설정",
     area: "member",
   },
   {
@@ -193,6 +186,13 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "participant",
   },
   {
+    path: "/result/[sessionId]/report/[questionNo]",
+    sample: "/result/1/report/3",
+    title: "문항 상세",
+    description: "내가 고른 답과 정답, AI 첨삭(잘한 점·놓친 점·다시 볼 것), 이전·다음 문항 이동",
+    area: "participant",
+  },
+  {
     path: "/pay/[code]",
     sample: "/pay/482913",
     title: "유료 방 결제",
@@ -206,8 +206,17 @@ export const ROUTES: readonly RouteMeta[] = [
     path: "/host/rooms",
     sample: "/host/rooms",
     title: "내가 만든 방",
-    description: "명성 등급·승급 조건, 진행 중 방(진행 화면 열기)·종료된 방(상세 리포트) 목록",
+    description: "허브 — 헤드라인·명성 카드·운영 실적·행동 카드 3장·내 방 목록",
     area: "host",
+  },
+  {
+    path: "/host/reputation",
+    sample: "/host/reputation",
+    title: "명성 · 뱃지",
+    description:
+      "레벨 사다리 5단계 · 다음 레벨 승급 조건 · 뱃지 컬렉션 8종 (내가 만든 방 › 명성 상세)",
+    area: "host",
+    nav: "/host/rooms",
   },
   {
     path: "/host/sets",

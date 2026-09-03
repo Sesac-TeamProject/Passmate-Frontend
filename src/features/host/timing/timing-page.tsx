@@ -1,6 +1,7 @@
 import { Clock } from "lucide-react";
 import { Stepper } from "@/components/common/stepper";
 import { Switch } from "@/components/ui/switch";
+import { PendingLabel } from "@/components/common/pending-label";
 import { QuestionTypeChip } from "@/features/host/editor/question-type-chip";
 import type { QuestionType } from "@/features/host/types";
 import { cn } from "@/lib/utils";
@@ -170,7 +171,7 @@ export function TimingPage({
             errorMessage ? "ml-6" : "ml-auto",
           )}
         >
-          {saving ? "저장하는 중…" : "저장"}
+          {saving ? <PendingLabel>저장하는 중…</PendingLabel> : "저장"}
         </button>
       </section>
     </main>

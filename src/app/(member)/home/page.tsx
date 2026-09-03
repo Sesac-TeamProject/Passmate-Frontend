@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { avatarIdFromKey, avatarKeyFromId } from "@/components/common/student-avatar";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import { ScreenError } from "@/components/common/screen-error";
-import { ScreenLoading } from "@/components/common/screen-loading";
 import { toPopularRooms } from "@/features/home/adapt";
+import { HomeSkeleton } from "@/features/home/home-skeleton";
 import { HomePage } from "@/features/home/home-page";
 import { PAID_ROOM_LOGIN_MESSAGE, toJoinErrorMessage } from "@/features/participant/join/adapt";
 import { INITIAL_JOIN_VALUES, type JoinValues } from "@/features/participant/join/join-form";
@@ -45,7 +45,7 @@ export default function Page() {
     setDefaultsApplied(true);
     setJoinValues((prev) =>
       prev.nickname === "" && prev.avatar === "cat"
-        ? { ...prev, nickname: profile.nickname ?? "", avatar: avatarKeyFromId(profile.avatarId) }
+        ? { ...prev, nickname: profile.nickname ?? "", avatar: toAvatarKey(profile.avatarId) }
         : prev,
     );
   }
@@ -55,7 +55,7 @@ export default function Page() {
     join.mutate(
       {
         pin: joinValues.pin,
-        body: { nickname: joinValues.nickname, avatarId: avatarIdFromKey(joinValues.avatar) },
+        body: { nickname: joinValues.nickname, avatarId: joinValues.avatar },
       },
       {
         onSuccess: (data) => {
@@ -96,7 +96,7 @@ export default function Page() {
         ? toJoinErrorMessage(join.error)
         : null;
 
-  if (rooms.isPending) return <ScreenLoading />;
+  if (rooms.isPending) return <HomeSkeleton />;
   if (rooms.isError)
     return <ScreenError message={rooms.error.message} onRetry={() => rooms.refetch()} />;
 

@@ -13,14 +13,16 @@ export type QuestionSetDto = {
 export type QuestionSetsResponse = CursorPage<QuestionSetDto>;
 export type QuestionSetStatusFilter = "CONFIRMED" | "DRAFT";
 
-/* ── 아래는 전부 @draft — 계약 없음(KMP는 목록만 호출). ../docs/tasks.md T027·T028·T076·T087 경로. 계약 도착 시 수정 ── */
+/* ── 아래는 경로·메서드가 API 명세서 v2로 확정됐다. 요청·응답 필드는 아직 미확보(@draft) ── */
 
-/** @draft POST /question-sets/generate 요청 (FR-009·016) */
+/** @draft POST /question-sets 요청 필드 — 빈 세트 생성 */
+export type CreateQuestionSetRequest = { title: string; description?: string };
+
+/** @draft POST /question-sets/{setId}/questions/generate 요청 필드 (FR-009·016) */
 export type GenerateQuestionSetRequest = {
   topic: string;
   counts: { type: QuestionType; count: number }[];
   difficulty: "EASY" | "MEDIUM" | "HARD";
-  materialFileId?: number | null;
 };
 /** @draft 문항 — 에디터가 보여줄 최소 필드 */
 export type QuestionDraft = {
@@ -37,25 +39,12 @@ export type QuestionDraft = {
   autoAdvance?: boolean | null;
   origin: "AI" | "MANUAL" | "MATERIAL";
 };
-/** @draft GET /question-sets/{id} · generate 응답 */
+/** @draft GET /question-sets/{setId} · generate 응답 필드 */
 export type QuestionSetDetailResponse = {
   setId: number;
   title: string;
   status: "DRAFT" | "CONFIRMED";
   questions: QuestionDraft[];
 };
-/** @draft PATCH /question-sets/{id} */
+/** @draft PUT /question-sets/{setId} 요청 필드 */
 export type UpdateQuestionSetRequest = { title?: string; questions?: QuestionDraft[] };
-/** @draft GET /me/ai-usage (FR-061) */
-export type AiUsageResponse = {
-  generationLeft: number;
-  generationLimit: number;
-  analysisLeft: number;
-  analysisLimit: number;
-};
-/** @draft POST /materials 응답 */
-export type MaterialUploadResponse = {
-  materialFileId: number;
-  fileName: string;
-  extractedChars: number;
-};

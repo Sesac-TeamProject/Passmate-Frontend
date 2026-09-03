@@ -1,3 +1,4 @@
+import type { AvatarKey } from "./common";
 import type { CursorPage, PaymentMethod } from "./common";
 
 export type CoinTransactionType = "CHARGE" | "DEDUCT" | "REFUND";
@@ -42,7 +43,7 @@ export type ConfirmChargeResponse = {
 };
 
 /** POST /rooms/{roomId}/entry-payments — 참가비 코인 차감. 402 잔액 부족 */
-export type CreateEntryPaymentRequest = { nickname: string; avatarId?: number | null };
+export type CreateEntryPaymentRequest = { nickname: string; avatarId?: AvatarKey | null };
 export type EntryPaymentResponse = { paymentNo?: string; balance?: number };
 
 export type PayoutStatus = "SCHEDULED" | "PAID" | "HELD";

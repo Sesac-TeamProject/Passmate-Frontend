@@ -7,8 +7,8 @@ import { ScreenLoading } from "@/components/common/screen-loading";
 import { toEditorQuestions, toGenerateErrorMessage } from "@/features/host/editor/adapt";
 import { EditorPage } from "@/features/host/editor/editor-page";
 import {
-  useAiUsage,
   useConfirmQuestionSet,
+  useCreateQuestionSet,
   useGenerateQuestionSet,
   useQuestionSet,
 } from "@/lib/queries/use-question-sets";
@@ -31,13 +31,29 @@ function EditorContainer() {
   }
 
   const questionSet = useQuestionSet(setId);
-  const usage = useAiUsage();
+  const create = useCreateQuestionSet();
   const generate = useGenerateQuestionSet();
   const confirm = useConfirmQuestionSet();
 
-  const handleGenerate = (body: GenerateQuestionSetRequest) => {
-    if (generate.isPending) return;
-    generate.mutate(body, { onSuccess: (res) => setSetId(res.setId) });
+  // TODO(계약): AI 사용량 표시 — GET /me/ai-usage는 API 명세서 v2에 없다.
+  // 명세는 "최초 5회 무료" 후 코인 차감(FR-075)인데 잔여 횟수를 주는 엔드포인트가 없다.
+  // 백엔드 회신 후 GET /users/me/coins 또는 신규 계약으로 되살린다.
+
+  /**
+   * 명세는 생성이 2단계다 — 빈 세트를 먼저 만들고(POST /question-sets),
+   * 그 세트에 문항을 붙인다(POST /question-sets/{setId}/questions/generate).
+   * 편집 중인 세트가 없으면 주제를 제목으로 세트부터 만든다.
+   */
+  const handleGenerate = async (body: GenerateQuestionSetRequest) => {
+    if (generate.isPending || create.isPending) return;
+
+    try {
+      const targetId = setId ?? (await create.mutateAsync({ title: body.topic })).setId;
+      const res = await generate.mutateAsync({ setId: targetId, body });
+      setSetId(res.setId);
+    } catch {
+      // 실패 문구는 아래 generateError가 create·generate 양쪽 오류에서 만든다
+    }
   };
 
   const handleConfirm = () => {
@@ -63,10 +79,15 @@ function EditorContainer() {
     <EditorPage
       title={title}
       questions={questions}
-      usage={usage.data}
       onGenerate={handleGenerate}
-      generating={generate.isPending}
-      generateError={generate.isError ? toGenerateErrorMessage(generate.error) : null}
+      generating={create.isPending || generate.isPending}
+      generateError={
+        generate.isError
+          ? toGenerateErrorMessage(generate.error)
+          : create.isError
+            ? toGenerateErrorMessage(create.error)
+            : null
+      }
       onConfirm={handleConfirm}
       confirming={confirm.isPending}
       canConfirm={setId !== null}

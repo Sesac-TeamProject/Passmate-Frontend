@@ -1,15 +1,34 @@
-import type { AiFeedbackDto, AnswerVerdict, ResultQuestionDto } from "@/lib/types/dto";
-import type { ReportFeedback, ReportQuestion, ReportVerdict } from "./report-page";
+import type {
+  AiFeedbackDto,
+  AnswerVerdict,
+  QuestionType,
+  ResultQuestionDto,
+} from "@/lib/types/dto";
+import type { QuestionDetail } from "./question-detail-page";
+import type { ReportKind, ReportRow, ReportVerdict } from "./report-question-table";
 
-/** 계약의 판정값은 서버 버전에 따라 두 벌로 온다 — 화면 칩 5종으로 좁힌다 */
+/**
+ * 계약의 판정값은 서버 버전에 따라 두 벌로 온다 — 화면 칩 5종으로 좁힌다.
+ * 계약에 PARTIAL은 없다. 시안이 AI 채점된 서술형을 "부분"이라 부르므로 라벨만 그 말을 쓰고,
+ * 부분 점수 여부를 클라이언트가 판정하지는 않는다 (채점은 서버 권위 — 규칙 문서 §1).
+ */
 const VERDICT: Record<AnswerVerdict, ReportVerdict> = {
   CORRECT: "CORRECT",
   WRONG: "WRONG",
   INCORRECT: "WRONG",
-  AI_ANALYZED: "AI_ANALYZED",
-  ANALYZED: "AI_ANALYZED",
+  AI_ANALYZED: "PARTIAL",
+  ANALYZED: "PARTIAL",
   AI_PENDING: "PENDING",
   PENDING: "PENDING",
+};
+
+/** 판정 칩 문구 — report-question-table의 VERDICT 표와 같은 말을 쓴다 */
+const VERDICT_LABEL: Record<ReportVerdict, string> = {
+  CORRECT: "정답",
+  WRONG: "오답",
+  PARTIAL: "부분",
+  PENDING: "분석 중",
+  UNKNOWN: "미채점",
 };
 
 function joinConcepts(concepts: string[] | undefined): string | null {
@@ -28,33 +47,81 @@ function isDone(feedback: AiFeedbackDto): boolean {
   return feedback.status === "DONE" || ((feedback.status ?? null) === null && hasContent);
 }
 
-/** 개인 결과의 문항 목록 → 리포트 문항 행 */
-export function toReportQuestions(questions: ResultQuestionDto[]): ReportQuestion[] {
-  return questions.map((question) => ({
-    questionId: question.questionId,
-    no: question.questionNo,
-    title: question.title ?? "",
-    verdict: question.verdict ? VERDICT[question.verdict] : "UNKNOWN",
-  }));
-}
+/** 계약의 문항 유형 → 표 "유형" 칩 */
+const KIND: Record<QuestionType, ReportKind> = {
+  MULTIPLE_CHOICE: "MULTIPLE",
+  OX: "OX",
+  ESSAY: "ESSAY",
+};
 
 /**
- * 하단 AI 분석 카드에 세울 문항을 고른다 — 분석이 끝난 첫 문항, 없으면 대기 중인 첫 문항.
- * 시안에는 서술형 한 문항만 열려 있고 문항을 바꿀 방법이 없다(셰브론이 갈 곳이 없다).
+ * 개인 결과의 문항 목록 → 리포트 표 행 (시안 787:8905).
+ * 서술형은 답안 원문 대신 "작성 142자"로 줄인다 — 표 한 줄에 들어가지 않는다.
  */
-export function toReportFeedback(questions: ResultQuestionDto[]): ReportFeedback | null {
-  const done = questions.find((q) => q.aiFeedback && isDone(q.aiFeedback));
-  const pending = questions.find((q) => q.aiFeedback?.status === "PENDING");
-  const target = done ?? pending;
+export function toReportRows(questions: ResultQuestionDto[]): ReportRow[] {
+  return questions.map((question) => {
+    const kind = question.type ? KIND[question.type] : "MULTIPLE";
+    const answer = question.myAnswer ?? "";
 
-  if (target === undefined || !target.aiFeedback) return null;
+    return {
+      questionId: question.questionId,
+      no: question.questionNo,
+      kind,
+      concept: question.concept ?? "",
+      title: question.title ?? "",
+      myAnswer: kind === "ESSAY" && answer !== "" ? `작성 ${answer.length}자` : answer,
+      verdict: question.verdict ? VERDICT[question.verdict] : "UNKNOWN",
+      classAccuracyPercent: question.classAccuracyPercent ?? null,
+      elapsedSeconds: question.elapsedSeconds ?? null,
+    };
+  });
+}
+
+/** 계약의 문항 유형 → 화면 라벨 */
+const TYPE_LABEL: Record<QuestionType, string> = {
+  MULTIPLE_CHOICE: "객관식",
+  OX: "OX",
+  ESSAY: "서술형",
+};
+
+/**
+ * 문항 하나 → 문항 상세 화면(P-Web).
+ * 시안은 "객관식 · 1점"처럼 배점을 쓰는데 계약에 배점이 없고 earnedScore(획득 점수)만 있다.
+ * 그대로 "1점"이라 쓰면 오답일 때 "0점"이 배점처럼 보이므로 "획득"임을 밝힌다.
+ */
+export function toQuestionDetail(
+  questions: ResultQuestionDto[],
+  no: number,
+): QuestionDetail | null {
+  const question = questions.find((q) => q.questionNo === no);
+  if (question === undefined) return null;
+
+  const verdict = question.verdict ? VERDICT[question.verdict] : "UNKNOWN";
+  const feedback = question.aiFeedback;
 
   return {
-    heading: `Q${target.questionNo} · AI 분석 (참고 의견)`,
-    isPending: done === undefined,
-    covered: joinConcepts(target.aiFeedback.coveredConcepts),
-    missing: joinConcepts(target.aiFeedback.missingConcepts),
-    improvement: target.aiFeedback.improvement ?? null,
-    hostComment: target.hostReview?.comment ?? null,
+    no,
+    total: questions.length,
+    title: question.title ?? "",
+    typeLabel: question.type ? TYPE_LABEL[question.type] : "",
+    scoreLabel: question.earnedScore === undefined ? null : `획득 ${question.earnedScore}점`,
+    isCorrect: verdict === "CORRECT",
+    verdictLabel: VERDICT_LABEL[verdict],
+    myAnswer: question.myAnswer ?? null,
+    correctAnswer: question.correctAnswer ?? null,
+    choices: (question.choiceDistribution ?? []).map((choice) => ({
+      label: choice.label,
+      count: choice.count,
+      isCorrect: choice.isCorrect === true,
+    })),
+    explanation: question.explanation ?? null,
+    feedback:
+      feedback && isDone(feedback)
+        ? {
+            covered: joinConcepts(feedback.coveredConcepts),
+            missing: joinConcepts(feedback.missingConcepts),
+            improvement: feedback.improvement ?? null,
+          }
+        : null,
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
@@ -11,8 +11,10 @@ import {
   type PodiumPlace,
   type RankRow,
 } from "@/features/participant/result/final-result-page";
+import { RatingSheet } from "@/features/participant/result/rating-sheet";
 import { readMyParticipant } from "@/lib/my-participant";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
+import { useSubmitRating } from "@/lib/queries/use-ratings";
 import { useMyResult } from "@/lib/queries/use-results";
 import { useSessionStore } from "@/lib/stores/session-store";
 
@@ -38,6 +40,8 @@ export default function Page() {
   const finalRanking = useSessionStore((s) => s.finalRanking);
   const ranking = useSessionStore((s) => s.ranking);
   const result = useMyResult(Number.isFinite(roomId) ? roomId : null);
+  const rate = useSubmitRating(roomId);
+  const [rateSkipped, setRateSkipped] = useState(false);
 
   // sessionStorage는 서버 렌더에 없다 — 서버 스냅샷을 null로 둬 하이드레이션을 맞춘다
   const myId = useSyncExternalStore(NO_SUBSCRIBE, readMyId, readMyIdOnServer);
@@ -45,6 +49,23 @@ export default function Page() {
   if (result.isPending) return <ScreenLoading />;
   if (result.isError)
     return <ScreenError message={result.error.message} onRetry={() => result.refetch()} />;
+
+  // P-Web 별점 시트 — 시안에 [건너뛰기]가 있다는 건 부르지 않아도 스스로 뜬다는 뜻이다.
+  // 계약의 canRate가 문을 지킨다(이미 냈거나 24시간이 지나면 false).
+  if (result.data.canRate && !rateSkipped)
+    return (
+      <RatingSheet
+        // TODO(계약): 결과 응답에 호스트 이름이 없다 (DESIGN_GAPS G-8)
+        hostName={null}
+        subtitle={[result.data.roomTitle, `${result.data.questionCount ?? 0}문항`]
+          .filter(Boolean)
+          .join(" · ")}
+        onSubmit={(body) => rate.mutate(body, { onSuccess: () => setRateSkipped(true) })}
+        onSkip={() => setRateSkipped(true)}
+        pending={rate.isPending}
+        errorMessage={rate.isError ? rate.error.message : null}
+      />
+    );
 
   const source = finalRanking.length > 0 ? finalRanking : ranking;
   const students = toRankedStudents(source);

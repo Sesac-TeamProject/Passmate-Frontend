@@ -1,4 +1,4 @@
-import { avatarKeyFromId } from "@/components/common/student-avatar";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import type { ChoiceKey, QuestionResult, Student } from "@/features/host/types";
 import type {
   ParticipantEntry,
@@ -20,7 +20,7 @@ export function toStudents(participants: ParticipantEntry[]): Student[] {
   return participants.map((p) => ({
     id: String(p.participantId),
     name: p.nickname,
-    avatar: avatarKeyFromId(p.avatarId),
+    avatar: toAvatarKey(p.avatarId),
   }));
 }
 
@@ -29,7 +29,7 @@ export function toRankedStudents(ranking: RankingEntry[]): Student[] {
   return ranking.map((r) => ({
     id: String(r.participantId),
     name: r.nickname,
-    avatar: avatarKeyFromId(r.avatarId),
+    avatar: toAvatarKey(r.avatarId),
   }));
 }
 
@@ -105,7 +105,7 @@ export function toFinalRanking(
     student: {
       id: String(r.participantId),
       name: r.nickname,
-      avatar: avatarKeyFromId(r.avatarId),
+      avatar: toAvatarKey(r.avatarId),
     },
     score: r.total,
     correctCount: correctById.get(String(r.participantId)) ?? null,
@@ -164,14 +164,14 @@ export function toSolvingStudents(
     return submissionParticipants.map((p) => ({
       id: String(p.participantId),
       name: p.nickname ?? "",
-      avatar: avatarKeyFromId(p.avatarId),
+      avatar: toAvatarKey(p.avatarId),
       submitted: p.submitted ?? false,
     }));
   }
   return participants.map((p) => ({
     id: String(p.participantId),
     name: p.nickname,
-    avatar: avatarKeyFromId(p.avatarId),
+    avatar: toAvatarKey(p.avatarId),
     submitted: false,
   }));
 }

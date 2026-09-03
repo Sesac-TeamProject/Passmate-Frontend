@@ -1,10 +1,12 @@
 // 랜딩 목업은 실제 데이터가 아니라 시안 스냅숏이므로 정적 상수를 그대로 둔다 (API 연동 대상 아님).
+import type { AvatarKey } from "@/components/common/student-avatar";
 import type { SidebarUser } from "@/components/layout/role-sidebar";
 import type {
   EssayAnswer,
   LiveQuestion,
   LiveRoom,
   Question,
+  QuestionInsight,
   SessionReport,
   Student,
 } from "@/features/host/types";
@@ -115,7 +117,17 @@ export const SESSION_REPORT_MOCK: SessionReport = {
   id: "1",
   title: "8월 4주차 Spring 스터디",
   dateLabel: "8/22 (금) 진행",
-  stats: { accuracy: 71, students: 6, questions: 8, aiAnalyses: 18 },
+  stats: {
+    accuracy: 71,
+    students: 6,
+    questions: 8,
+    aiAnalyses: 18,
+    submittedCount: 5,
+    completionPercent: 83,
+    avgElapsedSeconds: 252,
+    essayGradedCount: 6,
+    essayTotalCount: 6,
+  },
   questions: [
     { id: "q1", index: 1, title: "DI 컨테이너 개념", type: "multiple", accuracy: 100 },
     { id: "q2", index: 2, title: "@Transactional 전파", type: "multiple", accuracy: 67 },
@@ -126,10 +138,30 @@ export const SESSION_REPORT_MOCK: SessionReport = {
     { id: "q7", index: 7, title: "지연 로딩 기본 대상", type: "multiple", accuracy: 67 },
     { id: "q8", index: 8, title: "Security 필터 체인", type: "essay", aiCount: 6 },
   ],
+  strugglers: [
+    { id: "s1", name: "도윤", correctCount: null, questionCount: 8 },
+    { id: "s2", name: "희표", correctCount: 3, questionCount: 8 },
+    { id: "s3", name: "승혁", correctCount: 4, questionCount: 8 },
+    { id: "s4", name: "민지", correctCount: 5, questionCount: 8 },
+    { id: "s5", name: "혜림", correctCount: 6, questionCount: 8 },
+  ],
 };
 
 /** SESSION_REPORT_MOCK의 기본 선택 문항(q3, 서술형) — 분석 패널 목업이 이 문항의 답변을 보여준다 */
 export const REPORT_SELECTED_QUESTION_ID = "q3";
+
+/** @draft W-07 우측 상세 패널 목업 (계약 없음) */
+export const REPORT_INSIGHT_MOCK: QuestionInsight = {
+  gradingBreakdown: [
+    { label: "핵심 포함", count: 3 },
+    { label: "부분 점수", count: 2 },
+    { label: "핵심 누락", count: 1 },
+  ],
+  strengths: "1차 캐시와 동일성 보장을 짚은 답이 3명",
+  commonMisses: "쓰기 지연 · 변경 감지를 언급한 답이 2명뿐",
+  nextRoomSuggestion: "같은 개념을 객관식으로 한 번 더 확인",
+  hostComment: null,
+};
 
 export const REPORT_ESSAY_ANSWERS_MOCK: EssayAnswer[] = [
   {
@@ -190,3 +222,36 @@ export const REPORT_ESSAY_ANSWERS_MOCK: EssayAnswer[] = [
 
 /** ReviewPage 목업이 쓰는 학생 이름 목록 — LIVE_ROOM.students에서 id·name만 추린다 */
 export const REPORT_STUDENTS_MOCK: Student[] = LIVE_ROOM.students;
+
+/* --- HOW 섹션 미니 일러스트(visual/01~03) 스냅숏 --- */
+
+/** 01 방 열기 — PIN 6칸. null은 아직 안 친 칸, 커서는 첫 null에 온다 */
+export const STEP_PIN: readonly (string | null)[] = ["4", "8", "2", null, null, null];
+
+/** 02 문제 받기 — AI가 채운 문항 3줄. pending은 아직 만드는 중인 줄 */
+export const STEP_GENERATED: readonly {
+  type: "객관식" | "서술형";
+  prompt: string;
+  pending?: boolean;
+}[] = [
+  { type: "객관식", prompt: "@Transactional의 기본 전파 속성은?" },
+  { type: "서술형", prompt: "영속성 컨텍스트를 설명하세요" },
+  { type: "객관식", prompt: "Bean의 기본 스코프는?", pending: true },
+];
+
+/** 03 같이 풀기 — 접속한 학생 6명. 뒤 2명은 아직 안 들어와 흐리게 */
+export const STEP_PARTICIPANTS: readonly { avatar: AvatarKey; joined: boolean }[] = [
+  { avatar: "tiger", joined: true },
+  { avatar: "bear", joined: true },
+  { avatar: "dog", joined: true },
+  { avatar: "panda", joined: true },
+  { avatar: "rabbit", joined: false },
+  { avatar: "fox", joined: false },
+];
+
+/** 03 같이 풀기 — 랭킹 보드 3행 */
+export const STEP_RANKING: readonly { name: string; score: string; avatar: AvatarKey }[] = [
+  { name: "준영", score: "990점", avatar: "tiger" },
+  { name: "채원", score: "950점", avatar: "bear" },
+  { name: "승현", score: "880점", avatar: "dog" },
+];

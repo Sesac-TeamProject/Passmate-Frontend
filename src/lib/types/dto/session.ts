@@ -1,3 +1,4 @@
+import type { AvatarKey } from "./common";
 import type { QuestionType, RoomState } from "./common";
 
 /** 진행 문항 — 정답은 절대 포함하지 않는다 */
@@ -23,7 +24,7 @@ export type RankingEntry = {
   rank: number;
   participantId: number;
   nickname: string;
-  avatarId?: number | null;
+  avatarId?: AvatarKey | null;
   total: number;
 };
 
@@ -45,7 +46,7 @@ export type SubmissionChoice = { label?: string; count?: number };
 export type SubmissionParticipant = {
   participantId?: number;
   nickname?: string;
-  avatarId?: number | null;
+  avatarId?: AvatarKey | null;
   submitted?: boolean;
 };
 /** GET /rooms/{roomId}/session/current/submissions (호스트) */

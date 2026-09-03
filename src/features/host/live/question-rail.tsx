@@ -6,13 +6,15 @@ type Props = {
   total: number;
   /** 세션이 끝나 모든 문항이 완료 상태일 때 (W-12) — 현재 강조 대신 전부 밑줄만 깐다 */
   completed?: boolean;
+  /** 현재 문항 알약 색. 연결이 끊긴 W-05e는 민트 대신 옐로로 상태를 알린다 */
+  tone?: "mint" | "warning";
 };
 
 /**
  * 프로젝터 헤더의 문항 레일 (W-05·W-06·W-12 공통).
  * 시안 규칙: 지난 문항 회색 · 현재만 크게 민트 · 남은 문항 흐리게.
  */
-export function QuestionRail({ current, total, completed = false }: Props) {
+export function QuestionRail({ current, total, completed = false, tone = "mint" }: Props) {
   return (
     <ol
       className="flex items-center gap-3.5"
@@ -36,7 +38,10 @@ export function QuestionRail({ current, total, completed = false }: Props) {
             <li
               key={no}
               aria-current="step"
-              className="flex h-[34px] w-12 items-center justify-center rounded-xl bg-mint-bg text-heading-md text-mint-dark"
+              className={cn(
+                "flex h-[34px] w-12 items-center justify-center rounded-xl text-heading-md",
+                tone === "warning" ? "bg-warning-soft text-warning" : "bg-mint-bg text-mint-dark",
+              )}
             >
               {label}
             </li>

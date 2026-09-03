@@ -25,7 +25,7 @@ import {
   mockAdminSettlements,
   mockAdminUsers,
 } from "./admin";
-import { MOCK_TOKENS } from "./auth";
+import { MOCK_TOKENS, mockLogin } from "./auth";
 import {
   mockClaim,
   mockDeleteMe,
@@ -51,15 +51,14 @@ import {
   mockSettlementAccount,
 } from "./payments";
 import {
-  mockAiUsage,
-  mockCloneQuestionSet,
+  mockDuplicateQuestionSet,
   mockConfirmQuestionSet,
   mockCreateQuestionSet,
   mockGenerate,
+  mockGenerateFromFile,
   mockQuestionSetDetail,
   mockQuestionSets,
   mockUpdateQuestionSet,
-  mockUploadMaterial,
 } from "./question-sets";
 import {
   mockCreateRoom,
@@ -106,6 +105,8 @@ function asBody<T>(ctx: MockContext): T {
 
 const HANDLERS: Record<string, MockHandler> = {
   /* ── 인증 ─────────────────────────────────────────── */
+  "POST /auth/login/:provider": () => mockLogin(),
+  "POST /auth/dev-login": () => mockLogin(),
   "POST /auth/refresh": () => MOCK_TOKENS,
   "POST /auth/logout": () => undefined,
 
@@ -139,22 +140,23 @@ const HANDLERS: Record<string, MockHandler> = {
 
   /* ── 문제 세트 ────────────────────────────────────── */
   "GET /question-sets": (ctx) => mockQuestionSets(ctx.url),
-  "POST /question-sets/generate": (ctx) => mockGenerate(asBody<GenerateQuestionSetRequest>(ctx)),
   "POST /question-sets": (ctx) => mockCreateQuestionSet(ctx.body),
   "GET /question-sets/:id": (ctx) => mockQuestionSetDetail(ctx.params.id),
-  "PATCH /question-sets/:id": (ctx) =>
+  "PUT /question-sets/:id": (ctx) =>
     mockUpdateQuestionSet(ctx.params.id, asBody<UpdateQuestionSetRequest>(ctx)),
   "POST /question-sets/:id/confirm": (ctx) => mockConfirmQuestionSet(ctx.params.id),
-  "POST /question-sets/:id/clone": (ctx) => mockCloneQuestionSet(ctx.params.id),
-  "GET /me/ai-usage": () => mockAiUsage(),
-  "POST /materials": (ctx) => mockUploadMaterial(asBody<FormData>(ctx)),
+  "POST /question-sets/:id/duplicate": (ctx) => mockDuplicateQuestionSet(ctx.params.id),
+  "POST /question-sets/:setId/questions/generate": (ctx) =>
+    mockGenerate(asBody<GenerateQuestionSetRequest>(ctx)),
+  "POST /question-sets/:setId/questions/generate-from-file": (ctx) =>
+    mockGenerateFromFile(asBody<FormData>(ctx)),
 
   /* ── 결과 · 리포트 · 평가 ─────────────────────────── */
   "GET /rooms/:roomId/results/me": () => mockMyResult(),
   "GET /rooms/:roomId/reports/me": () => mockMyReport(),
   "GET /rooms/:roomId/results": () => mockRoomReport(),
-  "GET /rooms/:roomId/questions/:questionId/answers": () => mockEssayAnswers(),
-  "POST /answers/:answerId/review": () => mockPostReview(),
+  "GET /rooms/:roomId/answers": () => mockEssayAnswers(),
+  "PUT /rooms/:roomId/answers/:answerId/review": () => mockPostReview(),
   "POST /rooms/:roomId/ratings": () => mockSubmitRating(),
 
   /* ── 마이페이지 ───────────────────────────────────── */
@@ -189,9 +191,9 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /admin/reports": () => mockAdminReports(),
   "GET /admin/sanctions": () => mockAdminSanctions(),
   "GET /admin/payments": () => mockAdminPayments(),
-  "GET /admin/settlements/pending": () => mockAdminSettlements(),
+  "GET /admin/settlements": () => mockAdminSettlements(),
   "GET /admin/ad-campaigns": () => mockAdminAdCampaigns(),
-  "GET /admin/branded-quizzes": () => mockAdminBrandedQuizzes(),
+  "GET /admin/branded-rooms": () => mockAdminBrandedQuizzes(),
 };
 
 /** 라우트 표 키 목록 — handlers.test.ts가 전체 커버리지를 검증할 때 쓴다. */

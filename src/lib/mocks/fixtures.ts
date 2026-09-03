@@ -13,13 +13,13 @@ import type {
  * 백엔드 연동 시 lib/mocks 폴더를 통째로 걷어낸다.
  */
 
-/** 로그인 회원 = 이한결(여우, Lv.3). features/me/mock.ts PROFILE. avatarId 6 = fox(AVATAR_KEYS 6번째) */
+/** 로그인 회원 = 이한결(여우, Lv.3). features/me/mock.ts PROFILE */
 export const ME_USER_ID = 1;
 export const ME_PROFILE: UserProfileResponse = {
   nickname: "한결",
   email: "hangyeol@passmate.app",
   joinedAt: "2026-08-01",
-  avatarId: 6,
+  avatarId: "fox",
   level: 3,
   coins: 1200,
   joinedRoomCount: 3,
@@ -52,17 +52,16 @@ export const DEMO_ROOM: RoomInfoResponse = {
 };
 
 /**
- * 아바타 12종 ↔ avatarId 1..12 (components/common/student-avatar.tsx AVATAR_KEYS 순서:
- * cat,dog,bear,panda,rabbit,fox,frog,penguin,owl,tiger,raccoon,dino).
+ * 아바타는 문자열 키다 (lib/types/dto/common.ts AVATAR_KEYS — ERD avatar_id varchar(30)).
  * features/host/mock.ts LIVE_ROOM.students를 옮긴다. participantId는 11부터.
  */
 export const PARTICIPANTS: ParticipantEntry[] = [
-  { participantId: 11, nickname: "준영", avatarId: 1, isGuest: true }, // cat
-  { participantId: 12, nickname: "혜림", avatarId: 5, isGuest: true }, // rabbit
-  { participantId: 13, nickname: "승혁", avatarId: 2, isGuest: true }, // dog
-  { participantId: 14, nickname: "희표", avatarId: 3, isGuest: true }, // bear
-  { participantId: 15, nickname: "민지", avatarId: 6, isGuest: true }, // fox
-  { participantId: 16, nickname: "도윤", avatarId: 8, isGuest: true }, // penguin
+  { participantId: 11, nickname: "준영", avatarId: "cat", isGuest: true },
+  { participantId: 12, nickname: "혜림", avatarId: "rabbit", isGuest: true },
+  { participantId: 13, nickname: "승혁", avatarId: "dog", isGuest: true },
+  { participantId: 14, nickname: "희표", avatarId: "bear", isGuest: true },
+  { participantId: 15, nickname: "민지", avatarId: "fox", isGuest: true },
+  { participantId: 16, nickname: "도윤", avatarId: "penguin", isGuest: true },
 ];
 
 /**
@@ -113,6 +112,21 @@ export const HOSTED_ROOMS: HostedRoomDto[] = [
  * 구 features/home/mock.ts(삭제됨)의 POPULAR_ROOMS 값 — hostName=host, hostLevel=level,
  * participantCount=participants, isPaid=type==="paid". 첫 항목(482913)은 DEMO_ROOM과 같은 방.
  */
+/**
+ * 공개 방 목록의 "20:00 시작 · 내일 19:00" 문구를 보려면 날짜가 흘러도 미래여야 한다.
+ * 고정 ISO를 박으면 하루만 지나도 전부 과거가 되므로 오늘을 기준으로 만든다.
+ */
+function eveningAfter(days: number, hour: number): string {
+  const at = new Date();
+  at.setDate(at.getDate() + days);
+  at.setHours(hour, 0, 0, 0);
+  return at.toISOString();
+}
+
+const TODAY_EVENING = eveningAfter(0, 20);
+const TOMORROW_EVENING = eveningAfter(1, 19);
+const DAY_AFTER_EVENING = eveningAfter(2, 21);
+
 export const PUBLIC_ROOMS: PublicRoomDto[] = [
   {
     roomId: DEMO_ROOM_ID,
@@ -137,6 +151,7 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
     hostName: "박세라",
     hostLevel: 4,
     status: "WAITING",
+    scheduledAt: TODAY_EVENING,
     participantCount: 18,
     isPaid: false,
   },
@@ -170,6 +185,7 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
     hostName: "최유나",
     hostLevel: 5,
     status: "WAITING",
+    scheduledAt: TOMORROW_EVENING,
     participantCount: 31,
     isPaid: true,
   },
@@ -191,7 +207,7 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
     topic: "알고리즘",
     hostName: "오다은",
     hostLevel: 3,
-    status: "WAITING",
+    status: "RUNNING",
     participantCount: 27,
     isPaid: false,
   },
@@ -213,7 +229,7 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
     topic: "프론트엔드",
     hostName: "장하늘",
     hostLevel: 4,
-    status: "WAITING",
+    status: "RUNNING",
     participantCount: 22,
     isPaid: false,
   },
@@ -247,6 +263,7 @@ export const PUBLIC_ROOMS: PublicRoomDto[] = [
     hostName: "최유나",
     hostLevel: 5,
     status: "WAITING",
+    scheduledAt: DAY_AFTER_EVENING,
     participantCount: 19,
     isPaid: true,
   },

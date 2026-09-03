@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { avatarIdFromKey, avatarKeyFromId } from "@/components/common/student-avatar";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import {
@@ -11,6 +11,7 @@ import {
   wireMethodFromPayMethod,
 } from "@/features/participant/pay/adapt";
 import type { PaymentReceipt } from "@/features/participant/pay/payment-complete-card";
+import { PayFailed } from "@/features/participant/pay/pay-failed";
 import { PayPage, type PayFormValues, type PayStep } from "@/features/participant/pay/pay-page";
 import { CHARGE_OPTIONS } from "@/features/participant/pay/types";
 import {
@@ -61,6 +62,8 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
   const [chargeDefaultApplied, setChargeDefaultApplied] = useState(false);
   const [step, setStep] = useState<PayStep>("idle");
   const [error, setError] = useState<string | null>(null);
+  // W-11e 전체 화면으로 알릴 실패. 사용자가 스스로 취소한 건 여기 담지 않는다(폼 위 한 줄로 남긴다).
+  const [failure, setFailure] = useState<{ message: string; amount: number } | null>(null);
   const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
   // 참가비 차감이 끝난 방을 기억한다 — joinRoom만 실패한 재시도가 참가비를 다시 차감하지 않도록.
   const [paidReceipt, setPaidReceipt] = useState<{
@@ -85,7 +88,7 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
     setDefaultsApplied(true);
     setValues((prev) =>
       prev.nickname === ""
-        ? { ...prev, nickname: profile.nickname ?? "", avatar: avatarKeyFromId(profile.avatarId) }
+        ? { ...prev, nickname: profile.nickname ?? "", avatar: toAvatarKey(profile.avatarId) }
         : prev,
     );
   }
@@ -133,9 +136,10 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
     if (!values.agreed || step === "paying" || roomId === null) return;
     setStep("paying");
     setError(null);
+    setFailure(null);
 
     const nickname = values.nickname;
-    const avatarId = avatarIdFromKey(values.avatar);
+    const avatarId = values.avatar;
     const saved = pending?.roomId === roomId ? pending : null;
     const paid = paidReceipt?.roomId === roomId ? paidReceipt : null;
 
@@ -215,11 +219,12 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
         });
 
         if (!payResult.ok) {
-          setError(
-            payResult.code === "CANCELLED"
-              ? "결제가 취소됐어요 — 다시 시도해 주세요"
-              : `결제에 실패했어요 — ${payResult.message}`,
-          );
+          // 취소는 되돌아온 것이지 실패가 아니다 — 화면을 갈아 끼우지 않고 폼 위에 한 줄만 남긴다.
+          if (payResult.code === "CANCELLED") {
+            setError("결제가 취소됐어요 — 다시 시도해 주세요");
+          } else {
+            setFailure({ message: payResult.message, amount: chargeAmount });
+          }
           setStep("idle");
           return;
         }
@@ -267,10 +272,25 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
       });
       setStep("done");
     } catch (err) {
-      setError(toPayErrorMessage(err));
+      setFailure({
+        message: toPayErrorMessage(err),
+        amount: shortfall > 0 ? values.chargeAmount : paidRoom.fee,
+      });
       setStep("idle");
     }
   };
+
+  if (failure)
+    return (
+      <PayFailed
+        message={failure.message}
+        amount={failure.amount}
+        payMethod={values.payMethod}
+        onRetry={handleSubmit}
+        onChangeMethod={() => setFailure(null)}
+        retrying={step === "paying"}
+      />
+    );
 
   return (
     <PayPage

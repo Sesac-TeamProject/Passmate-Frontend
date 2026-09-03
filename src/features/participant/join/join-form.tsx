@@ -17,7 +17,7 @@ type Props = {
   values: JoinValues;
   onChange: (next: JoinValues) => void;
   onSubmit: () => void;
-  /** home: W-01 v6 PIN 입장 카드(gap 12 · 아바타 40) / guest: C-03 게스트 입장 카드(gap 20 · 아바타 36) */
+  /** home: W-01 v6 PIN 입장 카드(gap 12 · 아바타 40 · 닉네임 52) / guest: C-03 게스트 입장 카드(gap 20 · 아바타 36) */
   variant?: PinInputVariant;
   pending?: boolean;
   className?: string;
@@ -44,7 +44,7 @@ export function JoinForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className={cn("flex w-full flex-col", variant === "home" ? "gap-2.5" : "gap-5", className)}
+      className={cn("flex w-full flex-col", variant === "home" ? "gap-3" : "gap-5", className)}
     >
       <PinInput
         value={values.pin}
@@ -63,6 +63,8 @@ export function JoinForm({
           value={values.nickname}
           onChange={(e) => onChange({ ...values, nickname: e.target.value })}
           disabled={pending}
+          /* 홈 PIN 카드만 시안이 52 — 공통 폼 규격(h48)은 그대로 둔다 */
+          className={variant === "home" ? "h-[52px]" : undefined}
         />
       </FormField>
 
@@ -72,9 +74,9 @@ export function JoinForm({
           value={values.avatar}
           onChange={(avatar) => onChange({ ...values, avatar })}
           size={variant === "home" ? 40 : 36}
-          layout={variant === "home" ? "row" : "grid"}
           disabled={pending}
-          className={variant === "home" ? "self-center" : undefined}
+          /* 홈은 시안 간격이 가로 18·세로 10, 바깥 3은 선택 링 자리 — 3+44×6+18×5+3 = 360×104 */
+          className={variant === "home" ? "gap-x-[18px] gap-y-2.5 p-[3px]" : undefined}
         />
         <p className="text-label-md text-muted-foreground">
           대기실·결과 화면에서 이 캐릭터로 보여요 (닉네임과 함께)
