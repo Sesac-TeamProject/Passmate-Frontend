@@ -148,8 +148,24 @@ function buildMockRanking(): RankingEntry[] {
   }));
 }
 
+/** 이미 끝난 세션의 스냅샷 — 최종 순위만 있으면 결과 화면이 다 그려진다 */
+function buildFinishedSnapshot(): SessionSnapshotResponse {
+  return {
+    status: "FINISHED",
+    ts: new Date().toISOString(),
+    questionCount: LIVE_QUESTIONS.length,
+    currentQuestion: null,
+    ranking: buildMockRanking(),
+    isLocked: false,
+  };
+}
+
 /** GET /rooms/{roomId}/session — 재접속 스냅샷. 404 = 세션 미시작(WAITING) */
-export function mockSnapshot(): SessionSnapshotResponse {
+export function mockSnapshot(roomId: string): SessionSnapshotResponse {
+  // 끝난 세션의 최종 순위는 서버가 계속 갖고 있다 — 학생이 나중에 결과를 다시 열어도 순위가 나온다.
+  // 목의 phase 머신은 "지금 진행 중인 데모 방" 하나만 흉내 내므로, 그 방이 아니면 종료된 세션으로 답한다.
+  if (Number(roomId) !== DEMO_ROOM_ID) return buildFinishedSnapshot();
+
   if (phase === "WAITING") throw new AppError("NotFound");
 
   return {
