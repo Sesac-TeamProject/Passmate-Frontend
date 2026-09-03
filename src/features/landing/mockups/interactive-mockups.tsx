@@ -60,6 +60,16 @@ export function ReportMockup() {
           canSaveComment={false}
           onSaveComment={noop}
           onExport={noop}
+          // 랜딩 목업은 "문항별" 탭 스냅숏만 보여 준다 — 학생별 탭은 비워 둔다
+          students={[]}
+          selectedStudentId={null}
+          onSelectStudent={noop}
+          studentAnswers={[]}
+          answersLoading={false}
+          reviewProgressLabel={null}
+          onSaveReview={noop}
+          savingAnswerId={null}
+          reviewError={null}
         />
       </div>
     </div>

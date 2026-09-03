@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { QuestionInsight, SessionReport } from "@/features/host/types";
+import type { EssayAnswer, QuestionInsight, SessionReport, Student } from "@/features/host/types";
 import { PendingLabel } from "@/components/common/pending-label";
 import { cn } from "@/lib/utils";
+import { StudentReviewPanel, type ReviewDraft } from "./student-review-panel";
 import { ReportBody } from "./report-body";
 import { ReportStats } from "./report-stats";
 
@@ -19,6 +20,16 @@ type Props = {
   insight: QuestionInsight | null;
   canSaveComment: boolean;
   onSaveComment: (text: string) => void;
+  /** 학생별 탭 — 답안 단위 첨삭 */
+  students: Student[];
+  selectedStudentId: string | null;
+  onSelectStudent: (studentId: string) => void;
+  studentAnswers: EssayAnswer[];
+  answersLoading: boolean;
+  reviewProgressLabel: string | null;
+  onSaveReview: (answerId: number, draft: ReviewDraft) => void;
+  savingAnswerId: number | null;
+  reviewError: string | null;
   onExport: (format: ExportFormat) => void;
   exporting?: boolean;
 };
@@ -31,6 +42,15 @@ export function ReviewPage({
   insight,
   canSaveComment,
   onSaveComment,
+  students,
+  selectedStudentId,
+  onSelectStudent,
+  studentAnswers,
+  answersLoading,
+  reviewProgressLabel,
+  onSaveReview,
+  savingAnswerId,
+  reviewError,
   onExport,
   exporting,
 }: Props) {
@@ -107,6 +127,18 @@ export function ReviewPage({
           insight={insight}
           canSaveComment={canSaveComment}
           onSaveComment={onSaveComment}
+        />
+      ) : tab === "학생별" ? (
+        <StudentReviewPanel
+          students={students}
+          selectedStudentId={selectedStudentId}
+          onSelectStudent={onSelectStudent}
+          answers={studentAnswers}
+          loading={answersLoading}
+          progressLabel={reviewProgressLabel}
+          onSave={onSaveReview}
+          savingAnswerId={savingAnswerId}
+          saveError={reviewError}
         />
       ) : (
         <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed text-body-md text-muted-foreground">

@@ -113,17 +113,17 @@ export function useReviewTargets(
 }
 
 /**
- * @draft PUT /rooms/{roomId}/answers/{answerId}/review — **백엔드 미구현**(실서버 404).
- * 목에서만 동작한다. 화면은 NotFound를 "준비 중"으로 안내한다.
+ * PUT /rooms/{roomId}/answers/{answerId}/review — 첨삭 등록·수정(upsert).
+ * 보정 점수가 최종 점수를 바꾸므로 방 리포트도 함께 무효화한다.
  */
-export function usePostHostReview(roomId: number, questionId: number) {
+export function usePostHostReview(roomId: number, participantId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ answerId, body }: { answerId: number; body: HostReviewRequest }) =>
       putHostReview(roomId, answerId, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.reviewTargets(roomId, { questionId }) });
+      queryClient.invalidateQueries({ queryKey: qk.reviewTargets(roomId, { participantId }) });
       queryClient.invalidateQueries({ queryKey: qk.sessionResults(roomId) });
     },
   });

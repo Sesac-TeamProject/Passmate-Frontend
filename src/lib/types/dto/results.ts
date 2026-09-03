@@ -225,6 +225,15 @@ export type ReviewTargetListResponse = {
  * @draft PUT /rooms/{roomId}/answers/{answerId}/review — **백엔드 미구현**(실서버 404).
  * 필드는 `TeacherReview` 엔티티 기준이라 저장 API가 오면 그대로 맞을 가능성이 높다.
  */
+/** PUT …/review 응답 — 보정이 반영된 최종 점수를 함께 돌려준다 */
+export type TeacherReviewResponse = {
+  answerId: number;
+  participantId: number;
+  /** 보정이 반영된 최종 점수. 보정을 지우면 채점기가 낸 잠정 점수로 돌아간다 */
+  finalScore: number;
+  review: TeacherReviewView;
+};
+
 export type HostReviewRequest = {
   comment?: string;
   improvement?: string;

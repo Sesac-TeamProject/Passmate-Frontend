@@ -124,9 +124,17 @@ function toEssayAnswer(answer: ReviewTargetAnswer): EssayAnswer {
   return {
     answerId: answer.answerId,
     studentId: String(answer.participantId),
+    nickname: answer.nickname,
+    questionNo: answer.orderNo,
+    questionContent: answer.questionContent,
+    modelAnswer: answer.modelAnswer ?? null,
     text: answer.submitted,
     findings: toFindings(answer.analysis),
+    points: answer.points,
+    finalScore: answer.finalScore,
     comment: answer.teacherReview?.comment ?? "",
+    improvement: answer.teacherReview?.improvement ?? "",
+    adjustedScore: answer.teacherReview?.adjustedScore ?? null,
     reviewed: answer.reviewed,
   };
 }
@@ -148,6 +156,7 @@ export function toReviewProgressLabel(dto: ReviewTargetListResponse | undefined)
  */
 export function toReviewSaveMessage(error: unknown): string {
   if (!AppError.isAppError(error)) return "저장하지 못했어요. 다시 시도해 주세요";
-  if (error.kind === "NotFound") return "첨삭 저장은 서버 준비 중이에요";
+  // 답안이 지워졌거나 남의 방 답안을 건드린 경우 — 목록을 다시 부르면 사라진다
+  if (error.kind === "NotFound") return "이 답안을 찾을 수 없어요. 목록을 새로 고쳐 주세요";
   return error.message;
 }

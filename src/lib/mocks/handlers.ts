@@ -1,5 +1,6 @@
 import { AppError } from "@/lib/types/app-error";
 import type {
+  HostReviewRequest,
   AiGenerateRequest,
   ConfirmChargeRequest,
   CreateChargeRequest,
@@ -195,7 +196,8 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /rooms/:roomId/session/questions/:questionId/answers/me/analysis": () =>
     mockRequestAnalysis(),
   "GET /rooms/:roomId/answers": (ctx) => mockReviewTargets(ctx.url),
-  "PUT /rooms/:roomId/answers/:answerId/review": () => mockPostReview(),
+  "PUT /rooms/:roomId/answers/:answerId/review": (ctx) =>
+    mockPostReview(Number(ctx.params.answerId), asBody<HostReviewRequest>(ctx)),
   "POST /rooms/:roomId/ratings": () => mockSubmitRating(),
 
   /* ── 마이페이지 ───────────────────────────────────── */

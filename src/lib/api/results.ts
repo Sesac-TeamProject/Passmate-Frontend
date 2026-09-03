@@ -1,6 +1,7 @@
 import type {
   EssayAnalysisRequestResponse,
   HostReviewRequest,
+  TeacherReviewResponse,
   LearningReportResponse,
   MyAnswerResponse,
   MySessionResultResponse,
@@ -80,13 +81,17 @@ export function exportRoomReport(roomId: number, format = "CSV"): Promise<void> 
 }
 
 /**
- * @draft PUT /rooms/{roomId}/answers/{answerId}/review — **백엔드 미구현**(실서버 404).
- * 조회(`getReviewTargets`)만 있고 저장은 아직 없다. 화면은 NotFound를 "준비 중"으로 안내한다.
+ * PUT /rooms/{roomId}/answers/{answerId}/review — 첨삭 등록·수정(upsert).
+ * 답안당 한 장이라 POST가 아니라 PUT이다. 세 항목 모두 선택이고 **넘긴 값 그대로 저장**된다 —
+ * 빈 값을 보내면 지워진다(백엔드 `TeacherReviewRequest`).
  */
 export function putHostReview(
   roomId: number,
   answerId: number,
   body: HostReviewRequest,
-): Promise<void> {
-  return request<void>(`/rooms/${roomId}/answers/${answerId}/review`, { method: "PUT", body });
+): Promise<TeacherReviewResponse> {
+  return request<TeacherReviewResponse>(`/rooms/${roomId}/answers/${answerId}/review`, {
+    method: "PUT",
+    body,
+  });
 }

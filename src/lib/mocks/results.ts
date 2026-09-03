@@ -10,9 +10,11 @@ import type {
   ParticipantResultResponse,
   ParticipantResultRow,
   QuestionResponse,
+  HostReviewRequest,
   ReviewTargetAnswer,
   ReviewTargetListResponse,
   SessionResultsResponse,
+  TeacherReviewResponse,
 } from "@/lib/types/dto";
 import { DEMO_ROOM, DEMO_ROOM_ID, PARTICIPANTS, SET_QUESTIONS } from "./fixtures";
 
@@ -336,8 +338,19 @@ export function mockReviewTargets(url: URL): ReviewTargetListResponse {
 }
 
 /** @draft PUT /rooms/{roomId}/answers/{answerId}/review — 백엔드 미구현. 목에서만 성공한다 */
-export function mockPostReview(): undefined {
-  return undefined;
+export function mockPostReview(answerId: number, body: HostReviewRequest): TeacherReviewResponse {
+  return {
+    answerId,
+    participantId: 1,
+    // 보정을 넣으면 그 값이 최종 점수가 된다. 지우면 채점기 점수로 돌아간다
+    finalScore: body.adjustedScore ?? 70,
+    review: {
+      comment: body.comment,
+      improvement: body.improvement,
+      adjustedScore: body.adjustedScore,
+      reviewedAt: new Date().toISOString().slice(0, 19),
+    },
+  };
 }
 
 /** @draft POST /rooms/{roomId}/ratings — 백엔드 미구현. 세션당 1회만 받는다 */

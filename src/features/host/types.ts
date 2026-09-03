@@ -122,13 +122,25 @@ export type EssayAnswer = {
   /** 서버 답안 id — 첨삭 저장(PUT …/answers/{answerId}/review)이 이 값을 쓴다 */
   answerId: number;
   studentId: string;
+  nickname: string;
+  /** 문항 번호 — "Q2"로 그린다 */
+  questionNo: number;
+  questionContent: string;
+  /** 모범답안(첨삭 기준). 호스트에게는 항상 온다 */
+  modelAnswer: string | null;
   text: string;
   findings: AnswerFinding[];
-  /** 이미 남긴 첨삭 코멘트. 없으면 빈 문자열 */
+  /** 문항 배점 */
+  points: number;
+  /** 보정이 반영된 최종 점수 */
+  finalScore: number;
+  /** 이미 남긴 첨삭. 없으면 빈 문자열 */
   comment: string;
+  improvement: string;
+  /** 보정 점수. 안 건드렸으면 null */
+  adjustedScore: number | null;
   reviewed: boolean;
 };
-
 export type SessionReport = {
   id: string;
   title: string;
