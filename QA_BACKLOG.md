@@ -80,10 +80,10 @@ REST의 CORS는 `WEB_BASE_URL`(= `https://passmate.kr`)을 허용하는데 **WS�
 TanStack Query v5에서 `enabled: false`인 쿼리는 `isPending === true`다.
 pending 가드가 먼저 오면 뒤의 분기가 **도달 불가**가 된다.
 
-| 파일 | 증상 |
-| --- | --- |
+| 파일                                             | 증상                                                                         |
+| ------------------------------------------------ | ---------------------------------------------------------------------------- |
 | `app/host/(nav)/rooms/[code]/timing/page.tsx:41` | 세트가 안 붙은 방을 열면 "연결된 문제 세트를 찾지 못했어요" 대신 영원히 로딩 |
-| `app/host/(flow)/rooms/[code]/lobby/page.tsx:75` | 잘못된 PIN으로 대기실에 들어가면 에러 대신 영원히 로딩 |
+| `app/host/(flow)/rooms/[code]/lobby/page.tsx:75` | 잘못된 PIN으로 대기실에 들어가면 에러 대신 영원히 로딩                       |
 
 ---
 

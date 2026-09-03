@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEMO_ROOM_ID } from "@/lib/mocks/fixtures";
 import {
   __resetSessionForTests,
   mockNext,
@@ -30,7 +31,7 @@ const QUESTION_STARTED_REQUIRED = [
 describe("session 계약", () => {
   it("스냅샷은 WAITING이어도 200이고 ts가 없다", () => {
     __resetSessionForTests();
-    const snapshot = mockSnapshot();
+    const snapshot = mockSnapshot(String(DEMO_ROOM_ID));
 
     expectContract(
       snapshot,
@@ -53,7 +54,7 @@ describe("session 계약", () => {
   it("진행 중 스냅샷의 currentQuestion은 QUESTION_STARTED와 같은 모양이고 정답이 없다", () => {
     __resetSessionForTests();
     mockStartSession();
-    const question = mockSnapshot().currentQuestion;
+    const question = mockSnapshot(String(DEMO_ROOM_ID)).currentQuestion;
 
     expect(question).toBeDefined();
     expectContract(question as object, QUESTION_STARTED_REQUIRED, ["choices"]);

@@ -152,7 +152,7 @@ const HANDLERS: Record<string, MockHandler> = {
     mockKickParticipant(ctx.params.roomId, ctx.params.participantId),
 
   /* ── 진행 세션 ────────────────────────────────────── */
-  "GET /rooms/:roomId/session": () => mockSnapshot(),
+  "GET /rooms/:roomId/session": (ctx) => mockSnapshot(ctx.params.roomId),
   "POST /rooms/:roomId/session/start": () => mockStartSession(),
   "POST /rooms/:roomId/session/next": () => mockNext(),
   "POST /rooms/:roomId/session/current/end": () => mockEndCurrent(),

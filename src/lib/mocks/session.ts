@@ -153,15 +153,45 @@ function correctRateFor(q: QuestionResponse): number {
   return Math.round((correctCountFor(q) / submitCount) * 1000) / 10;
 }
 
-/** 참가자 픽스처를 점수 내림차순으로 흉내 낸 순위 */
+/**
+ * 최종 순위 픽스처 — 시안(788:8959)의 순위·점수를 그대로 쓴다.
+ * 3위 990점이 `mockMyResult`의 "내 결과"와 같아야 한 화면에서 두 숫자가 어긋나지 않는다.
+ * 맞힌 문항 수는 랭킹 계약에 없어 넣지 않는다(표가 그 칸을 비운다).
+ */
+const RANKING_ROWS = [
+  { nickname: "준영", totalScore: 1180 },
+  { nickname: "혜림", totalScore: 1050 },
+  { nickname: "민지", totalScore: 990 },
+  { nickname: "승혁", totalScore: 820 },
+  { nickname: "희표", totalScore: 740 },
+  { nickname: "도윤", totalScore: 610 },
+];
+
 function buildMockRanking(): RankingEntry[] {
-  return PARTICIPANTS.map((p, i) => ({
-    rank: i + 1,
-    participantId: p.id,
-    nickname: p.nickname,
-    avatarId: toAvatarKey(p.avatarId),
-    totalScore: Math.max(800 - i * 120, 100),
-  }));
+  return RANKING_ROWS.map((row, i) => {
+    const participant = PARTICIPANTS.find((p) => p.nickname === row.nickname);
+
+    return {
+      rank: i + 1,
+      participantId: participant?.id ?? i + 11,
+      nickname: row.nickname,
+      avatarId: toAvatarKey(participant?.avatarId),
+      totalScore: row.totalScore,
+    };
+  });
+}
+
+/** 끝난 세션의 스냅샷 — 최종 순위만 있으면 결과 화면이 다 그려진다 */
+function buildFinishedSnapshot(roomId: number): SessionSnapshotResponse {
+  return {
+    roomId,
+    status: "ENDED",
+    currentQuestionNo: 0,
+    totalCount: SET_QUESTIONS.length,
+    screenLocked: false,
+    submitted: false,
+    ranking: buildMockRanking(),
+  };
 }
 
 function buildSubmissionStatus(): SubmissionStatusPayload {
@@ -192,7 +222,17 @@ function buildQuestionEnded(): QuestionEndedPayload {
 }
 
 /** GET /rooms/{roomId}/session — **WAITING이어도 200**이고 서버 시각(ts)이 없다 */
-export function mockSnapshot(): SessionSnapshotResponse {
+/**
+ * GET /rooms/{roomId}/session — 재접속 스냅샷.
+ *
+ * 목의 phase 머신은 "지금 진행 중인 데모 방" 하나만 흉내 낸다 —
+ * 그 방이 아니면 **끝난 세션**으로 답한다. 끝난 방의 최종 순위는 서버가 계속 갖고 있으므로
+ * 학생이 나중에 결과를 다시 열어도 순위가 나와야 한다(그러지 않으면 결과 화면이 비어 보인다).
+ */
+export function mockSnapshot(roomId: string): SessionSnapshotResponse {
+  const id = Number(roomId);
+  if (id !== DEMO_ROOM_ID) return buildFinishedSnapshot(id);
+
   return {
     roomId: DEMO_ROOM_ID,
     status,

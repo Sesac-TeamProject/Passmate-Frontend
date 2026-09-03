@@ -67,56 +67,59 @@ export function ReportPage({
   onReport,
 }: Props) {
   return (
-    <main className="flex min-h-screen flex-col gap-4 bg-background px-20 pt-[26px] pb-10">
-      <button
-        type="button"
-        onClick={onBack}
-        className="self-start text-label-md text-muted-foreground transition-colors hover:text-foreground"
-      >
-        ‹ 참여한 방으로
-      </button>
-
-      <ReportSummaryCard
-        roomTitle={roomTitle}
-        subtitle={subtitle}
-        correctCount={correctCount}
-        questionCount={questionCount}
-        rank={myRank}
-        participantCount={participantCount}
-        accuracyPercent={accuracyPercent}
-        elapsedSeconds={elapsedSeconds}
-        score={myScore}
-        onSavePdf={onSavePdf}
-      />
-
-      <ReportInsights comparison={comparison} trend={trend} concepts={concepts} />
-
-      <ReportQuestionTable rows={rows} onOpenQuestion={onOpenQuestion} />
-
-      <section className="flex flex-col gap-2.5 pt-2">
-        <h2 className="text-label-lg text-ink">다음에 이렇게 해보세요</h2>
-        <div className="flex flex-wrap gap-4">
-          {wrongCount > 0 && (
-            <NextStep onClick={onRetryWrong} primary>
-              틀린 {wrongCount}문항만 다시 풀기
-            </NextStep>
-          )}
-          {weakestConcept !== null && (
-            <NextStep onClick={onFindReviewRoom}>{weakestConcept} 복습 방 찾기</NextStep>
-          )}
-          <NextStep onClick={onShare}>리포트 공유하기</NextStep>
-        </div>
-      </section>
-
-      {onReport !== undefined && (
+    <main className="min-h-screen bg-background px-20 pt-[26px] pb-10">
+      {/* 시안은 1440에서 본문 1280 — 폭을 묶고 남는 공간은 좌우로 나눈다 (W-09와 같은 규칙) */}
+      <div className="mx-auto flex max-w-[1280px] flex-col gap-4">
         <button
           type="button"
-          onClick={onReport}
-          className="self-center text-label-md text-muted-foreground underline underline-offset-2 transition-colors hover:text-ink"
+          onClick={onBack}
+          className="self-start text-label-md text-muted-foreground transition-colors hover:text-foreground"
         >
-          이 방 신고하기
+          ‹ 참여한 방으로
         </button>
-      )}
+
+        <ReportSummaryCard
+          roomTitle={roomTitle}
+          subtitle={subtitle}
+          correctCount={correctCount}
+          questionCount={questionCount}
+          rank={myRank}
+          participantCount={participantCount}
+          accuracyPercent={accuracyPercent}
+          elapsedSeconds={elapsedSeconds}
+          score={myScore}
+          onSavePdf={onSavePdf}
+        />
+
+        <ReportInsights comparison={comparison} trend={trend} concepts={concepts} />
+
+        <ReportQuestionTable rows={rows} onOpenQuestion={onOpenQuestion} />
+
+        <section className="flex flex-col gap-2.5 pt-2">
+          <h2 className="text-label-lg text-ink">다음에 이렇게 해보세요</h2>
+          <div className="flex flex-wrap gap-4">
+            {wrongCount > 0 && (
+              <NextStep onClick={onRetryWrong} primary>
+                틀린 {wrongCount}문항만 다시 풀기
+              </NextStep>
+            )}
+            {weakestConcept !== null && (
+              <NextStep onClick={onFindReviewRoom}>{weakestConcept} 복습 방 찾기</NextStep>
+            )}
+            <NextStep onClick={onShare}>리포트 공유하기</NextStep>
+          </div>
+        </section>
+
+        {onReport !== undefined && (
+          <button
+            type="button"
+            onClick={onReport}
+            className="self-center text-label-md text-muted-foreground underline underline-offset-2 transition-colors hover:text-ink"
+          >
+            이 방 신고하기
+          </button>
+        )}
+      </div>
     </main>
   );
 }

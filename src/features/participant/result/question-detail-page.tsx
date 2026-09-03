@@ -71,8 +71,9 @@ export function QuestionDetailPage({
 }: Props) {
   return (
     // 브랜드 상단바는 (participant) 레이아웃의 SiteHeader가 이미 그린다 — 여기서 또 그리면 두 번 나온다
-    <main className="flex flex-1 flex-col bg-background">
-      <div className="flex items-center justify-between px-20 py-6">
+    <main className="flex flex-1 flex-col bg-background px-20">
+      {/* 시안 620:8221은 1440에서 본문 1200 — 폭을 묶고 남는 공간은 좌우로 나눈다 */}
+      <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between py-6">
         <Link
           href={backHref}
           className="flex items-center gap-2 text-label-lg text-muted-foreground hover:text-ink"
@@ -85,7 +86,7 @@ export function QuestionDetailPage({
         </span>
       </div>
 
-      <div className="mx-20 flex flex-col gap-5 rounded-[20px] border bg-card px-8 py-7">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 rounded-[20px] border bg-card px-8 py-7">
         <div className="flex items-center gap-3">
           <StatusChip tone={detail.isCorrect ? "free" : "paid"}>{detail.verdictLabel}</StatusChip>
           <span className="text-label-lg text-muted-foreground">
@@ -135,7 +136,7 @@ export function QuestionDetailPage({
         ) : null}
       </div>
 
-      <div className="mt-auto flex items-center justify-between px-20 py-8">
+      <div className="mx-auto mt-auto flex w-full max-w-[1200px] items-center justify-between py-8">
         <NavLink href={prevHref}>‹ 이전 문항</NavLink>
         <NavLink href={nextHref} primary>
           다음 문항 ›
