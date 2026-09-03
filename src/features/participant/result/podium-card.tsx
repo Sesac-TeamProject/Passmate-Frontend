@@ -50,7 +50,9 @@ function Stand({ entry }: { entry: PodiumEntry }) {
   const stand = STAND[entry.rank];
 
   return (
-    <li className="flex w-28 flex-col items-center gap-1.5">
+    // 간격 2px — 시안(788:8867~8886)은 아바타·이름·스탠드가 거의 붙어 있다.
+    // 6px씩 띄우면 가장 높은 1위 칸이 카드 위로 밀려 아바타가 테두리에 닿는다.
+    <li className="flex w-28 flex-col items-center gap-0.5">
       <StudentAvatar avatar={entry.student.avatar} size={48} />
       <span className="max-w-full truncate text-label-lg text-ink">{entry.student.name}</span>
       <span

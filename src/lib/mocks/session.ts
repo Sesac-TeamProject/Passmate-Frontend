@@ -135,17 +135,33 @@ function questionStartedData(): {
   };
 }
 
-/** SESSION_ENDED의 finalRanking — 참가자 픽스처를 점수 내림차순으로 흉내 낸다 */
+/**
+ * SESSION_ENDED의 finalRanking. 시안(788:8959)의 순위·점수를 그대로 쓴다 —
+ * 3위 990점이 mockMyResult의 "내 결과"와 같은 값이어야 결과 화면이 앞뒤가 맞는다.
+ */
+const RANKING_ROWS = [
+  { nickname: "준영", total: 1180, correctCount: 8 },
+  { nickname: "혜림", total: 1050, correctCount: 7 },
+  // 내 결과(mockMyResult correctCount=5)와 같은 값 — 한 화면에 두 숫자가 다르면 안 된다
+  { nickname: "민지", total: 990, correctCount: 5 },
+  { nickname: "승혁", total: 820, correctCount: 5 },
+  { nickname: "희표", total: 740, correctCount: 5 },
+  { nickname: "도윤", total: 610, correctCount: 4 },
+];
+
 function buildMockRanking(): RankingEntry[] {
-  return PARTICIPANTS.map((p, i) => ({
-    rank: i + 1,
-    participantId: p.participantId,
-    nickname: p.nickname,
-    avatarId: p.avatarId,
-    total: Math.max(800 - i * 120, 100),
-    // @draft 정답 수 — 점수 내림차순과 같은 순서로 8문항 중 몇 개를 맞혔는지
-    correctCount: Math.max(8 - i, 2),
-  }));
+  return RANKING_ROWS.map((row, i) => {
+    const participant = PARTICIPANTS.find((p) => p.nickname === row.nickname);
+
+    return {
+      rank: i + 1,
+      participantId: participant?.participantId ?? i + 11,
+      nickname: row.nickname,
+      avatarId: participant?.avatarId,
+      total: row.total,
+      correctCount: row.correctCount,
+    };
+  });
 }
 
 /** 이미 끝난 세션의 스냅샷 — 최종 순위만 있으면 결과 화면이 다 그려진다 */
