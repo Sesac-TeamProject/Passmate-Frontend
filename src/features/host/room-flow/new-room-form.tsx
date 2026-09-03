@@ -27,7 +27,8 @@ type Props = {
   /** 확정(CONFIRMED)된 문제 세트만 */
   sets: QuestionSetOption[];
   /** 명성 레벨. 유료 탭 잠금·명성 행에 쓴다 */
-  level: number;
+  /** 호스트 등급. 서버가 아직 등급을 안 주면 null — 그때는 잠그지도, 등급을 그리지도 않는다 */
+  level: number | null;
   onSubmit: (body: RoomCreateRequest) => void;
   pending?: boolean;
   errorMessage?: string | null;
@@ -54,7 +55,9 @@ export function NewRoomForm({
   const [roomType, setRoomType] = useState<RoomType>(initialValues?.roomType ?? "free");
   const [fee, setFee] = useState(initialValues?.fee ?? DEFAULT_ENTRY_FEE);
 
-  const paidLocked = level < PAID_ROOM_MIN_LEVEL;
+  // 서버가 등급을 못 준 경우(조회 실패)는 잠그지 않는다 — 없는 Lv.1을 지어내는 대신
+  // 서버의 403 HOST_LEVEL_REQUIRED가 판정하게 둔다.
+  const paidLocked = level !== null && level < PAID_ROOM_MIN_LEVEL;
   const isPaid = roomType === "paid";
 
   function handleFeeChange(e: ChangeEvent<HTMLInputElement>) {
@@ -148,7 +151,9 @@ export function NewRoomForm({
 
           <SettlementPreview fee={fee} hostShare={HOST_SHARE} />
 
-          <ReputationRow level={level} title={levelTitle(level)} minLevel={PAID_ROOM_MIN_LEVEL} />
+          {level !== null && (
+            <ReputationRow level={level} title={levelTitle(level)} minLevel={PAID_ROOM_MIN_LEVEL} />
+          )}
         </>
       )}
 

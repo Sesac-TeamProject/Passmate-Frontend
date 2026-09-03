@@ -8,7 +8,7 @@
 export type PendingPayment = {
   roomId: number;
   /** POST /coins/charges 로 받은 충전 건 — 있으면 createCharge를 다시 부르지 않는다 */
-  chargeId?: string;
+  chargeId?: number;
   /** 포트원 결제창이 돌려준 결제 건 — 있으면 결제창을 다시 열지 않고 confirm부터 이어 간다 */
   paymentId?: string;
   /** 참가비 차감까지 끝났다 — 남은 건 입장(joinRoom)뿐이다 */
@@ -35,7 +35,7 @@ export function readPendingPayment(roomId: number): PendingPayment | null {
     if (parsed.roomId !== roomId) return null;
     return {
       roomId,
-      chargeId: typeof parsed.chargeId === "string" ? parsed.chargeId : undefined,
+      chargeId: typeof parsed.chargeId === "number" ? parsed.chargeId : undefined,
       paymentId: typeof parsed.paymentId === "string" ? parsed.paymentId : undefined,
       entryPaid: parsed.entryPaid === true,
     };

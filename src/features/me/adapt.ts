@@ -9,7 +9,7 @@ import type {
   BadgesResponse,
   BadgeType,
   CoinBalanceResponse,
-  CoinTransactionDto,
+  CoinTransactionRow,
   CoinTransactionType,
   EarningsResponse,
   GradeResponse,
@@ -71,18 +71,18 @@ export function toProfile(me: MyProfileResponse): Profile {
 }
 
 const WIRE_METHOD_BY_PAY_METHOD: Record<PayMethod, PaymentMethod> = {
-  kakaopay: "KAKAO_PAY",
-  naverpay: "NAVER_PAY",
-  tosspay: "TOSS_PAY",
+  kakaopay: "KAKAOPAY",
+  naverpay: "NAVERPAY",
+  tosspay: "TOSSPAY",
   card: "CARD",
-  transfer: "TRANSFER",
+  transfer: "BANK_TRANSFER",
 };
 const PAY_METHOD_BY_WIRE_METHOD: Record<PaymentMethod, PayMethod> = {
-  KAKAO_PAY: "kakaopay",
-  NAVER_PAY: "naverpay",
-  TOSS_PAY: "tosspay",
+  KAKAOPAY: "kakaopay",
+  NAVERPAY: "naverpay",
+  TOSSPAY: "tosspay",
   CARD: "card",
-  TRANSFER: "transfer",
+  BANK_TRANSFER: "transfer",
 };
 
 /** 서버 전송용 PaymentMethod → 포트원 결제창이 쓰는 PayMethod */
@@ -97,22 +97,23 @@ export function toWireMethod(method: PayMethod): PaymentMethod {
 
 /**
  * 카드/코인 · 결제.
- * **잔액은 `GET /users/me`의 `coinBalance`가 원천이다** — `GET /users/me/coins`는 백엔드에 없다
- * (`CoinWallet` 엔티티만 있고 컨트롤러가 없다). 결제 수단·최근 내역은 아직 목뿐이라 `@draft`.
+ *
+ * **잔액은 `GET /users/me/coins`가 원천이다** — 지갑 API가 붙으면서
+ * `GET /users/me`의 `coinBalance`와 값이 같아졌다. 둘 중 지갑 쪽이 최근 내역까지 함께 준다.
  */
-export function toCoinSummary(coins: CoinBalanceResponse, coinBalance: number): CoinSummary {
-  const recent = coins.recent;
+export function toCoinSummary(coins: CoinBalanceResponse): CoinSummary {
+  const recent = coins.lastTransaction;
 
   return {
-    balance: coinBalance,
-    paymentMethodLabel: coins.defaultMethod
-      ? `${PAY_METHOD_LABEL[toPortoneMethod(coins.defaultMethod)]} (기본) · 포트원 안전결제`
+    balance: coins.balance,
+    paymentMethodLabel: coins.defaultPaymentMethod
+      ? `${PAY_METHOD_LABEL[toPortoneMethod(coins.defaultPaymentMethod)]} (기본) · 포트원 안전결제`
       : "등록된 결제 수단 없음",
     lastTransaction: recent
       ? {
-          dateLabel: recent.createdAt ? formatShortDate(recent.createdAt) : "",
-          title: recent.roomTitle ?? COIN_TX_TYPE_LABEL[recent.type ?? "CHARGE"],
-          amount: recent.amount ?? 0,
+          dateLabel: formatShortDate(recent.createdAt),
+          title: toCoinHistoryTitle(recent),
+          amount: recent.amount,
         }
       : null,
   };
@@ -120,17 +121,27 @@ export function toCoinSummary(coins: CoinBalanceResponse, coinBalance: number): 
 
 const COIN_TX_TYPE_LABEL: Record<CoinTransactionType, string> = {
   CHARGE: "코인 충전",
-  DEDUCT: "코인 사용",
-  REFUND: "환불",
+  ENTRY: "참가비 결제",
+  REFUND: "환급",
+  AI_ANALYSIS: "서술형 AI 분석",
+  ADMIN_ADJUST: "관리자 조정",
 };
 
+/**
+ * 내역 한 줄의 제목. `description`은 **차감 그 시점의** 방 제목 + 영수증 번호라
+ * 방 제목이 나중에 바뀌어도 흔들리지 않는다 — 있으면 그대로 쓴다.
+ */
+function toCoinHistoryTitle(row: CoinTransactionRow): string {
+  return row.description ?? COIN_TX_TYPE_LABEL[row.type];
+}
+
 /** GET /users/me/coins/transactions → 코인 사용 · 충전 내역 목록 */
-export function toCoinHistory(items: CoinTransactionDto[]): CoinHistoryItem[] {
-  return items.map((item, index) => ({
-    id: String(item.id ?? index),
-    date: item.createdAt ?? "",
-    title: item.roomTitle ?? COIN_TX_TYPE_LABEL[item.type ?? "CHARGE"],
-    amount: item.amount ?? 0,
+export function toCoinHistory(items: CoinTransactionRow[]): CoinHistoryItem[] {
+  return items.map((item) => ({
+    id: String(item.id),
+    date: item.createdAt,
+    title: toCoinHistoryTitle(item),
+    amount: item.amount,
   }));
 }
 

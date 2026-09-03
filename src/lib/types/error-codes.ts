@@ -16,6 +16,8 @@ export const ERROR_CODES = {
   SOCIAL_TOKEN_INVALID: "SOCIAL_TOKEN_INVALID",
   // 402
   INSUFFICIENT_COINS: "INSUFFICIENT_COINS",
+  /** 402 — 유료 방에 살아 있는 참가비 결제 없이 입장 시도. 결제 화면으로 보낸다 */
+  ENTRY_FEE_REQUIRED: "ENTRY_FEE_REQUIRED",
   // 403
   ACCESS_DENIED: "ACCESS_DENIED",
   NOT_ROOM_HOST: "NOT_ROOM_HOST",
@@ -48,6 +50,18 @@ export const ERROR_CODES = {
   QUESTION_SET_REQUIRED: "QUESTION_SET_REQUIRED",
   NICKNAME_DUPLICATED: "NICKNAME_DUPLICATED",
   ALREADY_JOINED: "ALREADY_JOINED",
+  /** 409 — 포트원 쪽이 아직 결제 완료가 아니다. 짧게 재시도하고 그래도면 "확인 중"으로 */
+  PAYMENT_NOT_COMPLETED: "PAYMENT_NOT_COMPLETED",
+  /** 409 — 실제 결제 금액 ≠ 요청 금액. 충전 실패로 접고 고객센터로 */
+  PAYMENT_AMOUNT_MISMATCH: "PAYMENT_AMOUNT_MISMATCH",
+  /** 409 — 같은 방에 살아 있는 참가비 결제가 이미 있다. 결제를 건너뛰고 바로 입장한다 */
+  ALREADY_PAID: "ALREADY_PAID",
+  /** 409 — 이미 취소된 참가비를 또 취소했다 */
+  ALREADY_REFUNDED: "ALREADY_REFUNDED",
+  /** 409 — 세션이 시작돼 취소 창이 닫혔다 */
+  REFUND_WINDOW_CLOSED: "REFUND_WINDOW_CLOSED",
+  /** 409 — 무료 방에 참가비 결제를 시도했다(분기 버그) */
+  NOT_PAID_ROOM: "NOT_PAID_ROOM",
   QUESTION_SET_ALREADY_CONFIRMED: "QUESTION_SET_ALREADY_CONFIRMED",
   QUESTION_SET_EMPTY: "QUESTION_SET_EMPTY",
   // 429 — 코인 정책이 확정되면 402로 바뀔 자리

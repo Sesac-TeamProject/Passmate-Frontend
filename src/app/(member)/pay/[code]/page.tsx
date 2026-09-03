@@ -14,6 +14,7 @@ import type { PaymentReceipt } from "@/features/participant/pay/payment-complete
 import { PayFailed } from "@/features/participant/pay/pay-failed";
 import { PayPage, type PayFormValues, type PayStep } from "@/features/participant/pay/pay-page";
 import { CHARGE_OPTIONS } from "@/features/participant/pay/types";
+import { isErrorCode, toInsufficientCoins } from "@/features/participant/pay/payment-errors";
 import {
   clearPendingPayment,
   readPendingPayment,
@@ -21,6 +22,7 @@ import {
   type PendingPayment,
 } from "@/lib/pending-payment";
 import { requestPayment } from "@/lib/portone";
+import { ERROR_CODES } from "@/lib/types/error-codes";
 import {
   useCoinBalance,
   useConfirmCharge,
@@ -68,7 +70,7 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
   // 참가비 차감이 끝난 방을 기억한다 — joinRoom만 실패한 재시도가 참가비를 다시 차감하지 않도록.
   const [paidReceipt, setPaidReceipt] = useState<{
     roomId: number;
-    paymentNo?: string;
+    paymentNo: string;
     balance?: number;
     chargeAmount: number;
     payMethod: PayFormValues["payMethod"];
@@ -108,16 +110,16 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
     setPending(readPendingPayment(roomId));
   }
 
-  // 무료 방은 결제가 필요 없다 — 대기실로 보낸다.
+  // 유료 방이 아니면 결제할 게 없다 — 대기실로 보낸다.
   useEffect(() => {
-    if (room.data && room.data.guestAllowed) router.replace(`/play/${pin}`);
+    if (room.data && room.data.type !== "PAID") router.replace(`/play/${pin}`);
   }, [room.data, pin, router]);
 
   if (room.isPending) return <ScreenLoading />;
   if (room.isError)
     return <ScreenError message={toPayErrorMessage(room.error)} onRetry={() => room.refetch()} />;
   // 무료 방 — 위 effect가 대기실로 보낸다. 그 사이 화면은 로딩으로만 보인다.
-  if (room.data.guestAllowed) return <ScreenLoading />;
+  if (room.data.type !== "PAID") return <ScreenLoading />;
 
   const paidRoom = toPaidRoom(room.data, pin);
 
@@ -132,6 +134,14 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
     setPending(null);
   };
 
+  /**
+   * 402가 실어 준 부족분으로 충전 프리셋을 다시 고른다 — 잔액을 다시 조회하지 않는다.
+   * 잔액 쿼리가 낡아 "충분한 줄 알고" 참가비부터 부른 경우가 여기로 온다.
+   */
+  const chargePresetFor = (shortfallCoins: number) =>
+    CHARGE_OPTIONS.find((amount) => amount >= shortfallCoins) ??
+    CHARGE_OPTIONS[CHARGE_OPTIONS.length - 1];
+
   const handleSubmit = async () => {
     if (!values.agreed || step === "paying" || roomId === null) return;
     setStep("paying");
@@ -143,80 +153,90 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
     const saved = pending?.roomId === roomId ? pending : null;
     const paid = paidReceipt?.roomId === roomId ? paidReceipt : null;
 
+    /** 참가비까지 끝난 상태에서 입장만 마치고 영수증을 그린다 */
+    const finish = async (receiptValues: {
+      paymentNo: string;
+      chargeAmount: number;
+      remaining: number;
+    }) => {
+      await joinRoom.mutateAsync({ nickname, avatarId });
+      forgetPending(roomId);
+      setReceipt({
+        paymentId: receiptValues.paymentNo,
+        roomCode: pin,
+        roomTitle: paidRoom.title,
+        chargeAmount: receiptValues.chargeAmount,
+        payMethod: values.payMethod,
+        deducted: paidRoom.fee,
+        remaining: receiptValues.remaining,
+      });
+      setStep("done");
+    };
+
     try {
-      // 이미 이 방의 참가비를 냈다(직전 시도가 joinRoom에서만 실패, 또는 새로고침) — 다시 차감하지 않고 입장만 재시도한다.
+      // 이미 이 방의 참가비를 냈다(직전 시도가 joinRoom에서만 실패, 또는 새로고침) — 다시 차감하지 않는다.
       if (paid || saved?.entryPaid) {
-        await joinRoom.mutateAsync({ nickname, avatarId });
-        forgetPending(roomId);
-        setReceipt({
-          paymentId: paid?.paymentNo ?? "",
-          roomCode: pin,
-          roomTitle: paidRoom.title,
+        await finish({
+          paymentNo: paid?.paymentNo ?? "",
           chargeAmount: paid?.chargeAmount ?? 0,
-          payMethod: paid?.payMethod ?? values.payMethod,
-          deducted: paidRoom.fee,
           remaining: paid?.balance ?? balance,
         });
-        setStep("done");
         return;
       }
 
+      // 잔액이 충분해 보이면 충전 없이 참가비만 낸다. 서버가 402로 되받으면 아래 충전 경로로 넘어간다.
       if (shortfall <= 0 && !saved?.chargeId) {
-        const entryRes = await entryPayment.mutateAsync({ nickname, avatarId });
-        savePending({ roomId, entryPaid: true });
-        setPaidReceipt({
-          roomId,
-          paymentNo: entryRes.paymentNo,
-          balance: entryRes.balance,
-          chargeAmount: 0,
-          payMethod: values.payMethod,
-        });
-        await joinRoom.mutateAsync({ nickname, avatarId });
-        forgetPending(roomId);
-        setReceipt({
-          paymentId: entryRes.paymentNo ?? "",
-          roomCode: pin,
-          roomTitle: paidRoom.title,
-          chargeAmount: 0,
-          payMethod: values.payMethod,
-          deducted: paidRoom.fee,
-          remaining: entryRes.balance ?? balance,
-        });
-        setStep("done");
-        return;
+        try {
+          const entryRes = await entryPayment.mutateAsync();
+          savePending({ roomId, entryPaid: true });
+          setPaidReceipt({
+            roomId,
+            paymentNo: entryRes.paymentNo,
+            balance: entryRes.balanceAfter,
+            chargeAmount: 0,
+            payMethod: values.payMethod,
+          });
+          await finish({
+            paymentNo: entryRes.paymentNo,
+            chargeAmount: 0,
+            remaining: entryRes.balanceAfter,
+          });
+          return;
+        } catch (err) {
+          // 같은 방에 살아 있는 결제가 이미 있다 — 결제를 건너뛰고 바로 입장한다.
+          if (isErrorCode(err, ERROR_CODES.ALREADY_PAID)) {
+            savePending({ roomId, entryPaid: true });
+            await finish({ paymentNo: "", chargeAmount: 0, remaining: balance });
+            return;
+          }
+          // 잔액이 실제로는 모자랐다 — 서버가 알려준 부족분만큼 충전 화면으로 되돌린다.
+          const short = toInsufficientCoins(err);
+          if (!short) throw err;
+          setValues((prev) => ({ ...prev, chargeAmount: chargePresetFor(short.shortfall) }));
+          setError("코인이 모자라요. 충전 금액을 확인하고 다시 눌러 주세요");
+          setStep("idle");
+          return;
+        }
       }
 
-      // 아래 세 단계는 각각 성공 즉시 기록한다 — 뒤 단계가 실패한 재시도가 앞 단계를 다시 밟지 않도록.
+      // 아래 두 단계는 각각 성공 즉시 기록한다 — 뒤 단계가 실패한 재시도가 앞 단계를 다시 밟지 않도록.
       let chargeId = saved?.chargeId ?? null;
       let paymentId = saved?.paymentId ?? null;
       let chargeAmount = values.chargeAmount;
-      let orderName = `패스메이트 코인 ${values.chargeAmount.toLocaleString()} C 충전`;
 
-      if (chargeId === null) {
-        const checkout = await createCharge.mutateAsync({
+      if (chargeId === null || paymentId === null) {
+        // roomId를 실어 보내면 confirm 한 번이 충전 + 참가비 차감까지 끝낸다.
+        const charge = await createCharge.mutateAsync({
           amount: values.chargeAmount,
           method: wireMethodFromPayMethod(values.payMethod),
           roomId,
         });
 
-        if (!checkout.chargeId) {
-          setError("충전 준비에 실패했어요. 다시 시도해 주세요");
-          setStep("idle");
-          return;
-        }
-
-        chargeId = checkout.chargeId;
-        chargeAmount = checkout.amount ?? values.chargeAmount;
-        orderName = checkout.orderName ?? orderName;
+        chargeId = charge.chargeId;
+        chargeAmount = charge.amount;
         savePending({ roomId, chargeId, entryPaid: false });
-      }
 
-      if (paymentId === null) {
-        const payResult = await requestPayment({
-          orderName,
-          amount: chargeAmount,
-          payMethod: values.payMethod,
-        });
+        const payResult = await requestPayment(charge, wireMethodFromPayMethod(values.payMethod));
 
         if (!payResult.ok) {
           // 취소는 되돌아온 것이지 실패가 아니다 — 화면을 갈아 끼우지 않고 폼 위에 한 줄만 남긴다.
@@ -233,19 +253,17 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
         savePending({ roomId, chargeId, paymentId, entryPaid: false });
       }
 
-      const confirmRes = await confirmCharge.mutateAsync({
-        chargeId,
-        body: { paymentId, roomId },
-      });
+      // 결제창이 성공으로 닫혀도 이 시점엔 코인이 아직 안 늘었다 — confirm이 적립한다(멱등).
+      const confirmRes = await confirmCharge.mutateAsync(chargeId);
 
-      let paymentNo = confirmRes.entryPayment?.paymentNo;
-      let remaining = confirmRes.entryPayment?.balance ?? confirmRes.balance ?? balance;
+      let paymentNo = confirmRes.entryPayment?.paymentNo ?? "";
+      let remaining = confirmRes.entryPayment?.balanceAfter ?? confirmRes.balanceAfter;
 
-      // 확인 응답에 entryPayment가 없으면 참가비 차감이 아직 끝나지 않은 것 — 이어서 차감한다.
+      // 확인 응답에 entryPayment가 없으면 참가비 차감이 아직 안 끝난 것 — 이어서 차감한다.
       if (!confirmRes.entryPayment) {
-        const entryRes = await entryPayment.mutateAsync({ nickname, avatarId });
+        const entryRes = await entryPayment.mutateAsync();
         paymentNo = entryRes.paymentNo;
-        remaining = entryRes.balance ?? remaining;
+        remaining = entryRes.balanceAfter;
       }
 
       // 참가비 차감이 끝났다 — joinRoom이 실패해도 재시도가 다시 차감하지 않도록 방 단위로 기억해 둔다.
@@ -258,19 +276,7 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
         payMethod: values.payMethod,
       });
 
-      await joinRoom.mutateAsync({ nickname, avatarId });
-      forgetPending(roomId);
-
-      setReceipt({
-        paymentId: paymentNo ?? paymentId,
-        roomCode: pin,
-        roomTitle: paidRoom.title,
-        chargeAmount,
-        payMethod: values.payMethod,
-        deducted: paidRoom.fee,
-        remaining,
-      });
-      setStep("done");
+      await finish({ paymentNo, chargeAmount, remaining });
     } catch (err) {
       setFailure({
         message: toPayErrorMessage(err),

@@ -6,7 +6,7 @@ import { StepPills } from "./step-pills";
 
 type Props = {
   sets: QuestionSetOption[];
-  level: number;
+  level: number | null;
   onSubmit: (body: RoomCreateRequest) => void;
   pending?: boolean;
   errorMessage?: string | null;

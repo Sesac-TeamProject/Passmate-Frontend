@@ -68,9 +68,21 @@ describe("mocks/handlers", () => {
     });
   });
 
-  it("유료 방은 서버처럼 400 UNSUPPORTED_ROOM_TYPE 으로 막힌다", async () => {
+  it("유료 방이 열렸다 — PAID는 fee와 함께 통과한다", async () => {
     await expect(
-      resolveMock("POST", "/rooms", { title: "유료", type: "PAID" }),
+      resolveMock("POST", "/rooms", { title: "유료", type: "PAID", fee: 3000 }),
+    ).resolves.toMatchObject({ type: "PAID", fee: 3000, status: "WAITING" });
+  });
+
+  it("참가비가 정책 범위를 벗어나면 400이다 — 문구는 서버 message를 쓴다", async () => {
+    await expect(
+      resolveMock("POST", "/rooms", { title: "유료", type: "PAID", fee: 50 }),
+    ).rejects.toMatchObject({ kind: "ValidationFailed", code: "INVALID_INPUT" });
+  });
+
+  it("BRANDED만 아직 400 UNSUPPORTED_ROOM_TYPE 으로 막힌다", async () => {
+    await expect(
+      resolveMock("POST", "/rooms", { title: "브랜드", type: "BRANDED" }),
     ).rejects.toMatchObject({ kind: "ValidationFailed", code: "UNSUPPORTED_ROOM_TYPE" });
   });
 
@@ -105,9 +117,10 @@ describe("mocks/handlers", () => {
 
   it("계약에 맞지 않는 바디로 코인 충전을 요청해도 AppError 대신 결제창 파라미터를 돌려준다", async () => {
     await expect(resolveMock("POST", "/coins/charges", {})).resolves.toMatchObject({
-      chargeId: expect.any(String),
+      chargeId: expect.any(Number),
       storeId: "store-mock",
       amount: 0,
+      status: "READY",
     });
   });
 
@@ -176,9 +189,10 @@ describe("mocks/handlers", () => {
         () => me.claimGuestRecord("mock-guest-record-token"),
         () => payments.getCoinBalance(),
         () => payments.getCoinTransactions(),
-        () => payments.createCharge({ amount: 10000, method: "KAKAO_PAY" }),
-        () => payments.confirmCharge("chg-1", { paymentId: "p" }),
-        () => payments.createEntryPayment(1, { nickname: "n" }),
+        () => payments.createCharge({ amount: 10000, method: "KAKAOPAY" }),
+        () => payments.confirmCharge(77),
+        () => payments.createEntryPayment(1),
+        () => payments.cancelEntryPayment(44),
         () => payments.getEarnings(),
         () => payments.getSettlementAccount(),
         () =>

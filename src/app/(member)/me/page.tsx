@@ -58,7 +58,7 @@ export default function Page() {
         profile={toProfile(me.data)}
         joinedRooms={me.data.stats.joinedRoomCount}
         hostedRooms={me.data.stats.hostedRoomCount}
-        coinSummary={toCoinSummary(coins.data, me.data.coinBalance)}
+        coinSummary={toCoinSummary(coins.data)}
         settlementSummary={toSettlementSummary(earnings.data)}
         settlementAccount={account.isSuccess ? toSettlementAccount(account.data) : null}
         onLogout={() => setLogoutOpen(true)}

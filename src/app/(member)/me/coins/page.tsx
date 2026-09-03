@@ -22,11 +22,11 @@ export default function Page() {
       <ScreenError message={transactions.error.message} onRetry={() => transactions.refetch()} />
     );
 
-  const items = filterCoinHistory(toCoinHistory(transactions.data.items ?? []), filter);
+  const items = filterCoinHistory(toCoinHistory(transactions.data.content), filter);
 
   return (
     <CoinsPage
-      balance={balance.data.balance ?? 0}
+      balance={balance.data.balance}
       filter={filter}
       onFilterChange={setFilter}
       items={items}

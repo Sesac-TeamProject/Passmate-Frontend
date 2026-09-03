@@ -3,10 +3,10 @@ import type {
   ReportRequest,
   HostReviewRequest,
   AiGenerateRequest,
-  ConfirmChargeRequest,
   CreateChargeRequest,
   JoinRoomRequest,
   NotificationSettingsDto,
+  PaymentMethodRequest,
   QuestionRequest,
   QuestionSetUpdateRequest,
   RoomCreateRequest,
@@ -44,6 +44,7 @@ import {
   mockUpdateProfile,
 } from "./me";
 import {
+  mockCancelEntryPayment,
   mockCoinBalance,
   mockCoinTransactions,
   mockConfirmCharge,
@@ -217,16 +218,17 @@ const HANDLERS: Record<string, MockHandler> = {
 
   /* ── 코인 · 정산 ──────────────────────────────────── */
   "GET /users/me/coins": () => mockCoinBalance(),
-  "GET /users/me/coins/transactions": () => mockCoinTransactions(),
+  "GET /users/me/coins/transactions": (ctx) => mockCoinTransactions(ctx.url),
   "POST /coins/charges": (ctx) => mockCreateCharge(asBody<CreateChargeRequest>(ctx)),
-  "POST /coins/charges/:chargeId/confirm": (ctx) =>
-    mockConfirmCharge(ctx.params.chargeId, asBody<ConfirmChargeRequest>(ctx)),
-  "POST /rooms/:roomId/entry-payments": () => mockEntryPayment(),
+  "POST /coins/charges/:chargeId/confirm": (ctx) => mockConfirmCharge(Number(ctx.params.chargeId)),
+  "POST /rooms/:roomId/entry-payments": (ctx) => mockEntryPayment(Number(ctx.params.roomId)),
+  "POST /entry-payments/:paymentId/cancel": (ctx) =>
+    mockCancelEntryPayment(Number(ctx.params.paymentId)),
   "GET /users/me/earnings": () => mockEarnings(),
   "GET /users/me/settlement-account": () => mockSettlementAccount(),
   "PUT /users/me/settlement-account": (ctx) =>
     mockPutSettlementAccount(asBody<SettlementAccountRequest>(ctx)),
-  "PUT /users/me/payment-method": () => mockPutPaymentMethod(),
+  "PUT /users/me/payment-method": (ctx) => mockPutPaymentMethod(asBody<PaymentMethodRequest>(ctx)),
 
   /* ── 관리자 (A-01~A-06) ───────────────────────────── */
   "GET /admin/dashboard": () => mockAdminDashboard(),

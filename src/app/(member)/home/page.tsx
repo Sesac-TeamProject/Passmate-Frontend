@@ -121,7 +121,7 @@ export default function Page() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         sets={toQuestionSetOptions(sets.data?.content ?? [])}
-        level={grade.data?.level ?? 1}
+        level={grade.data?.level ?? null}
         onSubmit={handleCreateRoom}
         pending={create.isPending}
         errorMessage={

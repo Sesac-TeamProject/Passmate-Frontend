@@ -60,8 +60,9 @@ export default function Page() {
       />
     );
 
-  // 등급 조회가 실패해도 방 만들기는 막지 않는다 — 유료 옵션만 잠긴 채로 진행한다.
-  const level = grade.data?.level ?? 1;
+  // 등급 조회가 실패해도 방 만들기는 막지 않는다. 없는 Lv.1을 지어내지 않고 null로 넘겨,
+  // 유료 옵션을 잠그는 대신 서버의 403 HOST_LEVEL_REQUIRED가 판정하게 둔다.
+  const level = grade.data?.level ?? null;
   const errorMessage = pinMissing
     ? PIN_MISSING_MESSAGE
     : create.isError

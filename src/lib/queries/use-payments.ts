@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  cancelEntryPayment,
   confirmCharge,
   createCharge,
   createEntryPayment,
@@ -10,13 +11,9 @@ import {
   putPaymentMethod,
   putSettlementAccount,
 } from "@/lib/api/payments";
-import type {
-  ConfirmChargeRequest,
-  CreateChargeRequest,
-  CreateEntryPaymentRequest,
-  PaymentMethod,
-  SettlementAccountRequest,
-} from "@/lib/types/dto";
+import { AppError } from "@/lib/types/app-error";
+import type { CreateChargeRequest, PaymentMethod, SettlementAccountRequest } from "@/lib/types/dto";
+import { ERROR_CODES } from "@/lib/types/error-codes";
 import { qk } from "./keys";
 
 /** GET /users/me/coins */
@@ -27,11 +24,11 @@ export function useCoinBalance() {
   });
 }
 
-/** GET /users/me/coins/transactions */
-export function useCoinTransactions() {
+/** GET /users/me/coins/transactions — 오프셋 페이지(`page`·`size`) */
+export function useCoinTransactions(page = 0, size = 20) {
   return useQuery({
-    queryKey: qk.coinTransactions,
-    queryFn: () => getCoinTransactions(),
+    queryKey: [...qk.coinTransactions, page, size],
+    queryFn: () => getCoinTransactions(page, size),
   });
 }
 
@@ -42,28 +39,62 @@ export function useCreateCharge() {
   });
 }
 
-/** POST /coins/charges/{chargeId}/confirm. 성공 시 코인 잔액·내역을 갱신한다 */
+/** 결제창이 닫힌 직후 포트원 쪽이 아직 READY일 때 기다렸다 다시 물어보는 간격 */
+const CONFIRM_RETRY_DELAY_MS = 1200;
+const CONFIRM_RETRY_LIMIT = 2;
+
+/**
+ * POST /coins/charges/{chargeId}/confirm — 본문 없음. 성공 시 코인 잔액·내역을 갱신한다.
+ *
+ * **409 `PAYMENT_NOT_COMPLETED`만 재시도한다** — 결제창이 닫힌 직후 곧바로 부르면 포트원 쪽이
+ * 아직 `READY`인 경우다. 두 번까지 다시 물어보고 그래도면 화면이 "결제 확인 중"으로 접는다.
+ * 웹훅이 뒤이어 확정하므로 코인은 유실되지 않는다. 다른 오류는 재시도하지 않는다.
+ */
 export function useConfirmCharge() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ chargeId, body }: { chargeId: string; body: ConfirmChargeRequest }) =>
-      confirmCharge(chargeId, body),
+    mutationFn: (chargeId: number) => confirmCharge(chargeId),
+    retry: (failureCount, error) =>
+      failureCount < CONFIRM_RETRY_LIMIT &&
+      AppError.isAppError(error) &&
+      error.code === ERROR_CODES.PAYMENT_NOT_COMPLETED,
+    retryDelay: CONFIRM_RETRY_DELAY_MS,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.coins });
-      queryClient.invalidateQueries({ queryKey: qk.coinTransactions });
+      // qk.me(["me"])는 coins·transactions의 접두다 — 잔액을 함께 읽는 마이페이지까지 한 번에 턴다
+      queryClient.invalidateQueries({ queryKey: qk.me });
     },
   });
 }
 
-/** POST /rooms/{roomId}/entry-payments — 참가비 코인 차감. 402 잔액 부족. 성공 시 코인 잔액을 갱신한다 */
+/**
+ * POST /rooms/{roomId}/entry-payments — 참가비 코인 차감. **본문 없음**(금액은 서버가 방에서 읽는다).
+ * 잔액이 모자라면 402 `INSUFFICIENT_COINS`이고 부족분이 `AppError.data`에 실려 온다.
+ */
 export function useEntryPayment(roomId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: CreateEntryPaymentRequest) => createEntryPayment(roomId, body),
+    mutationFn: () => createEntryPayment(roomId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.coins });
+      // qk.me(["me"])는 coins·transactions의 접두다 — 잔액을 함께 읽는 마이페이지까지 한 번에 턴다
+      queryClient.invalidateQueries({ queryKey: qk.me });
+    },
+  });
+}
+
+/**
+ * POST /entry-payments/{paymentId}/cancel — 세션 시작 전까지만. 코인으로 전액 돌려주고
+ * 입장해 있었다면 방에서도 빠진다. 시작 후에는 409 `REFUND_WINDOW_CLOSED`.
+ */
+export function useCancelEntryPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (paymentId: number) => cancelEntryPayment(paymentId),
+    onSuccess: () => {
+      // qk.me(["me"])는 coins·transactions의 접두다 — 잔액을 함께 읽는 마이페이지까지 한 번에 턴다
+      queryClient.invalidateQueries({ queryKey: qk.me });
     },
   });
 }
