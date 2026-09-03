@@ -22,10 +22,10 @@ describe("음성 힌트 업로드 계약", () => {
       }),
     );
     vi.stubGlobal("fetch", fetchMock);
+    // client.ts는 토큰을 읽을 때만 window를 본다 — location은 RequireAuth의 일이라 두지 않는다
     vi.stubGlobal("window", {
       localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
       sessionStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
-      location: { pathname: "/host", search: "", assign: vi.fn() },
     });
   });
 
@@ -38,7 +38,7 @@ describe("음성 힌트 업로드 계약", () => {
     const { uploadVoiceHint } = await import("./sessions");
     await uploadVoiceHint(7, new Blob(["clip"]), 4200);
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    return { url, form: init.body as FormData };
+    return { url, init, form: init.body as FormData };
   }
 
   it("파트 이름은 audio가 아니라 file이다 — 틀리면 400이다", async () => {
@@ -59,5 +59,22 @@ describe("음성 힌트 업로드 계약", () => {
     const { url } = await upload();
 
     expect(new URL(url).pathname).toBe("/rooms/7/session/hints");
+  });
+
+  it("POST로 보낸다", async () => {
+    const { init } = await upload();
+
+    expect(init.method).toBe("POST");
+  });
+
+  /**
+   * multipart는 boundary가 붙어야 서버가 파트를 가른다. 직접 `multipart/form-data`를 넣으면
+   * boundary가 빠져 서버가 본문을 못 읽고 400이 난다 — 브라우저가 붙이도록 비워 둬야 한다.
+   */
+  it("Content-Type을 직접 넣지 않는다 — boundary가 빠지면 서버가 못 읽는다", async () => {
+    const { init } = await upload();
+    const headers = new Headers(init.headers);
+
+    expect(headers.get("Content-Type")).toBeNull();
   });
 });

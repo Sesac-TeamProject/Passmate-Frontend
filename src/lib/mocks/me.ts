@@ -10,7 +10,6 @@ import type {
   JoinedRoomsResponse,
   MyProfileResponse,
   NotificationSettingsDto,
-  NotificationSettingsUpdate,
   UserProfileUpdateRequest,
 } from "@/lib/types/dto";
 import { AppError } from "@/lib/types/app-error";
@@ -22,12 +21,14 @@ import { DEMO_ROOM_ID, ME_PROFILE, PUBLIC_ROOMS } from "./fixtures";
  * features/host/my-rooms/mock.ts LEVEL_STATUS·PROMOTION을 DTO 모양으로 옮긴다.
  */
 
-let profile: MyProfileResponse = { ...ME_PROFILE };
-let notificationSettings: NotificationSettingsDto = {
+const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettingsDto = {
   sessionStart: true,
   ratingRequest: true,
   settlementDone: true,
 };
+
+let profile: MyProfileResponse = { ...ME_PROFILE };
+let notificationSettings: NotificationSettingsDto = { ...DEFAULT_NOTIFICATION_SETTINGS };
 
 /** 현재 프로필(mutable). 다른 도메인 목이 내 닉네임·아바타를 읽을 때 이 getter로 단일 출처를 쓴다. */
 export function currentProfile(): MyProfileResponse {
@@ -260,7 +261,7 @@ export function mockNotificationSettings(): NotificationSettingsDto {
  * 목이 부분 갱신을 받아 주면 목에서만 통과하고 실서버에서 400이 난다.
  */
 export function mockPutNotificationSettings(
-  body: NotificationSettingsUpdate,
+  body: NotificationSettingsDto,
 ): NotificationSettingsDto {
   const missing = (["sessionStart", "ratingRequest", "settlementDone"] as const).filter(
     (k) => typeof body?.[k] !== "boolean",
@@ -345,4 +346,15 @@ export function mockClaim(): GuestClaimResponse {
     finalRank: 3,
     claimedAt: new Date().toISOString().slice(0, 19),
   };
+}
+
+/**
+ * 테스트 전용 — 마이페이지 목의 모듈 상태를 초기값으로 되돌린다.
+ * 다른 도메인 목(`session`·`rooms`·`question-sets`·`results`)과 같은 규약이다 —
+ * 알림 설정을 바꾸는 테스트가 뒤 테스트에 새어 들어가지 않게 한다.
+ */
+export function __resetMeForTests(): void {
+  profile = { ...ME_PROFILE };
+  notificationSettings = { ...DEFAULT_NOTIFICATION_SETTINGS };
+  nextReportId = 1;
 }

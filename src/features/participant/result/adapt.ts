@@ -157,11 +157,19 @@ export function toRatingDeadlineLabel(rating: RatingAvailability): string | null
   return `${hours}시간 안에 남길 수 있어요`;
 }
 
-/** 별점 제출 실패 문구 */
+/**
+ * 별점 제출 실패 문구.
+ *
+ * 서버가 막는 이유가 넷이고 문구가 다 다르다(`RatingBlockedReason`과 같은 판정을 쓴다).
+ * 코드로 갈라 주지 않으면 "권한이 없어요"·"이미 처리된 요청이에요" 같은 엉뚱한 기본 문구가 뜬다.
+ */
 export function toRatingSubmitMessage(error: unknown): string {
   if (!AppError.isAppError(error)) return "보내지 못했어요. 다시 시도해 주세요";
   // 방이 지워졌거나 참여하지 않은 방인 경우
   if (error.kind === "NotFound") return "이 방을 찾을 수 없어요";
   if (error.code === ERROR_CODES.ALREADY_RATED) return "이미 별점을 남겼어요";
+  if (error.code === ERROR_CODES.RATING_WINDOW_CLOSED) return "평가 기간이 지났어요";
+  if (error.code === ERROR_CODES.RATING_NOT_ALLOWED) return "답안을 낸 학생만 평가할 수 있어요";
+  if (error.code === ERROR_CODES.SESSION_NOT_ENDED) return "수업이 끝난 뒤에 남길 수 있어요";
   return error.message;
 }

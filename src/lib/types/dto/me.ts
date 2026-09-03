@@ -143,23 +143,18 @@ export type BadgesResponse = {
 };
 
 /**
- * GET·PUT /users/me/notification-settings 응답 — 3종뿐(마케팅 없음, DESIGN_GAPS C-5).
- * **셋 다 반드시 온다** — 서버가 현재 설정을 통째로 돌려주기 때문에 optional이 아니다.
+ * GET·PUT /users/me/notification-settings — 3종뿐(마케팅 없음, DESIGN_GAPS C-5).
+ *
+ * 응답은 **셋 다 반드시 온다**(서버가 현재 설정을 통째로 돌려준다). 요청도 같은 모양이다 —
+ * 부분 수정이 아니라 셋을 다 보내야 한다. 서버가 일부러 `@NotNull` 셋으로 받는데
+ * (`NotificationSettingRequest`), 부분 갱신을 허용하면 토글 하나를 끄면서 나머지를
+ * 실수로 되돌릴 수 있기 때문이다. 하나라도 빼면 400이다.
  */
 export type NotificationSettingsDto = {
   sessionStart: boolean;
   ratingRequest: boolean;
   settlementDone: boolean;
 };
-
-/**
- * PUT /users/me/notification-settings 요청 — **세 항목을 모두 보낸다.**
- *
- * 부분 수정이 아니다. 서버가 일부러 셋 다 `@NotNull`로 받는다(`NotificationSettingRequest`) —
- * 부분 갱신을 허용하면 토글 하나를 끄면서 나머지를 실수로 되돌릴 수 있기 때문이다.
- * 하나라도 빼면 400이다. 화면은 현재 값을 얹어서 통째로 보낸다.
- */
-export type NotificationSettingsUpdate = NotificationSettingsDto;
 
 /**
  * GET /users/{userId}/profile — 선생님 공개 프로필.

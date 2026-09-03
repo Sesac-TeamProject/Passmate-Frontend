@@ -1,4 +1,5 @@
 import { AppError } from "@/lib/types/app-error";
+import { RATING_COMMENT_MAX, RATING_TAG_MAX } from "@/lib/types/dto";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 import type {
   AnswerResultView,
@@ -355,8 +356,28 @@ export function mockPostReview(answerId: number, body: HostReviewRequest): Teach
   };
 }
 
-/** POST /rooms/{roomId}/ratings — 세션당 1회. 201로 접수된 평가를 돌려준다 */
+/**
+ * POST /rooms/{roomId}/ratings — 세션당 1회. 201로 접수된 평가를 돌려준다.
+ *
+ * 서버의 제약(`RoomRatingRequest`)을 그대로 막는다 — 별점 1~5, 태그 최대 5개, 후기 500자.
+ * 목이 받아 주면 목에서만 통과하고 실서버에서 400이 난다.
+ */
 export function mockSubmitRating(body: SubmitRatingRequest): RoomRatingResponse {
+  const stars = body?.stars;
+  const invalid =
+    typeof stars !== "number" || !Number.isInteger(stars) || stars < 1 || stars > 5
+      ? "별점은 1~5입니다."
+      : (body.tags?.length ?? 0) > RATING_TAG_MAX
+        ? `태그는 ${RATING_TAG_MAX}개까지입니다.`
+        : (body.comment?.length ?? 0) > RATING_COMMENT_MAX
+          ? `후기는 ${RATING_COMMENT_MAX}자를 넘을 수 없습니다.`
+          : null;
+  if (invalid) {
+    throw new AppError("ValidationFailed", {
+      code: ERROR_CODES.INVALID_INPUT,
+      serverMessage: invalid,
+    });
+  }
   if (rated) throw new AppError("Conflict", { code: ERROR_CODES.ALREADY_RATED });
   rated = true;
   return {

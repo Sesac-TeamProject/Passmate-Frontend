@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { RATING_TAGS, RATING_TAG_LABEL } from "@/features/participant/result/rating-tags";
 import { __resetResultsForTests, mockSubmitRating } from "@/lib/mocks/results";
 import { ERROR_CODES } from "@/lib/types/error-codes";
+import { RATING_COMMENT_MAX } from "./ratings";
 import { expectContract } from "./expect-contract";
 
 /**
@@ -28,11 +29,31 @@ describe("별점·평가 계약", () => {
     expect(RATING_TAGS).not.toContain("GOOD_QUALITY");
   });
 
-  it("태그마다 문구가 있다 — 하나라도 비면 학생 화면에 빈 칩이 뜬다", () => {
-    for (const tag of SERVER_RATING_TAGS) {
-      expect(RATING_TAG_LABEL[tag]).toBeTruthy();
-    }
-    expect(Object.keys(RATING_TAG_LABEL)).toHaveLength(SERVER_RATING_TAGS.length);
+  /**
+   * 문구까지 값으로 고정한다. truthy만 보면 아무 문자열이나 통과해, 예전처럼 시안 문구로
+   * 추측해 놓고도 초록으로 지나간다. 이 값들은 서버 `RatingTag` enum의 label이고,
+   * 호스트가 보는 집계(`RoomRatingListResponse.tagCounts[].label`)에도 같은 문구가 실려 온다 —
+   * 어긋나면 학생 화면의 칩과 선생님 화면의 집계가 같은 태그를 다른 말로 부른다.
+   */
+  it("태그 문구가 서버 label과 같다", () => {
+    expect(RATING_TAG_LABEL).toEqual({
+      CLEAR_EXPLANATION: "설명이 명확해요",
+      FAIR_DIFFICULTY: "난이도가 적당해요",
+      GOOD_PACING: "시간 배분이 좋아요",
+      HELPFUL_HINT: "힌트가 도움됐어요",
+      GOOD_QUESTIONS: "문제 품질이 좋아요",
+    });
+  });
+
+  it("서버가 막는 값은 목도 막는다 — 별점 범위·태그 수·후기 길이", () => {
+    __resetResultsForTests();
+    const invalid = expect.objectContaining({ code: ERROR_CODES.INVALID_INPUT });
+
+    expect(() => mockSubmitRating({ stars: 0 as 1 })).toThrowError(invalid);
+    expect(() => mockSubmitRating({ stars: 6 as 5 })).toThrowError(invalid);
+    expect(() =>
+      mockSubmitRating({ stars: 5, comment: "가".repeat(RATING_COMMENT_MAX + 1) }),
+    ).toThrowError(invalid);
   });
 
   it("제출은 별점만 필수다 — 태그·후기 없이도 낼 수 있다", () => {

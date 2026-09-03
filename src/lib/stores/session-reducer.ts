@@ -31,7 +31,7 @@ export type SessionState = {
   ranking: RankingEntry[];
   finalRanking: RankingEntry[];
   screenLocked: boolean;
-  /** @draft 음성 힌트 — 백엔드 미구현이라 목에서만 채워진다 */
+  /** 음성 힌트 — HINT_PUBLISHED 이벤트로 채워진다 */
   hints: VoiceHintEntry[];
 };
 

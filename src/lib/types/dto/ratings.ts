@@ -28,6 +28,12 @@ export type RatingAvailability = {
 export type RatingTag =
   "CLEAR_EXPLANATION" | "FAIR_DIFFICULTY" | "GOOD_PACING" | "HELPFUL_HINT" | "GOOD_QUESTIONS";
 
+/** 한 번에 고를 수 있는 태그 수 — 서버 `RoomRatingRequest.tags` `@Size(max)` */
+export const RATING_TAG_MAX = 5;
+
+/** 후기 길이 상한 — 서버 `RoomRatingRequest.comment` `@Size(max)`. 넘기면 400이다 */
+export const RATING_COMMENT_MAX = 500;
+
 /**
  * POST /rooms/{roomId}/ratings — 답안을 낸 참가자만, 종료 후 기간 안에, 1회. 게스트도 낼 수 있다.
  * `stars`만 필수다 — 태그·후기는 안 골라도 된다.

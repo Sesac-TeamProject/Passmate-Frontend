@@ -5,7 +5,7 @@ import type {
   AiGenerateRequest,
   CreateChargeRequest,
   JoinRoomRequest,
-  NotificationSettingsUpdate,
+  NotificationSettingsDto,
   PaymentMethodRequest,
   QuestionRequest,
   QuestionSetUpdateRequest,
@@ -212,7 +212,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /users/me/badges": () => mockMyBadges(),
   "GET /users/me/notification-settings": () => mockNotificationSettings(),
   "PUT /users/me/notification-settings": (ctx) =>
-    mockPutNotificationSettings(asBody<NotificationSettingsUpdate>(ctx)),
+    mockPutNotificationSettings(asBody<NotificationSettingsDto>(ctx)),
   "GET /users/:userId/profile": (ctx) => mockHostProfile(ctx.params.userId),
   "POST /reports": (ctx) => mockReport(asBody<ReportRequest>(ctx)),
   "POST /guest-records/claim": () => mockClaim(),

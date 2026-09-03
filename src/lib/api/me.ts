@@ -8,7 +8,6 @@ import type {
   JoinedRoomsResponse,
   MyProfileResponse,
   NotificationSettingsDto,
-  NotificationSettingsUpdate,
   ReportRequest,
   ReportResponse,
   UserProfileUpdateRequest,
@@ -52,7 +51,7 @@ export function getNotificationSettings(): Promise<NotificationSettingsDto> {
 
 /** PUT /users/me/notification-settings — 바꿀 것만 보내면 바뀐 전체 설정을 돌려준다 */
 export function putNotificationSettings(
-  body: NotificationSettingsUpdate,
+  body: NotificationSettingsDto,
 ): Promise<NotificationSettingsDto> {
   return request<NotificationSettingsDto>("/users/me/notification-settings", {
     method: "PUT",

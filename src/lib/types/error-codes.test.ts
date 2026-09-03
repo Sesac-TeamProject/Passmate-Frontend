@@ -64,12 +64,9 @@ const SERVER_ENUM_NAMES = [
   "GUEST_RECORD_ALREADY_CLAIMED",
 ] as const;
 
-/**
- * 서버 enum에 없는데 프런트가 들고 있는 코드. **비어 있어야 한다.**
- * 예전에 `RECORD_PURGED`를 여기 두었는데 서버의 실제 이름은 `GUEST_RECORD_EXPIRED`였다 —
- * 화면이 영영 타지 않는 분기를 들고 있었다.
- */
-const UNVERIFIED: readonly string[] = [];
+// 예전에는 "서버에 아직 없는 코드"를 담는 UNVERIFIED 목록이 있었는데, 거기 넣어 둔
+// `RECORD_PURGED`는 서버에 아예 없는 이름이었고 화면은 영영 타지 않는 분기를 들고 있었다.
+// 목록을 없앤다 — 서버 enum에 없는 코드는 프런트도 들고 있지 않는다.
 
 describe("ERROR_CODES", () => {
   it("모든 값이 키와 같다 (서버가 enum 이름을 그대로 내보낸다)", () => {
@@ -79,16 +76,15 @@ describe("ERROR_CODES", () => {
   });
 
   it("서버 enum에 없는 코드를 들고 있지 않다", () => {
-    const allowed = new Set<string>([...SERVER_ENUM_NAMES, ...UNVERIFIED]);
+    const allowed = new Set<string>(SERVER_ENUM_NAMES);
     const unknown = Object.keys(ERROR_CODES).filter((k) => !allowed.has(k));
     expect(unknown).toEqual([]);
   });
 
-  it("서버 enum 53개를 빠짐없이 들고 있다", () => {
-    expect(SERVER_ENUM_NAMES).toHaveLength(53);
+  it("서버 enum을 빠짐없이 들고 있고, 그 밖의 것은 없다", () => {
     const missing = SERVER_ENUM_NAMES.filter((name) => !(name in ERROR_CODES));
     expect(missing).toEqual([]);
-    expect(Object.keys(ERROR_CODES)).toHaveLength(SERVER_ENUM_NAMES.length + UNVERIFIED.length);
+    expect(Object.keys(ERROR_CODES)).toHaveLength(SERVER_ENUM_NAMES.length);
   });
 
   it("화면이 실제로 분기하는 코드가 모두 있다", () => {

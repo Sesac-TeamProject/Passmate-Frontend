@@ -118,10 +118,11 @@ export type ScreenLockRequest = { locked: boolean };
 export type ScreenLockResponse = { roomId: number; screenLocked: boolean };
 
 /**
- * 음성 힌트(PTT) — 백엔드 `voicehint` 패키지 1:1.
- * 업로드는 파트 이름이 `file`이고 `durationMs`는 쿼리다(`api/sessions.ts` 주석 참고).
+ * 음성 힌트 한 개 — 호스트가 문항에 붙인 클립. 백엔드 `voicehint` 패키지 1:1.
+ *
+ * 업로드는 파트 이름이 **`file`**이고 `durationMs`는 **쿼리**다 — 어기면 조용히 틀린다
+ * (`api/sessions.ts` 주석 참고). `audioUrl`은 잠깐만 열리는 주소라 저장하지 않는다.
  */
-/** 음성 힌트 한 개 — 호스트가 문항에 붙인 클립 */
 export type VoiceHintEntry = {
   hintId: number;
   sessionQuestionId: number;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  __resetMeForTests,
   mockCumulativeReport,
   mockJoinedRooms,
   mockNotificationSettings,
@@ -86,6 +87,7 @@ describe("마이페이지 계약", () => {
    * 한 번 `Partial`로 바꿨다가 실서버에서 400을 맞았다.
    */
   it("알림 설정 PUT은 세 항목을 다 보내야 한다 — 빠지면 400", () => {
+    __resetMeForTests();
     const saved = mockPutNotificationSettings({
       sessionStart: false,
       ratingRequest: true,
@@ -101,6 +103,11 @@ describe("마이페이지 계약", () => {
   });
 
   it("알림 설정 GET은 세 항목이 반드시 온다 — optional로 두면 화면이 false로 오해한다", () => {
-    expectContract(mockNotificationSettings(), ["sessionStart", "ratingRequest", "settlementDone"]);
+    __resetMeForTests();
+    const settings = mockNotificationSettings();
+
+    expectContract(settings, ["sessionStart", "ratingRequest", "settlementDone"]);
+    // 앞 테스트가 끄고 간 값이 새어 들어오면 여기서 잡힌다
+    expect(settings).toEqual({ sessionStart: true, ratingRequest: true, settlementDone: true });
   });
 });

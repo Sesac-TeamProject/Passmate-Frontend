@@ -151,7 +151,7 @@ export function useConfirmQuestionSet() {
   });
 }
 
-/** @draft POST /question-sets/{setId}/duplicate — 실서버 404(백엔드 미구현). 목에서만 동작 */
+/** POST /question-sets/{setId}/duplicate — 사본은 DRAFT로 시작한다 */
 export function useDuplicateQuestionSet() {
   const queryClient = useQueryClient();
 
