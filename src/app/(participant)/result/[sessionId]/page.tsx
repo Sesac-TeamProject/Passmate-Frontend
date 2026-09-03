@@ -4,42 +4,40 @@ import { useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
-import { toRankedStudents } from "@/features/host/live/adapt";
-import {
-  FinalResultPage,
-  type PodiumEntry,
-  type PodiumPlace,
-  type RankRow,
-} from "@/features/participant/result/final-result-page";
+import { toAvatarKey } from "@/components/common/student-avatar";
+import { toReportRows } from "@/features/participant/result/adapt";
+import { FinalResultPage } from "@/features/participant/result/final-result-page";
+import type { PodiumEntry, PodiumPlace } from "@/features/participant/result/podium-card";
+import type { RankRow } from "@/features/participant/result/ranking-table";
 import { RatingSheet } from "@/features/participant/result/rating-sheet";
 import { readMyParticipant } from "@/lib/my-participant";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
 import { useSubmitRating } from "@/lib/queries/use-ratings";
-import { useMyResult } from "@/lib/queries/use-results";
+import { useMyReport, useMyResult } from "@/lib/queries/use-results";
 import { useSessionStore } from "@/lib/stores/session-store";
-
-/** 순위 카드에 담는 행 수 — 시안은 3줄(1·2위 + 나) */
-const ROW_LIMIT = 3;
 
 const NO_SUBSCRIBE = () => () => {};
 const readMyId = () => readMyParticipant()?.participantId ?? null;
 const readMyIdOnServer = () => null;
 
 /**
- * M-05 최종 결과 컨테이너.
- * 내 점수·등수는 결과 조회(GET /rooms/{id}/results/me)에서, 상위 순위는 세션 스냅샷의 랭킹에서 온다 —
- * 그래서 이 화면도 세션에 붙는다(AI 피드백이 준비되면 서버 이벤트가 결과를 무효화한다).
+ * P-Web 최종 결과 컨테이너 (시안 788:8834).
+ * 내 점수·문항별 판정은 결과 조회에서, 전체 순위는 세션 스냅샷의 랭킹에서,
+ * 반 평균 비교·소요 시간은 학습 리포트에서 온다 — AI 채점이 끝나면 서버 이벤트가 결과를 무효화한다.
  */
 export default function Page() {
   const params = useParams<{ sessionId: string }>();
   const roomId = Number(params.sessionId);
   const router = useRouter();
 
-  useSessionConnection(Number.isFinite(roomId) ? roomId : null, { isHost: false });
+  const validRoomId = Number.isFinite(roomId) ? roomId : null;
+
+  useSessionConnection(validRoomId, { isHost: false });
 
   const finalRanking = useSessionStore((s) => s.finalRanking);
   const ranking = useSessionStore((s) => s.ranking);
-  const result = useMyResult(Number.isFinite(roomId) ? roomId : null);
+  const result = useMyResult(validRoomId);
+  const report = useMyReport(validRoomId);
   const rate = useSubmitRating(roomId);
   const [rateSkipped, setRateSkipped] = useState(false);
 
@@ -68,34 +66,59 @@ export default function Page() {
     );
 
   const source = finalRanking.length > 0 ? finalRanking : ranking;
-  const students = toRankedStudents(source);
-
-  const podium: PodiumEntry[] = source
-    .filter((r) => r.rank <= 3)
-    .map((r, i) => ({ rank: r.rank as PodiumPlace, student: students[i] }));
+  const questionCount = result.data.questionCount ?? 0;
 
   // 참여 기록이 없으면(다른 탭·새로고침) 내 등수로 대신 찾는다
   const myRank = result.data.rank ?? null;
   const myParticipantId = myId ?? source.find((r) => r.rank === myRank)?.participantId ?? null;
 
-  const rows: RankRow[] = source.slice(0, ROW_LIMIT).map((r, i) => ({
-    rank: r.rank,
-    student: students[i],
-    score: r.total,
-    isMe: myParticipantId !== null && r.participantId === myParticipantId,
+  const podium: PodiumEntry[] = source
+    .filter((entry) => entry.rank <= 3)
+    .map((entry) => ({
+      rank: entry.rank as PodiumPlace,
+      student: {
+        id: String(entry.participantId),
+        name: entry.nickname,
+        avatar: toAvatarKey(entry.avatarId),
+      },
+      score: entry.total,
+    }));
+
+  const rankRows: RankRow[] = source.map((entry) => ({
+    rank: entry.rank,
+    participantId: entry.participantId,
+    name: entry.nickname,
+    score: entry.total,
+    correctCount: entry.correctCount ?? null,
+    isMe: myParticipantId !== null && entry.participantId === myParticipantId,
   }));
+
+  // 부제는 서버가 준 조각만 이어 붙인다 — 없는 조각은 통째로 뺀다
+  const subtitle = [
+    "최종 결과",
+    questionCount > 0 ? `${questionCount}문항` : null,
+    report.data?.participantCount ? `${report.data.participantCount}명 참여` : null,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(" · ");
 
   return (
     <FinalResultPage
+      roomTitle={result.data.roomTitle ?? ""}
+      subtitle={subtitle}
       myRank={myRank}
       myScore={result.data.totalScore ?? 0}
       myCorrectCount={result.data.correctCount ?? 0}
-      questionCount={result.data.questionCount ?? 0}
+      questionCount={questionCount}
+      elapsedSeconds={report.data?.elapsedSeconds ?? null}
+      comparison={report.data?.comparison ?? null}
       podium={podium}
-      rows={rows}
+      rankRows={rankRows}
+      questionRows={toReportRows(result.data.questions ?? [])}
       isGuest={result.data.isGuest ?? false}
       onOpenReport={() => router.push(`/result/${roomId}/report`)}
       onSignUp={() => router.push("/login")}
+      onOpenQuestion={(no) => router.push(`/result/${roomId}/report/${no}`)}
     />
   );
 }

@@ -26,6 +26,8 @@ export type RankingEntry = {
   nickname: string;
   avatarId?: AvatarKey | null;
   total: number;
+  /** @draft 맞힌 문항 수 — 최종 결과 전체 순위표의 "정답" 열 (시안 788:8959). 미제출이면 null */
+  correctCount?: number | null;
 };
 
 /** GET /rooms/{roomId}/session — 재접속 스냅샷. 404 = 세션 미시작(WAITING) */

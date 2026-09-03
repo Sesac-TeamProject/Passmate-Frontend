@@ -143,6 +143,8 @@ function buildMockRanking(): RankingEntry[] {
     nickname: p.nickname,
     avatarId: p.avatarId,
     total: Math.max(800 - i * 120, 100),
+    // @draft 정답 수 — 점수 내림차순과 같은 순서로 8문항 중 몇 개를 맞혔는지
+    correctCount: Math.max(8 - i, 2),
   }));
 }
 
