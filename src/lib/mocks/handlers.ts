@@ -126,7 +126,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "DELETE /rooms/:roomId/participants/me": () => mockLeaveRoom(),
 
   /* ── 진행 세션 ────────────────────────────────────── */
-  "GET /rooms/:roomId/session": () => mockSnapshot(),
+  "GET /rooms/:roomId/session": (ctx) => mockSnapshot(ctx.params.roomId),
   "POST /rooms/:roomId/session/start": () => mockStartSession(),
   "POST /rooms/:roomId/session/next": () => mockNext(),
   "POST /rooms/:roomId/session/current/end": () => mockEndCurrent(),

@@ -29,8 +29,9 @@ export function ReputationPage({
 }: Props) {
   return (
     // 시안 W-14는 본문 1090 (좌 60 · 우 50) — 넓은 화면에서 카드가 늘어나지 않게 폭을 묶는다
-    <main className="min-h-screen bg-background pt-10 pr-[50px] pb-10 pl-[60px]">
-      <div className="flex max-w-[1090px] flex-col gap-6">
+    <main className="min-h-screen bg-background px-[60px] pt-10 pb-10">
+      {/* W-09와 같은 규칙 — 폭을 묶고 남는 공간은 좌우로 나눈다 */}
+      <div className="mx-auto flex max-w-[1090px] flex-col gap-6">
         <div className="flex flex-col gap-2">
           <Link
             href="/host/rooms"
