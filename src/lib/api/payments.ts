@@ -20,7 +20,7 @@ import type {
   SettlementAccountRequest,
   SettlementAccountResponse,
 } from "@/lib/types/dto";
-import { request } from "./client";
+import { downloadFile, request } from "./client";
 
 /**
  * @draft **백엔드 미구현**(실서버 404) — 화면이 "준비 중"으로 접는다. GET /users/me/coins */
@@ -69,6 +69,14 @@ export function createEntryPayment(
 /** GET /users/me/earnings — 수익·정산 요약+내역 */
 export function getEarnings(): Promise<EarningsResponse> {
   return request<EarningsResponse>("/users/me/earnings");
+}
+
+/**
+ * GET /users/me/earnings/export — 정산 내역을 첨부 파일로 내려받는다.
+ * 형식은 **서버가 CSV만 받는다** — 다른 값을 넘기면 400 `INVALID_INPUT`이다.
+ */
+export function exportEarnings(): Promise<void> {
+  return downloadFile("/users/me/earnings/export?format=csv", "passmate-settlements.csv");
 }
 
 /**

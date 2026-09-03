@@ -4,6 +4,7 @@ import {
   confirmQuestionSet,
   createQuestionSet,
   deleteQuestion,
+  deleteQuestionSet,
   duplicateQuestionSet,
   generateFromFile,
   generateQuestions,
@@ -156,6 +157,21 @@ export function useDuplicateQuestionSet() {
 
   return useMutation({
     mutationFn: (setId: number) => duplicateQuestionSet(setId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.questionSetsRoot });
+    },
+  });
+}
+
+/**
+ * DELETE /question-sets/{setId} — 목록에서 감춘다(소프트 삭제).
+ * 안 끝난 방이 쓰고 있으면 409로 막히므로 목록을 다시 부른다.
+ */
+export function useDeleteQuestionSet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (setId: number) => deleteQuestionSet(setId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.questionSetsRoot });
     },

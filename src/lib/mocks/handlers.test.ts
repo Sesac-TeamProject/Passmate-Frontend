@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/lib/types/app-error";
 import { MOCK_ROUTES, resolveMock } from "./handlers";
+import { __resetQuestionSetsForTests } from "./question-sets";
 import { __resetRoomsForTests } from "./rooms";
 import { __resetSessionForTests } from "./session";
 
@@ -25,6 +26,7 @@ describe("mocks/handlers", () => {
   beforeEach(() => {
     __resetSessionForTests();
     __resetRoomsForTests();
+    __resetQuestionSetsForTests();
   });
 
   it(

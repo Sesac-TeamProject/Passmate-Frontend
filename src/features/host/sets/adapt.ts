@@ -34,6 +34,18 @@ export function toQuestionSets(items: QuestionSetSummaryResponse[]): QuestionSet
   }));
 }
 
+/** 세트 삭제 실패 문구 */
+export function toDeleteErrorMessage(error: unknown): string {
+  if (!AppError.isAppError(error)) return "삭제하지 못했어요. 다시 시도해 주세요";
+  // 아직 끝나지 않은 방이 이 세트를 쓰고 있으면 서버가 409로 막는다.
+  // 공통 Conflict 문구("이미 처리된 요청이에요")는 여기서 사실과 달라 이유를 따로 적는다.
+  if (error.kind === "Conflict") {
+    return "아직 끝나지 않은 방이 쓰고 있어요. 그 방을 먼저 정리해 주세요";
+  }
+  if (error.kind === "NotFound") return "이미 지워진 세트예요. 목록을 새로 고쳐 주세요";
+  return error.message;
+}
+
 /** 세트 복제 실패 문구 */
 export function toCloneErrorMessage(error: unknown): string {
   if (!AppError.isAppError(error)) return "복제하지 못했어요. 다시 시도해 주세요";

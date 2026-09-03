@@ -49,6 +49,7 @@ import {
   mockConfirmCharge,
   mockCreateCharge,
   mockEarnings,
+  mockExportEarnings,
   mockEntryPayment,
   mockPutPaymentMethod,
   mockPutSettlementAccount,
@@ -59,6 +60,7 @@ import {
   mockConfirmQuestionSet,
   mockCreateQuestionSet,
   mockDeleteQuestion,
+  mockDeleteQuestionSet,
   mockDuplicateQuestionSet,
   mockGenerate,
   mockGenerateFromFile,
@@ -173,6 +175,7 @@ const HANDLERS: Record<string, MockHandler> = {
     mockUpdateQuestionSet(ctx.params.id, asBody<QuestionSetUpdateRequest>(ctx)),
   "POST /question-sets/:id/confirm": (ctx) => mockConfirmQuestionSet(ctx.params.id),
   "POST /question-sets/:id/duplicate": (ctx) => mockDuplicateQuestionSet(ctx.params.id),
+  "DELETE /question-sets/:setId": (ctx) => mockDeleteQuestionSet(ctx.params.setId),
   "POST /question-sets/:setId/questions": (ctx) =>
     mockAddQuestion(ctx.params.setId, asBody<QuestionRequest>(ctx)),
   "PUT /question-sets/:setId/questions/:questionId": (ctx) =>
@@ -221,6 +224,7 @@ const HANDLERS: Record<string, MockHandler> = {
     mockConfirmCharge(ctx.params.chargeId, asBody<ConfirmChargeRequest>(ctx)),
   "POST /rooms/:roomId/entry-payments": () => mockEntryPayment(),
   "GET /users/me/earnings": () => mockEarnings(),
+  "GET /users/me/earnings/export": () => mockExportEarnings(),
   "GET /users/me/settlement-account": () => mockSettlementAccount(),
   "PUT /users/me/settlement-account": (ctx) =>
     mockPutSettlementAccount(asBody<SettlementAccountRequest>(ctx)),

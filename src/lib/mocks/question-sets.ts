@@ -286,6 +286,13 @@ export async function mockGenerate(
  * @draft POST /question-sets/{setId}/duplicate — 백엔드 미구현(실서버 404).
  * 목에서만 동작한다.
  */
+/** DELETE /question-sets/{setId} — 목록에서만 감춘다(소프트 삭제) */
+export function mockDeleteQuestionSet(id: string | number): undefined {
+  const target = find(id);
+  sets = sets.filter((s) => s.set.id !== target.set.id);
+  return undefined;
+}
+
 export function mockDuplicateQuestionSet(id: string): QuestionSetSummaryResponse {
   const source = find(id);
   const set: QuestionSetSummaryResponse = {
@@ -315,4 +322,14 @@ export async function mockGenerateFromFile(
 ): Promise<QuestionResponse[]> {
   const file = form instanceof FormData ? (form.get("file") as File | null) : null;
   return mockGenerate(id, { topic: file?.name ?? "업로드 자료", counts: { MCQ: 3 } });
+}
+
+/** 테스트 전용 — 모듈 스코프 세트 목록을 초기값으로 되돌린다(라우트 스윕이 세트를 지운다) */
+export function __resetQuestionSetsForTests(): void {
+  sets = QUESTION_SETS.map((set) => ({
+    set,
+    questions: set.id === 1 ? SET_QUESTIONS.map((q) => ({ ...q })) : [],
+  }));
+  nextSetId = 1000;
+  nextQuestionId = 1000;
 }

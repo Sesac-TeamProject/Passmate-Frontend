@@ -9,10 +9,21 @@ type Props = {
   onSelect: () => void;
   onClone: () => void;
   cloning?: boolean;
+  onDelete: () => void;
+  /** 삭제 요청 중 — 버튼을 잠근다 */
+  deleting?: boolean;
 };
 
 /** W-08 문제 세트 카드 */
-export function SetCard({ set, selected, onSelect, onClone, cloning }: Props) {
+export function SetCard({
+  set,
+  selected,
+  onSelect,
+  onClone,
+  cloning,
+  onDelete,
+  deleting = false,
+}: Props) {
   return (
     <div
       role="button"
@@ -60,6 +71,17 @@ export function SetCard({ set, selected, onSelect, onClone, cloning }: Props) {
           >
             방 만들기
           </Link>
+          <button
+            type="button"
+            disabled={deleting}
+            className="text-muted-foreground hover:text-negative hover:underline disabled:opacity-60"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            {deleting ? "삭제하는 중…" : "삭제"}
+          </button>
         </div>
       </div>
     </div>

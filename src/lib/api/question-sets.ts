@@ -94,6 +94,15 @@ export function generateQuestions(
 }
 
 /**
+ * DELETE /question-sets/{setId} — 목록에서 감춘다(**소프트 삭제**).
+ * 끝난 방이 이 세트를 출제 근거로 참조하므로 실제로 지우지는 않는다.
+ * 아직 안 끝난 방이 쓰고 있으면 409 `CONFLICT`로 막힌다.
+ */
+export function deleteQuestionSet(setId: number): Promise<void> {
+  return request<void>(`/question-sets/${setId}`, { method: "DELETE" });
+}
+
+/**
  * POST /question-sets/{setId}/duplicate — 세트를 복제한다.
  * 제목을 안 주면 서버가 정한다("… 사본"). 복제본은 DRAFT로 시작한다.
  */
