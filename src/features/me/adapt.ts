@@ -3,9 +3,12 @@ import { toAvatarKey } from "@/components/common/student-avatar";
 import { parseServerDateTime } from "@/lib/datetime";
 import { formatShortDate, formatWon } from "@/lib/format";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
+
+/** 플랫폼 수수료 20% — 호스트 몫. 백엔드 `HostEarningRow.net` 주석과 같은 값 */
+const HOST_SHARE_PERCENT = 80;
 import { AppError } from "@/lib/types/app-error";
 import type {
-  BadgeDto,
+  BadgeResponse,
   BadgesResponse,
   BadgeType,
   CoinBalanceResponse,
@@ -20,7 +23,8 @@ import type {
   NotificationSettingsDto,
   PaymentMethod,
   SettlementAccountDto,
-  SettlementItemDto,
+  HostEarningRow,
+  PayoutStatus,
 } from "@/lib/types/dto";
 import type { CoinHistoryFilter, CoinHistoryItem } from "./coins/types";
 import type { ActiveSession } from "./joined/types";
@@ -140,35 +144,46 @@ export function filterCoinHistory(
   return items;
 }
 
-const PAYOUT_STATUS_TO_SETTLEMENT_STATUS: Record<
-  NonNullable<SettlementItemDto["status"]>,
-  SettlementStatus
-> = {
-  SCHEDULED: "scheduled",
-  PAID: "paid",
+const PAYOUT_STATUS_TO_SETTLEMENT_STATUS: Record<PayoutStatus, SettlementStatus> = {
+  PENDING: "scheduled",
+  SETTLED: "paid",
   HELD: "held",
+  CARRIED: "carried",
 };
 
-/** GET /users/me/earnings.items → 결제 · 정산 내역 표 */
-export function toSettlementRows(items: SettlementItemDto[]): SettlementRow[] {
-  return items.map((item, index) => ({
-    id: String(item.settlementId ?? index),
-    dateLabel: item.dateLabel ?? "",
-    roomTitle: item.roomTitle ?? "",
-    participants: item.participantCount ?? 0,
-    gross: item.entryFeeTotal ?? 0,
-    fee: item.feeAmount ?? 0,
-    payout: item.payoutAmount ?? 0,
-    status: item.status ? PAYOUT_STATUS_TO_SETTLEMENT_STATUS[item.status] : "scheduled",
+/** 서버 시각(UTC naive) → "8/22". 값이 이상하면 빈 문자열 */
+function toShortDate(value: string): string {
+  const date = parseServerDateTime(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+/** "2026-09-05"(날짜만) → "9/5". 시각이 없어 parseServerDateTime을 쓰지 않는다 */
+function toPayoutDateLabel(value: string): string {
+  const [, month, day] = value.split("-");
+  return month && day ? `${Number(month)}/${Number(day)}` : "";
+}
+
+/** GET /users/me/earnings 의 `earnings` → 결제 · 정산 내역 표 */
+export function toSettlementRows(rows: HostEarningRow[]): SettlementRow[] {
+  return rows.map((row, index) => ({
+    id: `${row.roomId}-${index}`,
+    dateLabel: toShortDate(row.earnedAt),
+    roomTitle: row.roomTitle,
+    participants: row.participantCount,
+    gross: row.gross,
+    fee: row.platformFee,
+    payout: row.net,
+    status: PAYOUT_STATUS_TO_SETTLEMENT_STATUS[row.status],
   }));
 }
 
 /** GET /users/me/earnings → 마이페이지 "이번 달 정산 예정" 카드 */
 export function toSettlementSummary(earnings: EarningsResponse): SettlementSummary {
   return {
-    thisMonthAmount: earnings.nextPayout?.amount ?? earnings.monthlyTotal ?? 0,
-    payoutDateLabel: earnings.nextPayout?.dateLabel ?? "",
-    hostShare: earnings.hostSharePercent ?? 80,
+    thisMonthAmount: earnings.thisMonthNet,
+    payoutDateLabel: toPayoutDateLabel(earnings.nextPayoutDate),
+    hostShare: HOST_SHARE_PERCENT,
     paidRoomLevel: PAID_ROOM_MIN_LEVEL,
     taxNote: "연 소득 기준 원천징수 3.3% 적용",
   };
@@ -176,26 +191,27 @@ export function toSettlementSummary(earnings: EarningsResponse): SettlementSumma
 
 /** GET /users/me/earnings → W-10 정산 요약 3장 */
 export function toSettlementStats(earnings: EarningsResponse): StatItem[] {
-  const hostShare = earnings.hostSharePercent ?? 80;
-  const nextPayout = earnings.nextPayout;
+  // 유료 방 실적은 계약에 따로 없다 — 적립이 생긴 세션을 세어 쓴다
+  const paidRoomCount = earnings.earnings.length;
+  const studentCount = earnings.earnings.reduce((sum, row) => sum + row.participantCount, 0);
 
   return [
     {
       id: "revenue",
-      label: `이번 달 수익 (선생님 ${hostShare}%)`,
-      value: formatWon(earnings.monthlyTotal ?? 0, true),
+      label: `이번 달 수익 (선생님 ${HOST_SHARE_PERCENT}%)`,
+      value: formatWon(earnings.thisMonthNet, true),
       tile: { label: "₩", tone: "mint" },
     },
     {
       id: "next-payout",
-      label: nextPayout?.dateLabel ? `다음 지급 (${nextPayout.dateLabel})` : "다음 지급",
-      value: formatWon(nextPayout?.amount ?? 0, true),
+      label: `다음 지급 (${toPayoutDateLabel(earnings.nextPayoutDate)})`,
+      value: formatWon(earnings.pendingNet, true),
       tile: { label: "D", tone: "blue" },
     },
     {
       id: "paid-rooms",
       label: "유료 방 운영",
-      value: `${earnings.paidRoomCount ?? 0}회 · ${earnings.studentCount ?? 0}명`,
+      value: `${paidRoomCount}회 · ${studentCount}명`,
       tile: { label: "R", tone: "orange" },
     },
   ];
@@ -297,14 +313,12 @@ const BADGE_META: Record<BadgeType, { kind: AchievementBadgeKind; label?: string
     // TODO(디자인): 시안 뱃지 시트에서 "평가 4.5+"·"AI 세트 50개"는 아이콘이 비어 있다
     RATING_45: { kind: "empty", title: "평가 4.5+" },
     RATINGS_50: { kind: "ring", label: "50", title: "평가 50개 받기" },
-    STREAK_30: { kind: "drop", title: "30일 연속 활동" },
+    ACTIVE_30D: { kind: "drop", title: "30일 연속 활동" },
     FIRST_PAID_ROOM: { kind: "won", title: "유료 방 첫 개설" },
     AI_SETS_50: { kind: "empty", title: "AI 세트 50개" },
   };
 
-/**
- * 호스트 공개 프로필은 뱃지를 BadgeDto가 아니라 BadgeType 목록으로 준다 — 목록에 있으면 획득한 것이다.
- */
+/** 공개 프로필은 **획득한 뱃지만** 준다 — 목록에 있으면 딴 것이다 */
 export function toEarnedAchievement(type: BadgeType): Achievement {
   const meta = BADGE_META[type];
   return {
@@ -315,15 +329,16 @@ export function toEarnedAchievement(type: BadgeType): Achievement {
   };
 }
 
-function toAchievement(badge: BadgeDto): Achievement {
-  const meta = badge.type ? BADGE_META[badge.type] : undefined;
+function toAchievement(badge: BadgeResponse): Achievement {
+  const meta = BADGE_META[badge.code];
 
   return {
-    id: badge.type ?? "unknown",
+    id: badge.code,
     kind: meta?.kind ?? "empty",
+    // 이름은 서버 문구를 그대로 쓴다 — 뱃지가 늘어도 프런트를 고치지 않는다
     label: meta?.label,
-    title: meta?.title ?? badge.type ?? "",
-    locked: !badge.earned,
+    title: badge.name,
+    locked: !badge.achieved,
   };
 }
 
@@ -335,17 +350,21 @@ export function toHostRecord(
   grade: GradeResponse | undefined,
   badges: BadgesResponse | undefined,
 ): HostRecord {
-  const stats = grade?.stats;
-  const items = (badges?.items ?? []).map(toAchievement);
-  const earned = items.filter((item) => !item.locked).length;
+  const items = (badges?.badges ?? []).map(toAchievement);
 
   return {
     stats: {
-      rooms: stats?.roomCount ?? 0,
-      rating: stats?.avgStars ?? 0,
-      students: stats?.totalStudents ?? 0,
+      rooms: grade?.roomsHosted ?? 0,
+      // 받은 평가가 없으면 서버가 필드를 뺀다 — 0으로 채우면 "0점을 받았다"가 된다
+      rating: grade?.avgRating ?? 0,
+      students: grade?.totalStudents ?? 0,
     },
-    badges: { earned, total: items.length, locked: items.length - earned, items },
+    badges: {
+      earned: badges?.achievedCount ?? 0,
+      total: badges?.totalCount ?? items.length,
+      locked: (badges?.totalCount ?? items.length) - (badges?.achievedCount ?? 0),
+      items,
+    },
     // 진행 중인 방 수 · 이번 달 정산액은 useHostedRooms/useEarnings에 계약이 있지만, 이 카드를 그리는
     // 화면이 아직 없어(위 docstring 참고) 여기서는 채우지 않는다. 화면이 생기면 컨테이너가 두 훅을 더 호출해 채운다.
     openRooms: 0,

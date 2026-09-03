@@ -13,6 +13,8 @@ const STATUS_CLASS: Record<SettlementStatus, string> = {
   scheduled: "bg-choice-c text-choice-c-foreground",
   paid: "bg-choice-d text-choice-d-foreground",
   held: "bg-choice-a text-choice-a-foreground",
+  // 이월 — 지급 기준에 못 미쳐 다음 회차로 넘어간 건 (서버 CARRIED)
+  carried: "bg-muted text-muted-foreground",
 };
 
 const COLUMNS = [

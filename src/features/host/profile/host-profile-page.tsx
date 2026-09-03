@@ -10,8 +10,7 @@ import { formatWon } from "@/lib/format";
 const ROOM_LIMIT = 3;
 
 export type HostRoom = {
-  /** 참여 링크에 쓰는 PIN */
-  pin: string;
+  roomId: number;
   title: string;
   isPaid: boolean;
   /** 참가비(코인). 무료면 null */
@@ -109,7 +108,7 @@ export function HostProfilePage({
         <ul className="flex flex-col gap-2.5">
           {rooms.slice(0, ROOM_LIMIT).map((room) => (
             <li
-              key={room.pin}
+              key={room.roomId}
               className="flex items-center gap-2.5 rounded-2xl border bg-card px-3.5 py-3"
             >
               <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -128,7 +127,8 @@ export function HostProfilePage({
                   </span>
                 )}
                 <Link
-                  href={`/join?pin=${room.pin}`}
+                  // 공개 방 카드에는 PIN이 없다(DESIGN_GAPS N-1) — PIN 입력 화면으로 보낸다
+                  href="/join"
                   className="rounded-[10px] bg-mint px-3 py-1.5 text-label-lg text-white transition-colors hover:bg-mint-dark"
                 >
                   참여하기

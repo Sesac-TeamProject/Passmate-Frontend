@@ -23,7 +23,7 @@ export default function Page() {
   return (
     <SettlementPage
       stats={toSettlementStats(earnings.data)}
-      rows={toSettlementRows(earnings.data.items ?? [])}
+      rows={toSettlementRows(earnings.data.earnings ?? [])}
       account={account.isSuccess ? toSettlementAccount(account.data) : null}
     />
   );

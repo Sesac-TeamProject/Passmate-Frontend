@@ -1,4 +1,5 @@
-import type { HostLevel, PageResponse, RoomStatus } from "./common";
+import type { PageResponse, RoomStatus } from "./common";
+import type { PublicRoomResponse } from "./rooms";
 
 /** 참여한 방 한 줄 — 백엔드 `report/dto/JoinedRoomResponses.kt` 1:1 */
 export type JoinedRoom = {
@@ -56,46 +57,90 @@ export type CumulativeReportResponse = {
   weakTopics: string[];
 };
 
-export type GradeStats = {
-  participationCount?: number;
-  avgAccuracyPercent?: number | null;
-  roomCount?: number;
-  totalStudents?: number;
-  avgStars?: number | null;
-  ratingCount?: number;
-};
-export type GradeCriterion = { label?: string; current?: number; target?: number; met?: boolean };
-export type GradeNext = {
-  level?: HostLevel;
-  progressPercent?: number;
-  criteria?: GradeCriterion[];
-};
-/** GET /users/me/grade */
-export type GradeResponse = {
-  level?: HostLevel;
-  achievedAt?: string | null;
-  stats?: GradeStats;
-  next?: GradeNext | null;
+/**
+ * 승급 조건 한 줄의 진행도.
+ * **기준은 서버가 계산해서 내려준다** — 화면이 등급 기준을 따로 들고 있지 않게 하려는 설계다
+ * (백엔드 `HostGradeResponses.kt`). 기준이 바뀌어도 프런트를 고칠 필요가 없다.
+ */
+export type GradeRequirement = {
+  /** `ROOMS_HOSTED` · `TOTAL_STUDENTS` · `AVG_RATING` */
+  type: string;
+  label: string;
+  current: number;
+  target: number;
+  met: boolean;
 };
 
+/** Lv.4~5 유지 조건 충족 현황. Lv.1~3은 유지 조건이 없어 응답에서 빠진다 */
+export type GradeMaintenance = {
+  /** 유지 판정 기간(일) */
+  windowDays: number;
+  sessionsInWindow: number;
+  requiredSessions: number;
+  avgRating?: number;
+  requiredAvgRating?: number;
+  met: boolean;
+  nextEvaluationAt?: string;
+};
+
+/** GET /users/me/grade — 내 등급·명성 */
+export type GradeResponse = {
+  level: number;
+  /** 등급 이름("새싹"). 서버 문구를 그대로 쓴다 */
+  levelName: string;
+  levelAchievedAt?: string;
+  /** 방 운영 횟수 — 시작해서 종료까지 간 방만 센다 */
+  roomsHosted: number;
+  totalStudents: number;
+  /** 평균 별점. 받은 평가가 없으면 응답에서 빠진다 */
+  avgRating?: number;
+  ratingCount: number;
+  /** 다음 등급. 최고 등급이면 빠진다 */
+  nextLevel?: number;
+  nextLevelName?: string;
+  /** 다음 등급 조건별 진행도. 최고 등급이면 빈 배열 */
+  nextRequirements: GradeRequirement[];
+  /** 다음 등급까지 종합 진행률 — **0~1**이다. 화면은 %로 바꿔 그린다 */
+  nextLevelProgress?: number;
+  /** 평가 표본이 모자라 승급이 보류된 상태인지(FR-046) */
+  ratingSamplePending: boolean;
+  maintenance?: GradeMaintenance;
+  /** 지금 등급까지 열린 기능 문구 */
+  unlocked: string[];
+  lastEvaluatedAt?: string;
+};
+
+/** 뱃지 코드 8종 — 백엔드 시드(`V3__badge_seed.sql`)가 원본이다 */
 export type BadgeType =
   | "FIRST_ROOM"
   | "ROOMS_10"
   | "STUDENTS_100"
   | "RATING_45"
   | "RATINGS_50"
-  | "STREAK_30"
+  | "ACTIVE_30D"
   | "FIRST_PAID_ROOM"
   | "AI_SETS_50";
-export type BadgeDto = {
-  type?: BadgeType;
-  earned?: boolean;
-  earnedAt?: string | null;
-  progressCurrent?: number | null;
-  progressTarget?: number | null;
+
+/** 뱃지 한 칸 */
+export type BadgeResponse = {
+  code: BadgeType;
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  achieved: boolean;
+  achievedAt?: string;
+  /** 현재 진행값 */
+  progress: number;
+  /** 달성 목표치. 조건이 없는 뱃지는 빠진다 */
+  target?: number;
 };
-/** GET /users/me/badges */
-export type BadgesResponse = { items?: BadgeDto[] };
+
+/** GET /users/me/badges — 획득한 것 먼저, 그 안에서는 최근 획득 순 */
+export type BadgesResponse = {
+  achievedCount: number;
+  totalCount: number;
+  badges: BadgeResponse[];
+};
 
 /** GET/PUT /users/me/notification-settings — 3종뿐(마케팅 없음, DESIGN_GAPS C-5) */
 export type NotificationSettingsDto = {
@@ -104,34 +149,29 @@ export type NotificationSettingsDto = {
   settlementDone?: boolean;
 };
 
-/** GET /users/{userId}/profile — 호스트 공개 프로필 */
 /**
- * @draft 호스트 공개 프로필이 함께 주는 방 카드. `GET /users/{userId}/profile`이 백엔드 미구현이라
- * 필드가 확정되지 않았다 — 공개 방 목록(`PublicRoomResponse`)과 모양이 다를 수 있다.
+ * GET /users/{userId}/profile — 선생님 공개 프로필.
+ * 열어 둔 방은 공개 방 카드와 같은 모양이라 **PIN이 없다**(DESIGN_GAPS N-1) —
+ * 카드에서 방으로 바로 넣지 못하고 `/join`으로 보낸다.
  */
-export type HostProfileRoom = {
-  roomId?: number;
-  pin?: string;
-  title?: string;
-  topic?: string | null;
-  status?: string | null;
-  participantCount?: number | null;
-  scheduledAt?: string | null;
-  isPaid?: boolean;
-  entryFee?: number | null;
-};
-
 export type HostProfileResponse = {
-  userId?: number;
-  nickname?: string;
-  intro?: string | null;
-  level?: HostLevel | null;
-  avgStars?: number | null;
-  ratingCount?: number;
-  roomCount?: number;
-  totalStudents?: number;
-  badges?: BadgeType[];
-  rooms?: HostProfileRoom[];
+  userId: number;
+  nickname: string;
+  profileImageUrl?: string;
+  defaultAvatarId?: string;
+  /** 활동 시작 시각 — 가입일 */
+  activeSince?: string;
+  level: number;
+  levelName: string;
+  avgRating?: number;
+  ratingCount: number;
+  roomsHosted: number;
+  totalStudents: number;
+  badgeCount: number;
+  /** 획득한 뱃지만. 못 딴 것은 남에게 보이지 않는다 */
+  badges: BadgeResponse[];
+  /** 지금 열어 둔 공개 방(운영 중·예정). 비공개 방은 빠진다 */
+  openRooms: PublicRoomResponse[];
 };
 
 export type ReportReason =

@@ -23,20 +23,22 @@ export default function Page() {
   if (grade.isError)
     return <ScreenError message={grade.error.message} onRetry={() => grade.refetch()} />;
 
-  const level = grade.data?.level ?? 1;
-  const nextLevel = grade.data?.next?.level ?? Math.min(5, level + 1);
+  const level = grade.data.level;
+  // 최고 등급이면 다음 등급이 없다 — 사다리는 현재 등급을 끝으로 그린다
+  const nextLevel = grade.data.nextLevel ?? level;
 
   return (
     <ReputationPage
       currentLevel={level}
-      progress={grade.data?.next?.progressPercent ?? 0}
+      // 서버는 0~1로 준다 — 화면은 %로 그린다
+      progress={Math.round((grade.data.nextLevelProgress ?? 0) * 100)}
       achievedLabel={toAchievedLabel(grade.data)}
       nextLevel={nextLevel}
       nextTitle={toNextTitle(grade.data)}
       criteria={toLevelCriteria(grade.data)}
       // 뱃지 조회가 실패해도 레벨 사다리는 보여준다 — 컬렉션만 전부 잠김으로 접힌다
       note={level >= 3 ? MAINTAIN_NOTE : null}
-      earnedBadges={toEarnedBadges(badges.data?.items)}
+      earnedBadges={toEarnedBadges(badges.data?.badges)}
     />
   );
 }

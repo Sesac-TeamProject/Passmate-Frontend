@@ -10,7 +10,7 @@ import type {
   EarningsResponse,
   EntryPaymentResponse,
   SettlementAccountDto,
-  SettlementItemDto,
+  HostEarningRow,
 } from "@/lib/types/dto";
 import { DEMO_ROOM } from "./fixtures";
 
@@ -58,47 +58,27 @@ const COIN_HISTORY: CoinTransactionDto[] = [
   { id: 5, type: "CHARGE", amount: 1200, balanceAfter: 1200, createdAt: "2026-08-01" },
 ];
 
-/** features/me/settlement/mock.ts SETTLEMENT_ROWS */
-const SETTLEMENT_ITEMS: SettlementItemDto[] = [
+/** 세션별 적립 — 백엔드 `HostEarningRow` 1:1. 최근 순 */
+const SETTLEMENT_ITEMS: HostEarningRow[] = [
   {
-    settlementId: 1,
-    dateLabel: "8/22",
+    roomId: 101,
     roomTitle: "8월 4주차 Spring 스터디",
     participantCount: 6,
-    entryFeeTotal: 60000,
-    feeAmount: 12000,
-    payoutAmount: 48000,
-    status: "SCHEDULED",
+    gross: 60000,
+    platformFee: 12000,
+    net: 48000,
+    status: "PENDING",
+    earnedAt: "2026-08-22T11:00:00",
   },
   {
-    settlementId: 2,
-    dateLabel: "8/20",
+    roomId: 102,
     roomTitle: "CS 모의면접 3회차",
     participantCount: 5,
-    entryFeeTotal: 50000,
-    feeAmount: 10000,
-    payoutAmount: 40000,
-    status: "SCHEDULED",
-  },
-  {
-    settlementId: 3,
-    dateLabel: "8/15",
-    roomTitle: "JPA 심화 2회차",
-    participantCount: 4,
-    entryFeeTotal: 40000,
-    feeAmount: 8000,
-    payoutAmount: 32000,
-    status: "PAID",
-  },
-  {
-    settlementId: 4,
-    dateLabel: "8/08",
-    roomTitle: "Spring 기술면접 1회차",
-    participantCount: 8,
-    entryFeeTotal: 80000,
-    feeAmount: 16000,
-    payoutAmount: 64000,
-    status: "PAID",
+    gross: 50000,
+    platformFee: 10000,
+    net: 40000,
+    status: "SETTLED",
+    earnedAt: "2026-08-20T11:00:00",
   },
 ];
 
@@ -178,19 +158,11 @@ export function mockEntryPayment(): EntryPaymentResponse {
 /** GET /users/me/earnings — 수익·정산 요약+내역. features/me/settlement/mock.ts SETTLEMENT_STATS */
 export function mockEarnings(): EarningsResponse {
   return {
-    items: SETTLEMENT_ITEMS,
-    nextCursor: null,
-    hasNext: false,
-    monthlyTotal: 384000,
-    hostSharePercent: 80,
-    nextPayout: { dateLabel: "9/5", amount: 307200 },
-    paidRoomCount: 12,
-    studentCount: 48,
-    account: {
-      bankName: settlementAccount.bankName,
-      maskedNumber: "***-***-4821",
-      payoutNote: null,
-    },
+    thisMonthNet: 384000,
+    pendingNet: 307200,
+    nextPayoutDate: "2026-09-05",
+    accountRegistered: true,
+    earnings: SETTLEMENT_ITEMS,
   };
 }
 

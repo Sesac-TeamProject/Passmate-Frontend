@@ -52,31 +52,38 @@ export type ConfirmChargeResponse = {
 export type CreateEntryPaymentRequest = { nickname: string; avatarId?: AvatarKey | null };
 export type EntryPaymentResponse = { paymentNo?: string; balance?: number };
 
-export type PayoutStatus = "SCHEDULED" | "PAID" | "HELD";
-export type SettlementItemDto = {
-  settlementId?: number;
-  dateLabel?: string;
-  roomTitle?: string;
-  participantCount?: number;
-  entryFeeTotal?: number;
-  feeAmount?: number;
-  payoutAmount?: number;
-  status?: PayoutStatus | null;
+/** 정산 상태 — 백엔드 `HostEarningRow.status` */
+export type PayoutStatus = "PENDING" | "SETTLED" | "HELD" | "CARRIED";
+/** 세션 한 건의 적립 */
+export type HostEarningRow = {
+  roomId: number;
+  roomTitle: string;
+  participantCount: number;
+  /** 참가비 총액(코인, 1 C = ₩1) */
+  gross: number;
+  /** 플랫폼 수수료 20% */
+  platformFee: number;
+  /** 호스트 정산액 80% */
+  net: number;
+  status: PayoutStatus;
+  earnedAt: string;
 };
-export type EarningsNextPayout = { dateLabel?: string; amount?: number };
-export type EarningsAccount = {
-  bankName?: string;
-  maskedNumber?: string;
-  payoutNote?: string | null;
-};
-/** GET /users/me/earnings — 수익·정산 요약+내역 */
-export type EarningsResponse = CursorPage<SettlementItemDto> & {
-  monthlyTotal?: number;
-  hostSharePercent?: number;
-  nextPayout?: EarningsNextPayout | null;
-  paidRoomCount?: number;
-  studentCount?: number;
-  account?: EarningsAccount | null;
+
+/**
+ * GET /users/me/earnings — 내 수익·정산 내역.
+ * **커서 페이지가 아니다** — 서버가 목록을 통째로 준다.
+ */
+export type EarningsResponse = {
+  /** 이번 달에 적립된 정산액 합계 */
+  thisMonthNet: number;
+  /** 아직 지급되지 않은 정산액 합계(이월 포함) */
+  pendingNet: number;
+  /** 다음 지급 예정일 (YYYY-MM-DD) */
+  nextPayoutDate: string;
+  /** 정산 계좌를 등록했는지. false면 지급이 보류된다 */
+  accountRegistered: boolean;
+  /** 세션별 적립. 최근 순 */
+  earnings: HostEarningRow[];
 };
 
 /** GET/PUT /users/me/settlement-account — 미등록이면 GET 404 */

@@ -38,7 +38,7 @@ export default function Page() {
       totalStudents={reputation.totalStudentCount}
       level={toLevelStatus(reputation)}
       levelSubtitle={toLevelSubtitle(reputation)}
-      stats={toHubStats(reputation, earnings.data?.monthlyTotal)}
+      stats={toHubStats(reputation, earnings.data?.thisMonthNet)}
       actions={toHubActions(rooms)}
     />
   );

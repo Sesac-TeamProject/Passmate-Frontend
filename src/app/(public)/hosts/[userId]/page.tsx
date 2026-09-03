@@ -6,7 +6,6 @@ import { ScreenLoading } from "@/components/common/screen-loading";
 import { toHostRooms } from "@/features/host/profile/adapt";
 import { HostProfilePage } from "@/features/host/profile/host-profile-page";
 import { toEarnedAchievement } from "@/features/me/adapt";
-import { levelTitle } from "@/lib/host-level";
 import { useHostProfile } from "@/lib/queries/use-me";
 
 /** M-10 선생님 공개 프로필 컨테이너 — 인기 방 카드에서 선생님 이름을 누르면 온다 */
@@ -20,19 +19,19 @@ export default function Page() {
   if (profile.isError)
     return <ScreenError message={profile.error.message} onRetry={() => profile.refetch()} />;
 
-  const level = profile.data.level ?? 1;
-
   return (
     <HostProfilePage
-      nickname={profile.data.nickname ?? ""}
-      intro={profile.data.intro ?? null}
-      level={level}
-      levelTitle={levelTitle(level)}
-      avgStars={profile.data.avgStars ?? null}
-      roomCount={profile.data.roomCount ?? 0}
-      totalStudents={profile.data.totalStudents ?? 0}
-      badges={(profile.data.badges ?? []).map(toEarnedAchievement)}
-      rooms={toHostRooms(profile.data.rooms ?? [])}
+      nickname={profile.data.nickname}
+      // 계약에 한 줄 소개가 없다 — 화면이 그 줄을 감춘다
+      intro={null}
+      level={profile.data.level}
+      // 등급 이름은 서버가 준다 — 화면이 자체 표를 들지 않는다
+      levelTitle={profile.data.levelName}
+      avgStars={profile.data.avgRating ?? null}
+      roomCount={profile.data.roomsHosted}
+      totalStudents={profile.data.totalStudents}
+      badges={profile.data.badges.map((badge) => toEarnedAchievement(badge.code))}
+      rooms={toHostRooms(profile.data.openRooms)}
     />
   );
 }
