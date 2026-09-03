@@ -94,12 +94,16 @@ export function generateQuestions(
 }
 
 /**
- * @draft POST /question-sets/{setId}/duplicate — 백엔드 미구현(실서버 404).
- * 목에서만 동작한다. 화면은 NotFound를 "준비 중"으로 안내한다.
+ * POST /question-sets/{setId}/duplicate — 세트를 복제한다.
+ * 제목을 안 주면 서버가 정한다("… 사본"). 복제본은 DRAFT로 시작한다.
  */
-export function duplicateQuestionSet(setId: number): Promise<QuestionSetSummaryResponse> {
+export function duplicateQuestionSet(
+  setId: number,
+  title?: string,
+): Promise<QuestionSetSummaryResponse> {
   return request<QuestionSetSummaryResponse>(`/question-sets/${setId}/duplicate`, {
     method: "POST",
+    body: { title },
   });
 }
 

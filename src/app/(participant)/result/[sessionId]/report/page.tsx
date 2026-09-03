@@ -6,6 +6,7 @@ import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toReportRows } from "@/features/participant/result/adapt";
 import { ReportDialog } from "@/features/participant/result/report-dialog";
+import { reportTypeLabel } from "@/features/participant/result/report-reasons";
 import { ReportPage } from "@/features/participant/result/report-page";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
 import { useReport } from "@/lib/queries/use-me";
@@ -88,9 +89,15 @@ export default function Page() {
           setReportOpen(open);
           if (!open) sendReport.reset();
         }}
-        onSubmit={(reason, detail) =>
+        onSubmit={(type, detail) =>
           sendReport.mutate(
-            { targetType: "ROOM", targetId: roomId, reason, detail },
+            {
+              targetType: "ROOM",
+              targetId: roomId,
+              type,
+              // 서버의 `reason`은 자유 서술이다 — 안 적었으면 고른 항목 문구를 그대로 보낸다
+              reason: detail?.trim() || reportTypeLabel(type),
+            },
             { onSuccess: () => setReportOpen(false) },
           )
         }

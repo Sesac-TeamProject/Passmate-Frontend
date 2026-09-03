@@ -1,5 +1,6 @@
 import { AppError } from "@/lib/types/app-error";
 import type {
+  ReportRequest,
   HostReviewRequest,
   AiGenerateRequest,
   ConfirmChargeRequest,
@@ -11,7 +12,7 @@ import type {
   RoomCreateRequest,
   RoomUpdateRequest,
   ScreenLockRequest,
-  SettlementAccountDto,
+  SettlementAccountRequest,
   AnswerSubmitRequest,
   UserProfileUpdateRequest,
 } from "@/lib/types/dto";
@@ -209,7 +210,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "PUT /users/me/notification-settings": (ctx) =>
     mockPutNotificationSettings(asBody<NotificationSettingsDto>(ctx)),
   "GET /users/:userId/profile": (ctx) => mockHostProfile(ctx.params.userId),
-  "POST /reports": () => mockReport(),
+  "POST /reports": (ctx) => mockReport(asBody<ReportRequest>(ctx)),
   "POST /guest-records/claim": () => mockClaim(),
 
   /* ── 코인 · 정산 ──────────────────────────────────── */
@@ -222,7 +223,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /users/me/earnings": () => mockEarnings(),
   "GET /users/me/settlement-account": () => mockSettlementAccount(),
   "PUT /users/me/settlement-account": (ctx) =>
-    mockPutSettlementAccount(asBody<SettlementAccountDto>(ctx)),
+    mockPutSettlementAccount(asBody<SettlementAccountRequest>(ctx)),
   "PUT /users/me/payment-method": () => mockPutPaymentMethod(),
 
   /* ── 관리자 (A-01~A-06) ───────────────────────────── */

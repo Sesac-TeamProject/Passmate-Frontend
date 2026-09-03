@@ -57,7 +57,7 @@ export default function Page() {
   const myId = useSyncExternalStore(NO_SUBSCRIBE, readMyId, readMyIdOnServer);
   /**
    * 게스트로 풀었을 때 받아 둔 이관용 표(7일). localStorage라 서버 렌더에 없다.
-   * 회원으로 돌아오면 이 표로 기록 이관을 한 번 시도한다 — 서버에 API가 아직 없어(404)
+   * 회원으로 돌아오면 이 표로 기록 이관을 한 번 시도한다.
    * 실패해도 표를 지우지 않는다(다음 로그인에서 다시 시도된다).
    */
   const guestRecord = useSyncExternalStore(

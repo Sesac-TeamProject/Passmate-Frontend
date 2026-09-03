@@ -150,10 +150,7 @@ export function toReviewProgressLabel(dto: ReviewTargetListResponse | undefined)
   return `${dto.reviewedCount}/${dto.totalCount} 첨삭 완료`;
 }
 
-/**
- * 첨삭 저장 실패 문구.
- * **저장 API가 아직 백엔드에 없다**(실서버 404) — NotFound는 고장이 아니라 "준비 중"이다.
- */
+/** 첨삭 저장 실패 문구 */
 export function toReviewSaveMessage(error: unknown): string {
   if (!AppError.isAppError(error)) return "저장하지 못했어요. 다시 시도해 주세요";
   // 답안이 지워졌거나 남의 방 답안을 건드린 경우 — 목록을 다시 부르면 사라진다

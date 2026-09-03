@@ -17,7 +17,8 @@ import type {
   EntryPaymentResponse,
   PaymentMethod,
   PaymentMethodRequest,
-  SettlementAccountDto,
+  SettlementAccountRequest,
+  SettlementAccountResponse,
 } from "@/lib/types/dto";
 import { request } from "./client";
 
@@ -70,14 +71,22 @@ export function getEarnings(): Promise<EarningsResponse> {
   return request<EarningsResponse>("/users/me/earnings");
 }
 
-/** GET /users/me/settlement-account (404=미등록) */
-export function getSettlementAccount(): Promise<SettlementAccountDto> {
-  return request<SettlementAccountDto>("/users/me/settlement-account");
+/**
+ * GET /users/me/settlement-account.
+ * **미등록도 200이다** — `registered: false`로 오고 `account`가 빠진다(404 아님).
+ */
+export function getSettlementAccount(): Promise<SettlementAccountResponse> {
+  return request<SettlementAccountResponse>("/users/me/settlement-account");
 }
 
-/** PUT /users/me/settlement-account */
-export function putSettlementAccount(body: SettlementAccountDto): Promise<void> {
-  return request<void>("/users/me/settlement-account", { method: "PUT", body });
+/** PUT /users/me/settlement-account — 등록·변경. 번호는 마스킹하지 않은 원본을 보낸다 */
+export function putSettlementAccount(
+  body: SettlementAccountRequest,
+): Promise<SettlementAccountResponse> {
+  return request<SettlementAccountResponse>("/users/me/settlement-account", {
+    method: "PUT",
+    body,
+  });
 }
 
 /**

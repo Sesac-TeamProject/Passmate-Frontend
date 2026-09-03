@@ -174,19 +174,48 @@ export type HostProfileResponse = {
   openRooms: PublicRoomResponse[];
 };
 
-export type ReportReason =
+/** 신고 종류 — 서버 필드 이름은 `type`이다(`reason`은 자유 서술) */
+export type ReportType =
   "NICKNAME" | "QUESTION_ERROR" | "PAID_ROOM" | "OPERATION" | "SPAM" | "DIFFICULTY";
-/** POST /reports — 게스트 익명 신고 가능 */
+
+export type ReportTargetType = "USER" | "PARTICIPANT" | "QUESTION" | "ROOM";
+
+/** POST /reports — 게스트도 낼 수 있다 */
 export type ReportRequest = {
-  targetType: "USER" | "ROOM" | "QUESTION";
+  targetType: ReportTargetType;
   targetId: number;
-  reason: ReportReason;
-  detail?: string | null;
+  type: ReportType;
+  /** 자유 서술. 화면이 고른 항목 문구를 그대로 넣는다 */
+  reason: string;
 };
+
+export type ReportStatus = "OPEN" | "REVIEWING" | "RESOLVED";
+
+/** POST /reports 응답 — 접수된 신고 한 건 */
+export type ReportResponse = {
+  id: number;
+  targetType: ReportTargetType;
+  targetId: number;
+  type: ReportType;
+  reason: string;
+  status: ReportStatus;
+  createdAt?: string;
+};
+
 /**
- * @draft POST /guest-records/claim — **백엔드 미구현**(실서버 404).
- *
- * 연동 키는 입장할 때 받은 `guestToken`이다(ERD `participant.guest_token`) — `participantId`가
- * 아니다. 웹은 그 값을 방별로 7일간 들고 있다(`lib/guest-token-storage`).
+ * POST /guest-records/claim — 가입 후 게스트 기록을 계정으로 옮긴다.
+ * 연동 키는 입장할 때 받은 `guestToken`이다(`participantId`가 아니다) —
+ * 웹은 그 값을 방별로 7일간 들고 있다(`lib/guest-token-storage`).
  */
-export type ClaimGuestRecordRequest = { guestToken: string };
+export type GuestClaimRequest = { guestToken: string };
+
+/** 옮겨진 기록 한 건 — 화면이 "OO 방 기록을 가져왔어요"로 알린다 */
+export type GuestClaimResponse = {
+  roomId: number;
+  roomTitle: string;
+  participantId: number;
+  nickname: string;
+  totalScore: number;
+  finalRank?: number;
+  claimedAt?: string;
+};

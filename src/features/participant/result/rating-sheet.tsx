@@ -30,7 +30,6 @@ type Props = {
 /**
  * P-Web 별점 시트 (design.pen 프레임 NSaex) — 세션이 끝난 학생이 선생님을 평가한다.
  * 세션당 한 번만 낼 수 있어 결과의 `rating.available`이 참일 때만 띄운다.
- * **제출 API는 아직 백엔드에 없다**(실서버 404) — 저장 실패는 "준비 중"으로 안내한다.
  */
 export function RatingSheet({
   hostName,

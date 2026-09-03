@@ -1,6 +1,7 @@
 import type {
   BadgesResponse,
-  ClaimGuestRecordRequest,
+  GuestClaimRequest,
+  GuestClaimResponse,
   GradeResponse,
   HostProfileResponse,
   CumulativeReportResponse,
@@ -8,6 +9,7 @@ import type {
   MyProfileResponse,
   NotificationSettingsDto,
   ReportRequest,
+  ReportResponse,
   UserProfileUpdateRequest,
 } from "@/lib/types/dto";
 import { request } from "./client";
@@ -47,9 +49,14 @@ export function getNotificationSettings(): Promise<NotificationSettingsDto> {
   return request<NotificationSettingsDto>("/users/me/notification-settings");
 }
 
-/** PUT /users/me/notification-settings */
-export function putNotificationSettings(body: NotificationSettingsDto): Promise<void> {
-  return request<void>("/users/me/notification-settings", { method: "PUT", body });
+/** PUT /users/me/notification-settings — 바뀐 설정을 그대로 돌려준다 */
+export function putNotificationSettings(
+  body: NotificationSettingsDto,
+): Promise<NotificationSettingsDto> {
+  return request<NotificationSettingsDto>("/users/me/notification-settings", {
+    method: "PUT",
+    body,
+  });
 }
 
 /** GET /users/{userId}/profile — 호스트 공개 프로필 */
@@ -57,16 +64,16 @@ export function getHostProfile(userId: number): Promise<HostProfileResponse> {
   return request<HostProfileResponse>(`/users/${userId}/profile`);
 }
 
-/** POST /reports — 게스트 익명 신고 가능 */
-export function postReport(body: ReportRequest): Promise<void> {
-  return request<void>("/reports", { method: "POST", body });
+/** POST /reports — 게스트도 낼 수 있다. 종류(`type`)와 자유 서술(`reason`)을 따로 받는다 */
+export function postReport(body: ReportRequest): Promise<ReportResponse> {
+  return request<ReportResponse>("/reports", { method: "POST", body });
 }
 
 /**
- * @draft POST /guest-records/claim — **백엔드 미구현**(실서버 404).
- * 가입 후 7일 안에 게스트 기록을 계정으로 옮긴다. 키는 입장 때 받은 `guestToken`이다.
+ * POST /guest-records/claim — 가입 후 7일 안에 게스트 기록을 계정으로 옮긴다.
+ * 키는 입장 때 받은 `guestToken`이다. 옮겨진 기록 한 건을 돌려준다.
  */
-export function claimGuestRecord(guestToken: string): Promise<void> {
-  const body: ClaimGuestRecordRequest = { guestToken };
-  return request<void>("/guest-records/claim", { method: "POST", body });
+export function claimGuestRecord(guestToken: string): Promise<GuestClaimResponse> {
+  const body: GuestClaimRequest = { guestToken };
+  return request<GuestClaimResponse>("/guest-records/claim", { method: "POST", body });
 }

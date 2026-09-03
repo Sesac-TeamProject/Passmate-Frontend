@@ -9,7 +9,9 @@ import type {
   CreateChargeRequest,
   EarningsResponse,
   EntryPaymentResponse,
-  SettlementAccountDto,
+  SettlementAccountRequest,
+  SettlementAccountResponse,
+  SettlementAccountView,
   HostEarningRow,
 } from "@/lib/types/dto";
 import { DEMO_ROOM } from "./fixtures";
@@ -82,10 +84,15 @@ const SETTLEMENT_ITEMS: HostEarningRow[] = [
   },
 ];
 
-let settlementAccount: SettlementAccountDto = {
+/** 조회는 마스킹된 번호만 준다 — 원본은 서버 밖으로 나오지 않는다 */
+let settlementAccount: SettlementAccountView = {
+  bankCode: "004",
   bankName: "국민은행",
-  accountNumber: "123456-01-234567",
+  accountNoMasked: "********4567",
   holderName: "이한결",
+  verified: true,
+  verifiedAt: "2026-08-01T09:00:00",
+  updatedAt: "2026-08-01T09:00:00",
 };
 
 let chargeCounter = 1;
@@ -166,15 +173,27 @@ export function mockEarnings(): EarningsResponse {
   };
 }
 
-/** GET /users/me/settlement-account — 미등록이면 404(목에서는 항상 등록됨) */
-export function mockSettlementAccount(): SettlementAccountDto {
-  return settlementAccount;
+/** GET /users/me/settlement-account — 미등록도 200이다(목에서는 항상 등록됨) */
+export function mockSettlementAccount(): SettlementAccountResponse {
+  return { registered: true, account: settlementAccount };
 }
 
-/** PUT /users/me/settlement-account */
-export function mockPutSettlementAccount(body: SettlementAccountDto): SettlementAccountDto {
-  settlementAccount = { ...settlementAccount, ...body };
-  return settlementAccount;
+/** PUT /users/me/settlement-account — 계좌를 바꾸면 실명 확인이 다시 false가 된다 */
+export function mockPutSettlementAccount(
+  body: SettlementAccountRequest,
+): SettlementAccountResponse {
+  // 라우트 스윕이 계약에 맞지 않는 `{}`로도 부르므로 필드가 없을 때를 견딘다
+  const digits = (body.accountNo ?? "").replace(/\D/g, "");
+
+  settlementAccount = {
+    bankCode: body.bankCode ?? "",
+    bankName: body.bankName ?? "",
+    accountNoMasked: `********${digits.slice(-4)}`,
+    holderName: body.holderName ?? "",
+    verified: false,
+    updatedAt: new Date().toISOString().slice(0, 19),
+  };
+  return { registered: true, account: settlementAccount };
 }
 
 /** PUT /users/me/payment-method */

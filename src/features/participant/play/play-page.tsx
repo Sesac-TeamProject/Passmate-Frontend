@@ -36,7 +36,7 @@ export function PlayPage({
           hasSubmitted={hasSubmitted}
           banner={
             hint && (
-              <HintBanner key={hint.hintId} clipUrl={hint.clipUrl} durationMs={hint.durationMs} />
+              <HintBanner key={hint.hintId} clipUrl={hint.audioUrl} durationMs={hint.durationMs} />
             )
           }
         />

@@ -34,12 +34,10 @@ export function toQuestionSets(items: QuestionSetSummaryResponse[]): QuestionSet
   }));
 }
 
-/**
- * 세트 복제 실패 문구.
- * **복제 API가 아직 백엔드에 없다**(실서버 404) — NotFound는 고장이 아니라 "준비 중"이다.
- */
+/** 세트 복제 실패 문구 */
 export function toCloneErrorMessage(error: unknown): string {
   if (!AppError.isAppError(error)) return "복제하지 못했어요. 다시 시도해 주세요";
-  if (error.kind === "NotFound") return "세트 복제는 서버 준비 중이에요";
+  // 원본 세트가 지워졌거나 남의 세트인 경우
+  if (error.kind === "NotFound") return "이 세트를 찾을 수 없어요. 목록을 새로 고쳐 주세요";
   return error.message;
 }

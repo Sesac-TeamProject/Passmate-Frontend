@@ -48,15 +48,22 @@ export type SettlementAccount = {
   holder: string;
 };
 
-/** C-02-3 은행 선택지 — 정책 목록이라 서버 데이터가 아닌 UI 상수로 둔다 */
-export const BANKS = [
-  "국민은행",
-  "신한은행",
-  "우리은행",
-  "하나은행",
-  "카카오뱅크",
-  "토스뱅크",
-] as const;
+/**
+ * C-02-3 은행 선택지 — 정책 목록이라 서버 데이터가 아닌 UI 상수로 둔다.
+ *
+ * 코드는 금융결제원 표준 코드다. 서버는 받은 값을 **검증 없이 그대로 저장**하므로
+ * (백엔드 `SettlementAccountService`) 실제 지급 전에 팀이 한 번 확인해야 한다.
+ */
+export const BANK_CODES: Record<string, string> = {
+  국민은행: "004",
+  신한은행: "088",
+  우리은행: "020",
+  하나은행: "081",
+  카카오뱅크: "090",
+  토스뱅크: "092",
+};
+
+export const BANKS = Object.keys(BANK_CODES) as readonly string[];
 
 /** C-02 v3 카드/정산 — 이번 달 정산 예정 요약 */
 export type SettlementSummary = {

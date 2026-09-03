@@ -45,7 +45,15 @@ let submitCount = 0;
 let locked = false;
 let mySubmitted = false;
 let hints: VoiceHintEntry[] = [
-  { hintId: 1, questionNo: 2, clipUrl: "/mock/hints/hint-1.mp3", durationMs: 5000 },
+  {
+    hintId: 1,
+    sessionQuestionId: 2,
+    questionId: 2,
+    orderNo: 2,
+    audioUrl: "/mock/hints/hint-1.mp3",
+    durationMs: 5000,
+    publishedAt: "2026-09-03T02:00:00",
+  },
 ];
 let nextHintId = 2;
 let nextAnswerId = 1;
@@ -292,24 +300,29 @@ export function mockSubmitAnswer(body: AnswerSubmitRequest): AnswerResponse {
   };
 }
 
-/** @draft GET /rooms/{roomId}/session/hints — 백엔드 미구현. 목 전용 */
+/** GET /rooms/{roomId}/session/hints */
 export function mockHints(): VoiceHintsResponse {
-  return { hints };
+  return { roomId: DEMO_ROOM_ID, totalCount: hints.length, hints };
 }
 
 /**
- * @draft POST /rooms/{roomId}/session/hints — 백엔드 미구현. 목 전용.
+ * POST /rooms/{roomId}/session/hints — 클립 업로드.
  * 라우트 스윕이 실제 FormData가 아닌 `{}`로도 호출하므로 `instanceof` 가드를 둔다.
  */
 export function mockUploadHint(form: FormData): VoiceHintEntry {
   const raw = form instanceof FormData ? form.get("durationMs") : null;
   const durationMs = typeof raw === "string" && raw !== "" ? Number(raw) : 5000;
   const hintId = nextHintId++;
-  const entry = {
+  const question = currentQuestion();
+  const entry: VoiceHintEntry = {
     hintId,
-    questionNo: currentQuestion().orderNo,
-    clipUrl: `/mock/hints/hint-${hintId}.mp3`,
+    // 목의 세트 문항은 id 하나뿐이라 세션 문항 id도 같은 값을 쓴다
+    sessionQuestionId: question.id,
+    questionId: question.id,
+    orderNo: question.orderNo,
+    audioUrl: `/mock/hints/hint-${hintId}.mp3`,
     durationMs,
+    publishedAt: nowServerTime(),
   };
   hints = [...hints, entry];
   return entry;
@@ -323,7 +336,17 @@ export function __resetSessionForTests(): void {
   submitCount = 0;
   locked = false;
   mySubmitted = false;
-  hints = [{ hintId: 1, questionNo: 2, clipUrl: "/mock/hints/hint-1.mp3", durationMs: 5000 }];
+  hints = [
+    {
+      hintId: 1,
+      sessionQuestionId: 2,
+      questionId: 2,
+      orderNo: 2,
+      audioUrl: "/mock/hints/hint-1.mp3",
+      durationMs: 5000,
+      publishedAt: "2026-09-03T02:00:00",
+    },
+  ];
   nextHintId = 2;
   nextAnswerId = 1;
 }

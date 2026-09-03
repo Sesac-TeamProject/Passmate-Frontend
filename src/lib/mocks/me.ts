@@ -1,4 +1,7 @@
 import type {
+  GuestClaimResponse,
+  ReportRequest,
+  ReportResponse,
   BadgesResponse,
   BadgeType,
   GradeResponse,
@@ -300,11 +303,29 @@ export function mockHostProfile(userId: string): HostProfileResponse {
 }
 
 /** POST /reports — 게스트 익명 신고 가능 */
-export function mockReport(): undefined {
-  return undefined;
+export function mockReport(body: ReportRequest): ReportResponse {
+  return {
+    id: nextReportId++,
+    targetType: body.targetType,
+    targetId: body.targetId,
+    type: body.type,
+    reason: body.reason,
+    status: "OPEN",
+    createdAt: new Date().toISOString().slice(0, 19),
+  };
 }
 
-/** POST /guest-records/claim — 가입 후 7일 내. 목에서는 항상 성공한다 */
-export function mockClaim(): undefined {
-  return undefined;
+let nextReportId = 1;
+
+/** POST /guest-records/claim — 가입 후 7일 내. 목에서는 항상 한 건이 옮겨진다 */
+export function mockClaim(): GuestClaimResponse {
+  return {
+    roomId: 1,
+    roomTitle: "8월 4주차 Spring 스터디",
+    participantId: 1,
+    nickname: "게스트",
+    totalScore: 320,
+    finalRank: 3,
+    claimedAt: new Date().toISOString().slice(0, 19),
+  };
 }

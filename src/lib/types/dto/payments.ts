@@ -86,11 +86,33 @@ export type EarningsResponse = {
   earnings: HostEarningRow[];
 };
 
-/** GET/PUT /users/me/settlement-account — 미등록이면 GET 404 */
-export type SettlementAccountDto = {
-  bankName?: string;
-  accountNumber?: string;
-  holderName?: string;
+/** 정산 계좌 — 조회는 마스킹된 번호만 준다 */
+export type SettlementAccountView = {
+  bankCode: string;
+  bankName: string;
+  /** 뒤 네 자리만 남기고 가린다 ("********6789") */
+  accountNoMasked: string;
+  holderName: string;
+  /** 예금주 실명 확인 여부. 계좌를 바꾸면 다시 false가 된다 */
+  verified: boolean;
+  verifiedAt?: string;
+  updatedAt?: string;
 };
-/** PUT /users/me/payment-method */
+
+/**
+ * GET/PUT /users/me/settlement-account.
+ * **미등록도 200이다** — `registered: false`로 오고 `account`가 빠진다(404가 아니다).
+ */
+export type SettlementAccountResponse = {
+  registered: boolean;
+  account?: SettlementAccountView;
+};
+
+/** PUT 본문 — 등록·변경. 번호는 마스킹하지 않은 원본을 보낸다 */
+export type SettlementAccountRequest = {
+  bankCode: string;
+  bankName: string;
+  accountNo: string;
+  holderName: string;
+}; /** PUT /users/me/payment-method */
 export type PaymentMethodRequest = { method: PaymentMethod };

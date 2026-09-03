@@ -167,23 +167,23 @@ export type AdminReportKpis = {
   avgHandlingDeltaHours: number;
 };
 
-export type ReportTargetKind = "STUDENT" | "TEACHER" | "GUEST" | "QUESTION" | "ROOM";
+export type AdminReportTargetKind = "STUDENT" | "TEACHER" | "GUEST" | "QUESTION" | "ROOM";
 
-export type ReportType = "NICKNAME" | "QUESTION_ERROR" | "PAID_ROOM" | "OPERATION" | "SPAM";
+export type AdminReportType = "NICKNAME" | "QUESTION_ERROR" | "PAID_ROOM" | "OPERATION" | "SPAM";
 
-export type ReportStatus = "PENDING" | "REVIEWING" | "RESOLVED";
+export type AdminReportStatus = "PENDING" | "REVIEWING" | "RESOLVED";
 
 export type AdminReport = {
   /** 표시용 신고 ID. 예: R-1042 */
   id: string;
-  target: { kind: ReportTargetKind; label: string };
-  type: ReportType;
+  target: { kind: AdminReportTargetKind; label: string };
+  type: AdminReportType;
   reason: string;
   /** 익명 신고는 null */
   reporterName: string | null;
   /** ISO 8601 */
   receivedAt: string;
-  status: ReportStatus;
+  status: AdminReportStatus;
 };
 
 /** GET /admin/sanctions?days=30 */

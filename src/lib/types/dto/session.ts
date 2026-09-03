@@ -121,11 +121,21 @@ export type ScreenLockResponse = { roomId: number; screenLocked: boolean };
  * @draft 음성 힌트(PTT) — 백엔드에 `voicehint` 패키지가 없다(US10, 이번 범위 밖).
  * 목에서만 동작하며 실서버에서는 404다.
  */
+/** 음성 힌트 한 개 — 호스트가 문항에 붙인 클립 */
 export type VoiceHintEntry = {
   hintId: number;
-  questionNo: number;
-  clipUrl: string;
+  sessionQuestionId: number;
+  questionId: number;
+  /** 몇 번째 문항의 힌트인지 */
+  orderNo: number;
+  audioUrl: string;
   durationMs?: number;
+  publishedAt: string;
 };
-/** @draft GET /rooms/{roomId}/session/hints — 백엔드 미구현 */
-export type VoiceHintsResponse = { hints?: VoiceHintEntry[] };
+
+/** GET /rooms/{roomId}/session/hints */
+export type VoiceHintsResponse = {
+  roomId: number;
+  totalCount: number;
+  hints: VoiceHintEntry[];
+};

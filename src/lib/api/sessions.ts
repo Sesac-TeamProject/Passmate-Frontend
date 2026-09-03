@@ -93,15 +93,12 @@ export function submitAnswer(
   });
 }
 
-/**
- * @draft GET /rooms/{roomId}/session/hints — 백엔드에 `voicehint` 패키지가 없다(실서버 404).
- * 목에서만 동작한다.
- */
+/** GET /rooms/{roomId}/session/hints — 이 방에 붙은 음성 힌트 목록 */
 export function getVoiceHints(roomId: number): Promise<VoiceHintsResponse> {
   return request<VoiceHintsResponse>(`/rooms/${roomId}/session/hints`);
 }
 
-/** @draft POST /rooms/{roomId}/session/hints — 백엔드 미구현(실서버 404) */
+/** POST /rooms/{roomId}/session/hints — 클립 업로드(multipart). 지금 문항에 붙는다 */
 export function uploadVoiceHint(
   roomId: number,
   clip: Blob,

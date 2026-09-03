@@ -15,7 +15,7 @@ import type {
   CreateChargeRequest,
   CreateEntryPaymentRequest,
   PaymentMethod,
-  SettlementAccountDto,
+  SettlementAccountRequest,
 } from "@/lib/types/dto";
 import { qk } from "./keys";
 
@@ -90,7 +90,7 @@ export function useUpdateSettlementAccount() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: SettlementAccountDto) => putSettlementAccount(body),
+    mutationFn: (body: SettlementAccountRequest) => putSettlementAccount(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.settlementAccount });
       queryClient.invalidateQueries({ queryKey: qk.earnings });

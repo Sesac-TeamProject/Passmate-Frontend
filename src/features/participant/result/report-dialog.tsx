@@ -4,14 +4,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { PendingLabel } from "@/components/common/pending-label";
-import type { ReportReason } from "@/lib/types/dto";
+import type { ReportType } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
 import { ROOM_REPORT_REASONS } from "./report-reasons";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (reason: ReportReason, detail: string | null) => void;
+  onSubmit: (reason: ReportType, detail: string | null) => void;
   pending: boolean;
   errorMessage: string | null;
 };
@@ -22,7 +22,7 @@ type Props = {
  * 운영팀이 분류 없는 신고를 받으면 처리할 수 없다.
  */
 export function ReportDialog({ open, onOpenChange, onSubmit, pending, errorMessage }: Props) {
-  const [reason, setReason] = useState<ReportReason | null>(null);
+  const [reason, setReason] = useState<ReportType | null>(null);
   const [detail, setDetail] = useState("");
 
   return (

@@ -22,7 +22,7 @@ import type {
   MyProfileResponse,
   NotificationSettingsDto,
   PaymentMethod,
-  SettlementAccountDto,
+  SettlementAccountResponse,
   HostEarningRow,
   PayoutStatus,
 } from "@/lib/types/dto";
@@ -217,20 +217,20 @@ export function toSettlementStats(earnings: EarningsResponse): StatItem[] {
   ];
 }
 
-/** "***-***-4821" 형태로 마스킹 — 마지막 4자리만 남긴다 */
-function maskAccountNumber(accountNumber: string | undefined): string {
-  if (!accountNumber) return "";
-  const last4 = accountNumber.replace(/\D/g, "").slice(-4);
-  return last4 ? `***-***-${last4}` : "";
-}
+/**
+ * GET /users/me/settlement-account → 마이페이지 계좌 요약.
+ * 미등록이면 `registered: false`로 오고 `account`가 빠진다 — 화면이 등록 안내를 띄우도록 null을 준다.
+ * 번호는 **서버가 마스킹해서** 준다(`accountNoMasked`) — 원본은 조회로 돌아오지 않는다.
+ */
+export function toSettlementAccount(dto: SettlementAccountResponse): SettlementAccount | null {
+  const account = dto.account;
+  if (!dto.registered || account === undefined) return null;
 
-/** GET /users/me/settlement-account → 정산 계좌 등록 폼 초기값 · 표시용. 404는 컨테이너가 미등록으로 처리한다 */
-export function toSettlementAccount(dto: SettlementAccountDto): SettlementAccount {
   return {
-    bank: dto.bankName ?? "",
-    maskedNumber: maskAccountNumber(dto.accountNumber),
-    accountNumber: dto.accountNumber ?? "",
-    holder: dto.holderName ?? "",
+    bank: account.bankName,
+    maskedNumber: account.accountNoMasked,
+    accountNumber: "",
+    holder: account.holderName,
   };
 }
 

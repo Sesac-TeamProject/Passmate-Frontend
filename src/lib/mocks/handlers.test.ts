@@ -170,7 +170,7 @@ describe("mocks/handlers", () => {
         () => me.getNotificationSettings(),
         () => me.putNotificationSettings({ sessionStart: true }),
         () => me.getHostProfile(42),
-        () => me.postReport({ targetType: "USER", targetId: 42, reason: "SPAM" }),
+        () => me.postReport({ targetType: "USER", targetId: 42, type: "SPAM", reason: "도배해요" }),
         () => me.claimGuestRecord("mock-guest-record-token"),
         () => payments.getCoinBalance(),
         () => payments.getCoinTransactions(),
@@ -181,8 +181,9 @@ describe("mocks/handlers", () => {
         () => payments.getSettlementAccount(),
         () =>
           payments.putSettlementAccount({
-            bankName: "국민",
-            accountNumber: "1",
+            bankCode: "004",
+            bankName: "국민은행",
+            accountNo: "123456789",
             holderName: "h",
           }),
         () => payments.putPaymentMethod("CARD"),
