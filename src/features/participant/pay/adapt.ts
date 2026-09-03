@@ -30,7 +30,6 @@ export function formatSchedule(
  *
  * **입장 전에는 서버가 많이 알려주지 않는다** — `RoomSummaryResponse`에는 호스트·문항 수·일정이
  * 없다. 시안이 그리던 호스트 이름·별점·"문항 8개"는 지어낼 근거가 없어 비운다(DESIGN_GAPS).
- * 유료 방 자체가 아직 서버에 없어(400 `UNSUPPORTED_ROOM_TYPE`) 이 화면 전체가 `@draft`다.
  *
  * @param pin 라우트 파라미터. 응답에는 PIN이 없어 화면이 알고 있는 값을 그대로 쓴다
  */
@@ -59,7 +58,14 @@ export function toPayErrorMessage(error: unknown): string {
   if (!AppError.isAppError(error)) return "잠시 문제가 생겼어요. 다시 시도해 주세요.";
   if (error.code === ERROR_CODES.NICKNAME_DUPLICATED)
     return "같은 닉네임이 이미 있어요. 다른 닉네임을 써 주세요";
+  if (error.code === ERROR_CODES.ENTRY_FEE_REQUIRED) return "참가비 결제가 필요한 방이에요";
   if (error.kind === "PaymentRequired") return "코인이 부족해요. 충전 후 다시 시도해 주세요";
+  if (error.code === ERROR_CODES.REFUND_WINDOW_CLOSED)
+    return "세션이 시작돼 참가를 취소할 수 없어요";
+  if (error.code === ERROR_CODES.PAYMENT_NOT_COMPLETED)
+    return "결제를 확인하고 있어요. 잠시 뒤 코인이 들어와요";
+  if (error.code === ERROR_CODES.PAYMENT_AMOUNT_MISMATCH)
+    return "결제 금액이 맞지 않아 충전하지 못했어요. 고객센터로 알려 주세요";
   if (error.kind === "Gone") return "이미 종료된 방이에요";
   if (error.kind === "NotFound") return "없는 방이에요";
   if (error.code === ERROR_CODES.GUEST_NOT_ALLOWED) return "로그인 후 결제할 수 있어요";
@@ -67,11 +73,11 @@ export function toPayErrorMessage(error: unknown): string {
 }
 
 const WIRE_METHOD_BY_PAY_METHOD: Record<PayMethod, PaymentMethod> = {
-  kakaopay: "KAKAO_PAY",
-  naverpay: "NAVER_PAY",
-  tosspay: "TOSS_PAY",
+  kakaopay: "KAKAOPAY",
+  naverpay: "NAVERPAY",
+  tosspay: "TOSSPAY",
   card: "CARD",
-  transfer: "TRANSFER",
+  transfer: "BANK_TRANSFER",
 };
 
 /** 결제 카드가 쓰는 포트원 PayMethod → 서버 전송용 PaymentMethod */

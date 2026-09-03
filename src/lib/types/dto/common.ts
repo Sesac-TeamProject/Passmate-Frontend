@@ -8,8 +8,11 @@
  * 2. **이름을 번역하지 않는다** — 어댑터(`features/<role>/…/adapt.ts`)가 화면용 파생값만 만든다.
  */
 
-/** 오류 응답 본문 (`{code, message}`). 서버는 항상 둘 다 주지만 파싱은 느슨하게 받는다. */
-export type ApiErrorBody = { code?: string | null; message?: string | null };
+/**
+ * 오류 응답 본문 (`{code, message}`). 서버는 항상 둘 다 주지만 파싱은 느슨하게 받는다.
+ * `data`는 **다음 행동에 필요할 때만** 붙는다 — 지금은 402 `INSUFFICIENT_COINS`의 부족분뿐이다.
+ */
+export type ApiErrorBody = { code?: string | null; message?: string | null; data?: unknown };
 
 /**
  * 목록 응답 공통 형식 — **오프셋 페이지**(`?page=0&size=20`).
@@ -32,7 +35,7 @@ export type CursorPage<T> = { items?: T[]; nextCursor?: string | null; hasNext?:
 
 /** 방 상태 — 백엔드 `room/domain/RoomStatus.kt`. `FINISHED`는 서버에 없다(세션 phase는 스토어 파생값) */
 export type RoomStatus = "WAITING" | "RUNNING" | "ENDED" | "CANCELED";
-/** 방 유형 — 현재 `POST /rooms`는 FREE만 받는다(PAID·BRANDED는 400 UNSUPPORTED_ROOM_TYPE) */
+/** 방 유형 — `POST /rooms`는 FREE·PAID를 받는다(BRANDED만 400 UNSUPPORTED_ROOM_TYPE) */
 export type RoomType = "FREE" | "PAID" | "BRANDED";
 
 /** 문항 유형 — 백엔드 `question/domain/QuestionEnums.kt`. 객관식은 `MCQ`다 */
@@ -57,8 +60,12 @@ export type AuthProvider = "GOOGLE";
  * 서버는 아직 등급을 계산하지 않는다 — `HostReputation.level`이 비어 있으면 등급 UI를 숨긴다.
  */
 export type HostLevel = 1 | 2 | 3 | 4 | 5;
-/** @draft 결제 수단 — 코인·정산 API가 아직 없다 */
-export type PaymentMethod = "KAKAO_PAY" | "NAVER_PAY" | "TOSS_PAY" | "CARD" | "TRANSFER";
+/**
+ * 코인 충전에 쓸 결제 수단 — 백엔드 `coin/domain/PaymentMethod.kt`.
+ * **언더스코어가 없다**(`KAKAO_PAY`가 아니라 `KAKAOPAY`) — 옛 값으로 보내면 400이다.
+ * 카드 정보는 서버에 저장되지 않는다(포트원이 갖는다).
+ */
+export type PaymentMethod = "KAKAOPAY" | "NAVERPAY" | "TOSSPAY" | "CARD" | "BANK_TRANSFER";
 
 /**
  * 아바타 키 12종. ERD `user.default_avatar_id varchar(30)` · `participant.avatar_id varchar(30)` —

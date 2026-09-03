@@ -7,7 +7,6 @@ import { ScreenLoading } from "@/components/common/screen-loading";
 import { toMeErrorMessage, toWireMethod } from "@/features/me/adapt";
 import { ChargePage } from "@/features/me/coins/charge-page";
 import { DEFAULT_CHARGE_AMOUNT } from "@/features/me/coins/types";
-import { formatNumber } from "@/lib/format";
 import { requestPayment, type PayMethod } from "@/lib/portone";
 import { useCoinBalance, useConfirmCharge, useCreateCharge } from "@/lib/queries/use-payments";
 
@@ -27,26 +26,22 @@ export default function Page() {
     setPending(true);
     setError(null);
     try {
-      const checkout = await createCharge.mutateAsync({ amount, method: toWireMethod(payMethod) });
-      const result = await requestPayment({
-        orderName: checkout.orderName ?? `패스메이트 코인 ${formatNumber(amount)} C 충전`,
-        amount,
-        payMethod,
-      });
+      const method = toWireMethod(payMethod);
+      const charge = await createCharge.mutateAsync({ amount, method });
+      // 결제창이 성공으로 닫혀도 이 시점엔 코인이 아직 안 늘었다 — confirm이 적립한다
+      const result = await requestPayment(charge, method);
+
       if (!result.ok) {
         setPending(false);
         setError(result.message);
         return;
       }
-      if (!checkout.chargeId) throw new Error("결제 준비에 실패했어요");
-      await confirmCharge.mutateAsync({
-        chargeId: checkout.chargeId,
-        body: { paymentId: result.paymentId },
-      });
+
+      const confirmed = await confirmCharge.mutateAsync(charge.chargeId);
       const params = new URLSearchParams({
-        amount: String(amount),
+        amount: String(confirmed.amount),
         method: payMethod,
-        paymentId: result.paymentId,
+        paymentId: charge.paymentId,
       });
       router.push(`/me/coins/charge/complete?${params.toString()}`);
     } catch (err) {

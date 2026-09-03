@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { ERROR_CODES } from "./error-codes";
 
 /**
- * 백엔드 `common/exception/ErrorCode.kt`(develop @ 5f433d2)에서 그대로 옮긴 이름 40개.
+ * 백엔드 `common/exception/ErrorCode.kt`(develop @ 9e39ce3)에서 그대로 옮긴 이름 47개.
+ * 결제 7개(ENTRY_FEE_REQUIRED·PAYMENT_*·ALREADY_PAID·ALREADY_REFUNDED·REFUND_WINDOW_CLOSED·
+ * NOT_PAID_ROOM)는 코인·참가비 PR #29~#32에서 늘었다.
  * 서버는 enum 이름을 code로 내보낸다 — 이 목록과 어긋나면 화면 분기가 조용히 죽는다.
  */
 const SERVER_ENUM_NAMES = [
@@ -15,6 +17,7 @@ const SERVER_ENUM_NAMES = [
   "TOKEN_INVALID",
   "SOCIAL_TOKEN_INVALID",
   "INSUFFICIENT_COINS",
+  "ENTRY_FEE_REQUIRED",
   "ACCESS_DENIED",
   "NOT_ROOM_HOST",
   "NOT_QUESTION_SET_OWNER",
@@ -38,6 +41,12 @@ const SERVER_ENUM_NAMES = [
   "QUESTION_SET_REQUIRED",
   "NICKNAME_DUPLICATED",
   "ALREADY_JOINED",
+  "PAYMENT_NOT_COMPLETED",
+  "PAYMENT_AMOUNT_MISMATCH",
+  "ALREADY_PAID",
+  "ALREADY_REFUNDED",
+  "REFUND_WINDOW_CLOSED",
+  "NOT_PAID_ROOM",
   "QUESTION_SET_ALREADY_CONFIRMED",
   "QUESTION_SET_EMPTY",
   "AI_FREE_LIMIT_EXCEEDED",
@@ -64,8 +73,8 @@ describe("ERROR_CODES", () => {
     expect(unknown).toEqual([]);
   });
 
-  it("서버 enum 40개를 빠짐없이 들고 있다", () => {
-    expect(SERVER_ENUM_NAMES).toHaveLength(40);
+  it("서버 enum 47개를 빠짐없이 들고 있다", () => {
+    expect(SERVER_ENUM_NAMES).toHaveLength(47);
     const missing = SERVER_ENUM_NAMES.filter((name) => !(name in ERROR_CODES));
     expect(missing).toEqual([]);
     expect(Object.keys(ERROR_CODES)).toHaveLength(SERVER_ENUM_NAMES.length + UNVERIFIED.length);
@@ -83,6 +92,10 @@ describe("ERROR_CODES", () => {
       "ALREADY_SUBMITTED",
       "SESSION_ALREADY_FINISHED",
       "QUESTION_SET_REQUIRED",
+      "ENTRY_FEE_REQUIRED",
+      "ALREADY_PAID",
+      "PAYMENT_NOT_COMPLETED",
+      "REFUND_WINDOW_CLOSED",
     ]) {
       expect(ERROR_CODES).toHaveProperty(code);
     }

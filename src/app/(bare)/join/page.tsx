@@ -9,6 +9,8 @@ import {
   toRoomPreview,
 } from "@/features/participant/join/adapt";
 import { INITIAL_JOIN_VALUES, type JoinValues } from "@/features/participant/join/join-form";
+import { isErrorCode } from "@/features/participant/pay/payment-errors";
+import { ERROR_CODES } from "@/lib/types/error-codes";
 import { JoinPage } from "@/features/participant/join/join-page";
 import { PIN_LENGTH } from "@/features/participant/join/pin-input";
 import { useJoinRoom, useNicknameCheck, useRoomByPin } from "@/lib/queries/use-rooms";
@@ -46,6 +48,8 @@ function JoinContainer() {
   const room = useRoomByPin(pinReady ? values.pin : null);
   const roomId = room.data?.id ?? null;
   const guestAllowed = room.data?.guestAllowed ?? false;
+  // 유료 방은 참가비 결제를 거쳐야 들어간다 — 게스트 입장 경로가 아예 없다(회원 전용)
+  const isPaidRoom = room.data?.type === "PAID";
 
   // 게스트가 못 들어가는 방이면 닉네임을 물어볼 필요가 없다 — 로그인·결제가 먼저다
   const nicknameCheck = useNicknameCheck(guestAllowed ? roomId : null, debouncedNickname);
@@ -55,8 +59,8 @@ function JoinContainer() {
     if (!room.data || join.isPending) return;
     setPaidGuest(false);
 
-    // 유료 방 — 회원은 결제 화면으로, 게스트는 로그인 안내
-    if (!room.data.guestAllowed) {
+    // 유료 방 — 회원은 결제 화면으로, 비로그인은 로그인부터 태운다
+    if (isPaidRoom) {
       if (status === "authenticated") router.push(`/pay/${values.pin}`);
       else setPaidGuest(true);
       return;
@@ -64,7 +68,13 @@ function JoinContainer() {
 
     join.mutate(
       { nickname: values.nickname.trim(), avatarId: values.avatar },
-      { onSuccess: () => router.push(`/play/${values.pin}`) },
+      {
+        onSuccess: () => router.push(`/play/${values.pin}`),
+        // 게이트는 서버에 있다 — 결제 화면을 건너뛰고 입장을 직접 불러도 402로 막힌다.
+        onError: (error) => {
+          if (isErrorCode(error, ERROR_CODES.ENTRY_FEE_REQUIRED)) router.push(`/pay/${values.pin}`);
+        },
+      },
     );
   };
 
