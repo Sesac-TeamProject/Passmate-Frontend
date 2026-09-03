@@ -10,10 +10,24 @@ type Props = {
   sets: QuestionSet[];
   onClone: (setId: string) => void;
   cloning?: boolean;
+  /** 복제 실패 문구 — 서버에 복제 API가 아직 없다 */
+  cloneError?: string | null;
+  onDelete: (setId: string) => void;
+  deletingSetId?: string | null;
+  /** 삭제 실패 문구 — 안 끝난 방이 쓰고 있으면 서버가 막는다 */
+  deleteError?: string | null;
 };
 
 /** W-08 문제 세트 관리 — 목록 + 우측 상세 패널(세트 재활용) */
-export function SetsPage({ sets, onClone, cloning }: Props) {
+export function SetsPage({
+  sets,
+  onClone,
+  cloning,
+  cloneError = null,
+  onDelete,
+  deletingSetId = null,
+  deleteError = null,
+}: Props) {
   const [selectedId, setSelectedId] = useState(sets[0]?.id ?? null);
   const selected = sets.find((s) => s.id === selectedId) ?? sets[0] ?? null;
 
@@ -29,6 +43,11 @@ export function SetsPage({ sets, onClone, cloning }: Props) {
             + 새 세트
           </Link>
         </div>
+        {(cloneError ?? deleteError) !== null ? (
+          <p role="alert" className="text-label-lg text-negative">
+            {cloneError ?? deleteError}
+          </p>
+        ) : null}
         {sets.length === 0 ? (
           // TODO(design): DESIGN_GAPS W-08 빈 상태
           <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed py-16 text-center text-body-md text-muted-foreground">
@@ -41,8 +60,10 @@ export function SetsPage({ sets, onClone, cloning }: Props) {
                 key={s.id}
                 set={s}
                 selected={s.id === selectedId}
+                deleting={s.id === deletingSetId}
                 onSelect={() => setSelectedId(s.id)}
                 onClone={() => onClone(s.id)}
+                onDelete={() => onDelete(s.id)}
                 cloning={cloning}
               />
             ))}

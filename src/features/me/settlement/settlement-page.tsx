@@ -10,10 +10,21 @@ type Props = {
   rows: SettlementRow[];
   /** 정산 계좌 요약(은행 · 마스킹 번호) — 미등록이면 null */
   account: { bank: string; maskedNumber: string } | null;
+  onExport: () => void;
+  exporting?: boolean;
+  /** 내보내기 실패 문구. 없으면 감춘다 */
+  exportError?: string | null;
 };
 
 /** W-10 정산 — 배너 · 요약 3장 · 결제/정산 내역 표 · 정산 계좌 카드 */
-export function SettlementPage({ stats, rows, account }: Props) {
+export function SettlementPage({
+  stats,
+  rows,
+  account,
+  onExport,
+  exporting = false,
+  exportError = null,
+}: Props) {
   return (
     <main className="flex flex-col gap-6 px-9 py-7">
       <HeroBanner
@@ -34,11 +45,20 @@ export function SettlementPage({ stats, rows, account }: Props) {
       <section className="flex flex-col gap-3">
         <header className="flex items-center justify-between">
           <h2 className="text-heading-sm text-ink">결제 · 정산 내역</h2>
-          {/* TODO(API): 정산 내역 CSV 다운로드 계약 없음 — DESIGN_GAPS에도 미기재(별도 요청 필요). 계약 도착 시 lib/api/client.ts downloadFile로 연결 */}
-          <Link href="#" className="text-label-lg text-mint-dark">
-            CSV 내보내기 ›
-          </Link>
+          <button
+            type="button"
+            onClick={onExport}
+            disabled={exporting}
+            className="text-label-lg text-mint-dark hover:underline disabled:opacity-60"
+          >
+            {exporting ? "내보내는 중…" : "CSV 내보내기 ›"}
+          </button>
         </header>
+        {exportError != null && (
+          <p role="alert" className="text-label-md text-negative">
+            {exportError}
+          </p>
+        )}
         <SettlementTable rows={rows} />
       </section>
 

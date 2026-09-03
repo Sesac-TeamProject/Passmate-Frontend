@@ -4,6 +4,7 @@ import { PttButton } from "@/components/common/ptt-button";
 import { ReconnectingBanner } from "@/components/common/reconnecting-banner";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import type { LiveQuestion } from "@/features/host/types";
+import { IS_MOCK } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { ChoiceRow, type ChoiceRowState } from "./choice-row";
 import { LiveRail, LiveRailMini, type SolvingStudent } from "./live-rail";
@@ -95,16 +96,23 @@ export function LivePage({
               </p>
             )}
             <div className="flex items-center gap-5">
-              {/* TODO(design): 새 시안 하단바는 "정답 공개 / 다음 문항" 2개뿐이고 PTT·화면 잠금이 없다.
-                프로젝터 규칙 카드는 "프로젝터는 아무도 안 만짐"이라 앱 리모컨(M-T2)으로 옮긴 것으로 읽히는데,
-                PTT 플로우 시트는 "선생님 웹 · W-05"에서 누른다고 못박아 서로 어긋난다.
-                디자이너 확인 전까지 두 조작을 남겨 둔다 — HANDOVER.md 결정 1번. */}
-              <PttButton
-                onRecorded={onHint}
-                onError={onHintError}
-                uploading={hintUploading}
-                disabled={frozen}
-              />
+              {/*
+                음성 힌트(PTT)는 **백엔드에 없다** — `voicehint` 패키지 자체가 없어 실서버에서는
+                업로드가 404다. 목 모드에서만 보여 준다: 실서버에서 누르면 실패하는 버튼을 두면
+                "고장 났다"로 읽힌다(US10, 이번 범위 밖).
+
+                TODO(design): 새 시안 하단바는 "정답 공개 / 다음 문항" 2개뿐이고 PTT·화면 잠금이 없다.
+                PTT 플로우 시트는 "선생님 웹 · W-05"에서 누른다고 못박아 서로 어긋난다 —
+                디자이너 확인 전까지 두 조작을 남겨 둔다(HANDOVER 결정 1번).
+              */}
+              {IS_MOCK ? (
+                <PttButton
+                  onRecorded={onHint}
+                  onError={onHintError}
+                  uploading={hintUploading}
+                  disabled={frozen}
+                />
+              ) : null}
               <button
                 type="button"
                 onClick={onToggleLock}
@@ -149,7 +157,7 @@ export function LivePage({
             {QUESTION_TYPE_LABEL[q.type]}
           </span>
           <span aria-hidden className="h-4 w-px bg-line-soft" />
-          <span>1점</span>
+          <span>{q.points}점</span>
           <span aria-hidden className="h-4 w-px bg-line-soft" />
           <span>
             {q.total}문항 중 {q.index}번째

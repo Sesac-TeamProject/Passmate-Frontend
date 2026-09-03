@@ -82,7 +82,7 @@ export function AdminSidebar() {
             <UserRound className="size-[15px]" strokeWidth={2.25} />
           </span>
           <div className="flex flex-col gap-px">
-            <p className="text-label-lg text-sidebar-foreground">{profile.name}</p>
+            <p className="text-label-lg text-sidebar-foreground">{profile.nickname}</p>
             <p className="text-label-md text-sidebar-foreground/50">운영 관리자</p>
           </div>
         </div>

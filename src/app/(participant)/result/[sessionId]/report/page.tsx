@@ -6,6 +6,7 @@ import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toReportRows } from "@/features/participant/result/adapt";
 import { ReportDialog } from "@/features/participant/result/report-dialog";
+import { reportTypeLabel } from "@/features/participant/result/report-reasons";
 import { ReportPage } from "@/features/participant/result/report-page";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
 import { useReport } from "@/lib/queries/use-me";
@@ -36,29 +37,17 @@ export default function Page() {
   if (report.isError)
     return <ScreenError message={report.error.message} onRetry={() => report.refetch()} />;
 
-  const questions = result.data.questions ?? [];
+  const questions = result.data.questions;
   const rows = toReportRows(questions);
-  const concepts = report.data.concepts ?? [];
-  const questionCount = result.data.questionCount ?? questions.length;
+  const questionCount = result.data.questionCount;
 
-  // 부제는 서버가 준 조각만 이어 붙인다 — 없는 조각은 통째로 뺀다
-  const subtitle = [
-    report.data.dateLabel ?? null,
-    report.data.attemptCount ? `${report.data.attemptCount}회차 참여` : null,
-    questionCount > 0 ? `문항 ${questionCount}개` : null,
-  ]
-    .filter((part): part is string => part !== null)
-    .join(" · ");
+  // 부제는 서버가 준 조각만 이어 붙인다 — 없는 조각은 통째로 뺀다.
+  // 계약에 회차·날짜 라벨이 없어(@draft) 지금 남는 조각은 문항 수뿐이다.
+  const subtitle = questionCount > 0 ? `문항 ${questionCount}개` : "";
 
   const wrongCount = rows.filter((row) => row.verdict === "WRONG").length;
-  const weakestConcept =
-    concepts.length === 0
-      ? null
-      : [...concepts].sort(
-          (a, b) =>
-            a.correctCount / Math.max(1, a.questionCount) -
-            b.correctCount / Math.max(1, b.questionCount),
-        )[0].name;
+  // 계약에 개념별 정답률이 없다 — 리포트가 주는 취약 주제의 첫 항목으로 대신한다
+  const weakestConcept = report.data.weakTopics[0] ?? null;
 
   const handleShare = () => {
     void navigator.clipboard.writeText(window.location.href);
@@ -67,21 +56,23 @@ export default function Page() {
   return (
     <>
       <ReportPage
-        roomTitle={result.data.roomTitle ?? ""}
+        roomTitle={result.data.roomTitle}
         subtitle={subtitle}
-        correctCount={result.data.correctCount ?? 0}
+        correctCount={result.data.correctCount}
         questionCount={questionCount}
-        myRank={result.data.rank ?? null}
-        participantCount={report.data.participantCount ?? null}
-        accuracyPercent={report.data.accuracyPercent ?? 0}
-        elapsedSeconds={report.data.elapsedSeconds ?? null}
-        myScore={result.data.totalScore ?? 0}
-        comparison={report.data.comparison ?? null}
-        trend={report.data.trend ?? []}
-        concepts={concepts}
+        myRank={result.data.rank}
+        accuracyPercent={report.data.accuracy}
+        myScore={result.data.totalScore}
         rows={rows}
         wrongCount={wrongCount}
         weakestConcept={weakestConcept}
+        // @draft 계약에 없는 값들 — 참가자 수·소요 시간·비교/추이/개념 카드.
+        // 지어내지 않고 비워 두면 ReportPage가 해당 자리를 감춘다
+        participantCount={null}
+        elapsedSeconds={null}
+        comparison={null}
+        trend={[]}
+        concepts={[]}
         onBack={() => router.push("/me/joined")}
         // 내보내기 계약이 없어 브라우저 인쇄로 대신한다 — PDF 저장은 인쇄 대화상자에서 고른다
         onSavePdf={() => window.print()}
@@ -98,9 +89,15 @@ export default function Page() {
           setReportOpen(open);
           if (!open) sendReport.reset();
         }}
-        onSubmit={(reason, detail) =>
+        onSubmit={(type, detail) =>
           sendReport.mutate(
-            { targetType: "ROOM", targetId: roomId, reason, detail },
+            {
+              targetType: "ROOM",
+              targetId: roomId,
+              type,
+              // 서버의 `reason`은 자유 서술이다 — 안 적었으면 고른 항목 문구를 그대로 보낸다
+              reason: detail?.trim() || reportTypeLabel(type),
+            },
             { onSuccess: () => setReportOpen(false) },
           )
         }

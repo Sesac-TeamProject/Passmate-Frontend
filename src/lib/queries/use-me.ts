@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMe } from "@/lib/api/auth";
 import {
   claimGuestRecord,
@@ -6,18 +6,19 @@ import {
   getBadges,
   getGrade,
   getHostProfile,
-  getMyPage,
+  getCumulativeReport,
+  getJoinedRooms,
   getNotificationSettings,
   postReport,
   putNotificationSettings,
   updateProfile,
 } from "@/lib/api/me";
+import { clearGuestRecord } from "@/lib/guest-token-storage";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type {
-  MeResponse,
   NotificationSettingsDto,
   ReportRequest,
-  UpdateProfileRequest,
+  UserProfileUpdateRequest,
 } from "@/lib/types/dto";
 import { qk } from "./keys";
 
@@ -33,11 +34,23 @@ export function useMe() {
   });
 }
 
-/** GET /users/me/rooms/joined — 요약+진행 중+참여 방 (FR-032·033) */
-export function useMyPage() {
+/**
+ * GET /users/me/rooms/joined — 요약 + 참여한 방 페이지.
+ * 페이지를 넘겨도 목록이 깜빡이지 않게 이전 결과를 유지한다.
+ */
+export function useJoinedRooms(page = 0) {
   return useQuery({
-    queryKey: qk.myPage,
-    queryFn: () => getMyPage(),
+    queryKey: qk.joinedRooms(page),
+    queryFn: () => getJoinedRooms(page),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** GET /users/me/report — 누적 학습 리포트(추이 그래프·취약 주제) */
+export function useCumulativeReport() {
+  return useQuery({
+    queryKey: qk.cumulativeReport,
+    queryFn: () => getCumulativeReport(),
   });
 }
 
@@ -86,19 +99,20 @@ export function useUpdateNotificationSettings() {
   });
 }
 
-/** PUT /users/me — 닉네임·기본 캐릭터 부분 수정. 성공 시 auth-store 프로필에 합치고 내 프로필을 갱신한다 */
+/**
+ * PUT /users/me — 닉네임(필수)·프로필 이미지·기본 캐릭터.
+ * 서버가 갱신된 프로필 **전체**를 돌려주므로 응답을 그대로 auth-store와 캐시에 넣는다
+ * (요청 필드만 합치던 방식은 서버가 계산하는 지표·코인을 놓친다).
+ */
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: UpdateProfileRequest) => updateProfile(body),
-    onSuccess: (_data, variables) => {
-      // 호출자가 실제로 보낸 필드만 합친다 — 생략한 필드까지 undefined로 덮어써 지우지 않도록.
-      const patch: Partial<MeResponse> = {};
-      if (variables.nickname !== undefined) patch.nickname = variables.nickname ?? undefined;
-      if (variables.avatarId !== undefined) patch.avatarId = variables.avatarId;
-      useAuthStore.getState().setProfile(patch);
-      // exact — ["me"]는 코인·수익·정산 계좌·등급·AI 사용량 키의 prefix라 그냥 무효화하면 전부 다시 불린다.
+    mutationFn: (body: UserProfileUpdateRequest) => updateProfile(body),
+    onSuccess: (profile) => {
+      useAuthStore.getState().setProfile(profile);
+      queryClient.setQueryData(qk.me, profile);
+      // exact — ["me"]는 코인·수익·정산 계좌·등급 키의 prefix라 그냥 무효화하면 전부 다시 불린다.
       queryClient.invalidateQueries({ queryKey: qk.me, exact: true });
     },
   });
@@ -127,9 +141,16 @@ export function useReport() {
   });
 }
 
-/** POST /guest-records/claim — 가입 후 7일 내, 경과 시 410 RECORD_PURGED */
+/**
+ * @draft POST /guest-records/claim — **백엔드 미구현**(실서버 404).
+ * 성공하면 보관하던 표를 지운다. 아직 없는 API라 실패는 조용히 삼키고 표를 그대로 둔다 —
+ * 서버가 생기면 다음 로그인에서 다시 시도된다.
+ */
 export function useClaimGuestRecord() {
   return useMutation({
-    mutationFn: (participantId: number) => claimGuestRecord(participantId),
+    mutationFn: async ({ guestToken, roomId }: { guestToken: string; roomId: number }) => {
+      await claimGuestRecord(guestToken);
+      clearGuestRecord(roomId);
+    },
   });
 }

@@ -25,9 +25,22 @@ export function EditorMockup() {
       <EditorPage
         title={EDITOR_MOCK_TITLE}
         questions={EDITOR_MOCK_QUESTIONS}
+        readOnly={false}
         onGenerate={noop}
+        generating={false}
+        generateError={null}
+        form={null}
+        onAddManual={noop}
+        onEdit={noop}
+        onRegenerate={noop}
+        onDelete={noop}
+        onMove={noop}
+        busyQuestionId={null}
+        listError={null}
         onConfirm={noop}
+        confirming={false}
         canConfirm
+        confirmError={null}
       />
     </div>
   );
@@ -47,6 +60,16 @@ export function ReportMockup() {
           canSaveComment={false}
           onSaveComment={noop}
           onExport={noop}
+          // 랜딩 목업은 "문항별" 탭 스냅숏만 보여 준다 — 학생별 탭은 비워 둔다
+          students={[]}
+          selectedStudentId={null}
+          onSelectStudent={noop}
+          studentAnswers={[]}
+          answersLoading={false}
+          reviewProgressLabel={null}
+          onSaveReview={noop}
+          savingAnswerId={null}
+          reviewError={null}
         />
       </div>
     </div>

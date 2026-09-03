@@ -1,395 +1,369 @@
 import { AppError } from "@/lib/types/app-error";
+import { ERROR_CODES } from "@/lib/types/error-codes";
 import type {
-  AnswerVerdict,
-  EssayAnswerDto,
-  EssayAnswersResponse,
+  AnswerResultView,
+  EssayAnalysisRequestResponse,
+  EssayAnalysisView,
   LearningReportResponse,
-  QuestionType,
-  ResultQuestionDto,
-  RoomReportResponse,
-  RoomReportStudent,
-  SessionResultResponse,
+  MyAnswerResponse,
+  MySessionResultResponse,
+  ParticipantResultResponse,
+  ParticipantResultRow,
+  QuestionResponse,
+  HostReviewRequest,
+  ReviewTargetAnswer,
+  ReviewTargetListResponse,
+  SessionResultsResponse,
+  TeacherReviewResponse,
 } from "@/lib/types/dto";
-import { DEMO_ROOM } from "./fixtures";
+import { DEMO_ROOM, DEMO_ROOM_ID, PARTICIPANTS, SET_QUESTIONS } from "./fixtures";
 
 /**
- * 세션 리포트(results) 목 응답. features/host/mock.ts SESSION_REPORT(ReportQuestion·EssayAnswer)를
- * DTO 모양으로 옮긴다. "8월 4주차 Spring 스터디" 세션 — DEMO_ROOM과 같은 방의 종료 후 리포트로 취급한다.
+ * 세션 결과·리포트·첨삭·AI 분석 목 응답.
+ * 문항은 `SET_QUESTIONS`(단일 출처)를 그대로 쓰고, 정답률·점수만 재현 가능한 고정값으로 만든다.
  */
 
-type ReportQuestionSource = {
-  no: number;
-  title: string;
-  type: "multiple" | "essay" | "ox";
-  accuracy?: number;
-  aiCount?: number;
-  /** @draft 우측 상세 패널이 쓰는 문항 전문 — 없으면 title을 쓴다 */
-  prompt?: string;
-  /** @draft 리포트 표 "개념" 열 */
-  concept: string;
-  /** @draft 리포트 표 "소요" 열(초) */
-  elapsedSeconds: number;
+/** 내 참가자 id — 픽스처의 "민지"(회원)로 고정한다 */
+const MY_PARTICIPANT_ID = 15;
+
+/** 문항별 정답률(%) — 서술형은 정답 개념이 없어 0으로 두고 AI 분석 건수로 말한다 */
+const CORRECT_RATE: Record<number, number> = {
+  1: 0,
+  2: 67,
+  3: 83,
+  4: 50,
+  5: 67,
+  6: 0,
+  7: 67,
+  8: 0,
 };
 
-const REPORT_QUESTIONS: ReportQuestionSource[] = [
-  {
-    no: 1,
-    title: "DI 컨테이너 개념",
-    type: "multiple",
-    accuracy: 100,
-    concept: "DI · AOP",
-    elapsedSeconds: 18,
-  },
-  {
-    no: 2,
-    title: "@Transactional 전파",
-    type: "multiple",
-    accuracy: 67,
-    concept: "트랜잭션",
-    elapsedSeconds: 52,
-  },
-  {
-    no: 3,
-    title: "JPA 영속성 컨텍스트",
-    prompt: "JPA 영속성 컨텍스트를 1차 캐시 관점에서 설명하세요.",
-    type: "essay",
-    accuracy: 38,
-    aiCount: 6,
-    concept: "JPA 영속성",
-    elapsedSeconds: 160,
-  },
-  {
-    no: 4,
-    title: "AOP 프록시 방식",
-    type: "multiple",
-    accuracy: 50,
-    concept: "DI · AOP",
-    elapsedSeconds: 34,
-  },
-  {
-    no: 5,
-    title: "Bean 기본 스코프",
-    type: "ox",
-    accuracy: 83,
-    concept: "DI · AOP",
-    elapsedSeconds: 28,
-  },
-  {
-    no: 6,
-    title: "N+1 문제",
-    type: "essay",
-    accuracy: 46,
-    aiCount: 6,
-    concept: "JPA 영속성",
-    elapsedSeconds: 48,
-  },
-  {
-    no: 7,
-    title: "지연 로딩 기본 대상",
-    type: "multiple",
-    accuracy: 67,
-    concept: "JPA 영속성",
-    elapsedSeconds: 21,
-  },
-  {
-    no: 8,
-    title: "Security 필터 체인",
-    type: "essay",
-    accuracy: 58,
-    aiCount: 6,
-    concept: "트랜잭션",
-    elapsedSeconds: 39,
-  },
-];
+/** 서술형 문항의 AI 분석 건수 */
+const AI_ANALYSIS_COUNT: Record<number, number> = { 1: 6, 6: 6, 8: 6 };
 
-const REPORT_STATS = { accuracy: 71, students: 6, questions: 8, aiAnalyses: 18 };
-const REPORT_DATE_LABEL = "8/22 (금) 진행";
+/** 내가 맞힌 문항(객관식·OX 중) */
+const MY_CORRECT = new Set([2, 3, 5]);
 
-/** 문항 3(JPA 영속성 컨텍스트) 서술형 답안 — participantId는 PARTICIPANTS 순서(11=준영..16=도윤) */
-const ESSAY_ANSWERS_Q3: EssayAnswerDto[] = [
-  {
-    answerId: 1,
-    participantId: 11,
-    nickname: "준영",
-    content:
-      "영속성 컨텍스트는 엔티티를 관리하는 공간으로, 1차 캐시를 통해 같은 트랜잭션 안에서 동일 엔티티 조회를 보장하고…",
-    aiFeedback: {
-      status: "DONE",
-      coveredConcepts: ["1차 캐시", "동일성 보장"],
-      missingConcepts: ["쓰기 지연", "변경 감지"],
-      improvement: "flush 시점을 예시와 함께 보강",
-      weaknesses: null,
-      suggestedScore: null,
-    },
-  },
-  {
-    answerId: 2,
-    participantId: 12,
-    nickname: "혜림",
-    content:
-      "엔티티 매니저가 관리하는 영속 상태의 엔티티 집합입니다. 변경 감지로 update 쿼리가 자동 생성됩니다.",
-    aiFeedback: {
-      status: "DONE",
-      coveredConcepts: ["변경 감지"],
-      missingConcepts: ["1차 캐시", "동일성 보장"],
-      improvement: "트랜잭션 범위와 함께 설명",
-      weaknesses: null,
-      suggestedScore: null,
-    },
-  },
-  {
-    answerId: 3,
-    participantId: 13,
-    nickname: "승혁",
-    content:
-      "JPA가 엔티티를 저장하는 환경입니다. persist 하면 영속 상태가 되고 commit 시점에 DB에 반영됩니다.",
-    aiFeedback: {
-      status: "DONE",
-      coveredConcepts: ["영속 상태", "쓰기 지연"],
-      missingConcepts: ["1차 캐시", "변경 감지"],
-      improvement: "준영속·삭제 상태까지 생명주기로 정리",
-      weaknesses: null,
-      suggestedScore: null,
-    },
-  },
-  {
-    answerId: 4,
-    participantId: 14,
-    nickname: "희표",
-    content: "엔티티를 캐싱해서 같은 id로 조회하면 DB에 다시 가지 않고 캐시에서 돌려줍니다.",
-    aiFeedback: {
-      status: "DONE",
-      coveredConcepts: ["1차 캐시"],
-      missingConcepts: ["동일성 보장", "변경 감지"],
-      improvement: "캐시 범위가 트랜잭션 단위임을 명시",
-      weaknesses: null,
-      suggestedScore: null,
-    },
-  },
-  {
-    answerId: 5,
-    participantId: 15,
-    nickname: "민지",
-    content:
-      "영속성 컨텍스트는 트랜잭션 안에서 엔티티 변경을 추적해 flush 시점에 update 쿼리를 만들어 줍니다.",
-    aiFeedback: {
-      status: "DONE",
-      coveredConcepts: ["변경 감지", "flush"],
-      missingConcepts: ["1차 캐시", "동일성 보장"],
-      improvement: "스냅샷 비교 원리를 한 줄 추가",
-      weaknesses: null,
-      suggestedScore: null,
-    },
-  },
-  {
-    answerId: 6,
-    participantId: 16,
-    nickname: "도윤",
-    content: "엔티티 매니저 안에 있는 저장소로, 여기에 들어간 엔티티만 JPA가 관리합니다.",
-    aiFeedback: {
-      status: "DONE",
-      coveredConcepts: ["관리 대상 범위"],
-      missingConcepts: ["1차 캐시", "쓰기 지연", "변경 감지"],
-      improvement: "영속성 컨텍스트가 주는 이점을 예시로 보강",
-      weaknesses: null,
-      suggestedScore: null,
-    },
-  },
-];
+const MY_ESSAY_ANSWER =
+  "영속성 컨텍스트는 엔티티를 관리하는 공간으로, 1차 캐시를 통해 같은 트랜잭션 안에서 동일 엔티티 조회를 보장합니다.";
 
-/** features/host/mock.ts QUESTION_RESULT.ranking — s6(도윤)은 원본에 없어 6등으로 채운다 */
-const RANKING: RoomReportStudent[] = [
-  {
-    participantId: 11,
-    nickname: "준영",
-    rank: 1,
-    totalScore: 1240,
-    correctCount: 7,
-    isGuest: true,
-  },
-  {
-    participantId: 12,
-    nickname: "혜림",
-    rank: 2,
-    totalScore: 1100,
-    correctCount: 6,
-    isGuest: true,
-  },
-  { participantId: 15, nickname: "민지", rank: 3, totalScore: 980, correctCount: 6, isGuest: true },
-  { participantId: 13, nickname: "승혁", rank: 4, totalScore: 870, correctCount: 5, isGuest: true },
-  { participantId: 14, nickname: "희표", rank: 5, totalScore: 760, correctCount: 5, isGuest: true },
-  { participantId: 16, nickname: "도윤", rank: 6, totalScore: 640, correctCount: 4, isGuest: true },
-];
+const DONE_ANALYSIS: EssayAnalysisView = {
+  keyPoints: ["1차 캐시", "동일성 보장"],
+  missingPoints: ["쓰기 지연", "변경 감지"],
+  suggestions: ["flush 시점을 예시와 함께 보강"],
+  summary: "핵심은 짚었지만 쓰기 지연·변경 감지까지 이어 설명하면 더 좋아요.",
+  completedAt: "2026-09-02T03:10:00",
+};
+
+/** 서술형 답안 6명 — 문항 1(JPA 영속성 컨텍스트) 기준 */
+const ESSAY_TEXTS: Record<number, string> = {
+  11: "영속성 컨텍스트는 엔티티를 관리하는 공간으로, 1차 캐시를 통해 동일 엔티티 조회를 보장하고…",
+  12: "엔티티 매니저가 관리하는 영속 상태의 엔티티 집합입니다. 변경 감지로 update 쿼리가 자동 생성됩니다.",
+  13: "JPA가 엔티티를 저장하는 환경입니다. persist 하면 영속 상태가 되고 commit 시점에 DB에 반영됩니다.",
+  14: "엔티티를 캐싱해서 같은 id로 조회하면 DB에 다시 가지 않고 캐시에서 돌려줍니다.",
+  15: MY_ESSAY_ANSWER,
+  16: "엔티티 매니저 안에 있는 저장소로, 여기에 들어간 엔티티만 JPA가 관리합니다.",
+};
+
+/** 참가자별 총점 — 랭킹과 결과가 같은 숫자를 말하도록 한곳에서 만든다 */
+const TOTAL_SCORES: Record<number, number> = {
+  11: 1240,
+  12: 1100,
+  15: 980,
+  13: 870,
+  14: 760,
+  16: 640,
+};
 
 let rated = false;
+/** 내 서술형 분석 상태 — 요청하면 PENDING, 3초 뒤 DONE으로 바뀐다 */
+let myAnalysisStatus: MyAnswerResponse["analysisStatus"] = "NOT_REQUESTED";
+let analysisRequestedAt = 0;
+let remainingFreeAnalysis = 5;
 
-function toQuestionType(type: "multiple" | "essay" | "ox"): QuestionType {
-  if (type === "multiple") return "MULTIPLE_CHOICE";
-  if (type === "ox") return "OX";
-  return "ESSAY";
+const ANALYSIS_DELAY_MS = 3000;
+const ANALYSIS_COIN_COST = 100;
+
+function sessionQuestionId(q: QuestionResponse): number {
+  return 1000 + q.id;
 }
 
-function buildResultQuestion(q: ReportQuestionSource): ResultQuestionDto {
-  const type = toQuestionType(q.type);
+/** 요청 후 3초가 지났으면 완료로 넘긴다 — 화면 폴링이 상태가 바뀌는 걸 볼 수 있게 */
+function currentAnalysisStatus(): MyAnswerResponse["analysisStatus"] {
+  if (myAnalysisStatus === "PENDING" && Date.now() - analysisRequestedAt > ANALYSIS_DELAY_MS)
+    myAnalysisStatus = "DONE";
+  return myAnalysisStatus;
+}
 
-  if (q.type === "essay") {
-    const mine = ESSAY_ANSWERS_Q3[0];
-    return {
-      questionId: q.no,
-      questionNo: q.no,
-      title: q.title,
-      type,
-      verdict: "AI_ANALYZED",
-      myAnswer: mine.content,
-      correctAnswer: null,
-      explanation: null,
-      earnedScore: 0,
-      aiFeedback: mine.aiFeedback,
-      hostReview: null,
-      concept: q.concept,
-      classAccuracyPercent: q.accuracy ?? null,
-      elapsedSeconds: q.elapsedSeconds,
-    };
-  }
+function myScoreFor(q: QuestionResponse): number {
+  if (q.type === "ESSAY") return currentAnalysisStatus() === "DONE" ? q.points : 0;
+  return MY_CORRECT.has(q.orderNo) ? q.points : 0;
+}
 
-  const verdict: AnswerVerdict = (q.accuracy ?? 0) >= 50 ? "CORRECT" : "WRONG";
-  // 문항 상세(P-Web)가 "내가 고른 답 vs 정답"을 나란히 보여줘서 목도 두 값을 채운다.
-  // 보기 원문이 목에 없어 번호로 대신한다 — 계약이 오면 실제 보기 텍스트가 들어온다.
-  const correctChoice = "1번";
-  const myChoice = verdict === "CORRECT" ? correctChoice : "2번";
-  // @draft 보기별 응답 인원 — 방 인원 6명을 정답률에 맞춰 나눈다 (시안 "다른 학생들은")
-  const correctPeople = Math.round((REPORT_STATS.students * (q.accuracy ?? 0)) / 100);
-  const rest = REPORT_STATS.students - correctPeople;
+function toAnswerResultView(q: QuestionResponse): AnswerResultView {
+  const isEssay = q.type === "ESSAY";
+  const status = isEssay && q.orderNo === 1 ? currentAnalysisStatus() : "NOT_REQUESTED";
+  const score = myScoreFor(q);
 
   return {
-    questionId: q.no,
-    questionNo: q.no,
-    title: q.title,
-    type,
-    verdict,
-    myAnswer: myChoice,
-    correctAnswer: correctChoice,
-    explanation: null,
-    // accuracy(정답률 %)를 점수로 쓰면 "획득 67점"처럼 읽혀 사실과 다르다
-    earnedScore: verdict === "CORRECT" ? 1 : 0,
-    aiFeedback: null,
-    hostReview: null,
-    concept: q.concept,
-    classAccuracyPercent: q.accuracy ?? null,
-    elapsedSeconds: q.elapsedSeconds,
-    choiceDistribution: [
-      { label: "1번", count: correctPeople, isCorrect: true },
-      { label: "2번", count: Math.ceil(rest / 2) },
-      { label: "3번", count: Math.floor(rest / 2) },
-      { label: "4번", count: 0 },
-    ],
+    sessionQuestionId: sessionQuestionId(q),
+    questionId: q.id,
+    orderNo: q.orderNo,
+    type: q.type,
+    content: q.content,
+    points: q.points,
+    ...(q.answer ? { answer: q.answer } : {}),
+    ...(q.explanation ? { explanation: q.explanation } : {}),
+    submitted: isEssay ? MY_ESSAY_ANSWER : (q.choices?.[MY_CORRECT.has(q.orderNo) ? 0 : 1] ?? "O"),
+    ...(isEssay ? {} : { isCorrect: MY_CORRECT.has(q.orderNo) }),
+    score,
+    finalScore: score,
+    analysisStatus: status,
+    ...(status === "DONE" ? { analysis: DONE_ANALYSIS } : {}),
   };
 }
 
-/** GET /rooms/{roomId}/results/me — 참여자 개인 결과 */
-export function mockMyResult(): SessionResultResponse {
+/** GET /rooms/{roomId}/results/me — 게스트도 부를 수 있다 */
+export function mockMyResult(): MySessionResultResponse {
   return {
+    roomId: DEMO_ROOM_ID,
     roomTitle: DEMO_ROOM.title,
+    status: "ENDED",
+    endedAt: "2026-09-02T03:00:00",
+    participantId: MY_PARTICIPANT_ID,
+    nickname: "민지",
+    avatarId: "fox",
+    guest: false,
     rank: 3,
-    totalScore: 990,
-    correctCount: 5,
-    questionCount: REPORT_STATS.questions,
-    canRate: !rated,
-    isGuest: false,
-    questions: REPORT_QUESTIONS.map(buildResultQuestion),
+    totalScore: TOTAL_SCORES[MY_PARTICIPANT_ID],
+    correctCount: MY_CORRECT.size,
+    submitCount: SET_QUESTIONS.length,
+    questionCount: SET_QUESTIONS.length,
+    questions: SET_QUESTIONS.map(toAnswerResultView),
+    rating: {
+      available: !rated,
+      ...(rated ? { blockedReason: "ALREADY_RATED" as const } : {}),
+      alreadyRated: rated,
+      deadline: "2026-09-03T03:00:00",
+    },
   };
 }
 
-/** GET /rooms/{roomId}/reports/me — AI 학습 리포트 */
+/** GET …/questions/{questionId}/answers/me — 내 답안 한 건 */
+export function mockMyAnswer(questionId: string): MyAnswerResponse {
+  const q = SET_QUESTIONS.find((item) => item.id === Number(questionId));
+  if (!q) throw new AppError("NotFound", { code: ERROR_CODES.QUESTION_NOT_FOUND });
+
+  const view = toAnswerResultView(q);
+  return {
+    roomId: DEMO_ROOM_ID,
+    sessionQuestionId: view.sessionQuestionId,
+    questionId: view.questionId,
+    orderNo: view.orderNo,
+    type: view.type,
+    content: view.content,
+    points: view.points,
+    submitted: view.submitted ?? "",
+    ...(view.isCorrect === undefined ? {} : { isCorrect: view.isCorrect }),
+    score: view.score,
+    finalScore: view.finalScore,
+    submittedAt: "2026-09-02T02:40:00",
+    ...(view.answer ? { answer: view.answer } : {}),
+    ...(view.explanation ? { explanation: view.explanation } : {}),
+    analysisStatus: view.analysisStatus,
+    ...(view.analysis ? { analysis: view.analysis } : {}),
+    remainingFreeAnalysis,
+    analysisCoinCost: ANALYSIS_COIN_COST,
+  };
+}
+
+/**
+ * POST …/answers/me/analysis — 202. 무료 횟수를 다 쓰면 402를 던진다(코인 잔액도 없다고 본다).
+ * 요청 3초 뒤 DONE으로 바뀌어 화면 폴링이 상태 변화를 볼 수 있다.
+ */
+export function mockRequestAnalysis(): EssayAnalysisRequestResponse {
+  if (remainingFreeAnalysis <= 0)
+    throw new AppError("PaymentRequired", { code: ERROR_CODES.INSUFFICIENT_COINS });
+
+  remainingFreeAnalysis -= 1;
+  myAnalysisStatus = "PENDING";
+  analysisRequestedAt = Date.now();
+
+  return {
+    analysisStatus: "PENDING",
+    chargedCoins: 0,
+    remainingFreeAnalysis,
+    analysisCoinCost: ANALYSIS_COIN_COST,
+  };
+}
+
+/** GET /rooms/{roomId}/reports/me — 세션 종료 시 만들어진 학습 리포트 */
 export function mockMyReport(): LearningReportResponse {
   return {
-    // 방 평균(REPORT_STATS.accuracy=71)이 아니라 나의 정답률 — 비교 카드 myPercent와 같은 값
-    accuracyPercent: 75,
+    roomId: DEMO_ROOM_ID,
+    roomTitle: DEMO_ROOM.title,
+    participantId: MY_PARTICIPANT_ID,
+    nickname: "민지",
+    totalQuestions: SET_QUESTIONS.length,
+    correctCount: MY_CORRECT.size,
+    accuracy: 71,
+    totalScore: TOTAL_SCORES[MY_PARTICIPANT_ID],
+    finalRank: 3,
     weakTopics: ["JPA 영속성", "트랜잭션", "인덱스"],
     improvementPoints: [
-      "flush 시점을 예시와 함께 보강",
-      "트랜잭션 범위와 함께 설명",
-      "준영속·삭제 상태까지 생명주기로 정리",
+      "JPA 영속성 · 트랜잭션 주제를 다시 살펴보세요.",
+      "정답률이 71% 입니다. 틀린 문항의 해설부터 확인해 보세요.",
     ],
-    dateLabel: REPORT_DATE_LABEL,
-    attemptCount: 3,
-    participantCount: 24,
-    elapsedSeconds: 700,
-    comparison: { myPercent: 75, classAveragePercent: 68, topPercent: 100 },
-    trend: [
-      { label: "1회차", accuracyPercent: 58 },
-      { label: "2회차", accuracyPercent: 63 },
-      { label: "3회차 (이번)", accuracyPercent: 75 },
-    ],
-    concepts: [
-      { name: "JPA 영속성", correctCount: 1, questionCount: 3 },
-      { name: "트랜잭션", correctCount: 2, questionCount: 3 },
-      { name: "DI · AOP", correctCount: 2, questionCount: 2 },
-    ],
+    generatedAt: "2026-09-02T03:00:05",
   };
+}
+
+function buildParticipantRows(): ParticipantResultRow[] {
+  return PARTICIPANTS.map((p) => ({
+    rank: 0,
+    participantId: p.id,
+    nickname: p.nickname,
+    avatarId: p.avatarId,
+    totalScore: TOTAL_SCORES[p.id] ?? 500,
+    correctCount: Math.round(((TOTAL_SCORES[p.id] ?? 500) / 1240) * 7),
+    submitCount: SET_QUESTIONS.length,
+  }))
+    .sort((a, b) => b.totalScore - a.totalScore)
+    .map((row, i) => ({ ...row, rank: i + 1 }));
 }
 
 /** GET /rooms/{roomId}/results (호스트) */
-export function mockRoomReport(): RoomReportResponse {
+export function mockSessionResults(): SessionResultsResponse {
+  const participants = buildParticipantRows();
+
   return {
-    roomTitle: DEMO_ROOM.title,
-    pin: DEMO_ROOM.pin,
-    status: "FINISHED",
-    dateLabel: REPORT_DATE_LABEL,
+    roomId: DEMO_ROOM_ID,
+    title: DEMO_ROOM.title,
+    status: "ENDED",
+    startedAt: "2026-09-02T02:00:00",
+    endedAt: "2026-09-02T03:00:00",
     summary: {
-      avgAccuracyPercent: REPORT_STATS.accuracy,
-      studentCount: REPORT_STATS.students,
-      questionCount: REPORT_STATS.questions,
-      aiAnalysisCount: REPORT_STATS.aiAnalyses,
-      avgScore: null,
-      topScore: RANKING[0]?.totalScore ?? null,
-      // 이 목의 방 인원은 6명이다 — 시안 숫자(24명/22명)를 그대로 쓰면 KPI끼리 어긋난다
-      submittedCount: 5,
-      completionPercent: 83,
-      avgElapsedSeconds: 252,
-      essayGradedCount: 6,
-      essayTotalCount: 6,
+      participantCount: participants.length,
+      questionCount: SET_QUESTIONS.length,
+      avgCorrectRate: 71,
+      avgScore: 932,
+      aiAnalysisCount: 18,
     },
-    questions: REPORT_QUESTIONS.map((q) => ({
-      questionId: q.no,
-      questionNo: q.no,
-      title: q.title,
-      type: toQuestionType(q.type),
-      accuracyPercent: q.accuracy ?? null,
-      aiFeedbackCount: q.aiCount ?? null,
-      // @draft 오답 인원은 정답률의 나머지로 만든다 — 계약이 오면 서버 값이 들어온다
-      wrongCount: Math.round((REPORT_STATS.students * (100 - (q.accuracy ?? 0))) / 100),
-      prompt: q.prompt ?? q.title,
+    questions: SET_QUESTIONS.map((q) => ({
+      sessionQuestionId: sessionQuestionId(q),
+      questionId: q.id,
+      orderNo: q.orderNo,
+      type: q.type,
+      content: q.content,
+      points: q.points,
+      submitCount: participants.length,
+      correctCount: Math.round((participants.length * (CORRECT_RATE[q.orderNo] ?? 0)) / 100),
+      correctRate: CORRECT_RATE[q.orderNo] ?? 0,
+      aiAnalysisCount: AI_ANALYSIS_COUNT[q.orderNo] ?? 0,
     })),
-    students: RANKING.map((student, i) => ({ ...student, isMissing: i === RANKING.length - 1 })),
-    insights: REPORT_QUESTIONS.filter((q) => q.type === "essay").map((q) => ({
-      questionId: q.no,
-      gradingBreakdown: [
-        { label: "핵심 포함", count: 3 },
-        { label: "부분 점수", count: 2 },
-        { label: "핵심 누락", count: 1 },
-      ],
-      strengths: "1차 캐시와 동일성 보장을 짚은 답이 3명",
-      commonMisses: "쓰기 지연 · 변경 감지를 언급한 답이 2명뿐",
-      nextRoomSuggestion: "같은 개념을 객관식으로 한 번 더 확인",
-      hostComment: null,
-    })),
+    participants,
   };
 }
 
-/** @draft GET /rooms/{roomId}/questions/{questionId}/answers — 서술형 답안 목록(W-07 분석 패널) */
-export function mockEssayAnswers(): EssayAnswersResponse {
-  return { answers: ESSAY_ANSWERS_Q3 };
+/** GET /rooms/{roomId}/results/participants/{participantId} (호스트) */
+export function mockParticipantResult(participantId: string): ParticipantResultResponse {
+  const id = Number(participantId);
+  const row = buildParticipantRows().find((p) => p.participantId === id);
+  if (!row) throw new AppError("NotFound", { code: ERROR_CODES.PARTICIPANT_NOT_FOUND });
+
+  return {
+    roomId: DEMO_ROOM_ID,
+    participantId: row.participantId,
+    nickname: row.nickname,
+    avatarId: row.avatarId,
+    rank: row.rank,
+    totalScore: row.totalScore,
+    correctCount: row.correctCount,
+    submitCount: row.submitCount,
+    questionCount: SET_QUESTIONS.length,
+    questions: SET_QUESTIONS.map(toAnswerResultView),
+  };
 }
 
-/** @draft POST /answers/{answerId}/review */
-export function mockPostReview(): undefined {
-  return undefined;
+function toReviewTarget(
+  q: QuestionResponse,
+  participantId: number,
+  index: number,
+): ReviewTargetAnswer {
+  const reviewed = index < 3;
+  return {
+    answerId: index + 1,
+    sessionQuestionId: sessionQuestionId(q),
+    questionId: q.id,
+    orderNo: q.orderNo,
+    type: q.type,
+    questionContent: q.content,
+    points: q.points,
+    ...(q.answer ? { modelAnswer: q.answer } : {}),
+    participantId,
+    nickname: PARTICIPANTS.find((p) => p.id === participantId)?.nickname ?? "",
+    avatarId: PARTICIPANTS.find((p) => p.id === participantId)?.avatarId ?? "cat",
+    submitted: ESSAY_TEXTS[participantId] ?? "",
+    score: q.points,
+    finalScore: q.points,
+    submittedAt: "2026-09-02T02:40:00",
+    analysisStatus: "DONE",
+    analysis: DONE_ANALYSIS,
+    reviewed,
+    ...(reviewed
+      ? {
+          teacherReview: {
+            comment: "핵심은 잘 짚었어요. 쓰기 지연까지 이어서 설명해 보세요",
+            reviewedAt: "2026-09-02T03:20:00",
+          },
+        }
+      : {}),
+  };
 }
 
-/** POST /rooms/{roomId}/ratings — 세션당 1회. 409 ALREADY_RATED */
+/** GET /rooms/{roomId}/answers — 첨삭 대상 목록(서술형만) */
+export function mockReviewTargets(url: URL): ReviewTargetListResponse {
+  const questionId = url.searchParams.get("questionId");
+  const target =
+    SET_QUESTIONS.find((q) => q.type === "ESSAY" && (!questionId || q.id === Number(questionId))) ??
+    SET_QUESTIONS[0];
+
+  const answers = PARTICIPANTS.map((p, i) => toReviewTarget(target, p.id, i));
+  return {
+    roomId: DEMO_ROOM_ID,
+    totalCount: answers.length,
+    reviewedCount: answers.filter((a) => a.reviewed).length,
+    answers,
+  };
+}
+
+/** @draft PUT /rooms/{roomId}/answers/{answerId}/review — 백엔드 미구현. 목에서만 성공한다 */
+export function mockPostReview(answerId: number, body: HostReviewRequest): TeacherReviewResponse {
+  return {
+    answerId,
+    participantId: 1,
+    // 보정을 넣으면 그 값이 최종 점수가 된다. 지우면 채점기 점수로 돌아간다
+    finalScore: body.adjustedScore ?? 70,
+    review: {
+      comment: body.comment,
+      improvement: body.improvement,
+      adjustedScore: body.adjustedScore,
+      reviewedAt: new Date().toISOString().slice(0, 19),
+    },
+  };
+}
+
+/** @draft POST /rooms/{roomId}/ratings — 백엔드 미구현. 세션당 1회만 받는다 */
 export function mockSubmitRating(): undefined {
-  if (rated) throw new AppError("Conflict", { code: "ALREADY_RATED" });
+  if (rated) throw new AppError("Conflict", { code: ERROR_CODES.ALREADY_RATED });
   rated = true;
   return undefined;
+}
+
+/** 테스트 전용 — 결과 목의 모듈 상태를 되돌린다 */
+export function __resetResultsForTests(): void {
+  rated = false;
+  myAnalysisStatus = "NOT_REQUESTED";
+  analysisRequestedAt = 0;
+  remainingFreeAnalysis = 5;
 }

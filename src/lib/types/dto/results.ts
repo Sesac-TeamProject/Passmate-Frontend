@@ -1,164 +1,241 @@
-import type { QuestionType, RoomState } from "./common";
+import type { AnalysisStatus, QuestionType, RoomStatus } from "./common";
+import type { RatingAvailability } from "./ratings";
 
-export type AnswerVerdict =
-  "CORRECT" | "WRONG" | "INCORRECT" | "AI_ANALYZED" | "ANALYZED" | "AI_PENDING" | "PENDING";
-/** SKIPPED = 세션 시작 시 aiAnalysisEnabled=false */
-export type AiFeedbackStatus = "PENDING" | "DONE" | "FAILED" | "SKIPPED";
+/**
+ * 결과·리포트·첨삭·AI 분석 — 백엔드 `report/dto/*.kt`·`feedback/dto/*.kt` 1:1
+ * (`contracts/rest-api.md` §2-7).
+ */
 
-export type AiFeedbackDto = {
-  status?: AiFeedbackStatus | null;
-  coveredConcepts?: string[];
-  missingConcepts?: string[];
-  weaknesses?: string | null;
-  improvement?: string | null;
-  suggestedScore?: number | null;
+/**
+ * 서술형 AI 분석 결과. **`DONE`일 때만 온다** — 분석 전·중·실패면 필드 자체가 빠진다.
+ * 상태는 함께 오는 `analysisStatus`로 판단한다.
+ */
+export type EssayAnalysisView = {
+  keyPoints: string[];
+  missingPoints: string[];
+  suggestions: string[];
+  summary: string;
+  completedAt?: string;
 };
-export type HostReviewDto = {
+
+/** 선생님 첨삭. 조회는 되지만 **저장 API가 아직 없다**(US7에서 `@draft`로 남긴다) */
+export type TeacherReviewView = {
   comment?: string;
-  improvement?: string | null;
-  adjustedScore?: number | null;
+  /** 보정 점수. 서술형 최종 점수는 이 값이 우선한다 */
+  adjustedScore?: number;
+  improvement?: string;
+  reviewedAt: string;
 };
 
-/** @draft 보기 하나에 몇 명이 답했는지 — label은 보기 원문 */
-export type ChoiceCountDto = { label: string; count: number; isCorrect?: boolean };
-
-export type ResultQuestionDto = {
+/**
+ * GET …/questions/{questionId}/answers/me — 내 답안 한 건과 그 피드백.
+ * `remainingFreeAnalysis`는 회원에게만 온다(게스트는 분석을 요청할 수 없다).
+ */
+export type MyAnswerResponse = {
+  roomId: number;
+  sessionQuestionId: number;
   questionId: number;
-  questionNo: number;
-  title?: string;
-  type?: QuestionType | null;
-  verdict?: AnswerVerdict | null;
-  myAnswer?: string | null;
-  correctAnswer?: string | null;
-  explanation?: string | null;
-  earnedScore?: number;
-  aiFeedback?: AiFeedbackDto | null;
-  hostReview?: HostReviewDto | null;
-  /** @draft 문항이 다루는 개념 이름 — 리포트 표 "개념" 열 (시안 787:8920) */
-  concept?: string | null;
-  /** @draft 이 문항의 방 전체 정답률 — 리포트 표 "반 정답률" 열 */
-  classAccuracyPercent?: number | null;
-  /** @draft 내가 이 문항에 쓴 시간(초) — 리포트 표 "소요" 열 */
-  elapsedSeconds?: number | null;
-  /** @draft 보기별 응답 인원 — 문항 상세 "다른 학생들은" (시안 620:8221). 없으면 그 칸을 감춘다 */
-  choiceDistribution?: ChoiceCountDto[];
-};
-/** GET /rooms/{roomId}/results/me */
-export type SessionResultResponse = {
-  roomTitle?: string;
-  rank?: number | null;
-  totalScore?: number;
-  correctCount?: number;
-  questionCount?: number;
-  canRate?: boolean;
-  isGuest?: boolean;
-  questions?: ResultQuestionDto[];
-};
-/** @draft 반 평균 대비 내 위치 — 리포트 "반 평균과 비교" 카드 (시안 787:8862) */
-export type ReportComparisonDto = {
-  myPercent: number;
-  classAveragePercent: number;
-  topPercent: number;
-};
-/** @draft 회차별 추이 한 점 — label은 "1회차"처럼 서버가 만든 표기 */
-export type ReportTrendPointDto = { label: string; accuracyPercent: number };
-/** @draft 개념별 맞힌 수 — 리포트 "개념별 정답률" 카드 */
-export type ReportConceptDto = { name: string; correctCount: number; questionCount: number };
-
-/** GET /rooms/{roomId}/reports/me */
-export type LearningReportResponse = {
-  accuracyPercent?: number;
-  weakTopics?: string[];
-  improvementPoints?: string[];
-  /** @draft 헤더 부제 "8/22 (금) · 3회차 참여 · 문항 8개"에 쓰는 값들 */
-  dateLabel?: string | null;
-  attemptCount?: number | null;
-  /** @draft 헤더 "3위 / 24명"의 분모 */
-  participantCount?: number | null;
-  /** @draft 헤더 "소요 시간" — 세션 전체 */
-  elapsedSeconds?: number | null;
-  /** @draft 분석 카드 3장. 없으면 해당 카드를 숨긴다 */
-  comparison?: ReportComparisonDto | null;
-  trend?: ReportTrendPointDto[];
-  concepts?: ReportConceptDto[];
+  orderNo: number;
+  type: QuestionType;
+  content: string;
+  points: number;
+  /** 내가 낸 답 */
+  submitted: string;
+  isCorrect?: boolean;
+  score: number;
+  /** 첨삭 보정이 있으면 반영된 최종 점수 */
+  finalScore: number;
+  submittedAt: string;
+  /** 정답·해설은 문항이 마감된 뒤에만 온다 */
+  answer?: string;
+  explanation?: string;
+  analysisStatus: AnalysisStatus;
+  analysis?: EssayAnalysisView;
+  teacherReview?: TeacherReviewView;
+  /** 이번 달 남은 무료 분석 횟수 */
+  remainingFreeAnalysis?: number;
+  /** 무료 횟수를 넘겼을 때 1건당 코인 */
+  analysisCoinCost: number;
 };
 
-export type RoomReportSummary = {
-  avgAccuracyPercent?: number | null;
-  studentCount?: number;
-  questionCount?: number;
-  aiAnalysisCount?: number;
-  avgScore?: number | null;
-  topScore?: number | null;
-  /** @draft W-07 KPI 6칸 (시안 784:8863) — 없는 칸은 "—"로 둔다 */
-  submittedCount?: number | null;
-  completionPercent?: number | null;
-  avgElapsedSeconds?: number | null;
-  essayGradedCount?: number | null;
-  essayTotalCount?: number | null;
-};
-export type RoomReportQuestion = {
-  questionId?: number;
-  questionNo?: number;
-  title?: string;
-  type?: QuestionType | null;
-  accuracyPercent?: number | null;
-  aiFeedbackCount?: number | null;
-  /** @draft 이 문항을 틀린 학생 수 — W-07 표 "오답" 열 */
-  wrongCount?: number | null;
-  /** @draft 문항 원문(표 제목보다 긴 전문) — 우측 상세 패널 머리글 */
-  prompt?: string | null;
-};
-export type RoomReportStudent = {
-  participantId?: number;
-  nickname?: string;
-  rank?: number | null;
-  totalScore?: number;
-  correctCount?: number;
-  isGuest?: boolean;
-  /** @draft 미제출이면 true — W-07 "많이 틀린 학생"이 "미제출"로 적는다 */
-  isMissing?: boolean | null;
+/**
+ * POST …/answers/me/analysis — **202**로 접수만 하고 결과는 나중에 온다.
+ * 완료 알림 이벤트가 없어 화면은 `analysisStatus`가 `PENDING`인 동안 폴링한다.
+ * 코인이 모자라면 402 `INSUFFICIENT_COINS`, 게스트는 403 `GUEST_NOT_ALLOWED`.
+ */
+export type EssayAnalysisRequestResponse = {
+  analysisStatus: AnalysisStatus;
+  /** 이번에 차감된 코인(무료 횟수 안이면 0) */
+  chargedCoins: number;
+  remainingFreeAnalysis: number;
+  analysisCoinCost: number;
 };
 
-/** @draft 문항 하나의 채점 분포·AI 총평 — W-07 우측 상세 패널 (시안 784:8983) */
-export type RoomQuestionInsightDto = {
+/** 결과 화면의 문항 한 줄 — 내 답·정답·점수·피드백을 함께 담는다 */
+export type AnswerResultView = {
+  sessionQuestionId: number;
   questionId: number;
-  /** 채점 현황 막대 — 라벨은 서버 문구 그대로 쓴다 */
-  gradingBreakdown?: { label: string; count: number }[];
-  /** AI 분석 (참고 의견) 3항 */
-  strengths?: string | null;
-  commonMisses?: string | null;
-  nextRoomSuggestion?: string | null;
-  /** 이미 저장된 선생님 코멘트 */
-  hostComment?: string | null;
-};
-/** GET /rooms/{roomId}/results (호스트) */
-export type RoomReportResponse = {
-  roomTitle?: string;
-  pin?: string;
-  status?: RoomState | null;
-  dateLabel?: string | null;
-  summary?: RoomReportSummary;
-  questions?: RoomReportQuestion[];
-  students?: RoomReportStudent[];
-  /** @draft 문항별 채점 분포·AI 총평 — 별도 엔드포인트를 두지 않고 리포트에 함께 싣는다 */
-  insights?: RoomQuestionInsightDto[];
+  orderNo: number;
+  type: QuestionType;
+  content: string;
+  points: number;
+  answer?: string;
+  explanation?: string;
+  /** 안 냈으면 필드가 빠진다 — "미제출"과 "빈 답"은 다르다 */
+  submitted?: string;
+  isCorrect?: boolean;
+  score: number;
+  finalScore: number;
+  analysisStatus: AnalysisStatus;
+  analysis?: EssayAnalysisView;
+  teacherReview?: TeacherReviewView;
 };
 
-/** @draft 경로는 API 명세서 v2로 확정. 응답 필드는 미확보 — 서술형 답안 목록(W-07 분석 패널) */
-export type EssayAnswerDto = {
-  answerId: number;
+/** GET /rooms/{roomId}/results/me — 게스트도 부를 수 있다. **호스트 이름은 없다**(G-8) */
+export type MySessionResultResponse = {
+  roomId: number;
+  roomTitle: string;
+  status: RoomStatus;
+  endedAt?: string;
   participantId: number;
   nickname: string;
-  content: string;
-  aiFeedback?: AiFeedbackDto | null;
-  hostReview?: HostReviewDto | null;
+  avatarId: string;
+  /** 게스트로 풀었는가 — 가입 유도 문구를 띄우는 조건 */
+  guest: boolean;
+  rank: number;
+  totalScore: number;
+  correctCount: number;
+  submitCount: number;
+  questionCount: number;
+  questions: AnswerResultView[];
+  /** 별점 가능 여부·마감. 제출 API는 아직 없다(US12) */
+  rating: RatingAvailability;
 };
-/** @draft GET /rooms/{roomId}/answers 응답 필드 */
-export type EssayAnswersResponse = { answers: EssayAnswerDto[] };
-/** @draft PUT /rooms/{roomId}/answers/{answerId}/review 요청 필드 (FR-034) */
+
+/** GET /rooms/{roomId}/results/participants/{participantId} — 호스트가 학생 한 명을 들여다본다 */
+export type ParticipantResultResponse = {
+  roomId: number;
+  participantId: number;
+  nickname: string;
+  avatarId: string;
+  rank: number;
+  totalScore: number;
+  correctCount: number;
+  submitCount: number;
+  questionCount: number;
+  questions: AnswerResultView[];
+};
+
+export type ResultSummary = {
+  participantCount: number;
+  questionCount: number;
+  /** 0~100 */
+  avgCorrectRate: number;
+  avgScore: number;
+  aiAnalysisCount: number;
+};
+
+export type QuestionResultRow = {
+  sessionQuestionId: number;
+  questionId: number;
+  orderNo: number;
+  type: QuestionType;
+  content: string;
+  points: number;
+  submitCount: number;
+  correctCount: number;
+  correctRate: number;
+  aiAnalysisCount: number;
+};
+
+export type ParticipantResultRow = {
+  rank: number;
+  participantId: number;
+  nickname: string;
+  avatarId: string;
+  totalScore: number;
+  correctCount: number;
+  submitCount: number;
+};
+
+/** GET /rooms/{roomId}/results (호스트) — **pin·최고점은 없다** */
+export type SessionResultsResponse = {
+  roomId: number;
+  title: string;
+  status: RoomStatus;
+  startedAt?: string;
+  endedAt?: string;
+  summary: ResultSummary;
+  questions: QuestionResultRow[];
+  participants: ParticipantResultRow[];
+};
+
+/** GET /rooms/{roomId}/reports/me — 세션 종료 시 서버가 만들어 둔 학습 리포트 */
+export type LearningReportResponse = {
+  roomId: number;
+  roomTitle: string;
+  participantId: number;
+  nickname: string;
+  totalQuestions: number;
+  correctCount: number;
+  /** 0~100 */
+  accuracy: number;
+  totalScore: number;
+  finalRank: number;
+  weakTopics: string[];
+  /** 서버가 정답률·취약 주제로 만든 문장들 */
+  improvementPoints: string[];
+  generatedAt: string;
+};
+
+/** 첨삭 대상 답안 한 건 — 문항·학생·AI 분석·기존 첨삭이 한 줄에 다 들어 있다 */
+export type ReviewTargetAnswer = {
+  answerId: number;
+  sessionQuestionId: number;
+  questionId: number;
+  orderNo: number;
+  type: QuestionType;
+  questionContent: string;
+  points: number;
+  /** 모범답안 */
+  modelAnswer?: string;
+  participantId: number;
+  nickname: string;
+  avatarId: string;
+  submitted: string;
+  isCorrect?: boolean;
+  score: number;
+  finalScore: number;
+  submittedAt: string;
+  analysisStatus: AnalysisStatus;
+  analysis?: EssayAnalysisView;
+  reviewed: boolean;
+  teacherReview?: TeacherReviewView;
+};
+
+/** GET /rooms/{roomId}/answers?questionId&participantId (호스트) */
+export type ReviewTargetListResponse = {
+  roomId: number;
+  totalCount: number;
+  reviewedCount: number;
+  answers: ReviewTargetAnswer[];
+};
+
+/**
+ * @draft PUT /rooms/{roomId}/answers/{answerId}/review — **백엔드 미구현**(실서버 404).
+ * 필드는 `TeacherReview` 엔티티 기준이라 저장 API가 오면 그대로 맞을 가능성이 높다.
+ */
+/** PUT …/review 응답 — 보정이 반영된 최종 점수를 함께 돌려준다 */
+export type TeacherReviewResponse = {
+  answerId: number;
+  participantId: number;
+  /** 보정이 반영된 최종 점수. 보정을 지우면 채점기가 낸 잠정 점수로 돌아간다 */
+  finalScore: number;
+  review: TeacherReviewView;
+};
+
 export type HostReviewRequest = {
-  comment: string;
-  improvement?: string | null;
-  adjustedScore?: number | null;
+  comment?: string;
+  improvement?: string;
+  adjustedScore?: number;
 };

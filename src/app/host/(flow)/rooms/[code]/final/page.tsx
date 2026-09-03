@@ -12,8 +12,8 @@ import {
 } from "@/features/host/live/adapt";
 import { FinalPage } from "@/features/host/live/final-page";
 import type { PodiumEntry } from "@/features/host/live/podium";
-import { useRoomByPin } from "@/lib/queries/use-rooms";
-import { useRoomReport } from "@/lib/queries/use-results";
+import { useHostRoomId, useRoom } from "@/lib/queries/use-rooms";
+import { useSessionResults } from "@/lib/queries/use-results";
 import { useSessionStore } from "@/lib/stores/session-store";
 
 /**
@@ -25,16 +25,18 @@ export default function Page() {
   const pin = params.code;
   const router = useRouter();
 
-  const room = useRoomByPin(pin);
-  const roomId = room.data?.roomId ?? null;
+  const room = useHostRoomId(pin);
+  const roomId = room.roomId;
 
   const phase = useSessionStore((s) => s.phase);
   const finalRanking = useSessionStore((s) => s.finalRanking);
   const ranking = useSessionStore((s) => s.ranking);
-  const questionCount = useSessionStore((s) => s.questionCount);
+  const totalCount = useSessionStore((s) => s.totalCount);
   const snapshotTs = useSessionStore((s) => s.snapshotTs);
 
-  const report = useRoomReport(roomId);
+  const results = useSessionResults(roomId);
+  // 끝난 방은 PIN으로 못 찾는다 — 제목은 roomId로 읽는다(캐시해 둔 id가 여기서 쓰인다)
+  const detail = useRoom(roomId);
 
   // 아직 끝나지 않은 방을 주소로 열면 진행 흐름으로 돌려보낸다
   useEffect(() => {
@@ -43,13 +45,12 @@ export default function Page() {
   }, [phase, snapshotTs, pin, router]);
 
   if (room.isPending) return <ScreenLoading />;
-  if (room.isError)
-    return <ScreenError message={room.error.message} onRetry={() => room.refetch()} />;
+  if (room.error) return <ScreenError message={room.error.message} />;
 
   // SESSION_ENDED가 finalRanking을 싣지 않으면 마지막 랭킹으로 대신한다
   const source = finalRanking.length > 0 ? finalRanking : ranking;
-  const rows = toFinalRanking(source, report.data);
-  const total = report.data?.summary?.questionCount ?? questionCount ?? 0;
+  const rows = toFinalRanking(source, results.data);
+  const total = results.data?.summary.questionCount ?? totalCount;
 
   const podium: [PodiumEntry, PodiumEntry, PodiumEntry] | null =
     rows.length >= 3
@@ -62,13 +63,13 @@ export default function Page() {
 
   return (
     <FinalPage
-      title={room.data.title}
+      title={detail.data?.title ?? ""}
       questionTotal={total}
       podium={podium}
       rest={podium ? rows.slice(3) : rows}
-      summary={toSessionSummary(report.data, rows.length, total)}
-      accuracyByQuestion={toReportAccuracy(report.data, total)}
-      hardest={toHardestQuestion(report.data)}
+      summary={toSessionSummary(results.data, rows.length, total)}
+      accuracyByQuestion={toReportAccuracy(results.data, total)}
+      hardest={toHardestQuestion(results.data)}
       // TODO(API): 순위 내보내기는 계약이 없다 (DESIGN_GAPS D-8)
       onExport={() => {}}
       onOpenReport={() => roomId !== null && router.push(`/host/sessions/${roomId}/review`)}

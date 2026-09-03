@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { CreateRoomRequest } from "@/lib/types/dto";
+import type { RoomCreateRequest } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
 import {
   DEFAULT_ENTRY_FEE,
@@ -33,7 +33,7 @@ type Props = {
   sets: QuestionSetOption[];
   /** 명성 레벨. 유료 탭 잠금·명성 행에 쓴다 */
   level: number;
-  onSubmit: (body: CreateRoomRequest) => void;
+  onSubmit: (body: RoomCreateRequest) => void;
   pending?: boolean;
   errorMessage?: string | null;
 };
@@ -79,12 +79,13 @@ export function NewRoomDialog({
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (pending) return;
+    // 값이 없는 필드는 키를 빼서 보낸다 — 서버가 null을 검증에 걸 수 있다(R-4)
     onSubmit({
       title: name.trim(),
-      questionSetId: questionSetId ? Number(questionSetId) : null,
-      isPaid,
-      entryFee: isPaid ? fee : null,
-      isListed: true,
+      type: isPaid ? "PAID" : "FREE",
+      ...(questionSetId ? { questionSetId: Number(questionSetId) } : {}),
+      ...(isPaid ? { fee } : {}),
+      isPublic: true,
     });
   };
 

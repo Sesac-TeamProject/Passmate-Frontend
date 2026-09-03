@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/lib/types/app-error";
 import { MOCK_ROUTES, resolveMock } from "./handlers";
+import { __resetQuestionSetsForTests } from "./question-sets";
+import { __resetRoomsForTests } from "./rooms";
 import { __resetSessionForTests } from "./session";
 
 const SAMPLE: Record<string, string> = {
@@ -19,9 +21,12 @@ const SAMPLE: Record<string, string> = {
 const ROUTE_SWEEP_TIMEOUT_MS = 30000;
 
 describe("mocks/handlers", () => {
-  // session.ts의 phase 등은 모듈 스코프 상태라 테스트 간에 남는다 — 매 테스트 전에 되돌린다.
+  // session.ts의 phase, rooms.ts의 방·참가자는 모듈 스코프 상태라 테스트 간에 남는다
+  // (예: 라우트 스윕이 방을 닫으면 그 PIN은 이후 404다) — 매 테스트 전에 되돌린다.
   beforeEach(() => {
     __resetSessionForTests();
+    __resetRoomsForTests();
+    __resetQuestionSetsForTests();
   });
 
   it(
@@ -31,7 +36,7 @@ describe("mocks/handlers", () => {
         const [method, path] = key.split(" ");
         const url =
           path.replace(/:[a-zA-Z]+/g, (m) => SAMPLE[m] ?? "1") +
-          (path === "/rooms/public" ? "?sort=popular&type=all" : "");
+          (path === "/rooms/public" ? "?sort=POPULAR" : "");
 
         try {
           await resolveMock(method, url, {});
@@ -46,11 +51,41 @@ describe("mocks/handlers", () => {
     ROUTE_SWEEP_TIMEOUT_MS,
   );
 
-  it("GET /rooms/pin/482913 은 시연 방을 돌려준다", async () => {
+  it("GET /rooms/pin/482913 은 시연 방 요약을 돌려준다 (PIN은 응답에 없다)", async () => {
     await expect(resolveMock("GET", "/rooms/pin/482913")).resolves.toMatchObject({
-      roomId: 1,
-      pin: "482913",
+      id: 1,
+      title: "Spring 실전 모의고사 4주차",
+      status: "WAITING",
     });
+  });
+
+  it("POST /rooms 는 RoomResponse(PIN 포함)를 돌려준다", async () => {
+    await expect(resolveMock("POST", "/rooms", { title: "새 방" })).resolves.toMatchObject({
+      title: "새 방",
+      status: "WAITING",
+      type: "FREE",
+      pin: expect.stringMatching(/^\d{6}$/),
+    });
+  });
+
+  it("유료 방은 서버처럼 400 UNSUPPORTED_ROOM_TYPE 으로 막힌다", async () => {
+    await expect(
+      resolveMock("POST", "/rooms", { title: "유료", type: "PAID" }),
+    ).rejects.toMatchObject({ kind: "ValidationFailed", code: "UNSUPPORTED_ROOM_TYPE" });
+  });
+
+  it("GET /question-sets 는 PageResponse 형태다", async () => {
+    await expect(resolveMock("GET", "/question-sets")).resolves.toMatchObject({
+      page: 0,
+      hasNext: false,
+      content: expect.any(Array),
+    });
+  });
+
+  it("확정된 세트의 문항은 고칠 수 없다 (409)", async () => {
+    await expect(
+      resolveMock("POST", "/question-sets/1/questions", { type: "OX", content: "c", answer: "O" }),
+    ).rejects.toMatchObject({ kind: "Conflict", code: "QUESTION_SET_ALREADY_CONFIRMED" });
   });
 
   it("모르는 PIN은 NotFound", async () => {
@@ -59,9 +94,12 @@ describe("mocks/handlers", () => {
     });
   });
 
-  it("WAITING 상태의 스냅샷은 NotFound(404=미시작)", async () => {
-    await expect(resolveMock("GET", "/rooms/1/session")).rejects.toMatchObject({
-      kind: "NotFound",
+  it("WAITING 상태의 스냅샷도 200이다 — 404가 아니다", async () => {
+    // 예전 계약은 "404 = 세션 미시작"이었다. 서버는 WAITING에도 정상 응답을 준다(ws-events.md §6)
+    await expect(resolveMock("GET", "/rooms/1/session")).resolves.toMatchObject({
+      status: "WAITING",
+      currentQuestionNo: 0,
+      submitted: false,
     });
   });
 
@@ -92,15 +130,16 @@ describe("mocks/handlers", () => {
         import("@/lib/api/auth"),
         import("@/lib/api/admin"),
       ]);
-      // generateQuestionSet은 목 지연이 1.5초 더 걸려 맨 끝에 둔다(ROUTE_SWEEP_TIMEOUT_MS로 흡수).
+      // generateQuestions는 목 지연이 1.5초 더 걸려 맨 끝에 둔다(ROUTE_SWEEP_TIMEOUT_MS로 흡수).
       const calls: (() => Promise<unknown>)[] = [
         () => rooms.getRoomByPin("482913"),
         () => rooms.createRoom({ title: "t" }),
         () => rooms.getHostedRooms(),
-        () => rooms.getPublicRooms({ sort: "popular", type: "all" }),
-        () => rooms.joinRoom(1, { nickname: "n" }),
+        () => rooms.getPublicRooms({ sort: "POPULAR" }),
+        () => rooms.joinRoom(1, { nickname: `n${Date.now()}` }),
         () => rooms.getParticipants(1),
         () => rooms.leaveRoom(1),
+        () => rooms.checkNickname(1, "준영"),
         () => sessions.startSession(1),
         () => sessions.getSessionSnapshot(1),
         () => sessions.nextQuestion(1),
@@ -108,30 +147,33 @@ describe("mocks/handlers", () => {
         () => sessions.endSession(1),
         () => sessions.lockScreen(1, true),
         () => sessions.getSubmissions(1),
-        () => sessions.submitAnswer(1, 1, "A"),
+        () => sessions.getRanking(1),
+        () => sessions.getQuestionResult(1, 1),
+        () => sessions.submitAnswer(1, 1, "REQUIRED"),
         () => sessions.getVoiceHints(1),
         () => sessions.uploadVoiceHint(1, new Blob(["x"], { type: "audio/webm" }), 1200),
         () => qs.getQuestionSets(),
         () => qs.getQuestionSet(1),
-        () => qs.updateQuestionSet(1, { title: "t" }),
-        () => qs.confirmQuestionSet(1),
         () => qs.duplicateQuestionSet(1),
         () => qs.createQuestionSet({ title: "t" }),
-        () => qs.generateFromFile(1, new File(["x"], "a.pdf", { type: "application/pdf" })),
         () => results.getMyResult(1),
         () => results.getMyReport(1),
-        () => results.getRoomReport(1),
-        () => results.getEssayAnswers(1, 1),
+        () => results.getSessionResults(1),
+        () => results.getParticipantResult(1, 11),
+        () => results.getMyAnswer(1, 1),
+        () => results.requestEssayAnalysis(1, 1),
+        () => results.getReviewTargets(1, { questionId: 1 }),
         () => results.putHostReview(1, 1, { comment: "c" }),
         () => me.updateProfile({ nickname: "n" }),
-        () => me.getMyPage(),
+        () => me.getJoinedRooms(0),
+        () => me.getCumulativeReport(),
         () => me.getGrade(),
         () => me.getBadges(),
         () => me.getNotificationSettings(),
         () => me.putNotificationSettings({ sessionStart: true }),
         () => me.getHostProfile(42),
-        () => me.postReport({ targetType: "USER", targetId: 42, reason: "SPAM" }),
-        () => me.claimGuestRecord(11),
+        () => me.postReport({ targetType: "USER", targetId: 42, type: "SPAM", reason: "도배해요" }),
+        () => me.claimGuestRecord("mock-guest-record-token"),
         () => payments.getCoinBalance(),
         () => payments.getCoinTransactions(),
         () => payments.createCharge({ amount: 10000, method: "KAKAO_PAY" }),
@@ -141,8 +183,9 @@ describe("mocks/handlers", () => {
         () => payments.getSettlementAccount(),
         () =>
           payments.putSettlementAccount({
-            bankName: "국민",
-            accountNumber: "1",
+            bankCode: "004",
+            bankName: "국민은행",
+            accountNo: "123456789",
             holderName: "h",
           }),
         () => payments.putPaymentMethod("CARD"),
@@ -162,19 +205,39 @@ describe("mocks/handlers", () => {
         () => auth.devLogin("web-dev"),
         () => auth.logout(),
         () => me.deleteMe(),
-        () =>
-          qs.generateQuestionSet(1, {
-            topic: "Spring",
-            counts: [{ type: "MULTIPLE_CHOICE", count: 1 }],
-            difficulty: "MEDIUM",
-          }),
+        () => rooms.getRoom(1),
+        () => rooms.updateRoom(1, { title: "t" }),
+        () => rooms.closeRoom(1),
+        // 세트 수정·문항 CRUD는 **초안 세트**에서만 된다(확정 세트는 409) —
+        // 새 세트를 만들어 관련 라우트를 순서대로 훑는다.
+        async () => {
+          const set = await qs.createQuestionSet({ title: "목 라우트 확인" });
+          const question = await qs.addQuestion(set.id, {
+            type: "OX",
+            content: "c",
+            answer: "O",
+          });
+          await qs.updateQuestion(set.id, question.id, {
+            type: "OX",
+            content: "c2",
+            answer: "X",
+          });
+          await qs.regenerateQuestion(set.id, question.id);
+          await qs.updateQuestionSet(set.id, { title: "t", questionOrder: [question.id] });
+          await qs.generateFromFile(set.id, new File(["x"], "a.pdf", { type: "application/pdf" }));
+          await qs.generateQuestions(set.id, { topic: "Spring", counts: { MCQ: 1 } });
+          await qs.deleteQuestion(set.id, question.id);
+          await qs.confirmQuestionSet(set.id);
+        },
       ];
 
       for (const call of calls) {
         try {
           await call();
         } catch (e) {
-          expect(AppError.isAppError(e)).toBe(true);
+          // `vi.resetModules()` 뒤에 다시 import한 모듈은 **다른 AppError 클래스**를 쓴다 —
+          // `instanceof`가 false가 되므로 여기서는 모양(kind)으로 본다.
+          expect(e).toMatchObject({ kind: expect.any(String) });
           expect((e as { code?: string | null }).code).not.toBe("MOCK_ROUTE_MISSING");
         }
       }

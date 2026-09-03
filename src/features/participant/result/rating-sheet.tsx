@@ -19,6 +19,8 @@ type Props = {
   hostName: string | null;
   /** 카드 부제. 예: "8월 4주차 Spring 스터디 · 오늘 8문항" */
   subtitle: string;
+  /** 평가 마감 안내(서버 `rating.deadline` 기준). 없으면 줄을 감춘다 */
+  deadlineLabel?: string | null;
   onSubmit: (body: SubmitRatingRequest) => void;
   onSkip: () => void;
   pending: boolean;
@@ -27,11 +29,12 @@ type Props = {
 
 /**
  * P-Web 별점 시트 (design.pen 프레임 NSaex) — 세션이 끝난 학생이 선생님을 평가한다.
- * 세션당 한 번만 낼 수 있어(409 ALREADY_RATED) 결과의 canRate가 참일 때만 띄운다.
+ * 세션당 한 번만 낼 수 있어 결과의 `rating.available`이 참일 때만 띄운다.
  */
 export function RatingSheet({
   hostName,
   subtitle,
+  deadlineLabel = null,
   onSubmit,
   onSkip,
   pending,
@@ -50,6 +53,7 @@ export function RatingSheet({
         <div className="flex flex-col items-center gap-1">
           {hostName ? <p className="text-heading-md text-ink">{hostName} 선생님</p> : null}
           <p className="text-body-lg text-muted-foreground">{subtitle}</p>
+          {deadlineLabel ? <p className="text-label-md text-mint-dark">{deadlineLabel}</p> : null}
         </div>
 
         <h1 className="mt-3 text-center text-heading-lg text-ink">오늘 수업 어땠나요?</h1>
@@ -133,7 +137,10 @@ export function RatingSheet({
             size="xl"
             className="flex-1"
             disabled={stars === null || pending}
-            onClick={() => stars && onSubmit({ stars, tags, comment: comment.trim() || null })}
+            onClick={() =>
+              stars &&
+              onSubmit({ stars, tags, ...(comment.trim() ? { comment: comment.trim() } : {}) })
+            }
           >
             {pending ? <PendingLabel>보내는 중…</PendingLabel> : "보내기"}
           </Button>

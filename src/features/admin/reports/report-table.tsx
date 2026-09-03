@@ -1,5 +1,10 @@
 import { formatRelativeTime } from "@/lib/format";
-import type { AdminReport, ReportStatus, ReportTargetKind, ReportType } from "@/lib/types/dto";
+import type {
+  AdminReport,
+  AdminReportStatus,
+  AdminReportTargetKind,
+  AdminReportType,
+} from "@/lib/types/dto";
 import { AdminTable, type AdminTableColumn } from "../components/admin-table";
 import { StatChip } from "../components/stat-chip";
 import type { Tone } from "../components/tone";
@@ -8,7 +13,7 @@ import type { Tone } from "../components/tone";
 const ID_COL_W = 98;
 const ANONYMOUS = "익명";
 
-const TARGET_SUFFIX: Record<ReportTargetKind, (label: string) => string> = {
+const TARGET_SUFFIX: Record<AdminReportTargetKind, (label: string) => string> = {
   STUDENT: (l) => `${l} (학생)`,
   TEACHER: (l) => `${l} (선생님)`,
   GUEST: (l) => `${l} (게스트)`,
@@ -17,7 +22,7 @@ const TARGET_SUFFIX: Record<ReportTargetKind, (label: string) => string> = {
 };
 
 /** 운영 신고는 시안에서 칩 없이 글자만 보인다 (tone null). */
-const TYPE_CHIP: Record<ReportType, { label: string; tone: Tone | null }> = {
+const TYPE_CHIP: Record<AdminReportType, { label: string; tone: Tone | null }> = {
   NICKNAME: { label: "닉네임", tone: "warning" },
   QUESTION_ERROR: { label: "문제 오류", tone: "info" },
   PAID_ROOM: { label: "유료 방", tone: "success" },
@@ -25,7 +30,7 @@ const TYPE_CHIP: Record<ReportType, { label: string; tone: Tone | null }> = {
   SPAM: { label: "도배", tone: "warning" },
 };
 
-const STATUS_CHIP: Record<ReportStatus, { label: string; tone: Tone }> = {
+const STATUS_CHIP: Record<AdminReportStatus, { label: string; tone: Tone }> = {
   PENDING: { label: "미처리", tone: "danger" },
   REVIEWING: { label: "검토 중", tone: "warning" },
   RESOLVED: { label: "처리 완료", tone: "success" },

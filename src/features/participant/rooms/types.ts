@@ -20,16 +20,19 @@ export type PublicRoomItem = {
   host: string;
   /** 계약이 안 주면 null이라 이름이 링크가 되지 않는다 */
   hostId: number | null;
+  /** 문항 수. 서버가 세트를 연결하지 않은 방에는 값이 없다 */
+  questionCount: number | null;
   participants: number;
   timing: PublicRoomTiming;
 };
 
-export type PublicRoomFilter = "all" | "free" | "paid";
+/** "오늘"은 다른 셋과 축이 다르다 — 유·무료 필터에 겹쳐 거는 값이라 같은 줄에 두되 따로 다룬다 */
+export type PublicRoomFilter = "all" | "free" | "paid" | "today";
 
 export const ROOM_FILTERS: { value: PublicRoomFilter; label: string }[] = [
   { value: "all", label: "전체" },
   { value: "free", label: "무료" },
   { value: "paid", label: "유료" },
-  // TODO(계약): 시안에는 "오늘" 칩이 하나 더 있다. GET /rooms/public이 날짜 필터를 받지
-  // 않아 뺐다 — 넣으면 누르는 순간 아무 일도 안 일어난다. DESIGN_GAPS G-4 참고.
+  // 서버 `GET /rooms/public`에 `today` 파라미터가 있다 — 시안의 "오늘" 칩을 되살렸다
+  { value: "today", label: "오늘" },
 ];

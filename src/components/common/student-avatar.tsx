@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { AVATAR_KEYS, type AvatarKey } from "@/lib/types/dto";
+import type { AvatarKey } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
 
 export { AVATAR_KEYS, toAvatarKey, type AvatarKey } from "@/lib/types/dto";

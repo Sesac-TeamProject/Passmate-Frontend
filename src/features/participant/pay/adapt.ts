@@ -1,8 +1,9 @@
 import { toAvatarKey } from "@/components/common/student-avatar";
+import { parseServerDateTime } from "@/lib/datetime";
 import { LEVEL_TITLE, levelTitle } from "@/lib/host-level";
 import type { PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
-import type { PaymentMethod, RoomInfoResponse } from "@/lib/types/dto";
+import type { PaymentMethod, RoomSummaryResponse } from "@/lib/types/dto";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 import type { PaidRoom } from "./types";
 
@@ -12,7 +13,7 @@ export function formatSchedule(
   estimatedMinutes: number | null | undefined,
 ): string {
   if (!scheduledAt) return "";
-  const date = new Date(scheduledAt);
+  const date = parseServerDateTime(scheduledAt);
   if (Number.isNaN(date.getTime())) return "";
 
   const md = `${date.getMonth() + 1}/${date.getDate()}`;
@@ -24,27 +25,32 @@ export function formatSchedule(
   return estimatedMinutes != null ? `${base} · 약 ${estimatedMinutes}분` : base;
 }
 
-/** GET /rooms/pin/{pin} 응답 → 방 정보 카드 뷰 타입 */
-export function toPaidRoom(room: RoomInfoResponse): PaidRoom {
-  const level = room.host?.level ?? 1;
-
+/**
+ * GET /rooms/pin/{pin} 응답 → 방 정보 카드 뷰 타입.
+ *
+ * **입장 전에는 서버가 많이 알려주지 않는다** — `RoomSummaryResponse`에는 호스트·문항 수·일정이
+ * 없다. 시안이 그리던 호스트 이름·별점·"문항 8개"는 지어낼 근거가 없어 비운다(DESIGN_GAPS).
+ * 유료 방 자체가 아직 서버에 없어(400 `UNSUPPORTED_ROOM_TYPE`) 이 화면 전체가 `@draft`다.
+ *
+ * @param pin 라우트 파라미터. 응답에는 PIN이 없어 화면이 알고 있는 값을 그대로 쓴다
+ */
+export function toPaidRoom(room: RoomSummaryResponse, pin: string): PaidRoom {
   return {
-    code: room.pin,
+    code: pin,
     title: room.title,
     topic: room.topic ?? "",
-    composition: room.questionCount ? `문항 ${room.questionCount}개` : "",
+    composition: "",
     host: {
-      name: room.host?.nickname ?? "",
-      // 계약에 호스트 avatarId가 없다 — 공개 프로필에도 아직 없어 기본 아바타로 접는다.
+      name: "",
       avatar: toAvatarKey(null),
-      level,
-      levelTitle: levelTitle(level) ?? LEVEL_TITLE[1],
+      level: 1,
+      levelTitle: levelTitle(1) ?? LEVEL_TITLE[1],
     },
-    rating: room.host?.avgStars ?? 0,
-    students: room.host?.ratingCount ?? 0,
-    schedule: formatSchedule(room.scheduledAt, room.estimatedMinutes),
-    capacity: { current: room.participantCount ?? 0, max: room.maxParticipants ?? 0 },
-    fee: room.entryFee ?? 0,
+    rating: 0,
+    students: 0,
+    schedule: formatSchedule(undefined, undefined),
+    capacity: { current: room.participantCount, max: room.maxParticipants ?? 0 },
+    fee: room.fee ?? 0,
   };
 }
 

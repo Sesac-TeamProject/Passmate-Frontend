@@ -1,4 +1,5 @@
-import type { PublicRoomDto } from "@/lib/types/dto";
+import { parseServerDateTime } from "@/lib/datetime";
+import type { PublicRoomResponse } from "@/lib/types/dto";
 import type { PublicRoomItem, PublicRoomTiming } from "./types";
 
 /**
@@ -6,13 +7,13 @@ import type { PublicRoomItem, PublicRoomTiming } from "./types";
  * 시안이 "20:00 시작" · "내일 19:00" 두 가지를 쓰므로 오늘/내일/그 밖으로 나눈다.
  */
 export function toTiming(
-  status: PublicRoomDto["status"],
-  scheduledAt: string | null | undefined,
+  status: PublicRoomResponse["status"],
+  scheduledAt: string | undefined,
 ): PublicRoomTiming {
   if (status === "RUNNING") return { kind: "live" };
   if (!scheduledAt) return { kind: "unknown" };
 
-  const at = new Date(scheduledAt);
+  const at = parseServerDateTime(scheduledAt);
   if (Number.isNaN(at.getTime())) return { kind: "unknown" };
 
   const hh = String(at.getHours()).padStart(2, "0");
@@ -32,20 +33,23 @@ export function toTiming(
 /**
  * GET /rooms/public 항목 → 공개 방 목록 카드.
  *
- * 시안 카드에 있는데 계약이 안 주는 것 둘은 그리지 않는다 (지어내지 않는다):
- * - "8문항" — PublicRoomDto에 questionCount가 없다 (PublicRoom에는 있는데 목록 응답에는 빠져 있다)
- * - "인기" 배지 — 해당 필드가 없다. sort=popular의 앞자리로 흉내 내면 필터를 바꿀 때마다 뒤집힌다
+ * 응답에 **PIN이 없다** — 목록에서 바로 입장할 수 없고, 학생은 PIN·QR을 받아야 한다.
+ * 카드 식별에는 방 id를 쓴다.
+ *
+ * "인기" 배지는 그리지 않는다 — 해당 필드가 없고, `sort=POPULAR`의 앞자리로 흉내 내면
+ * 필터를 바꿀 때마다 배지가 뒤집힌다.
  */
-export function toPublicRoomItems(items: PublicRoomDto[]): PublicRoomItem[] {
+export function toPublicRoomItems(items: PublicRoomResponse[]): PublicRoomItem[] {
   return items.map((room) => ({
-    code: room.pin ?? "",
-    title: room.title ?? "",
+    code: String(room.id),
+    title: room.title,
     topic: room.topic ?? "",
-    type: room.isPaid ? "paid" : "free",
-    entryFee: room.isPaid ? (room.entryFee ?? null) : null,
-    host: room.hostName ?? "",
-    hostId: room.hostId ?? null,
-    participants: room.participantCount ?? 0,
+    type: room.type === "PAID" ? "paid" : "free",
+    entryFee: room.type === "PAID" ? (room.fee ?? null) : null,
+    questionCount: room.questionCount ?? null,
+    host: room.host.nickname,
+    hostId: room.host.userId,
+    participants: room.participantCount,
     timing: toTiming(room.status, room.scheduledAt),
   }));
 }

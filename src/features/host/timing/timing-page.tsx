@@ -19,6 +19,8 @@ export type TimingRow = {
   body: string;
   type: QuestionType;
   timeLimitSec: number;
+  points: number;
+  /** 표시 전용 — 서버에 이 설정이 없어 저장되지 않는다(DESIGN_GAPS D-15) */
   autoAdvance: boolean;
 };
 
@@ -38,7 +40,6 @@ type Props = {
   onPreset: (sec: number) => void;
   onApplyPreset: () => void;
   onChangeTime: (questionId: number, sec: number) => void;
-  onToggleAuto: (questionId: number, next: boolean) => void;
   onSave: () => void;
   saving?: boolean;
   errorMessage?: string | null;
@@ -52,7 +53,6 @@ export function TimingPage({
   onPreset,
   onApplyPreset,
   onChangeTime,
-  onToggleAuto,
   onSave,
   saving = false,
   errorMessage = null,
@@ -107,7 +107,10 @@ export function TimingPage({
           <span className="flex-1">문항</span>
           <span className="w-24">유형</span>
           <span className="w-[190px]">제한 시간</span>
-          <span className="w-24">자동 넘김</span>
+          <span className="w-16">배점</span>
+          <span className="w-24" title="서버에 아직 없는 설정이라 저장되지 않아요">
+            자동 넘김
+          </span>
         </div>
 
         <ul className="flex flex-col">
@@ -136,11 +139,16 @@ export function TimingPage({
                   label={`${row.no}번 문항 제한 시간`}
                 />
               </span>
+              <span className="w-16 text-label-lg text-muted-foreground">{row.points}점</span>
+              {/*
+                자동 넘김은 서버 계약에 없다(DESIGN_GAPS D-15) — 저장되지 않으므로 잠가 둔다.
+                켜지는 것처럼 보이게 두면 "설정했는데 안 먹는다"가 된다.
+              */}
               <span className="w-24">
                 <Switch
                   checked={row.autoAdvance}
-                  onCheckedChange={(next) => onToggleAuto(row.questionId, next)}
-                  aria-label={`${row.no}번 문항 자동 넘김`}
+                  disabled
+                  aria-label={`${row.no}번 문항 자동 넘김 (준비 중)`}
                 />
               </span>
             </li>

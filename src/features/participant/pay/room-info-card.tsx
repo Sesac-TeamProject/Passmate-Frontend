@@ -16,24 +16,30 @@ export function RoomInfoCard({ room }: Props) {
           ₩ 유료
         </StatusChip>
         <span className="text-label-md text-muted-foreground">
-          {room.topic} · {room.composition}
+          {[room.topic, room.composition].filter(Boolean).join(" · ")}
         </span>
       </div>
 
       <h2 className="text-heading-md text-ink">{room.title}</h2>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <StudentAvatar avatar={room.host.avatar} size={28} />
-        <span className="text-label-lg text-ink">{room.host.name} 선생님</span>
-        <ReputationBadge level={room.host.level} title={room.host.levelTitle} />
-        <span className="text-label-md text-muted-foreground">
-          · 별점 {room.rating} · 학생 {room.students}명
-        </span>
-      </div>
+      {/*
+        호스트 정보는 `GET /rooms/pin/{pin}` 응답에 없다 — 이름이 없으면 등급·별점까지 통째로
+        감춘다. "Lv.1 새싹 · 별점 0"으로 채우면 있지도 않은 사실을 만든다.
+      */}
+      {room.host.name ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <StudentAvatar avatar={room.host.avatar} size={28} />
+          <span className="text-label-lg text-ink">{room.host.name} 선생님</span>
+          <ReputationBadge level={room.host.level} title={room.host.levelTitle} />
+          <span className="text-label-md text-muted-foreground">
+            · 별점 {room.rating} · 학생 {room.students}명
+          </span>
+        </div>
+      ) : null}
 
       <div className="h-px bg-border" />
 
-      <KeyValueRow label="일정" value={room.schedule} />
+      {room.schedule ? <KeyValueRow label="일정" value={room.schedule} /> : null}
       <KeyValueRow
         label="참가 인원"
         value={`${room.capacity.current}명 참여 중 · 최대 ${room.capacity.max}명`}

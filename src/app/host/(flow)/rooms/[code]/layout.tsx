@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
-import { useRoomByPin } from "@/lib/queries/use-rooms";
+import { useHostRoomId } from "@/lib/queries/use-rooms";
 
 /**
  * 대기실·진행·문항 결과가 공유하는 실시간 연결(호스트). 세 화면은 같은 [code] 세그먼트라
@@ -17,9 +17,9 @@ import { useRoomByPin } from "@/lib/queries/use-rooms";
  */
 export default function RoomSessionLayout({ children }: { children: ReactNode }) {
   const params = useParams<{ code: string }>();
-  const room = useRoomByPin(params.code ?? null);
+  const room = useHostRoomId(params.code ?? null);
 
-  useSessionConnection(room.data?.roomId ?? null, { isHost: true });
+  useSessionConnection(room.roomId, { isHost: true });
 
   return children;
 }

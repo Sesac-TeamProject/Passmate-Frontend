@@ -20,7 +20,7 @@ export default function Page() {
 
   if (!seeded && me.data) {
     setSeeded(true);
-    setValues({ nickname: me.data.nickname ?? "" });
+    setValues({ nickname: me.data.nickname });
   }
 
   const handleSubmit = () => {
@@ -33,7 +33,7 @@ export default function Page() {
 
   return (
     <AccountPage
-      avatar={toAvatarKey(me.data.avatarId)}
+      avatar={toAvatarKey(me.data.defaultAvatarId)}
       email={me.data.email ?? ""}
       values={values}
       onChange={setValues}

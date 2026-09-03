@@ -1,45 +1,97 @@
 import type {
-  EssayAnswersResponse,
+  EssayAnalysisRequestResponse,
   HostReviewRequest,
+  TeacherReviewResponse,
   LearningReportResponse,
-  RoomReportResponse,
-  SessionResultResponse,
+  MyAnswerResponse,
+  MySessionResultResponse,
+  ParticipantResultResponse,
+  ReviewTargetListResponse,
+  SessionResultsResponse,
 } from "@/lib/types/dto";
 import { downloadFile, request } from "./client";
 
-/** GET /rooms/{roomId}/results/me */
-export function getMyResult(roomId: number): Promise<SessionResultResponse> {
-  return request<SessionResultResponse>(`/rooms/${roomId}/results/me`);
+/** GET /rooms/{roomId}/results/me — 게스트 토큰으로도 부를 수 있다 */
+export function getMyResult(roomId: number): Promise<MySessionResultResponse> {
+  return request<MySessionResultResponse>(`/rooms/${roomId}/results/me`);
 }
 
-/** GET /rooms/{roomId}/reports/me */
+/** GET /rooms/{roomId}/reports/me — 세션 종료 시 서버가 만들어 둔 학습 리포트 */
 export function getMyReport(roomId: number): Promise<LearningReportResponse> {
   return request<LearningReportResponse>(`/rooms/${roomId}/reports/me`);
 }
 
-/** GET /rooms/{roomId}/results (호스트) */
-export function getRoomReport(roomId: number): Promise<RoomReportResponse> {
-  return request<RoomReportResponse>(`/rooms/${roomId}/results`);
+/** GET /rooms/{roomId}/results (호스트) — 요약·문항별·학생별 통계 */
+export function getSessionResults(roomId: number): Promise<SessionResultsResponse> {
+  return request<SessionResultsResponse>(`/rooms/${roomId}/results`);
 }
 
-/** GET /rooms/{roomId}/answers — 첨삭 대상 답안 목록. questionId로 문항 필터 */
-export function getEssayAnswers(
+/** GET /rooms/{roomId}/results/participants/{participantId} (호스트) — 학생 한 명의 문항별 상세 */
+export function getParticipantResult(
   roomId: number,
-  questionId?: number,
-): Promise<EssayAnswersResponse> {
-  return request<EssayAnswersResponse>(`/rooms/${roomId}/answers`, { query: { questionId } });
+  participantId: number,
+): Promise<ParticipantResultResponse> {
+  return request<ParticipantResultResponse>(
+    `/rooms/${roomId}/results/participants/${participantId}`,
+  );
 }
 
-/** GET /rooms/{roomId}/reports/export — 세션 전체 통계·학생별 리포트 CSV 내려받기 (FR-063) */
-export function exportRoomReport(roomId: number): Promise<void> {
-  return downloadFile(`/rooms/${roomId}/reports/export`, `passmate-report-${roomId}.csv`);
+/**
+ * GET …/session/questions/{questionId}/answers/me — 내 답안과 AI 분석·첨삭.
+ * `analysisStatus`가 `PENDING`인 동안 화면이 이 응답을 폴링한다(완료 이벤트가 없다).
+ */
+export function getMyAnswer(roomId: number, questionId: number): Promise<MyAnswerResponse> {
+  return request<MyAnswerResponse>(`/rooms/${roomId}/session/questions/${questionId}/answers/me`);
 }
 
-/** PUT /rooms/{roomId}/answers/{answerId}/review — 코멘트·점수 보정 upsert (FR-034) */
+/**
+ * POST …/session/questions/{questionId}/answers/me/analysis — **회원이 직접 요청한다**(202).
+ * 월 무료 5회, 초과분은 코인. 게스트는 403 `GUEST_NOT_ALLOWED`, 코인 부족은 402.
+ */
+export function requestEssayAnalysis(
+  roomId: number,
+  questionId: number,
+): Promise<EssayAnalysisRequestResponse> {
+  return request<EssayAnalysisRequestResponse>(
+    `/rooms/${roomId}/session/questions/${questionId}/answers/me/analysis`,
+    { method: "POST" },
+  );
+}
+
+/** GET /rooms/{roomId}/answers?questionId&participantId (호스트) — 첨삭 대상 목록 */
+export function getReviewTargets(
+  roomId: number,
+  filter: { questionId?: number; participantId?: number } = {},
+): Promise<ReviewTargetListResponse> {
+  return request<ReviewTargetListResponse>(`/rooms/${roomId}/answers`, {
+    query: { questionId: filter.questionId, participantId: filter.participantId },
+  });
+}
+
+/**
+ * GET /rooms/{roomId}/reports/export — 첨부 파일로 내려받는다 (호스트).
+ * 형식은 **서버가 CSV만 받는다** — PDF를 넘기면 400 `INVALID_INPUT`으로 이유를 돌려준다.
+ */
+export function exportRoomReport(roomId: number, format = "CSV"): Promise<void> {
+  const lower = format.toLowerCase();
+  return downloadFile(
+    `/rooms/${roomId}/reports/export?format=${lower}`,
+    `passmate-report-${roomId}.${lower}`,
+  );
+}
+
+/**
+ * PUT /rooms/{roomId}/answers/{answerId}/review — 첨삭 등록·수정(upsert).
+ * 답안당 한 장이라 POST가 아니라 PUT이다. 세 항목 모두 선택이고 **넘긴 값 그대로 저장**된다 —
+ * 빈 값을 보내면 지워진다(백엔드 `TeacherReviewRequest`).
+ */
 export function putHostReview(
   roomId: number,
   answerId: number,
   body: HostReviewRequest,
-): Promise<void> {
-  return request<void>(`/rooms/${roomId}/answers/${answerId}/review`, { method: "PUT", body });
+): Promise<TeacherReviewResponse> {
+  return request<TeacherReviewResponse>(`/rooms/${roomId}/answers/${answerId}/review`, {
+    method: "PUT",
+    body,
+  });
 }

@@ -1,118 +1,94 @@
-import type { AvatarKey } from "./dto/common";
-import type { QuestionType, RankingEntry } from "./dto";
+import type {
+  ParticipantResponse,
+  QuestionEndedPayload,
+  QuestionStartedPayload,
+  RankingEntry,
+  ScreenLockPayload,
+  SubmissionStatusPayload,
+} from "./dto";
 
-/** STOMP 프레임 envelope. type·ts 없으면 폐기 */
-export type ServerEventFrame = { type: string; ts: string; data?: unknown };
+/**
+ * STOMP 프레임 봉투 — 백엔드 `session/dto/SessionEvents.kt` 1:1 (`contracts/ws-events.md` §3).
+ *
+ * ```json
+ * { "type": "QUESTION_STARTED", "roomId": 1, "occurredAt": "2026-09-02T02:12:49.123456", "payload": {…} }
+ * ```
+ *
+ * 예전 판은 `{type, ts, data}`를 기대해 `ts`가 없는 실서버 프레임을 **전부 버렸다** —
+ * 세션 화면이 아예 움직이지 않던 원인이다.
+ * `occurredAt`은 오프셋 없는 UTC 문자열이라 `parseServerDateTime`으로 읽는다.
+ * `payload`가 없는 이벤트(`SESSION_STARTED`)는 필드 자체가 빠져 온다(`non_null`).
+ */
+export type ServerEventFrame = {
+  type: string;
+  roomId: number;
+  occurredAt: string;
+  payload?: unknown;
+};
 
-/** 계약 이벤트 19종 — type 문자열은 KMP 코드 기준(SESSION_STARTED/SESSION_ENDED/HINT_PUBLISHED) */
+/** 이벤트 봉투 공통부 */
+type Envelope<T extends string, P> = {
+  type: T;
+  roomId: number;
+  occurredAt: string;
+  payload: P;
+};
+
+/**
+ * 서버가 정의한 이벤트 **9종**(`SessionEventType.kt`).
+ * 뒤 두 개(`PARTICIPANT_*`)는 enum에만 있고 **발행하는 코드가 없다** — 대기실은 폴링으로 대신한다
+ * (`research.md` R-7, 백엔드 질문 B-1). 타입은 남겨 두어 서버가 발행을 넣으면 바로 받는다.
+ */
 export type ServerEvent =
-  | {
-      type: "PARTICIPANT_JOINED";
-      ts: string;
-      data: {
-        participantId: number;
-        nickname: string;
-        isGuest: boolean;
-        avatarId?: AvatarKey | null;
-        count: number;
-      };
-    }
-  | {
-      type: "PARTICIPANT_LEFT";
-      ts: string;
-      data: { participantId: number; count: number; reason?: "LEFT" | "KICKED" | null };
-    }
-  | { type: "SESSION_STARTED"; ts: string; data: { sessionId: number; questionCount: number } }
-  | {
-      type: "QUESTION_STARTED";
-      ts: string;
-      data: {
-        questionId: number;
-        questionNo: number;
-        type: QuestionType;
-        body: string;
-        choices?: string[] | null;
-        points: number;
-        timeLimitSec: number;
-        endsAt: string;
-      };
-    }
-  | {
-      type: "ANSWER_SUBMITTED";
-      ts: string;
-      data: { questionNo: number; submittedCount: number; totalCount: number };
-    }
-  | {
-      type: "QUESTION_ENDED";
-      ts: string;
-      data: {
-        questionNo: number;
-        answerReveal: { answer?: string | null; explanation?: string | null };
-        correctCount: number;
-      };
-    }
-  | {
-      type: "SCORE_UPDATED";
-      ts: string;
-      data: {
-        questionNo: number;
-        scores: { participantId: number; delta: number; total: number }[];
-      };
-    }
-  | { type: "RANKING_UPDATED"; ts: string; data: { ranking: RankingEntry[] } }
-  | { type: "SCREEN_LOCKED"; ts: string; data: { locked: boolean } }
-  | {
-      type: "HINT_PUBLISHED";
-      ts: string;
-      data: { hintId: number; questionNo: number; clipUrl: string; durationMs: number };
-    }
-  | {
-      type: "SESSION_ENDED";
-      ts: string;
-      data: { sessionId: number; finalRanking: RankingEntry[]; reportReady?: boolean };
-    }
-  | { type: "REPORT_READY"; ts: string; data: { sessionId: number } }
-  | { type: "ROOM_CANCELLED"; ts: string; data: { reason?: string | null } }
-  | { type: "FEEDBACK_READY"; ts: string; data: { answerId: number; questionNo: number } }
-  | { type: "FEEDBACK_FAILED"; ts: string; data: { answerId: number; questionNo: number } }
-  | { type: "REVIEW_RECEIVED"; ts: string; data: { answerId: number; questionNo: number } }
-  | {
-      type: "SUBMISSION_UPDATED";
-      ts: string;
-      data: { questionNo: number; submittedCount: number; totalCount: number };
-    }
-  | { type: "PROJECTOR_CONNECTED"; ts: string; data: Record<string, never> }
-  | { type: "PROJECTOR_DISCONNECTED"; ts: string; data: Record<string, never> };
+  /** 세션 시작 직후. 페이로드 없이 온 뒤 곧바로 QUESTION_STARTED(1번)가 이어진다 */
+  | Envelope<"SESSION_STARTED", undefined>
+  | Envelope<"QUESTION_STARTED", QuestionStartedPayload>
+  /** 문항 마감 — 여기서 처음 정답이 공개된다 */
+  | Envelope<"QUESTION_ENDED", QuestionEndedPayload>
+  /** 매 QUESTION_ENDED 직후. 페이로드가 배열 그 자체다 */
+  | Envelope<"RANKING_UPDATED", RankingEntry[]>
+  /** 호스트 토픽(/topic/rooms/{id}/host)에만 온다 */
+  | Envelope<"SUBMISSION_UPDATED", SubmissionStatusPayload>
+  | Envelope<"SCREEN_LOCKED", ScreenLockPayload>
+  /** 최종 랭킹이 함께 온다 */
+  | Envelope<"SESSION_ENDED", RankingEntry[]>
+  /** @draft 서버가 아직 발행하지 않는다 */
+  | Envelope<"PARTICIPANT_JOINED", ParticipantResponse>
+  /** @draft 서버가 아직 발행하지 않는다 */
+  | Envelope<"PARTICIPANT_LEFT", ParticipantResponse>;
 
 export type ServerEventType = ServerEvent["type"];
 
 export const SERVER_EVENT_TYPES: readonly ServerEventType[] = [
-  "PARTICIPANT_JOINED",
-  "PARTICIPANT_LEFT",
   "SESSION_STARTED",
   "QUESTION_STARTED",
-  "ANSWER_SUBMITTED",
   "QUESTION_ENDED",
-  "SCORE_UPDATED",
   "RANKING_UPDATED",
-  "SCREEN_LOCKED",
-  "HINT_PUBLISHED",
-  "SESSION_ENDED",
-  "REPORT_READY",
-  "ROOM_CANCELLED",
-  "FEEDBACK_READY",
-  "FEEDBACK_FAILED",
-  "REVIEW_RECEIVED",
   "SUBMISSION_UPDATED",
-  "PROJECTOR_CONNECTED",
-  "PROJECTOR_DISCONNECTED",
+  "SCREEN_LOCKED",
+  "SESSION_ENDED",
+  "PARTICIPANT_JOINED",
+  "PARTICIPANT_LEFT",
 ];
 
-/** 알 수 없는 type·ts 누락은 null (폐기). data 없으면 {} */
+/**
+ * 프레임 → 이벤트. 모르는 `type`이거나 봉투가 깨졌으면 null(폐기).
+ *
+ * `payload`는 있는 그대로 넘긴다 — 이벤트마다 모양이 달라(객체·배열·없음) 여기서 정규화하면
+ * 오히려 정보가 사라진다. 값을 꺼내는 쪽(리듀서)이 방어적으로 읽는다.
+ */
 export function parseServerEvent(raw: unknown): ServerEvent | null {
   if (typeof raw !== "object" || raw === null) return null;
+
   const frame = raw as Partial<ServerEventFrame>;
-  if (typeof frame.type !== "string" || typeof frame.ts !== "string") return null;
+  if (typeof frame.type !== "string") return null;
+  if (typeof frame.occurredAt !== "string") return null;
   if (!SERVER_EVENT_TYPES.includes(frame.type as ServerEventType)) return null;
-  return { type: frame.type, ts: frame.ts, data: frame.data ?? {} } as ServerEvent;
+
+  return {
+    type: frame.type,
+    roomId: typeof frame.roomId === "number" ? frame.roomId : 0,
+    occurredAt: frame.occurredAt,
+    payload: frame.payload,
+  } as ServerEvent;
 }

@@ -1,3 +1,7 @@
+/**
+ * @draft 관리자 콘솔 — **백엔드에 컨트롤러가 없다**(실서버 404, 10개 경로). 목에서만 돈다.
+ * 필드는 ERD 후보값이라 스웨거가 열리면 `contracts/rest-api.md` §3-4부터 대조한다.
+ */
 import type { UserRole } from "./auth";
 
 /* ── A-01 관리자 대시보드: GET /admin/dashboard ───────── */
@@ -103,7 +107,8 @@ export type AdminRoomSummaryCounts = {
 
 export type RoomKind = "FREE" | "PAID" | "BRANDED";
 
-export type RoomStatus = "WAITING" | "RUNNING" | "FINISHED";
+/** @draft 관리자 콘솔 전용 방 상태. 공통 `RoomStatus`(WAITING·RUNNING·ENDED·CANCELED)와 값이 달라 이름을 분리한다 */
+export type AdminRoomStatus = "WAITING" | "RUNNING" | "FINISHED";
 
 export type AdminRoomSummary = {
   pin: string;
@@ -114,7 +119,7 @@ export type AdminRoomSummary = {
   kind: RoomKind;
   /** 유료 방의 참가비(원). 무료·브랜디드는 null */
   entryFeeKrw: number | null;
-  status: RoomStatus;
+  status: AdminRoomStatus;
 };
 
 /** GET /admin/questions/review-queue — AI 생성 문항 중 신고 누적·정답률 이상 */
@@ -162,23 +167,23 @@ export type AdminReportKpis = {
   avgHandlingDeltaHours: number;
 };
 
-export type ReportTargetKind = "STUDENT" | "TEACHER" | "GUEST" | "QUESTION" | "ROOM";
+export type AdminReportTargetKind = "STUDENT" | "TEACHER" | "GUEST" | "QUESTION" | "ROOM";
 
-export type ReportType = "NICKNAME" | "QUESTION_ERROR" | "PAID_ROOM" | "OPERATION" | "SPAM";
+export type AdminReportType = "NICKNAME" | "QUESTION_ERROR" | "PAID_ROOM" | "OPERATION" | "SPAM";
 
-export type ReportStatus = "PENDING" | "REVIEWING" | "RESOLVED";
+export type AdminReportStatus = "PENDING" | "REVIEWING" | "RESOLVED";
 
 export type AdminReport = {
   /** 표시용 신고 ID. 예: R-1042 */
   id: string;
-  target: { kind: ReportTargetKind; label: string };
-  type: ReportType;
+  target: { kind: AdminReportTargetKind; label: string };
+  type: AdminReportType;
   reason: string;
   /** 익명 신고는 null */
   reporterName: string | null;
   /** ISO 8601 */
   receivedAt: string;
-  status: ReportStatus;
+  status: AdminReportStatus;
 };
 
 /** GET /admin/sanctions?days=30 */

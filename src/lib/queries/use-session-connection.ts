@@ -3,16 +3,22 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { getParticipants } from "@/lib/api/rooms";
 import { getSessionSnapshot, getVoiceHints } from "@/lib/api/sessions";
+import { IS_MOCK } from "@/lib/env";
 import { connectRoomStream } from "@/lib/stomp";
 import { useSessionStore } from "@/lib/stores/session-store";
-import { AppError } from "@/lib/types/app-error";
 import { qk } from "./keys";
 
 /**
- * 연결 → connected 마다 스냅샷(GET /rooms/{id}/session, 404=WAITING → 참가자 목록) → 스토어 통째 교체 → 이후 프레임 dispatch.
- * WAITING이 아니면(진행 중·종료) 참가자 목록과 음성 힌트 목록도 함께 새로 고친다 — 호스트 라이브 화면이
- * 랭킹에 쓸 이름을 갖고, 새로고침한 학생이 지금까지의 힌트를 잃지 않는다(둘 다 부가 정보라 실패는 무시).
- * 컴포넌트는 이 훅만 부르고 스토어를 selector 로 읽는다.
+ * 실시간 세션 연결.
+ *
+ * `connected`가 될 때마다 스냅샷(`GET /rooms/{id}/session`)으로 상태를 통째 교체하고, 이후
+ * 프레임을 스토어에 흘려보낸다. 스냅샷은 **WAITING이어도 200**이라 예전의 "404 = 미시작" 분기는
+ * 없앴다(`ws-events.md` §6).
+ *
+ * 참가자 명단은 여기서 한 번만 채운다 — 대기 중 갱신은 화면이 `useParticipants(…, {poll})`로
+ * 3초 폴링한다(서버가 입·퇴장 이벤트를 발행하지 않는다, 백엔드 질문 B-1).
+ *
+ * 컴포넌트는 이 훅만 부르고 스토어를 selector로 읽는다.
  */
 export function useSessionConnection(roomId: number | null, { isHost }: { isHost: boolean }) {
   const queryClient = useQueryClient();
@@ -25,33 +31,22 @@ export function useSessionConnection(roomId: number | null, { isHost }: { isHost
     store.reset();
 
     const restore = async () => {
+      const snapshot = await getSessionSnapshot(roomId);
+      store.replaceWithSnapshot(snapshot);
+
       try {
-        const snapshot = await getSessionSnapshot(roomId);
-        store.replaceWithSnapshot(snapshot);
+        store.setParticipants(await getParticipants(roomId));
+      } catch {
+        // 명단은 부가 정보 — 실패해도 스냅샷 복구 자체는 유지한다
+      }
 
-        if (useSessionStore.getState().phase !== "WAITING") {
-          try {
-            const { participants } = await getParticipants(roomId);
-            store.setParticipants(participants ?? []);
-          } catch {
-            // 참가자 목록은 부가 정보 — 실패해도 스냅샷 복구 자체는 유지한다
-          }
-
-          try {
-            // 힌트는 스냅샷에 없다 — 재접속·새로고침이 지금까지 발행된 힌트를 잃지 않도록 따로 복구한다.
-            const { hints } = await getVoiceHints(roomId);
-            store.setHints(hints ?? []);
-          } catch {
-            // 힌트 목록도 부가 정보 — 실패는 무시한다
-          }
-        }
-      } catch (e) {
-        if (AppError.isAppError(e) && e.kind === "NotFound") {
-          store.replaceWithSnapshot(null);
-          const { participants } = await getParticipants(roomId);
-          store.setParticipants(participants ?? []);
-        } else {
-          throw e;
+      // 음성 힌트는 백엔드에 없다(실서버 404) — 목 모드에서만 복구한다
+      if (IS_MOCK) {
+        try {
+          const { hints } = await getVoiceHints(roomId);
+          store.setHints(hints ?? []);
+        } catch {
+          // 힌트도 부가 정보 — 실패는 무시한다
         }
       }
     };
@@ -68,16 +63,18 @@ export function useSessionConnection(roomId: number | null, { isHost }: { isHost
         try {
           store.dispatch(event);
         } catch (e) {
-          // 형식이 깨진 프레임 하나가 화면 전체를 멈추지 않도록 버린다 (KMP도 파싱 실패 프레임은 폐기한다).
+          // 형식이 깨진 프레임 하나가 화면 전체를 멈추지 않도록 버린다.
           console.warn("이벤트 처리 실패 — 프레임을 버립니다", event.type, e);
           return;
         }
-        if (event.type === "SUBMISSION_UPDATED" || event.type === "ANSWER_SUBMITTED")
+        // 제출 집계는 이벤트로도 오고 REST로도 읽는다 — 캐시를 함께 맞춘다
+        if (event.type === "SUBMISSION_UPDATED")
           void queryClient.invalidateQueries({ queryKey: qk.submissions(roomId) });
-        if (event.type === "FEEDBACK_READY" || event.type === "REVIEW_RECEIVED")
+        // 세션이 끝나면 결과·리포트를 다시 읽어야 한다(완료 알림 이벤트가 따로 없다)
+        if (event.type === "SESSION_ENDED") {
           void queryClient.invalidateQueries({ queryKey: qk.myResult(roomId) });
-        if (event.type === "REPORT_READY")
-          void queryClient.invalidateQueries({ queryKey: qk.roomReport(roomId) });
+          void queryClient.invalidateQueries({ queryKey: qk.sessionResults(roomId) });
+        }
       },
     });
 

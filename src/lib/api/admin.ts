@@ -1,3 +1,6 @@
+/**
+ * @draft 관리자 콘솔 API — **백엔드 미구현**(실서버 404). 목 모드에서만 응답이 온다.
+ */
 import type {
   AdminAdCampaignsResponse,
   AdminBrandedQuizzesResponse,

@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
-import { firstErrorMessage, toSolvingStudents } from "@/features/host/live/adapt";
+import { firstErrorMessage, toSolvingStudents, toSubmittedCount } from "@/features/host/live/adapt";
 import { LivePage } from "@/features/host/live/live-page";
 import { ProjectorDisconnected } from "@/features/host/live/projector-disconnected";
 import { useDisconnectedTooLong } from "@/features/host/live/use-disconnected-too-long";
 // 문항 → 뷰 타입 변환은 학생 화면과 같은 함수를 쓴다(중복 정의 금지)
 import { toLiveQuestion } from "@/features/participant/play/adapt";
-import { useRoomByPin } from "@/lib/queries/use-rooms";
+import { useHostRoomId } from "@/lib/queries/use-rooms";
 import {
   useEndCurrentQuestion,
   useEndSession,
@@ -33,22 +33,25 @@ export default function Page() {
   const pin = params.code;
   const router = useRouter();
 
-  const room = useRoomByPin(pin);
-  const roomId = room.data?.roomId ?? null;
+  const room = useHostRoomId(pin);
+  const roomId = room.roomId;
 
   const phase = useSessionStore((s) => s.phase);
   const currentQuestion = useSessionStore((s) => s.currentQuestion);
-  const questionCount = useSessionStore((s) => s.questionCount);
-  const serverTs = useSessionStore((s) => s.serverTs);
-  const submitted = useSessionStore((s) => s.submitted);
+  const totalCount = useSessionStore((s) => s.totalCount);
   const participants = useSessionStore((s) => s.participants);
+  const submission = useSessionStore((s) => s.submission);
   const reveal = useSessionStore((s) => s.reveal);
-  const isLocked = useSessionStore((s) => s.isLocked);
+  const screenLocked = useSessionStore((s) => s.screenLocked);
   const connection = useSessionStore((s) => s.connection);
   const snapshotTs = useSessionStore((s) => s.snapshotTs);
 
-  // 보기별 응답 수와 학생별 제출 여부는 이벤트에 없어 진행 중에는 폴링으로 따라간다
+  /**
+   * 제출 집계는 호스트 토픽의 `SUBMISSION_UPDATED`로 실시간으로 온다.
+   * 폴링은 이벤트를 놓쳤을 때를 위한 보조라 간격을 넉넉히 둔다 — 값은 스토어(이벤트)를 먼저 본다.
+   */
   const submissions = useSubmissions(roomId, phase === "RUNNING", SUBMISSIONS_POLL_MS);
+  const submissionStatus = submission ?? submissions.data ?? null;
   const next = useNextQuestion(roomId ?? 0);
   const endCurrent = useEndCurrentQuestion(roomId ?? 0);
   const end = useEndSession(roomId ?? 0);
@@ -69,8 +72,7 @@ export default function Page() {
   }, [phase, reveal, snapshotTs, roomId, pin, router]);
 
   if (room.isPending) return <ScreenLoading />;
-  if (room.isError)
-    return <ScreenError message={room.error.message} onRetry={() => room.refetch()} />;
+  if (room.error) return <ScreenError message={room.error.message} />;
 
   // 10초가 지나도 안 붙으면 W-05e로 넘긴다. 문항이 아직 없어도 마찬가지 —
   // 벽에 걸린 프로젝터가 "여는 중"에서 멈춰 있는 것보다 끊겼다고 말해 주는 편이 낫다.
@@ -78,8 +80,8 @@ export default function Page() {
     return (
       <ProjectorDisconnected
         pin={pin}
-        current={currentQuestion?.questionNo ?? 1}
-        total={questionCount ?? 1}
+        current={currentQuestion?.orderNo ?? 1}
+        total={totalCount || 1}
         // 연결은 상위 [code] 레이아웃이 잡아 reconnect를 넘겨받을 수 없다.
         // 레이아웃 주석대로 새로고침하면 스냅샷으로 이어지므로, 시안 각주("같은 주소를 다시 열면
         // 자동으로 이어집니다")와도 같은 동작이다.
@@ -91,7 +93,8 @@ export default function Page() {
   if (!currentQuestion || phase !== "RUNNING")
     return <ScreenLoading label="문항을 여는 중이에요…" />;
 
-  const question = toLiveQuestion(currentQuestion, questionCount, serverTs, submitted);
+  const submittedCount = toSubmittedCount(submissionStatus, participants.length);
+  const question = toLiveQuestion(currentQuestion, submittedCount.submittedCount);
   const pending = next.isPending || endCurrent.isPending || end.isPending || lock.isPending;
   const errorMessage =
     hintError ?? firstErrorMessage(next.error, endCurrent.error, end.error, lock.error, hint.error);
@@ -99,14 +102,17 @@ export default function Page() {
   return (
     <LivePage
       question={question}
-      counts={(submissions.data?.choices ?? []).map((c) => c.count ?? 0)}
-      students={toSolvingStudents(submissions.data?.participants, participants)}
-      isLocked={isLocked}
-      isLastQuestion={questionCount !== null && currentQuestion.questionNo === questionCount}
+      // 보기별 제출 수는 **보기 원문이 키인 맵**으로 온다 — 문항의 보기 순서대로 꺼낸다
+      counts={(currentQuestion.choices ?? []).map(
+        (text) => submissionStatus?.distribution[text] ?? 0,
+      )}
+      students={toSolvingStudents(participants)}
+      isLocked={screenLocked}
+      isLastQuestion={currentQuestion.orderNo === currentQuestion.totalCount}
       onNext={() => next.mutate()}
       onEndCurrent={() => endCurrent.mutate()}
       onEndSession={() => end.mutate()}
-      onToggleLock={() => lock.mutate(!isLocked)}
+      onToggleLock={() => lock.mutate(!screenLocked)}
       onHint={(clip, durationMs) => {
         setHintError(null);
         hint.mutate({ clip, durationMs });

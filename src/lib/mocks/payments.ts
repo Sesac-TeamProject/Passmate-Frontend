@@ -9,8 +9,10 @@ import type {
   CreateChargeRequest,
   EarningsResponse,
   EntryPaymentResponse,
-  SettlementAccountDto,
-  SettlementItemDto,
+  SettlementAccountRequest,
+  SettlementAccountResponse,
+  SettlementAccountView,
+  HostEarningRow,
 } from "@/lib/types/dto";
 import { DEMO_ROOM } from "./fixtures";
 
@@ -58,54 +60,39 @@ const COIN_HISTORY: CoinTransactionDto[] = [
   { id: 5, type: "CHARGE", amount: 1200, balanceAfter: 1200, createdAt: "2026-08-01" },
 ];
 
-/** features/me/settlement/mock.ts SETTLEMENT_ROWS */
-const SETTLEMENT_ITEMS: SettlementItemDto[] = [
+/** 세션별 적립 — 백엔드 `HostEarningRow` 1:1. 최근 순 */
+const SETTLEMENT_ITEMS: HostEarningRow[] = [
   {
-    settlementId: 1,
-    dateLabel: "8/22",
+    roomId: 101,
     roomTitle: "8월 4주차 Spring 스터디",
     participantCount: 6,
-    entryFeeTotal: 60000,
-    feeAmount: 12000,
-    payoutAmount: 48000,
-    status: "SCHEDULED",
+    gross: 60000,
+    platformFee: 12000,
+    net: 48000,
+    status: "PENDING",
+    earnedAt: "2026-08-22T11:00:00",
   },
   {
-    settlementId: 2,
-    dateLabel: "8/20",
+    roomId: 102,
     roomTitle: "CS 모의면접 3회차",
     participantCount: 5,
-    entryFeeTotal: 50000,
-    feeAmount: 10000,
-    payoutAmount: 40000,
-    status: "SCHEDULED",
-  },
-  {
-    settlementId: 3,
-    dateLabel: "8/15",
-    roomTitle: "JPA 심화 2회차",
-    participantCount: 4,
-    entryFeeTotal: 40000,
-    feeAmount: 8000,
-    payoutAmount: 32000,
-    status: "PAID",
-  },
-  {
-    settlementId: 4,
-    dateLabel: "8/08",
-    roomTitle: "Spring 기술면접 1회차",
-    participantCount: 8,
-    entryFeeTotal: 80000,
-    feeAmount: 16000,
-    payoutAmount: 64000,
-    status: "PAID",
+    gross: 50000,
+    platformFee: 10000,
+    net: 40000,
+    status: "SETTLED",
+    earnedAt: "2026-08-20T11:00:00",
   },
 ];
 
-let settlementAccount: SettlementAccountDto = {
+/** 조회는 마스킹된 번호만 준다 — 원본은 서버 밖으로 나오지 않는다 */
+let settlementAccount: SettlementAccountView = {
+  bankCode: "004",
   bankName: "국민은행",
-  accountNumber: "123456-01-234567",
+  accountNoMasked: "********4567",
   holderName: "이한결",
+  verified: true,
+  verifiedAt: "2026-08-01T09:00:00",
+  updatedAt: "2026-08-01T09:00:00",
 };
 
 let chargeCounter = 1;
@@ -158,7 +145,7 @@ export function mockConfirmCharge(
 
   let entryPayment: EntryPaymentResponse | null = null;
   if (body.roomId != null) {
-    balance -= DEMO_ROOM.entryFee ?? 0;
+    balance -= DEMO_ROOM.fee ?? 0;
     entryPayment = { paymentNo: `PM-ENTRY-${chargeCounter++}`, balance };
   }
 
@@ -167,7 +154,7 @@ export function mockConfirmCharge(
 
 /** POST /rooms/{roomId}/entry-payments — 참가비 코인 차감. 402 잔액 부족 */
 export function mockEntryPayment(): EntryPaymentResponse {
-  const entryFee = DEMO_ROOM.entryFee ?? 0;
+  const entryFee = DEMO_ROOM.fee ?? 0;
   if (balance < entryFee) {
     throw new AppError("PaymentRequired", { code: "INSUFFICIENT_COINS" });
   }
@@ -178,31 +165,35 @@ export function mockEntryPayment(): EntryPaymentResponse {
 /** GET /users/me/earnings — 수익·정산 요약+내역. features/me/settlement/mock.ts SETTLEMENT_STATS */
 export function mockEarnings(): EarningsResponse {
   return {
-    items: SETTLEMENT_ITEMS,
-    nextCursor: null,
-    hasNext: false,
-    monthlyTotal: 384000,
-    hostSharePercent: 80,
-    nextPayout: { dateLabel: "9/5", amount: 307200 },
-    paidRoomCount: 12,
-    studentCount: 48,
-    account: {
-      bankName: settlementAccount.bankName,
-      maskedNumber: "***-***-4821",
-      payoutNote: null,
-    },
+    thisMonthNet: 384000,
+    pendingNet: 307200,
+    nextPayoutDate: "2026-09-05",
+    accountRegistered: true,
+    earnings: SETTLEMENT_ITEMS,
   };
 }
 
-/** GET /users/me/settlement-account — 미등록이면 404(목에서는 항상 등록됨) */
-export function mockSettlementAccount(): SettlementAccountDto {
-  return settlementAccount;
+/** GET /users/me/settlement-account — 미등록도 200이다(목에서는 항상 등록됨) */
+export function mockSettlementAccount(): SettlementAccountResponse {
+  return { registered: true, account: settlementAccount };
 }
 
-/** PUT /users/me/settlement-account */
-export function mockPutSettlementAccount(body: SettlementAccountDto): SettlementAccountDto {
-  settlementAccount = { ...settlementAccount, ...body };
-  return settlementAccount;
+/** PUT /users/me/settlement-account — 계좌를 바꾸면 실명 확인이 다시 false가 된다 */
+export function mockPutSettlementAccount(
+  body: SettlementAccountRequest,
+): SettlementAccountResponse {
+  // 라우트 스윕이 계약에 맞지 않는 `{}`로도 부르므로 필드가 없을 때를 견딘다
+  const digits = (body.accountNo ?? "").replace(/\D/g, "");
+
+  settlementAccount = {
+    bankCode: body.bankCode ?? "",
+    bankName: body.bankName ?? "",
+    accountNoMasked: `********${digits.slice(-4)}`,
+    holderName: body.holderName ?? "",
+    verified: false,
+    updatedAt: new Date().toISOString().slice(0, 19),
+  };
+  return { registered: true, account: settlementAccount };
 }
 
 /** PUT /users/me/payment-method */

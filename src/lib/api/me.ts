@@ -1,18 +1,22 @@
 import type {
   BadgesResponse,
-  ClaimGuestRecordRequest,
+  GuestClaimRequest,
+  GuestClaimResponse,
   GradeResponse,
   HostProfileResponse,
-  MyPageResponse,
+  CumulativeReportResponse,
+  JoinedRoomsResponse,
+  MyProfileResponse,
   NotificationSettingsDto,
   ReportRequest,
-  UpdateProfileRequest,
+  ReportResponse,
+  UserProfileUpdateRequest,
 } from "@/lib/types/dto";
 import { request } from "./client";
 
-/** PUT /users/me — 닉네임·기본 캐릭터 부분 수정 */
-export function updateProfile(body: UpdateProfileRequest): Promise<void> {
-  return request<void>("/users/me", { method: "PUT", body });
+/** PUT /users/me — 닉네임(필수)·프로필 이미지·기본 캐릭터. 응답은 갱신된 프로필 전체 */
+export function updateProfile(body: UserProfileUpdateRequest): Promise<MyProfileResponse> {
+  return request<MyProfileResponse>("/users/me", { method: "PUT", body });
 }
 
 /** DELETE /users/me */
@@ -20,9 +24,14 @@ export function deleteMe(): Promise<void> {
   return request<void>("/users/me", { method: "DELETE" });
 }
 
-/** GET /users/me/rooms/joined — 요약+진행 중+참여 방 (FR-032·033) */
-export function getMyPage(cursor?: string): Promise<MyPageResponse> {
-  return request<MyPageResponse>("/users/me/rooms/joined", { query: { cursor } });
+/** GET /users/me/rooms/joined?page&size — 요약 + 참여한 방 오프셋 페이지 */
+export function getJoinedRooms(page = 0, size?: number): Promise<JoinedRoomsResponse> {
+  return request<JoinedRoomsResponse>("/users/me/rooms/joined", { query: { page, size } });
+}
+
+/** GET /users/me/report — 누적 학습 리포트(추이·취약 주제) */
+export function getCumulativeReport(): Promise<CumulativeReportResponse> {
+  return request<CumulativeReportResponse>("/users/me/report");
 }
 
 /** GET /users/me/grade */
@@ -40,9 +49,14 @@ export function getNotificationSettings(): Promise<NotificationSettingsDto> {
   return request<NotificationSettingsDto>("/users/me/notification-settings");
 }
 
-/** PUT /users/me/notification-settings */
-export function putNotificationSettings(body: NotificationSettingsDto): Promise<void> {
-  return request<void>("/users/me/notification-settings", { method: "PUT", body });
+/** PUT /users/me/notification-settings — 바뀐 설정을 그대로 돌려준다 */
+export function putNotificationSettings(
+  body: NotificationSettingsDto,
+): Promise<NotificationSettingsDto> {
+  return request<NotificationSettingsDto>("/users/me/notification-settings", {
+    method: "PUT",
+    body,
+  });
 }
 
 /** GET /users/{userId}/profile — 호스트 공개 프로필 */
@@ -50,13 +64,16 @@ export function getHostProfile(userId: number): Promise<HostProfileResponse> {
   return request<HostProfileResponse>(`/users/${userId}/profile`);
 }
 
-/** POST /reports — 게스트 익명 신고 가능 */
-export function postReport(body: ReportRequest): Promise<void> {
-  return request<void>("/reports", { method: "POST", body });
+/** POST /reports — 게스트도 낼 수 있다. 종류(`type`)와 자유 서술(`reason`)을 따로 받는다 */
+export function postReport(body: ReportRequest): Promise<ReportResponse> {
+  return request<ReportResponse>("/reports", { method: "POST", body });
 }
 
-/** POST /guest-records/claim — 가입 후 7일 내, 경과 시 410 RECORD_PURGED */
-export function claimGuestRecord(participantId: number): Promise<void> {
-  const body: ClaimGuestRecordRequest = { participantId };
-  return request<void>("/guest-records/claim", { method: "POST", body });
+/**
+ * POST /guest-records/claim — 가입 후 7일 안에 게스트 기록을 계정으로 옮긴다.
+ * 키는 입장 때 받은 `guestToken`이다. 옮겨진 기록 한 건을 돌려준다.
+ */
+export function claimGuestRecord(guestToken: string): Promise<GuestClaimResponse> {
+  const body: GuestClaimRequest = { guestToken };
+  return request<GuestClaimResponse>("/guest-records/claim", { method: "POST", body });
 }

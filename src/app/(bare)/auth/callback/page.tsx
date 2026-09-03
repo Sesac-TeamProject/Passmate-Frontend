@@ -4,11 +4,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { LoginFailed } from "@/features/auth/login-failed";
 import { LoginProgress } from "@/features/auth/login-progress";
-import { socialLogin } from "@/lib/api/auth";
+import { getMe, socialLogin } from "@/lib/api/auth";
 import { safeNextPath } from "@/lib/safe-next";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { clearRefreshToken, writeRefreshToken } from "@/lib/token-storage";
-import type { MeResponse } from "@/lib/types/dto";
 
 /**
  * 소셜 로그인 콜백 — `/auth/callback?code=&next=`.
@@ -36,16 +35,12 @@ function CallbackClient() {
       authorizationCode: code,
       redirectUri: `${window.location.origin}/auth/callback`,
     })
-      .then((res) => {
+      .then(async (res) => {
         writeRefreshToken(res.refreshToken);
-        // 서버가 GET /users/me를 아직 안 만들어 로그인 응답의 user를 그대로 프로필로 쓴다.
-        const profile: MeResponse = {
-          userId: res.user.id,
-          name: res.user.nickname,
-          nickname: res.user.nickname,
-          email: res.user.email,
-          isAdmin: res.user.isAdmin,
-        };
+        // 액세스 토큰을 먼저 스토어에 넣어야 이어지는 GET /users/me에 Authorization이 붙는다.
+        useAuthStore.getState().setAccessToken(res.accessToken);
+        // 로그인 응답의 user(UserSummary)에는 지표·코인·가입일이 없다 — 프로필은 GET /users/me가 원천이다.
+        const profile = await getMe();
         useAuthStore.getState().setSession(res.accessToken, profile);
         router.replace(next);
       })

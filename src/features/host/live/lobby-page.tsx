@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import type { Student } from "@/features/host/types";
 import { formatPin } from "@/lib/format";
@@ -19,10 +19,37 @@ function padCount(value: number | null): string {
   return value === null ? "—" : String(value).padStart(2, "0");
 }
 
+/**
+ * 학생에게 알려 줄 접속 주소.
+ * 도메인을 코드에 박으면 배포 주소가 바뀔 때 **학생이 없는 주소로 간다** —
+ * 실제로 `passmate.app`이 박혀 있었지만 서비스 도메인은 `passmate.kr`이었다.
+ * QR과 같은 값을 쓰도록 지금 열려 있는 주소에서 읽는다.
+ */
+const NO_SUBSCRIBE = () => () => {};
+const readHostOnServer = () => "";
+const readHost = () => window.location.host;
+
 /** 입장 방법 3단계 안내 — 가운데 단계에만 PIN이 들어간다 */
-function toSteps(prettyPin: string): string[] {
-  return ["passmate.app 접속", `코드 ${prettyPin} 입력`, "닉네임 · 캐릭터 고르기"];
+function toSteps(prettyPin: string, host: string): string[] {
+  return [
+    host ? `${host} 접속` : "선생님 화면의 주소로 접속",
+    `코드 ${prettyPin} 입력`,
+    "닉네임 · 캐릭터 고르기",
+  ];
 }
+
+/**
+ * 방에 확정 세트가 아직 연결되지 않았을 때 대기실에서 바로 붙이는 셀렉트.
+ * 서버는 세트 없이 세션을 시작하면 409 `QUESTION_SET_REQUIRED`로 막는다.
+ */
+export type SetLinkPanel = {
+  options: { id: string; title: string; questionCount: number }[];
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+  pending: boolean;
+  errorMessage: string | null;
+};
 
 type Props = {
   /** 6자리 참여 PIN */
@@ -42,6 +69,11 @@ type Props = {
   /** 세션 시작 요청 중 */
   starting?: boolean;
   errorMessage?: string | null;
+  /** 세트가 연결돼 있으면 null — 연결 UI를 그리지 않는다 */
+  setLink?: SetLinkPanel | null;
+  /** 참가자 내보내기(강퇴) */
+  onKick?: (studentId: string) => void;
+  kickingId?: string | null;
 };
 
 /**
@@ -61,9 +93,14 @@ export function LobbyPage({
   onStart,
   starting,
   errorMessage,
+  setLink,
+  onKick,
+  kickingId,
 }: Props) {
   const prettyPin = formatPin(pin);
-  const steps = toSteps(prettyPin);
+  // 서버 렌더에는 주소가 없다 — 빈 값으로 그렸다가 브라우저에서 채운다(하이드레이션 어긋남 방지)
+  const host = useSyncExternalStore(NO_SUBSCRIBE, readHost, readHostOnServer);
+  const steps = toSteps(prettyPin, host);
   const meta = [
     { value: padCount(questionCount), label: "문항" },
     { value: timeLimitSec === null ? "—" : `${timeLimitSec}초`, label: "문항당 제한" },
@@ -73,7 +110,7 @@ export function LobbyPage({
 
   return (
     <ProjectorShell
-      rail={<LobbyRail students={students} />}
+      rail={<LobbyRail students={students} onKick={onKick} kickingId={kickingId} />}
       railCollapsed={<LobbyRailMini students={students} />}
       top={
         <>
@@ -98,15 +135,42 @@ export function LobbyPage({
             <p role="alert" className="text-body-md text-negative">
               {errorMessage}
             </p>
+          ) : setLink ? (
+            <p className="text-body-md text-negative">확정한 문제 세트를 먼저 연결해 주세요</p>
           ) : (
             <p className="text-body-md text-muted-foreground">
               학생이 들어오는 대로 오른쪽에 쌓여요
             </p>
           )}
+          {setLink ? (
+            <span className="flex items-center gap-2">
+              <select
+                aria-label="연결할 문제 세트"
+                value={setLink.value}
+                onChange={(e) => setLink.onChange(e.target.value)}
+                className="h-13 rounded-2xl bg-muted px-4 text-body-md text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">세트 고르기</option>
+                {setLink.options.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.title} — {option.questionCount}문항
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={setLink.onSubmit}
+                disabled={setLink.pending || setLink.value === ""}
+                className="h-13 rounded-2xl bg-mint-tint px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint hover:text-white disabled:opacity-60"
+              >
+                {setLink.pending ? <PendingLabel>연결 중…</PendingLabel> : "세트 연결"}
+              </button>
+            </span>
+          ) : null}
           <button
             type="button"
             onClick={onStart}
-            disabled={starting}
+            disabled={starting || Boolean(setLink)}
             className="h-13 w-[180px] rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
           >
             {starting ? <PendingLabel>시작하는 중…</PendingLabel> : "시험 시작"}
@@ -119,7 +183,7 @@ export function LobbyPage({
         <strong className="mt-1 text-display-2xl">{prettyPin}</strong>
         <span aria-hidden className="mt-5 h-[3px] w-[430px] rounded-sm bg-mint-dark" />
         <p className="mt-5 text-body-lg text-mint-dark">
-          passmate.app 에 접속해 코드를 입력하면 바로 들어옵니다
+          {host ? `${host} 에 접속해 ` : ""}코드를 입력하면 바로 들어옵니다
         </p>
         <div className="mt-11 flex items-center gap-7">
           <div className="rounded-2xl bg-card p-2.5">

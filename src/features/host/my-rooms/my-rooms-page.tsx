@@ -9,7 +9,8 @@ type Props = {
   rooms: MyRoom[];
   /** 헤드라인 윗줄 "누적 학생 수 : 312명" */
   totalStudents: number;
-  level: LevelStatus;
+  /** 서버가 아직 등급을 판정하지 않았으면 없다 — Lv.1로 채우면 없는 사실이 된다 */
+  level: LevelStatus | null;
   /** 명성 카드 부제 "방 운영 24회 · 평균 평가 4.6" */
   levelSubtitle: string;
   stats: HubStat[];
@@ -21,8 +22,9 @@ export function MyRoomsPage({ rooms, totalStudents, level, levelSubtitle, stats,
   return (
     // 시안 W-09 프레임 바탕은 흰색이다 — 앱 기본 회색(bg-background)이 아니다
     <main className="min-h-screen bg-card px-[60px] pt-12 pb-10">
-      {/* 시안은 1440에서 본문 1080 — 더 넓은 화면에서 가운데 칸만 늘어나지 않게 폭을 묶는다 */}
-      <div className="flex max-w-[1080px] flex-col gap-8">
+      {/* 시안은 1440에서 본문 1080 — 폭을 묶어 가운데 칸이 늘어나는 걸 막고,
+          남는 공간은 mx-auto로 좌우에 고르게 나눈다(왼쪽으로 붙이면 오른쪽만 크게 빈다) */}
+      <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
         {/* 시안은 세로 막대를 본문 칸 왼쪽 바깥(x=272)에 걸어 둔다 — 글자는 아래 카드들과 같은 300에서 시작 */}
         <header className="relative mb-6 flex flex-col gap-1.5">
           <span aria-hidden className="absolute top-1 -left-7 h-16 w-[3px] bg-ink" />
@@ -31,7 +33,9 @@ export function MyRoomsPage({ rooms, totalStudents, level, levelSubtitle, stats,
         </header>
 
         <div className="flex gap-9">
-          <ReputationCard status={level} subtitle={levelSubtitle} detailHref="/host/reputation" />
+          {level === null ? null : (
+            <ReputationCard status={level} subtitle={levelSubtitle} detailHref="/host/reputation" />
+          )}
           <HubSummary stats={stats} links={SUMMARY_LINKS} />
           <HubActions actions={actions} />
         </div>

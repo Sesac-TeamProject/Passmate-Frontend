@@ -1,17 +1,20 @@
 import { AppError } from "@/lib/types/app-error";
 import type {
+  ReportRequest,
+  HostReviewRequest,
+  AiGenerateRequest,
   ConfirmChargeRequest,
   CreateChargeRequest,
-  CreateRoomRequest,
-  GenerateQuestionSetRequest,
   JoinRoomRequest,
   NotificationSettingsDto,
-  RoomInfoResponse,
+  QuestionRequest,
+  QuestionSetUpdateRequest,
+  RoomCreateRequest,
+  RoomUpdateRequest,
   ScreenLockRequest,
-  SettlementAccountDto,
-  SubmitAnswerRequest,
-  UpdateProfileRequest,
-  UpdateQuestionSetRequest,
+  SettlementAccountRequest,
+  AnswerSubmitRequest,
+  UserProfileUpdateRequest,
 } from "@/lib/types/dto";
 import {
   mockAdminAdCampaigns,
@@ -32,7 +35,8 @@ import {
   mockGrade,
   mockHostProfile,
   mockMe,
-  mockMyPage,
+  mockCumulativeReport,
+  mockJoinedRooms,
   mockBadges as mockMyBadges,
   mockNotificationSettings,
   mockPutNotificationSettings,
@@ -51,30 +55,43 @@ import {
   mockSettlementAccount,
 } from "./payments";
 import {
-  mockDuplicateQuestionSet,
+  mockAddQuestion,
   mockConfirmQuestionSet,
   mockCreateQuestionSet,
+  mockDeleteQuestion,
+  mockDeleteQuestionSet,
+  mockDuplicateQuestionSet,
   mockGenerate,
   mockGenerateFromFile,
   mockQuestionSetDetail,
   mockQuestionSets,
+  mockRegenerateQuestion,
+  mockUpdateQuestion,
   mockUpdateQuestionSet,
 } from "./question-sets";
 import {
+  mockCheckNickname,
+  mockCloseRoom,
   mockCreateRoom,
   mockHostedRooms,
   mockJoinRoom,
+  mockKickParticipant,
   mockLeaveRoom,
   mockParticipants,
   mockPublicRooms,
+  mockRoom,
   mockRoomByPin,
+  mockUpdateRoom,
 } from "./rooms";
 import {
-  mockEssayAnswers,
+  mockMyAnswer,
   mockMyReport,
   mockMyResult,
+  mockParticipantResult,
   mockPostReview,
-  mockRoomReport,
+  mockRequestAnalysis,
+  mockReviewTargets,
+  mockSessionResults,
   mockSubmitRating,
 } from "./results";
 import type { MockContext, MockHandler } from "./router";
@@ -85,6 +102,8 @@ import {
   mockHints,
   mockLock,
   mockNext,
+  mockQuestionResult,
+  mockRanking,
   mockSnapshot,
   mockStartSession,
   mockSubmissions,
@@ -112,29 +131,38 @@ const HANDLERS: Record<string, MockHandler> = {
 
   /* ── 내 프로필 ────────────────────────────────────── */
   "GET /users/me": () => mockMe(),
-  "PUT /users/me": (ctx) => mockUpdateProfile(asBody<UpdateProfileRequest>(ctx)),
+  "PUT /users/me": (ctx) => mockUpdateProfile(asBody<UserProfileUpdateRequest>(ctx)),
   "DELETE /users/me": () => mockDeleteMe(),
 
   /* ── 방 ───────────────────────────────────────────── */
-  "GET /rooms/pin/:pin": (ctx): RoomInfoResponse => mockRoomByPin(ctx.params.pin),
-  "POST /rooms": (ctx) => mockCreateRoom(asBody<CreateRoomRequest>(ctx)),
+  "GET /rooms/pin/:pin": (ctx) => mockRoomByPin(ctx.params.pin),
+  "POST /rooms": (ctx) => mockCreateRoom(asBody<RoomCreateRequest>(ctx)),
+  "GET /rooms/:roomId": (ctx) => mockRoom(ctx.params.roomId),
+  "PUT /rooms/:roomId": (ctx) => mockUpdateRoom(ctx.params.roomId, asBody<RoomUpdateRequest>(ctx)),
+  "POST /rooms/:roomId/close": (ctx) => mockCloseRoom(ctx.params.roomId),
   "GET /users/me/rooms/hosted": () => mockHostedRooms(),
   "GET /rooms/public": (ctx) => mockPublicRooms(ctx.url),
   "POST /rooms/:roomId/participants": (ctx) =>
     mockJoinRoom(ctx.params.roomId, asBody<JoinRoomRequest>(ctx)),
   "GET /rooms/:roomId/participants": () => mockParticipants(),
+  "GET /rooms/:roomId/participants/nickname-check": (ctx) =>
+    mockCheckNickname(ctx.params.roomId, ctx.url.searchParams.get("nickname") ?? ""),
   "DELETE /rooms/:roomId/participants/me": () => mockLeaveRoom(),
+  "DELETE /rooms/:roomId/participants/:participantId": (ctx) =>
+    mockKickParticipant(ctx.params.roomId, ctx.params.participantId),
 
   /* ── 진행 세션 ────────────────────────────────────── */
-  "GET /rooms/:roomId/session": () => mockSnapshot(),
+  "GET /rooms/:roomId/session": (ctx) => mockSnapshot(ctx.params.roomId),
   "POST /rooms/:roomId/session/start": () => mockStartSession(),
   "POST /rooms/:roomId/session/next": () => mockNext(),
   "POST /rooms/:roomId/session/current/end": () => mockEndCurrent(),
   "POST /rooms/:roomId/session/end": () => mockEndSession(),
   "PUT /rooms/:roomId/session/lock": (ctx) => mockLock(asBody<ScreenLockRequest>(ctx)),
   "GET /rooms/:roomId/session/current/submissions": () => mockSubmissions(),
+  "GET /rooms/:roomId/session/ranking": () => mockRanking(),
+  "GET /rooms/:roomId/session/questions/:questionId/result": () => mockQuestionResult(),
   "POST /rooms/:roomId/session/questions/:questionId/answers": (ctx) =>
-    mockSubmitAnswer(asBody<SubmitAnswerRequest>(ctx)),
+    mockSubmitAnswer(asBody<AnswerSubmitRequest>(ctx)),
   "GET /rooms/:roomId/session/hints": () => mockHints(),
   "POST /rooms/:roomId/session/hints": (ctx) => mockUploadHint(asBody<FormData>(ctx)),
 
@@ -143,31 +171,48 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /question-sets": (ctx) => mockCreateQuestionSet(ctx.body),
   "GET /question-sets/:id": (ctx) => mockQuestionSetDetail(ctx.params.id),
   "PUT /question-sets/:id": (ctx) =>
-    mockUpdateQuestionSet(ctx.params.id, asBody<UpdateQuestionSetRequest>(ctx)),
+    mockUpdateQuestionSet(ctx.params.id, asBody<QuestionSetUpdateRequest>(ctx)),
   "POST /question-sets/:id/confirm": (ctx) => mockConfirmQuestionSet(ctx.params.id),
   "POST /question-sets/:id/duplicate": (ctx) => mockDuplicateQuestionSet(ctx.params.id),
+  "DELETE /question-sets/:setId": (ctx) => mockDeleteQuestionSet(ctx.params.setId),
+  "POST /question-sets/:setId/questions": (ctx) =>
+    mockAddQuestion(ctx.params.setId, asBody<QuestionRequest>(ctx)),
+  "PUT /question-sets/:setId/questions/:questionId": (ctx) =>
+    mockUpdateQuestion(ctx.params.setId, ctx.params.questionId, asBody<QuestionRequest>(ctx)),
+  "DELETE /question-sets/:setId/questions/:questionId": (ctx) =>
+    mockDeleteQuestion(ctx.params.setId, ctx.params.questionId),
+  "POST /question-sets/:setId/questions/:questionId/regenerate": (ctx) =>
+    mockRegenerateQuestion(ctx.params.setId, ctx.params.questionId),
   "POST /question-sets/:setId/questions/generate": (ctx) =>
-    mockGenerate(asBody<GenerateQuestionSetRequest>(ctx)),
+    mockGenerate(ctx.params.setId, asBody<AiGenerateRequest>(ctx)),
   "POST /question-sets/:setId/questions/generate-from-file": (ctx) =>
-    mockGenerateFromFile(asBody<FormData>(ctx)),
+    mockGenerateFromFile(ctx.params.setId, asBody<FormData>(ctx)),
 
   /* ── 결과 · 리포트 · 평가 ─────────────────────────── */
   "GET /rooms/:roomId/results/me": () => mockMyResult(),
   "GET /rooms/:roomId/reports/me": () => mockMyReport(),
-  "GET /rooms/:roomId/results": () => mockRoomReport(),
-  "GET /rooms/:roomId/answers": () => mockEssayAnswers(),
-  "PUT /rooms/:roomId/answers/:answerId/review": () => mockPostReview(),
+  "GET /rooms/:roomId/results": () => mockSessionResults(),
+  "GET /rooms/:roomId/results/participants/:participantId": (ctx) =>
+    mockParticipantResult(ctx.params.participantId),
+  "GET /rooms/:roomId/session/questions/:questionId/answers/me": (ctx) =>
+    mockMyAnswer(ctx.params.questionId),
+  "POST /rooms/:roomId/session/questions/:questionId/answers/me/analysis": () =>
+    mockRequestAnalysis(),
+  "GET /rooms/:roomId/answers": (ctx) => mockReviewTargets(ctx.url),
+  "PUT /rooms/:roomId/answers/:answerId/review": (ctx) =>
+    mockPostReview(Number(ctx.params.answerId), asBody<HostReviewRequest>(ctx)),
   "POST /rooms/:roomId/ratings": () => mockSubmitRating(),
 
   /* ── 마이페이지 ───────────────────────────────────── */
-  "GET /users/me/rooms/joined": () => mockMyPage(),
+  "GET /users/me/rooms/joined": (ctx) => mockJoinedRooms(ctx.url),
+  "GET /users/me/report": () => mockCumulativeReport(),
   "GET /users/me/grade": () => mockGrade(),
   "GET /users/me/badges": () => mockMyBadges(),
   "GET /users/me/notification-settings": () => mockNotificationSettings(),
   "PUT /users/me/notification-settings": (ctx) =>
     mockPutNotificationSettings(asBody<NotificationSettingsDto>(ctx)),
   "GET /users/:userId/profile": (ctx) => mockHostProfile(ctx.params.userId),
-  "POST /reports": () => mockReport(),
+  "POST /reports": (ctx) => mockReport(asBody<ReportRequest>(ctx)),
   "POST /guest-records/claim": () => mockClaim(),
 
   /* ── 코인 · 정산 ──────────────────────────────────── */
@@ -180,7 +225,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /users/me/earnings": () => mockEarnings(),
   "GET /users/me/settlement-account": () => mockSettlementAccount(),
   "PUT /users/me/settlement-account": (ctx) =>
-    mockPutSettlementAccount(asBody<SettlementAccountDto>(ctx)),
+    mockPutSettlementAccount(asBody<SettlementAccountRequest>(ctx)),
   "PUT /users/me/payment-method": () => mockPutPaymentMethod(),
 
   /* ── 관리자 (A-01~A-06) ───────────────────────────── */

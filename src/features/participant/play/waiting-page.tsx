@@ -13,13 +13,15 @@ type Props = {
   /** 내 닉네임. 참여 기록이 없으면(새로고침·다른 탭) null */
   myName: string | null;
   students: Student[];
+  /** 회원으로 들어왔는가 — 기록이 계정에 남는다는 약속은 회원에게만 한다 */
+  isMember?: boolean;
 };
 
 /**
  * M-02 대기실 (앱 시안 → 데스크톱 웹 이식).
  * 학생이 입장한 뒤 선생님이 시작할 때까지 머무는 화면.
  */
-export function WaitingPage({ roomTitle, pin, myName, students }: Props) {
+export function WaitingPage({ roomTitle, pin, myName, students, isMember }: Props) {
   const shown = students.slice(0, STACK_LIMIT);
   const overflow = students.length - shown.length;
 
@@ -61,6 +63,10 @@ export function WaitingPage({ roomTitle, pin, myName, students }: Props) {
         </ul>
 
         <p className="text-body-md text-muted-foreground">학생 {students.length}명이 함께해요</p>
+
+        {isMember ? (
+          <p className="text-label-md text-mint-dark">오늘 푼 기록은 내 계정에 저장돼요</p>
+        ) : null}
       </div>
 
       <span aria-hidden className="mt-auto flex items-center gap-1.5">

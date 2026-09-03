@@ -1,6 +1,6 @@
 /**
  * 서버 오류 응답 `code`. 화면은 HTTP 숫자가 아니라 이 값으로 문구를 분기한다.
- * 원천: 백엔드 `common/exception/ErrorCode.kt` (develop @ f719493, 2026-09-01).
+ * 원천: 백엔드 `common/exception/ErrorCode.kt` (develop @ 5f433d2, 2026-09-02) — 서버 enum 40개 전수.
  * 서버는 enum 이름을 그대로 code로 내보낸다 — 키와 값이 항상 같다.
  */
 export const ERROR_CODES = {
@@ -34,14 +34,30 @@ export const ERROR_CODES = {
   CONFLICT: "CONFLICT",
   ROOM_NOT_JOINABLE: "ROOM_NOT_JOINABLE",
   ROOM_FULL: "ROOM_FULL",
+  /** 409 — 진행 중인 세션이 아니다 */
+  SESSION_NOT_RUNNING: "SESSION_NOT_RUNNING",
+  /** 409 — 지금 풀 수 있는 문항이 아니다(마감됐거나 아직 안 열림) */
+  QUESTION_NOT_RUNNING: "QUESTION_NOT_RUNNING",
+  /** 409 — 참가자×문항 1건. 이미 낸 답은 못 고친다 */
+  ALREADY_SUBMITTED: "ALREADY_SUBMITTED",
+  /** 409 — 호스트가 학생 화면을 잠갔다 */
+  SCREEN_LOCKED: "SCREEN_LOCKED",
+  /** 409 — 마지막 문항 뒤 next. 호스트는 "세션 종료"를 눌러야 한다 */
+  SESSION_ALREADY_FINISHED: "SESSION_ALREADY_FINISHED",
+  /** 409 — 확정된 문제 세트를 먼저 연결해야 세션을 시작할 수 있다 */
+  QUESTION_SET_REQUIRED: "QUESTION_SET_REQUIRED",
   NICKNAME_DUPLICATED: "NICKNAME_DUPLICATED",
   ALREADY_JOINED: "ALREADY_JOINED",
   QUESTION_SET_ALREADY_CONFIRMED: "QUESTION_SET_ALREADY_CONFIRMED",
   QUESTION_SET_EMPTY: "QUESTION_SET_EMPTY",
+  // 429 — 코인 정책이 확정되면 402로 바뀔 자리
+  AI_FREE_LIMIT_EXCEEDED: "AI_FREE_LIMIT_EXCEEDED",
   // 500 / 502
   PIN_GENERATION_FAILED: "PIN_GENERATION_FAILED",
   INTERNAL_ERROR: "INTERNAL_ERROR",
   AI_GENERATION_FAILED: "AI_GENERATION_FAILED",
+  /** 502 — 서술형 분석 실패. 차감된 코인은 서버가 환급한다 */
+  AI_ANALYSIS_FAILED: "AI_ANALYSIS_FAILED",
   EXTERNAL_API_ERROR: "EXTERNAL_API_ERROR",
 
   /** @draft 서버 enum에 아직 없다 — 별점 기능(우선순위 3) 미구현. 구현 시 서버가 추가한다 */

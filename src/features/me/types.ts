@@ -10,14 +10,19 @@ export type Profile = {
   email: string;
   joinedLabel: string;
   avatar: AvatarKey;
-  level: number;
-  levelTitle: string;
+  /**
+   * 호스트 등급. **서버가 아직 계산하지 않는다** — `MyProfileResponse`에 등급·뱃지·별점 자리가
+   * 일부러 비어 있다(백엔드 주석: 0·null로 채우면 "등급 없음"으로 읽혀 오해를 만든다).
+   * 값이 없으면 화면은 뱃지·진행률을 **그리지 않는다**. 0으로 대체하지 말 것.
+   */
+  level?: number;
+  levelTitle?: string;
   /** 현재 레벨로 열리는 권한. 예: "유료 방 개설 가능" */
-  levelPerk: string;
+  levelPerk?: string;
   /** 다음 레벨까지 남은 실적 */
-  nextLevel: { level: number; roomsLeft: number; studentsLeft: number };
+  nextLevel?: { level: number; roomsLeft: number; studentsLeft: number };
   /** 다음 레벨까지 진행률(%) */
-  progress: number;
+  progress?: number;
 };
 
 /** 유료 방 개설이 열리는 최소 레벨. features/host/room-flow/adapt.ts PAID_ROOM_MIN_LEVEL과 값을 맞춰 여기 복제해 뒀다(공용화 TODO). */
@@ -43,15 +48,22 @@ export type SettlementAccount = {
   holder: string;
 };
 
-/** C-02-3 은행 선택지 — 정책 목록이라 서버 데이터가 아닌 UI 상수로 둔다 */
-export const BANKS = [
-  "국민은행",
-  "신한은행",
-  "우리은행",
-  "하나은행",
-  "카카오뱅크",
-  "토스뱅크",
-] as const;
+/**
+ * C-02-3 은행 선택지 — 정책 목록이라 서버 데이터가 아닌 UI 상수로 둔다.
+ *
+ * 코드는 금융결제원 표준 코드다. 서버는 받은 값을 **검증 없이 그대로 저장**하므로
+ * (백엔드 `SettlementAccountService`) 실제 지급 전에 팀이 한 번 확인해야 한다.
+ */
+export const BANK_CODES: Record<string, string> = {
+  국민은행: "004",
+  신한은행: "088",
+  우리은행: "020",
+  하나은행: "081",
+  카카오뱅크: "090",
+  토스뱅크: "092",
+};
+
+export const BANKS = Object.keys(BANK_CODES) as readonly string[];
 
 /** C-02 v3 카드/정산 — 이번 달 정산 예정 요약 */
 export type SettlementSummary = {
@@ -84,7 +96,8 @@ export type Achievement = {
 
 /** 개설한 방(host) 실적. 지금은 어느 화면도 그리지 않는다(마이페이지에 "기록" 카드 UI가 없다) — adapt.ts에만 정의해 둔다 */
 export type HostRecord = {
-  stats: { rooms: number; rating: number; students: number };
+  /** 평균 별점은 받은 평가가 없으면 서버가 주지 않는다 — 0으로 채우지 않는다 */
+  stats: { rooms: number; rating: number | null; students: number };
   badges: { earned: number; total: number; locked: number; items: Achievement[] };
   openRooms: number;
   /** 이번 달 정산 예정 금액(원) */
@@ -93,11 +106,18 @@ export type HostRecord = {
 
 export type AttendedSession = {
   id: string;
-  rank: number;
+  /**
+   * 내 등수. **아직 안 끝난 방은 값이 없다** — 0으로 채우면 "0위"라는 없는 사실이 된다
+   * (서버가 `myRank`를 아예 주지 않는다).
+   */
+  rank: number | null;
   title: string;
   dateLabel: string;
   questionCount: number;
-  score: number;
+  /** 내 점수. 채점 전이면 없다 */
+  score: number | null;
+  /** 학습 리포트가 만들어졌는가 — false면 리포트 링크를 걸지 않는다 */
+  hasReport: boolean;
 };
 
 /** 참여한 방(client) 학습 기록 */

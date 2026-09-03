@@ -1,27 +1,27 @@
 import type { StatItem } from "@/components/common/stat-cards";
 import { toAvatarKey } from "@/components/common/student-avatar";
+import { parseServerDateTime } from "@/lib/datetime";
 import { formatShortDate, formatWon } from "@/lib/format";
-import { LEVEL_TITLE, levelTitle } from "@/lib/host-level";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
 import type {
-  BadgeDto,
+  BadgeResponse,
   BadgesResponse,
   BadgeType,
   CoinBalanceResponse,
   CoinTransactionDto,
   CoinTransactionType,
   EarningsResponse,
-  GradeCriterion,
   GradeResponse,
-  MeResponse,
-  MyPageOngoing,
-  MyPageResponse,
-  MyPageRoom,
+  CumulativeReportResponse,
+  JoinedRoom,
+  JoinedRoomsResponse,
+  MyProfileResponse,
   NotificationSettingsDto,
   PaymentMethod,
-  SettlementAccountDto,
-  SettlementItemDto,
+  SettlementAccountResponse,
+  HostEarningRow,
+  PayoutStatus,
 } from "@/lib/types/dto";
 import type { CoinHistoryFilter, CoinHistoryItem } from "./coins/types";
 import type { ActiveSession } from "./joined/types";
@@ -32,6 +32,9 @@ import {
 } from "./notifications/types";
 import type { PaymentMethodItem } from "./payment-methods/types";
 import type { SettlementRow, SettlementStatus } from "./settlement/types";
+
+/** 플랫폼 수수료 20% — 호스트 몫. 백엔드 `HostEarningRow.net` 주석과 같은 값 */
+const HOST_SHARE_PERCENT = 80;
 import {
   type Achievement,
   type AchievementBadgeKind,
@@ -45,33 +48,25 @@ import {
   type SettlementSummary,
 } from "./types";
 
-/** GradeResponse.next.criteria에서 라벨이 prefix로 시작하는 항목을 찾아 남은 실적(target-current)을 돌려준다 */
-function criterionLeft(criteria: GradeCriterion[] | undefined, labelPrefix: string): number {
-  const match = criteria?.find((c) => c.label?.startsWith(labelPrefix));
-  if (!match || match.target == null || match.current == null) return 0;
-  return Math.max(0, match.target - match.current);
+/** 서버 가입 시각(UTC naive) → "2026-08 가입". 값이 깨졌으면 빈 문자열 */
+function toJoinedLabel(joinedAt: string): string {
+  const date = parseServerDateTime(joinedAt);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")} 가입`;
 }
 
-/** GET /users/me(+/grade) → 프로필 카드 */
-export function toProfile(me: MeResponse, grade?: GradeResponse): Profile {
-  const level = me.level ?? 1;
-  const next = grade?.next;
-
+/**
+ * GET /users/me → 프로필 카드.
+ * 등급·칭호·다음 레벨은 **채우지 않는다** — 서버가 아직 계산하지 않아 자리를 비워 둔 값이라
+ * Lv.1로 메우면 "새싹 등급"이라는 없는 사실을 만든다(`features/me/types.ts` Profile 주석).
+ */
+export function toProfile(me: MyProfileResponse): Profile {
   return {
-    name: me.nickname ?? "",
-    nickname: me.nickname ?? "",
+    name: me.nickname,
+    nickname: me.nickname,
     email: me.email ?? "",
-    joinedLabel: me.joinedAt ? `${me.joinedAt.slice(0, 7)} 가입` : "",
-    avatar: toAvatarKey(me.avatarId),
-    level,
-    levelTitle: levelTitle(level) ?? LEVEL_TITLE[1],
-    levelPerk: level >= PAID_ROOM_MIN_LEVEL ? "유료 방 개설 가능" : "",
-    nextLevel: {
-      level: next?.level ?? level + 1,
-      roomsLeft: criterionLeft(next?.criteria, "방 운영"),
-      studentsLeft: criterionLeft(next?.criteria, "총 학생"),
-    },
-    progress: next?.progressPercent ?? 0,
+    joinedLabel: toJoinedLabel(me.joinedAt),
+    avatar: toAvatarKey(me.defaultAvatarId),
   };
 }
 
@@ -100,12 +95,16 @@ export function toWireMethod(method: PayMethod): PaymentMethod {
   return WIRE_METHOD_BY_PAY_METHOD[method];
 }
 
-/** GET /users/me/coins → 카드/코인 · 결제 */
-export function toCoinSummary(coins: CoinBalanceResponse): CoinSummary {
+/**
+ * 카드/코인 · 결제.
+ * **잔액은 `GET /users/me`의 `coinBalance`가 원천이다** — `GET /users/me/coins`는 백엔드에 없다
+ * (`CoinWallet` 엔티티만 있고 컨트롤러가 없다). 결제 수단·최근 내역은 아직 목뿐이라 `@draft`.
+ */
+export function toCoinSummary(coins: CoinBalanceResponse, coinBalance: number): CoinSummary {
   const recent = coins.recent;
 
   return {
-    balance: coins.balance ?? 0,
+    balance: coinBalance,
     paymentMethodLabel: coins.defaultMethod
       ? `${PAY_METHOD_LABEL[toPortoneMethod(coins.defaultMethod)]} (기본) · 포트원 안전결제`
       : "등록된 결제 수단 없음",
@@ -145,35 +144,46 @@ export function filterCoinHistory(
   return items;
 }
 
-const PAYOUT_STATUS_TO_SETTLEMENT_STATUS: Record<
-  NonNullable<SettlementItemDto["status"]>,
-  SettlementStatus
-> = {
-  SCHEDULED: "scheduled",
-  PAID: "paid",
+const PAYOUT_STATUS_TO_SETTLEMENT_STATUS: Record<PayoutStatus, SettlementStatus> = {
+  PENDING: "scheduled",
+  SETTLED: "paid",
   HELD: "held",
+  CARRIED: "carried",
 };
 
-/** GET /users/me/earnings.items → 결제 · 정산 내역 표 */
-export function toSettlementRows(items: SettlementItemDto[]): SettlementRow[] {
-  return items.map((item, index) => ({
-    id: String(item.settlementId ?? index),
-    dateLabel: item.dateLabel ?? "",
-    roomTitle: item.roomTitle ?? "",
-    participants: item.participantCount ?? 0,
-    gross: item.entryFeeTotal ?? 0,
-    fee: item.feeAmount ?? 0,
-    payout: item.payoutAmount ?? 0,
-    status: item.status ? PAYOUT_STATUS_TO_SETTLEMENT_STATUS[item.status] : "scheduled",
+/** 서버 시각(UTC naive) → "8/22". 값이 이상하면 빈 문자열 */
+function toShortDate(value: string): string {
+  const date = parseServerDateTime(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+/** "2026-09-05"(날짜만) → "9/5". 시각이 없어 parseServerDateTime을 쓰지 않는다 */
+function toPayoutDateLabel(value: string): string {
+  const [, month, day] = value.split("-");
+  return month && day ? `${Number(month)}/${Number(day)}` : "";
+}
+
+/** GET /users/me/earnings 의 `earnings` → 결제 · 정산 내역 표 */
+export function toSettlementRows(rows: HostEarningRow[]): SettlementRow[] {
+  return rows.map((row, index) => ({
+    id: `${row.roomId}-${index}`,
+    dateLabel: toShortDate(row.earnedAt),
+    roomTitle: row.roomTitle,
+    participants: row.participantCount,
+    gross: row.gross,
+    fee: row.platformFee,
+    payout: row.net,
+    status: PAYOUT_STATUS_TO_SETTLEMENT_STATUS[row.status],
   }));
 }
 
 /** GET /users/me/earnings → 마이페이지 "이번 달 정산 예정" 카드 */
 export function toSettlementSummary(earnings: EarningsResponse): SettlementSummary {
   return {
-    thisMonthAmount: earnings.nextPayout?.amount ?? earnings.monthlyTotal ?? 0,
-    payoutDateLabel: earnings.nextPayout?.dateLabel ?? "",
-    hostShare: earnings.hostSharePercent ?? 80,
+    thisMonthAmount: earnings.thisMonthNet,
+    payoutDateLabel: toPayoutDateLabel(earnings.nextPayoutDate),
+    hostShare: HOST_SHARE_PERCENT,
     paidRoomLevel: PAID_ROOM_MIN_LEVEL,
     taxNote: "연 소득 기준 원천징수 3.3% 적용",
   };
@@ -181,95 +191,118 @@ export function toSettlementSummary(earnings: EarningsResponse): SettlementSumma
 
 /** GET /users/me/earnings → W-10 정산 요약 3장 */
 export function toSettlementStats(earnings: EarningsResponse): StatItem[] {
-  const hostShare = earnings.hostSharePercent ?? 80;
-  const nextPayout = earnings.nextPayout;
+  // 유료 방 실적은 계약에 따로 없다 — 적립이 생긴 세션을 세어 쓴다
+  const paidRoomCount = earnings.earnings.length;
+  const studentCount = earnings.earnings.reduce((sum, row) => sum + row.participantCount, 0);
 
   return [
     {
       id: "revenue",
-      label: `이번 달 수익 (선생님 ${hostShare}%)`,
-      value: formatWon(earnings.monthlyTotal ?? 0, true),
+      label: `이번 달 수익 (선생님 ${HOST_SHARE_PERCENT}%)`,
+      value: formatWon(earnings.thisMonthNet, true),
       tile: { label: "₩", tone: "mint" },
     },
     {
       id: "next-payout",
-      label: nextPayout?.dateLabel ? `다음 지급 (${nextPayout.dateLabel})` : "다음 지급",
-      value: formatWon(nextPayout?.amount ?? 0, true),
+      label: `다음 지급 (${toPayoutDateLabel(earnings.nextPayoutDate)})`,
+      value: formatWon(earnings.pendingNet, true),
       tile: { label: "D", tone: "blue" },
     },
     {
       id: "paid-rooms",
       label: "유료 방 운영",
-      value: `${earnings.paidRoomCount ?? 0}회 · ${earnings.studentCount ?? 0}명`,
+      value: `${paidRoomCount}회 · ${studentCount}명`,
       tile: { label: "R", tone: "orange" },
     },
   ];
 }
 
-/** "***-***-4821" 형태로 마스킹 — 마지막 4자리만 남긴다 */
-function maskAccountNumber(accountNumber: string | undefined): string {
-  if (!accountNumber) return "";
-  const last4 = accountNumber.replace(/\D/g, "").slice(-4);
-  return last4 ? `***-***-${last4}` : "";
-}
+/**
+ * GET /users/me/settlement-account → 마이페이지 계좌 요약.
+ * 미등록이면 `registered: false`로 오고 `account`가 빠진다 — 화면이 등록 안내를 띄우도록 null을 준다.
+ * 번호는 **서버가 마스킹해서** 준다(`accountNoMasked`) — 원본은 조회로 돌아오지 않는다.
+ */
+export function toSettlementAccount(dto: SettlementAccountResponse): SettlementAccount | null {
+  const account = dto.account;
+  if (!dto.registered || account === undefined) return null;
 
-/** GET /users/me/settlement-account → 정산 계좌 등록 폼 초기값 · 표시용. 404는 컨테이너가 미등록으로 처리한다 */
-export function toSettlementAccount(dto: SettlementAccountDto): SettlementAccount {
   return {
-    bank: dto.bankName ?? "",
-    maskedNumber: maskAccountNumber(dto.accountNumber),
-    accountNumber: dto.accountNumber ?? "",
-    holder: dto.holderName ?? "",
+    bank: account.bankName,
+    maskedNumber: account.accountNoMasked,
+    accountNumber: "",
+    holder: account.holderName,
   };
 }
 
-/** ActiveSession.progress — "3/8" → {current:3, total:8} */
-function parseProgress(label: string | null | undefined): { current: number; total: number } {
-  if (!label) return { current: 0, total: 0 };
-  const [current, total] = label.split("/").map(Number);
-  return {
-    current: Number.isFinite(current) ? current : 0,
-    total: Number.isFinite(total) ? total : 0,
-  };
-}
-
-/** MyPageResponse.ongoing → 참여한 방의 "다시 들어가기" 카드. 없으면 null */
-export function toActiveSession(ongoing: MyPageOngoing | null | undefined): ActiveSession | null {
+/**
+ * 지금 들어갈 수 있는 방 → "다시 들어가기" 카드. 없으면 null.
+ *
+ * 서버 응답에 **PIN이 없다** — 참여한 방 목록은 `roomId`만 준다. 진행률(3/8)도 없다.
+ * 그래서 카드는 방 이름·선생님만 보여 주고, 들어가는 길은 PIN 입력 화면으로 보낸다.
+ */
+export function toActiveSession(rooms: JoinedRoom[]): ActiveSession | null {
+  const ongoing = rooms.find((r) => r.status === "WAITING" || r.status === "RUNNING");
   if (!ongoing) return null;
 
   return {
-    code: ongoing.pin,
-    pin: ongoing.pin,
+    roomId: ongoing.roomId,
     title: ongoing.title,
-    hostName: ongoing.hostNickname ?? "",
-    progress: parseProgress(ongoing.progressLabel),
+    hostName: ongoing.hostNickname,
+    isRunning: ongoing.status === "RUNNING",
   };
 }
 
-function toAttendedSession(room: MyPageRoom): AttendedSession {
+function toAttendedSession(room: JoinedRoom): AttendedSession {
   return {
     id: String(room.roomId),
-    rank: room.myRank ?? 0,
+    // 아직 안 끝난 방은 등수·점수가 없다 — 0으로 채우지 않는다
+    rank: room.myRank ?? null,
     title: room.title,
-    dateLabel: room.dateLabel ?? "",
-    questionCount: room.questionCount ?? 0,
-    score: room.myScore ?? 0,
+    dateLabel: toSessionDateLabel(room),
+    questionCount: room.questionCount,
+    score: room.myScore ?? null,
+    hasReport: room.hasReport,
   };
+}
+
+/** 종료 시각이 있으면 그 날짜, 없으면 시작 시각. 둘 다 없으면 빈 문자열 */
+function toSessionDateLabel(room: JoinedRoom): string {
+  const source = room.endedAt ?? room.startedAt;
+  if (!source) return "";
+
+  const date = parseServerDateTime(source);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const weekday = new Intl.DateTimeFormat("ko-KR", { weekday: "short" }).format(date);
+  return `${date.getMonth() + 1}/${date.getDate()} (${weekday})`;
 }
 
 /** GET /users/me/rooms/joined → W-13 참여한 방 · 참여 기록 */
-export function toLearningRecord(page: MyPageResponse): LearningRecord {
-  const summary = page.summary;
-
+export function toLearningRecord(page: JoinedRoomsResponse): LearningRecord {
   return {
     stats: {
-      sessions: summary?.participationCount ?? 0,
-      accuracy: summary?.accuracyPercent ?? 0,
-      averageRank: summary?.avgRank ?? 0,
+      sessions: page.summary.completedSessionCount,
+      accuracy: page.summary.averageAccuracy,
+      averageRank: page.summary.averageRank,
     },
-    weakTopics: summary?.weakTopics ?? [],
-    sessions: (page.rooms ?? []).map(toAttendedSession),
+    weakTopics: page.summary.weakTopics,
+    sessions: page.rooms.content.map(toAttendedSession),
   };
+}
+
+/**
+ * "지난주보다 4.2%p 올랐어요" — 비교할 지난주가 없으면 null.
+ *
+ * 누적 리포트에는 세션별 추이(`trend`)도 오지만 **그릴 자리가 시안에 없다** — 없는 차트를
+ * 지어내는 대신 변화 한 줄만 쓴다(추이 그래프는 디자인이 정해지면 붙인다).
+ */
+export function toAccuracyChangeLabel(report: CumulativeReportResponse): string | null {
+  const change = report.accuracyChangeFromLastWeek;
+  if (change === undefined || change === 0) return null;
+
+  return change > 0
+    ? `지난주보다 ${change.toFixed(1)}%p 올랐어요`
+    : `지난주보다 ${Math.abs(change).toFixed(1)}%p 내렸어요`;
 }
 
 const BADGE_META: Record<BadgeType, { kind: AchievementBadgeKind; label?: string; title: string }> =
@@ -280,14 +313,12 @@ const BADGE_META: Record<BadgeType, { kind: AchievementBadgeKind; label?: string
     // TODO(디자인): 시안 뱃지 시트에서 "평가 4.5+"·"AI 세트 50개"는 아이콘이 비어 있다
     RATING_45: { kind: "empty", title: "평가 4.5+" },
     RATINGS_50: { kind: "ring", label: "50", title: "평가 50개 받기" },
-    STREAK_30: { kind: "drop", title: "30일 연속 활동" },
+    ACTIVE_30D: { kind: "drop", title: "30일 연속 활동" },
     FIRST_PAID_ROOM: { kind: "won", title: "유료 방 첫 개설" },
     AI_SETS_50: { kind: "empty", title: "AI 세트 50개" },
   };
 
-/**
- * 호스트 공개 프로필은 뱃지를 BadgeDto가 아니라 BadgeType 목록으로 준다 — 목록에 있으면 획득한 것이다.
- */
+/** 공개 프로필은 **획득한 뱃지만** 준다 — 목록에 있으면 딴 것이다 */
 export function toEarnedAchievement(type: BadgeType): Achievement {
   const meta = BADGE_META[type];
   return {
@@ -298,15 +329,16 @@ export function toEarnedAchievement(type: BadgeType): Achievement {
   };
 }
 
-function toAchievement(badge: BadgeDto): Achievement {
-  const meta = badge.type ? BADGE_META[badge.type] : undefined;
+function toAchievement(badge: BadgeResponse): Achievement {
+  const meta = BADGE_META[badge.code];
 
   return {
-    id: badge.type ?? "unknown",
+    id: badge.code,
     kind: meta?.kind ?? "empty",
+    // 이름은 서버 문구를 그대로 쓴다 — 뱃지가 늘어도 프런트를 고치지 않는다
     label: meta?.label,
-    title: meta?.title ?? badge.type ?? "",
-    locked: !badge.earned,
+    title: badge.name,
+    locked: !badge.achieved,
   };
 }
 
@@ -318,17 +350,21 @@ export function toHostRecord(
   grade: GradeResponse | undefined,
   badges: BadgesResponse | undefined,
 ): HostRecord {
-  const stats = grade?.stats;
-  const items = (badges?.items ?? []).map(toAchievement);
-  const earned = items.filter((item) => !item.locked).length;
+  const items = (badges?.badges ?? []).map(toAchievement);
 
   return {
     stats: {
-      rooms: stats?.roomCount ?? 0,
-      rating: stats?.avgStars ?? 0,
-      students: stats?.totalStudents ?? 0,
+      rooms: grade?.roomsHosted ?? 0,
+      // 받은 평가가 없으면 서버가 필드를 뺀다 — 0으로 채우면 "0점을 받았다"가 된다
+      rating: grade?.avgRating ?? null,
+      students: grade?.totalStudents ?? 0,
     },
-    badges: { earned, total: items.length, locked: items.length - earned, items },
+    badges: {
+      earned: badges?.achievedCount ?? 0,
+      total: badges?.totalCount ?? items.length,
+      locked: (badges?.totalCount ?? items.length) - (badges?.achievedCount ?? 0),
+      items,
+    },
     // 진행 중인 방 수 · 이번 달 정산액은 useHostedRooms/useEarnings에 계약이 있지만, 이 카드를 그리는
     // 화면이 아직 없어(위 docstring 참고) 여기서는 채우지 않는다. 화면이 생기면 컨테이너가 두 훅을 더 호출해 채운다.
     openRooms: 0,

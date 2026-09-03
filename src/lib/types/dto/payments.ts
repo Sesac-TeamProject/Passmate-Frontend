@@ -1,3 +1,9 @@
+/**
+ * @draft 코인·결제·정산 — **백엔드에 컨트롤러가 없다**(실서버 404). 목에서만 돈다.
+ *
+ * 잔액만 예외로 실제 값이 있다: `GET /users/me`의 `coinBalance`.
+ * 여기 필드는 ERD 후보값이라 스웨거가 열리면 `contracts/rest-api.md` §3-4부터 대조한다.
+ */
 import type { AvatarKey } from "./common";
 import type { CursorPage, PaymentMethod } from "./common";
 
@@ -46,38 +52,67 @@ export type ConfirmChargeResponse = {
 export type CreateEntryPaymentRequest = { nickname: string; avatarId?: AvatarKey | null };
 export type EntryPaymentResponse = { paymentNo?: string; balance?: number };
 
-export type PayoutStatus = "SCHEDULED" | "PAID" | "HELD";
-export type SettlementItemDto = {
-  settlementId?: number;
-  dateLabel?: string;
-  roomTitle?: string;
-  participantCount?: number;
-  entryFeeTotal?: number;
-  feeAmount?: number;
-  payoutAmount?: number;
-  status?: PayoutStatus | null;
-};
-export type EarningsNextPayout = { dateLabel?: string; amount?: number };
-export type EarningsAccount = {
-  bankName?: string;
-  maskedNumber?: string;
-  payoutNote?: string | null;
-};
-/** GET /users/me/earnings — 수익·정산 요약+내역 */
-export type EarningsResponse = CursorPage<SettlementItemDto> & {
-  monthlyTotal?: number;
-  hostSharePercent?: number;
-  nextPayout?: EarningsNextPayout | null;
-  paidRoomCount?: number;
-  studentCount?: number;
-  account?: EarningsAccount | null;
+/** 정산 상태 — 백엔드 `HostEarningRow.status` */
+export type PayoutStatus = "PENDING" | "SETTLED" | "HELD" | "CARRIED";
+/** 세션 한 건의 적립 */
+export type HostEarningRow = {
+  roomId: number;
+  roomTitle: string;
+  participantCount: number;
+  /** 참가비 총액(코인, 1 C = ₩1) */
+  gross: number;
+  /** 플랫폼 수수료 20% */
+  platformFee: number;
+  /** 호스트 정산액 80% */
+  net: number;
+  status: PayoutStatus;
+  earnedAt: string;
 };
 
-/** GET/PUT /users/me/settlement-account — 미등록이면 GET 404 */
-export type SettlementAccountDto = {
-  bankName?: string;
-  accountNumber?: string;
-  holderName?: string;
+/**
+ * GET /users/me/earnings — 내 수익·정산 내역.
+ * **커서 페이지가 아니다** — 서버가 목록을 통째로 준다.
+ */
+export type EarningsResponse = {
+  /** 이번 달에 적립된 정산액 합계 */
+  thisMonthNet: number;
+  /** 아직 지급되지 않은 정산액 합계(이월 포함) */
+  pendingNet: number;
+  /** 다음 지급 예정일 (YYYY-MM-DD) */
+  nextPayoutDate: string;
+  /** 정산 계좌를 등록했는지. false면 지급이 보류된다 */
+  accountRegistered: boolean;
+  /** 세션별 적립. 최근 순 */
+  earnings: HostEarningRow[];
 };
-/** PUT /users/me/payment-method */
+
+/** 정산 계좌 — 조회는 마스킹된 번호만 준다 */
+export type SettlementAccountView = {
+  bankCode: string;
+  bankName: string;
+  /** 뒤 네 자리만 남기고 가린다 ("********6789") */
+  accountNoMasked: string;
+  holderName: string;
+  /** 예금주 실명 확인 여부. 계좌를 바꾸면 다시 false가 된다 */
+  verified: boolean;
+  verifiedAt?: string;
+  updatedAt?: string;
+};
+
+/**
+ * GET/PUT /users/me/settlement-account.
+ * **미등록도 200이다** — `registered: false`로 오고 `account`가 빠진다(404가 아니다).
+ */
+export type SettlementAccountResponse = {
+  registered: boolean;
+  account?: SettlementAccountView;
+};
+
+/** PUT 본문 — 등록·변경. 번호는 마스킹하지 않은 원본을 보낸다 */
+export type SettlementAccountRequest = {
+  bankCode: string;
+  bankName: string;
+  accountNo: string;
+  holderName: string;
+}; /** PUT /users/me/payment-method */
 export type PaymentMethodRequest = { method: PaymentMethod };

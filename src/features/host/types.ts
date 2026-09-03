@@ -62,6 +62,8 @@ export type LiveQuestion = {
   type: QuestionType;
   prompt: string;
   choices: Choice[];
+  /** 배점. 서버 문항의 points 그대로 */
+  points: number;
   /** 제한 시간(초) */
   seconds: number;
   /** 남은 시간(초) — 서버 시각(endsAt − ts) 기준으로 렌더 시점에 계산한 값 */
@@ -117,11 +119,28 @@ export type QuestionInsight = {
 export type AnswerFinding = { tone: "good" | "lack" | "tip"; text: string };
 
 export type EssayAnswer = {
+  /** 서버 답안 id — 첨삭 저장(PUT …/answers/{answerId}/review)이 이 값을 쓴다 */
+  answerId: number;
   studentId: string;
+  nickname: string;
+  /** 문항 번호 — "Q2"로 그린다 */
+  questionNo: number;
+  questionContent: string;
+  /** 모범답안(첨삭 기준). 호스트에게는 항상 온다 */
+  modelAnswer: string | null;
   text: string;
   findings: AnswerFinding[];
+  /** 문항 배점 */
+  points: number;
+  /** 보정이 반영된 최종 점수 */
+  finalScore: number;
+  /** 이미 남긴 첨삭. 없으면 빈 문자열 */
+  comment: string;
+  improvement: string;
+  /** 보정 점수. 안 건드렸으면 null */
+  adjustedScore: number | null;
+  reviewed: boolean;
 };
-
 export type SessionReport = {
   id: string;
   title: string;

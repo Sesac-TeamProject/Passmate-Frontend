@@ -13,12 +13,14 @@ Next.js 16(App Router, TS) + Tailwind v4 + shadcn/ui + TanStack Query + Zustand.
 ## 레이어
 
 - `src/lib/api/` — fetch 래퍼(`client.ts`: 인증 헤더·401 refresh 1회·`AppError` 변환·다운로드)와 도메인별 api 함수(`rooms.ts`·`sessions.ts`·`question-sets.ts`·`results.ts`·`me.ts`·`payments.ts`·`ratings.ts`·`auth.ts`·`admin.ts`). **컴포넌트·page에서 `fetch` 직접 호출 금지.**
-- `src/lib/types/` — 계약 1:1 DTO(`dto.ts`는 도메인별 `dto/*.ts`를 다시 내보내는 허브)와 `AppError`. 계약에 없는 필드를 임의 추가하지 않는다 (계약 갱신이 먼저). 계약이 아직 없는 호출·필드는 `@draft` 주석으로 표시.
+- `src/lib/types/` — 계약 1:1 DTO(`dto.ts`는 도메인별 `dto/*.ts`를 다시 내보내는 허브)와 `AppError`. **필드의 원천은 백엔드 코드**(`Passmate-Backend@develop`)이고 대조표는 `specs/001-passmate-mvp/contracts/rest-api.md`다. 계약에 없는 필드를 임의 추가하지 않는다. 백엔드에 아직 구현이 없는 호출은 `@draft`로 표시하고 화면은 404를 "준비 중"으로 접는다.
+  - **서버 규약 셋**: nullable은 `field?: T`(서버가 `non_null`이라 null 필드는 응답에서 빠진다) · 목록은 오프셋 `PageResponse<T>` · 시각은 오프셋 없는 UTC 문자열이라 `lib/datetime.ts`의 `parseServerDateTime`으로만 읽는다(`new Date(서버문자열)` 금지).
 - `src/lib/queries/` — TanStack Query 훅(서버 상태). 호스트·참여·회원 도메인 훅의 쿼리 키는 `keys.ts` 한 곳에 둔다 — 관리자 훅은 각 파일에 로컬 키를 그대로 둔다(예: `use-admin-ad-campaigns.ts`의 `ADMIN_AD_CAMPAIGNS_KEY`). 뮤테이션 성공 시 `invalidateQueries`.
 - `src/lib/stores/` — Zustand(`auth-store`, `session-store`). 서버 상태를 스토어·useState에 복사하지 않는다.
-- `src/lib/mocks/` — `NEXT_PUBLIC_API_BASE_URL`이 비어 있을 때만 쓰는 목 응답. 경로 파라미터 라우터(`router.ts`, `METHOD path` 표)가 도메인별 핸들러(`handlers.ts` + `rooms.ts`·`session.ts`·`question-sets.ts`·`results.ts`·`me.ts`·`payments.ts`·`auth.ts`·`admin.ts`)로 총 64개 라우트(도메인 54 + 관리자 10)를 흘려보낸다. 공용 값은 `fixtures.ts`. 백엔드 연동 시 이 폴더를 통째로 걷어낸다.
+- `src/lib/mocks/` — `NEXT_PUBLIC_API_BASE_URL`이 비어 있을 때만 쓰는 목 응답. 경로 파라미터 라우터(`router.ts`, `METHOD path` 표)가 도메인별 핸들러(`handlers.ts` + `rooms.ts`·`session.ts`·`question-sets.ts`·`results.ts`·`me.ts`·`payments.ts`·`auth.ts`·`admin.ts`)로 총 80개 라우트(도메인 70 + 관리자 10)를 흘려보낸다. 공용 값은 `fixtures.ts`. 백엔드 연동 시 이 폴더를 통째로 걷어낸다.
 - 화면: `app/**/page.tsx`는 `'use client'` 컨테이너(쿼리·스토어·효과·다이얼로그 소유), `features/<role>/**/*-view.tsx`는 props만 받는 렌더 전용.
-- 라우트 가드: `components/common/require-auth.tsx`. `/admin/*`은 `role="ADMIN"`.
+- 라우트 가드: `components/common/require-auth.tsx`. `/admin/*`은 `adminOnly`(프로필의 `isAdmin`) — 서버에 역할 컬럼이 없다.
+- 실시간: `lib/stomp.ts` 하나가 STOMP를 소유한다. 봉투는 `{type, roomId, occurredAt, payload}`, 이벤트는 **9종**(`types/events.ts`). 제어는 전부 REST(204)이고 화면 전환은 이벤트가 만든다.
 - 색상 hex 하드코딩 금지 — `globals.css`의 시맨틱 토큰(`text-foreground`, `bg-success-soft`, `text-label-lg` 등)만 쓴다.
 
 ## Git
@@ -49,4 +51,6 @@ Next.js 16(App Router, TS) + Tailwind v4 + shadcn/ui + TanStack Query + Zustand.
 
 - Playwright E2E.
 - 실서버 검증 — STOMP 클라이언트(`lib/stomp.ts`)·`session-store`는 있지만 실제 브로커 연결은 아직 확인하지 않았다(목 모드는 이벤트 버스로 no-op 대체).
-- 계약이 없는 `@draft` 호출들(에디터 생성·문항 CRUD·서술형 첨삭·`GET /me/ai-usage`·자료 업로드·내보내기·이메일 로그인·`client=web` 콜백·`MeResponse.role`/`userId`) — 백엔드 계약이 오면 `lib/types/dto/*`·`lib/api/*`·`lib/mocks/*`만 고친다.
+- **백엔드에 없는 `@draft` 구역 32경로** — 코인·정산(9) · 관리자(10) · 평가 제출 · 게스트 기록 이관 · 첨삭 저장 · 세트 복제 · 파일 기반 생성 · 음성 힌트(2) · 마이페이지 확장(등급·뱃지·알림·공개 프로필 5) · 신고. 목에서만 돌고 실서버에서는 404다 — 화면은 NotFound를 "준비 중"으로 접는다. 스웨거가 열리면 `contracts/rest-api.md` §3-4부터 대조해 `lib/types/dto/*`·`lib/api/*`·`lib/mocks/*`만 고친다.
+- **서버가 일부러 비워 둔 값** — 호스트 등급·뱃지·평균 별점. `0`·`Lv.1`로 채우지 말고 UI를 감춘다(있지도 않은 사실을 만든다).
+- **서버가 발행하지 않는 이벤트** — `PARTICIPANT_JOINED`·`PARTICIPANT_LEFT`. 대기실 명단은 3초 폴링으로 대신한다(백엔드 질문 B-1). 발행이 들어오면 폴링만 끄면 된다.

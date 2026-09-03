@@ -2,9 +2,24 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/common/brand-logo";
 import { FitToViewport } from "@/components/common/fit-to-viewport";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+/**
+ * 개발용 로그인(`POST /auth/dev-login`) 패널. 로컬·dev 백엔드에만 있는 API라
+ * 컨테이너가 넘기지 않으면 아예 그리지 않는다.
+ */
+export type DevLoginPanel = {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+  pending: boolean;
+  /** 실패 문구. 운영 서버면 404라 "이 서버에는 없는 기능"으로 안내한다 */
+  errorMessage: string | null;
+};
 
 type Props = {
   onGoogleClick?: () => void;
+  devLogin?: DevLoginPanel;
 };
 
 /**
@@ -15,7 +30,7 @@ type Props = {
  *
  * 시안(b6JNW)은 1440×900에 상하 여백 74 — 뷰포트가 그보다 낮으면 FitToViewport가 전체를 비율 유지 축소해 스크롤을 없앤다.
  */
-export function LoginPage({ onGoogleClick }: Props) {
+export function LoginPage({ onGoogleClick, devLogin }: Props) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background">
       <FitToViewport className="flex flex-col items-center gap-5 py-[74px]">
@@ -43,6 +58,39 @@ export function LoginPage({ onGoogleClick }: Props) {
             </span>
             <span className="text-label-lg text-foreground">Google로 계속하기</span>
           </Button>
+
+          {devLogin ? (
+            <form
+              className="flex flex-col gap-2 border-t pt-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                devLogin.onSubmit();
+              }}
+            >
+              <label htmlFor="dev-login-key" className="text-label-md text-muted-foreground">
+                개발용 로그인 — 같은 key면 같은 계정으로 들어가요
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  id="dev-login-key"
+                  value={devLogin.value}
+                  onChange={(event) => devLogin.onChange(event.target.value)}
+                  placeholder="host1"
+                  autoComplete="off"
+                />
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  disabled={devLogin.pending || devLogin.value.trim() === ""}
+                >
+                  {devLogin.pending ? "들어가는 중" : "입장"}
+                </Button>
+              </div>
+              {devLogin.errorMessage ? (
+                <p className="text-label-md text-destructive">{devLogin.errorMessage}</p>
+              ) : null}
+            </form>
+          ) : null}
         </div>
 
         <p className="flex items-center gap-1">

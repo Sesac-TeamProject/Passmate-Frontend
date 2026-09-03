@@ -1,14 +1,13 @@
 import { toAvatarKey } from "@/components/common/student-avatar";
 import type { ChoiceKey, QuestionResult, Student } from "@/features/host/types";
 import type {
-  ParticipantEntry,
+  ParticipantResponse,
+  QuestionEndedPayload,
+  QuestionStartedPayload,
   RankingEntry,
-  RoomReportResponse,
-  SubmissionParticipant,
-  SnapshotQuestion,
-  SubmissionsResponse,
+  SessionResultsResponse,
+  SubmissionStatusPayload,
 } from "@/lib/types/dto";
-import type { SessionState } from "@/lib/stores/session-reducer";
 import type { FinalRankRow } from "./final-page";
 import type { HardestQuestion, SessionSummary } from "./final-rail";
 import type { SolvingStudent } from "./live-rail";
@@ -16,9 +15,9 @@ import type { SolvingStudent } from "./live-rail";
 const CHOICE_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
 
 /** 참가자 목록 → 대기실·랭킹이 쓰는 학생 뷰 타입 */
-export function toStudents(participants: ParticipantEntry[]): Student[] {
+export function toStudents(participants: ParticipantResponse[]): Student[] {
   return participants.map((p) => ({
-    id: String(p.participantId),
+    id: String(p.id),
     name: p.nickname,
     avatar: toAvatarKey(p.avatarId),
   }));
@@ -44,33 +43,33 @@ function toCorrectKey(
 }
 
 /**
- * 문항 종료 이벤트(reveal) + 제출 집계 + 랭킹 → W-06 문항 결과 뷰 타입.
- * 정답률 변동(accuracyDelta)은 계약에 지난 문항 정답률이 없어 0으로 두고 화면이 문구를 감춘다.
+ * 문항 종료 페이로드 + 랭킹 → W-06 문항 결과 뷰 타입.
+ *
+ * 보기별 제출 수는 `distribution` **맵**으로 온다 — 키가 보기 **원문**이라 문항의 보기 순서대로
+ * 꺼내야 A·B·C·D 자리가 맞는다. 정답률 변동은 지난 문항 정답률이 계약에 없어 0으로 두고
+ * 화면이 문구를 감춘다.
  */
 export function toQuestionResult(
-  reveal: NonNullable<SessionState["reveal"]>,
-  submissions: SubmissionsResponse | undefined,
+  reveal: QuestionEndedPayload,
   ranking: RankingEntry[],
-  question: SnapshotQuestion | null,
+  question: QuestionStartedPayload | null,
 ): QuestionResult {
   const choices = question?.choices ?? null;
-  const distribution = submissions?.choices
-    ? submissions.choices.map((c, i) => ({
-        key: CHOICE_KEYS[i] ?? "D",
-        text: c.label ?? "",
-        count: c.count ?? 0,
-      }))
-    : (choices ?? []).map((text, i) => ({ key: CHOICE_KEYS[i] ?? "D", text, count: 0 }));
+  const distribution = (choices ?? []).map((text, i) => ({
+    key: CHOICE_KEYS[i] ?? "D",
+    text,
+    count: reveal.distribution[text] ?? 0,
+  }));
 
   return {
-    correct: toCorrectKey(reveal.answer, choices),
+    correct: toCorrectKey(reveal.answer ?? null, choices),
     distribution,
-    accuracy: submissions?.accuracyPercent ?? 0,
+    accuracy: reveal.correctRate,
     accuracyDelta: 0,
     ranking: ranking.map((r) => ({
       rank: r.rank,
       studentId: String(r.participantId),
-      score: r.total,
+      score: r.totalScore,
       change: 0,
     })),
   };
@@ -90,16 +89,18 @@ export function toAccuracyByQuestion(
 }
 
 /**
- * 최종 순위 행 — 아바타·점수는 세션 랭킹에서, 맞힌 문항 수는 방 리포트에서 온다.
- * `RankingEntry`에 correctCount가 없고 `RoomReportStudent`에 avatarId가 없어 participantId로 합친다.
+ * 최종 순위 행 — 아바타·점수는 세션 랭킹에서, 맞힌 문항 수는 세션 결과에서 온다.
+ * `RankingEntry`에 correctCount가 없고 `ParticipantResultRow`에 avatarId는 있지만 랭킹이 더
+ * 최신이라(이벤트로 온다) participantId로 합친다.
  */
 export function toFinalRanking(
   ranking: RankingEntry[],
-  report: RoomReportResponse | undefined,
+  results: SessionResultsResponse | undefined,
 ): FinalRankRow[] {
   const correctById = new Map(
-    (report?.students ?? []).map((s) => [String(s.participantId), s.correctCount ?? null]),
+    (results?.participants ?? []).map((p) => [p.participantId, p.correctCount]),
   );
+
   return ranking.map((r) => ({
     rank: r.rank,
     student: {
@@ -107,73 +108,69 @@ export function toFinalRanking(
       name: r.nickname,
       avatar: toAvatarKey(r.avatarId),
     },
-    score: r.total,
-    correctCount: correctById.get(String(r.participantId)) ?? null,
+    score: r.totalScore,
+    correctCount: correctById.get(r.participantId) ?? null,
   }));
 }
 
 /** W-12 레일의 세션 요약. 진행 시간은 계약에 없어 늘 null이다 (DESIGN_GAPS D-16) */
 export function toSessionSummary(
-  report: RoomReportResponse | undefined,
+  results: SessionResultsResponse | undefined,
   studentCount: number,
   questionCount: number,
 ): SessionSummary {
   return {
-    avgAccuracy: report?.summary?.avgAccuracyPercent ?? null,
-    studentCount: report?.summary?.studentCount ?? studentCount,
+    avgAccuracy: results?.summary.avgCorrectRate ?? null,
+    studentCount: results?.summary.participantCount ?? studentCount,
     minutes: null,
-    questionCount: report?.summary?.questionCount ?? questionCount,
+    questionCount: results?.summary.questionCount ?? questionCount,
   };
 }
 
-/** 리포트의 문항별 정답률을 문항 번호 순서대로 편다. 아직 채점되지 않은 문항은 null */
+/** 문항별 정답률을 번호 순서대로 편다. 결과가 아직 없으면 null(차트가 회색 막대로 그린다) */
 export function toReportAccuracy(
-  report: RoomReportResponse | undefined,
+  results: SessionResultsResponse | undefined,
   questionCount: number,
 ): (number | null)[] {
-  const byNo = new Map(
-    (report?.questions ?? []).map((q) => [q.questionNo ?? 0, q.accuracyPercent ?? null]),
-  );
+  const byNo = new Map((results?.questions ?? []).map((q) => [q.orderNo, q.correctRate]));
   return Array.from({ length: questionCount }, (_, i) => byNo.get(i + 1) ?? null);
 }
 
-/** 정답률이 가장 낮은 문항. 채점된 문항이 없으면 null */
-export function toHardestQuestion(report: RoomReportResponse | undefined): HardestQuestion | null {
-  const scored = (report?.questions ?? []).filter(
-    (q): q is typeof q & { accuracyPercent: number } => typeof q.accuracyPercent === "number",
-  );
-  if (scored.length === 0) return null;
-  const worst = scored.reduce((a, b) => (b.accuracyPercent < a.accuracyPercent ? b : a));
-  return {
-    no: worst.questionNo ?? 0,
-    accuracy: worst.accuracyPercent,
-    title: worst.title ?? "",
-  };
+/** 정답률이 가장 낮은 문항. 결과가 없으면 null */
+export function toHardestQuestion(
+  results: SessionResultsResponse | undefined,
+): HardestQuestion | null {
+  const questions = results?.questions ?? [];
+  if (questions.length === 0) return null;
+
+  const worst = questions.reduce((a, b) => (b.correctRate < a.correctRate ? b : a));
+  return { no: worst.orderNo, accuracy: worst.correctRate, title: worst.content };
 }
 
 /**
  * W-05 제출 현황 레일이 쓰는 학생 목록.
- * 제출 여부는 제출 집계(GET .../submissions)에만 있어, 아직 못 받았으면 참가자 목록으로 대신하고
- * 전원을 "풀이 중"으로 둔다 — 문항이 막 열린 시점의 실제 상태와 같다.
+ *
+ * **누가 냈는지는 서버가 알려주지 않는다** — 제출 현황은 집계(제출 수·정답률·보기 분포)뿐이다.
+ * 그래서 개인별 제출 표시는 켜지 않고(전원 `submitted: false`) 화면은 "n/m명 제출" 숫자로 보여준다.
  */
-export function toSolvingStudents(
-  submissionParticipants: SubmissionParticipant[] | undefined,
-  participants: ParticipantEntry[],
-): SolvingStudent[] {
-  if (submissionParticipants && submissionParticipants.length > 0) {
-    return submissionParticipants.map((p) => ({
-      id: String(p.participantId),
-      name: p.nickname ?? "",
-      avatar: toAvatarKey(p.avatarId),
-      submitted: p.submitted ?? false,
-    }));
-  }
+export function toSolvingStudents(participants: ParticipantResponse[]): SolvingStudent[] {
   return participants.map((p) => ({
-    id: String(p.participantId),
+    id: String(p.id),
     name: p.nickname,
     avatar: toAvatarKey(p.avatarId),
     submitted: false,
   }));
+}
+
+/** 진행 중 제출 집계 → 화면이 쓰는 "n/m" 한 쌍. 아직 못 받았으면 0/참가자 수 */
+export function toSubmittedCount(
+  submission: SubmissionStatusPayload | null,
+  participantCount: number,
+): { submittedCount: number; totalCount: number } {
+  return {
+    submittedCount: submission?.submitCount ?? 0,
+    totalCount: submission?.participantCount ?? participantCount,
+  };
 }
 
 /** 여러 뮤테이션 중 처음 실패한 것의 문구. 모두 성공이면 null */

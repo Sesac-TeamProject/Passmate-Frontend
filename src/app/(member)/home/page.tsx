@@ -15,7 +15,7 @@ import { useGrade, useMe } from "@/lib/queries/use-me";
 import { useQuestionSets } from "@/lib/queries/use-question-sets";
 import { useCreateRoom, useJoinByPin, usePublicRooms } from "@/lib/queries/use-rooms";
 import { useAuthStore } from "@/lib/stores/auth-store";
-import type { CreateRoomRequest } from "@/lib/types/dto";
+import type { RoomCreateRequest } from "@/lib/types/dto";
 
 /** PIN 없이 만들어진 방은 대기실로 갈 수 없다 — 목록에서 다시 찾도록 안내한다 (host/rooms/new와 같은 문구) */
 const PIN_MISSING_MESSAGE =
@@ -26,9 +26,9 @@ export default function Page() {
   const router = useRouter();
   const status = useAuthStore((s) => s.status);
   const me = useMe();
-  const rooms = usePublicRooms({ sort: "popular", type: "all" });
+  const rooms = usePublicRooms({ sort: "POPULAR" });
   const join = useJoinByPin();
-  const sets = useQuestionSets("CONFIRMED");
+  const sets = useQuestionSets({ status: "CONFIRMED" });
   const grade = useGrade();
   const create = useCreateRoom();
 
@@ -45,7 +45,7 @@ export default function Page() {
     setDefaultsApplied(true);
     setJoinValues((prev) =>
       prev.nickname === "" && prev.avatar === "cat"
-        ? { ...prev, nickname: profile.nickname ?? "", avatar: toAvatarKey(profile.avatarId) }
+        ? { ...prev, nickname: profile.nickname, avatar: toAvatarKey(profile.defaultAvatarId) }
         : prev,
     );
   }
@@ -74,7 +74,7 @@ export default function Page() {
     );
   };
 
-  const handleCreateRoom = (body: CreateRoomRequest) => {
+  const handleCreateRoom = (body: RoomCreateRequest) => {
     setPinMissing(false);
     create.mutate(body, {
       onSuccess: (res) => {
@@ -104,7 +104,7 @@ export default function Page() {
     <>
       <HomePage
         name={me.data?.nickname ?? ""}
-        popularRooms={toPopularRooms(rooms.data.items ?? [])}
+        popularRooms={toPopularRooms(rooms.data.content)}
         join={{
           values: joinValues,
           onChange: setJoinValues,
@@ -120,7 +120,7 @@ export default function Page() {
       <NewRoomDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        sets={toQuestionSetOptions(sets.data?.items ?? [])}
+        sets={toQuestionSetOptions(sets.data?.content ?? [])}
         level={grade.data?.level ?? 1}
         onSubmit={handleCreateRoom}
         pending={create.isPending}

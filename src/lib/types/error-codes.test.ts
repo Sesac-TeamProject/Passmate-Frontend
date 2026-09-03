@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ERROR_CODES } from "./error-codes";
 
 /**
- * 백엔드 `common/exception/ErrorCode.kt`(develop @ f719493)에서 그대로 옮긴 이름.
+ * 백엔드 `common/exception/ErrorCode.kt`(develop @ 5f433d2)에서 그대로 옮긴 이름 40개.
  * 서버는 enum 이름을 code로 내보낸다 — 이 목록과 어긋나면 화면 분기가 조용히 죽는다.
  */
 const SERVER_ENUM_NAMES = [
@@ -30,13 +30,21 @@ const SERVER_ENUM_NAMES = [
   "CONFLICT",
   "ROOM_NOT_JOINABLE",
   "ROOM_FULL",
+  "SESSION_NOT_RUNNING",
+  "QUESTION_NOT_RUNNING",
+  "ALREADY_SUBMITTED",
+  "SCREEN_LOCKED",
+  "SESSION_ALREADY_FINISHED",
+  "QUESTION_SET_REQUIRED",
   "NICKNAME_DUPLICATED",
   "ALREADY_JOINED",
   "QUESTION_SET_ALREADY_CONFIRMED",
   "QUESTION_SET_EMPTY",
+  "AI_FREE_LIMIT_EXCEEDED",
   "PIN_GENERATION_FAILED",
   "INTERNAL_ERROR",
   "AI_GENERATION_FAILED",
+  "AI_ANALYSIS_FAILED",
   "EXTERNAL_API_ERROR",
 ] as const;
 
@@ -56,6 +64,13 @@ describe("ERROR_CODES", () => {
     expect(unknown).toEqual([]);
   });
 
+  it("서버 enum 40개를 빠짐없이 들고 있다", () => {
+    expect(SERVER_ENUM_NAMES).toHaveLength(40);
+    const missing = SERVER_ENUM_NAMES.filter((name) => !(name in ERROR_CODES));
+    expect(missing).toEqual([]);
+    expect(Object.keys(ERROR_CODES)).toHaveLength(SERVER_ENUM_NAMES.length + UNVERIFIED.length);
+  });
+
   it("화면이 실제로 분기하는 코드가 모두 있다", () => {
     for (const code of [
       "HOST_LEVEL_REQUIRED",
@@ -63,6 +78,11 @@ describe("ERROR_CODES", () => {
       "INSUFFICIENT_COINS",
       "NICKNAME_DUPLICATED",
       "GUEST_NOT_ALLOWED",
+      "AI_FREE_LIMIT_EXCEEDED",
+      "SCREEN_LOCKED",
+      "ALREADY_SUBMITTED",
+      "SESSION_ALREADY_FINISHED",
+      "QUESTION_SET_REQUIRED",
     ]) {
       expect(ERROR_CODES).toHaveProperty(code);
     }

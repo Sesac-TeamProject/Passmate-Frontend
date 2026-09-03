@@ -6,13 +6,14 @@ import { ReconnectingBanner } from "@/components/common/reconnecting-banner";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
-import { toLiveQuestion } from "@/features/participant/play/adapt";
+import { toLiveQuestion, toSubmittedValue } from "@/features/participant/play/adapt";
 import { WaitingPage } from "@/features/participant/play/waiting-page";
 import { PlayPage } from "@/features/participant/play/play-page";
 import { readMyParticipant } from "@/lib/my-participant";
-import { useRoomByPin } from "@/lib/queries/use-rooms";
-import { useSubmitAnswer } from "@/lib/queries/use-session-control";
+import { useParticipants, useRoomByPin } from "@/lib/queries/use-rooms";
+import { toSubmitAnswerMessage, useSubmitAnswer } from "@/lib/queries/use-session-control";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { useSessionStore } from "@/lib/stores/session-store";
 
 const NO_SUBSCRIBE = () => () => {};
@@ -26,19 +27,25 @@ export default function Page() {
   const router = useRouter();
 
   const room = useRoomByPin(pin);
-  const roomId = room.data?.roomId ?? null;
+  const roomId = room.data?.id ?? null;
+  // 회원으로 들어왔으면 기록이 계정에 남는다 — 게스트에게는 그 약속을 하지 않는다
+  const isMember = useAuthStore((s) => s.status) === "authenticated";
 
   const { reconnect } = useSessionConnection(roomId, { isHost: false });
 
   const phase = useSessionStore((s) => s.phase);
   const currentQuestion = useSessionStore((s) => s.currentQuestion);
-  const questionCount = useSessionStore((s) => s.questionCount);
-  const serverTs = useSessionStore((s) => s.serverTs);
-  const participants = useSessionStore((s) => s.participants);
   const submitted = useSessionStore((s) => s.submitted);
   const hints = useSessionStore((s) => s.hints);
-  const isLocked = useSessionStore((s) => s.isLocked);
+  const screenLocked = useSessionStore((s) => s.screenLocked);
   const connection = useSessionStore((s) => s.connection);
+
+  /**
+   * 대기실 명단은 **폴링**으로 갱신한다 — 서버가 참가자 입·퇴장 이벤트를 발행하지 않는다
+   * (백엔드 질문 B-1). 시작하면 폴링을 끄고 문항 화면이 이벤트로 움직인다.
+   */
+  const participantList = useParticipants(roomId, { poll: phase === "WAITING" });
+  const participants = participantList.data ?? [];
 
   const submitAnswer = useSubmitAnswer(roomId ?? 0);
   // sessionStorage는 서버 렌더에 없다. 렌더 중에 그냥 읽으면 하이드레이션이 어긋나므로
@@ -76,6 +83,7 @@ export default function Page() {
           pin={pin}
           myName={myName}
           students={toStudents(participants)}
+          isMember={isMember}
         />
       );
     }
@@ -83,13 +91,21 @@ export default function Page() {
     // RUNNING인데 아직 첫 문항이 도착하지 않은 짧은 순간
     if (!currentQuestion) return <ScreenLoading />;
 
-    const question = toLiveQuestion(currentQuestion, questionCount, serverTs, submitted);
+    // 제출 수는 서버가 학생에게 알려주지 않는다(호스트 토픽 전용) — 내 순위는 랭킹에서 찾는다
+    const question = toLiveQuestion(currentQuestion, 0);
     const latestHint = hints.length > 0 ? hints[hints.length - 1] : null;
 
-    const handleSubmit = (content: string) => {
+    /**
+     * 화면이 주는 값은 보기 키(A·B·C·D)나 서술형 본문이다.
+     * 서버는 **보기 원문**을 받으므로 여기서 바꿔 보낸다.
+     */
+    const handleSubmit = (choiceKeyOrText: string) => {
       if (roomId === null || submitAnswer.isPending) return;
       submitAnswer.mutate(
-        { questionId: currentQuestion.questionId, content },
+        {
+          questionId: currentQuestion.questionId,
+          submitted: toSubmittedValue(question, choiceKeyOrText),
+        },
         { onSuccess: () => setSubmittedQuestionId(currentQuestion.questionId) },
       );
     };
@@ -99,9 +115,10 @@ export default function Page() {
         question={question}
         onSubmit={handleSubmit}
         submitting={submitAnswer.isPending}
-        hasSubmitted={submittedQuestionId === currentQuestion.questionId}
-        isLocked={isLocked}
+        hasSubmitted={submitted || submittedQuestionId === currentQuestion.questionId}
+        isLocked={screenLocked}
         hint={latestHint}
+        errorMessage={submitAnswer.isError ? toSubmitAnswerMessage(submitAnswer.error) : null}
       />
     );
   };
