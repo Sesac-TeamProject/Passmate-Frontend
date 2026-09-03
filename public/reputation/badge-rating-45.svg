@@ -1,0 +1,7 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="AchievementBadge">
+<rect x="1.14286" y="1.14286" width="61.7143" height="61.7143" rx="17.1429" fill="#EAF8F1"/>
+<rect x="1.14286" y="1.14286" width="61.7143" height="61.7143" rx="17.1429" stroke="#BFEBD8" stroke-width="2.28571"/>
+<path id="Star" d="M32 13.7143L37.0382 23.9227L48.3038 25.5597L40.1519 33.5059L42.0763 44.726L32 39.4286L21.9237 44.726L23.8481 33.5059L15.6962 25.5597L26.9618 23.9227L32 13.7143Z" fill="#0E8A63"/>
+</g>
+</svg>

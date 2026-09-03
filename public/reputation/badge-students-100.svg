@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="AchievementBadge">
+<rect x="1.14286" y="1.14286" width="61.7143" height="61.7143" rx="17.1429" fill="#EAF8F1"/>
+<rect x="1.14286" y="1.14286" width="61.7143" height="61.7143" rx="17.1429" stroke="#BFEBD8" stroke-width="2.28571"/>
+<circle id="Ellipse" cx="22.8571" cy="22.8571" r="6.85714" fill="#5CCFA0"/>
+<rect id="Rectangle" x="12.5714" y="32" width="20.5714" height="16" rx="8" fill="#5CCFA0"/>
+<circle id="Ellipse_2" cx="42.2857" cy="22.8571" r="6.85714" fill="#5CCFA0"/>
+<rect id="Rectangle_2" x="32" y="32" width="20.5714" height="16" rx="8" fill="#5CCFA0"/>
+</g>
+</svg>

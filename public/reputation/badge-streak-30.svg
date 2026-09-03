@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="AchievementBadge">
+<rect x="1.14286" y="1.14286" width="61.7143" height="61.7143" rx="17.1429" fill="#EAF8F1"/>
+<rect x="1.14286" y="1.14286" width="61.7143" height="61.7143" rx="17.1429" stroke="#BFEBD8" stroke-width="2.28571"/>
+<ellipse id="Ellipse" cx="32" cy="33.1429" rx="13.7143" ry="17.1429" fill="#5CCFA0"/>
+<path id="Polygon" d="M32 9.14286L39.9179 22.8571H24.0821L32 9.14286Z" fill="#5CCFA0"/>
+<ellipse id="Ellipse_2" cx="32" cy="38.8571" rx="6.85714" ry="9.14286" fill="#5CCFA0"/>
+</g>
+</svg>

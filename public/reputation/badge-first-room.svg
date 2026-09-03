@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="AchievementBadge">
+<rect x="1.14286" y="1.14286" width="61.7143" height="61.7143" rx="17.1429" fill="#EAF8F1"/>
+<rect x="1.14286" y="1.14286" width="61.7143" height="61.7143" rx="17.1429" stroke="#BFEBD8" stroke-width="2.28571"/>
+<rect id="Rectangle" x="19.4286" y="13.7143" width="4.57143" height="36.5714" rx="2.28571" fill="#0E8A63"/>
+<rect id="Rectangle_2" x="24" y="14.8571" width="25.1429" height="16" rx="2.28571" fill="#0E8A63"/>
+<path id="Polygon" d="M49.1429 10.2857L61.1429 6.32674V14.2447L49.1429 10.2857Z" fill="#EAF8F1"/>
+</g>
+</svg>
