@@ -2,6 +2,7 @@
 
 import { Fragment, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import type { Student } from "@/features/host/types";
 import { formatPin } from "@/lib/format";
 import { LobbyRail, LobbyRailMini } from "./lobby-rail";
@@ -142,39 +143,48 @@ export function LobbyPage({
               학생이 들어오는 대로 오른쪽에 쌓여요
             </p>
           )}
-          {setLink ? (
-            <span className="flex items-center gap-2">
-              <select
-                aria-label="연결할 문제 세트"
-                value={setLink.value}
-                onChange={(e) => setLink.onChange(e.target.value)}
-                className="h-13 rounded-2xl bg-muted px-4 text-body-md text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">세트 고르기</option>
-                {setLink.options.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.title} — {option.questionCount}문항
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={setLink.onSubmit}
-                disabled={setLink.pending || setLink.value === ""}
-                className="h-13 rounded-2xl bg-mint-tint px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint hover:text-white disabled:opacity-60"
-              >
-                {setLink.pending ? <PendingLabel>연결 중…</PendingLabel> : "세트 연결"}
-              </button>
-            </span>
-          ) : null}
-          <button
-            type="button"
-            onClick={onStart}
-            disabled={starting || Boolean(setLink)}
-            className="h-13 w-[180px] rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
-          >
-            {starting ? <PendingLabel>시작하는 중…</PendingLabel> : "시험 시작"}
-          </button>
+          <span className="flex items-center gap-3">
+            {setLink ? (
+              <span className="flex items-center gap-2">
+                <select
+                  aria-label="연결할 문제 세트"
+                  value={setLink.value}
+                  onChange={(e) => setLink.onChange(e.target.value)}
+                  className="h-13 rounded-2xl bg-muted px-4 text-body-md text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">세트 고르기</option>
+                  {setLink.options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.title} — {option.questionCount}문항
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={setLink.onSubmit}
+                  disabled={setLink.pending || setLink.value === ""}
+                  className="h-13 rounded-2xl bg-mint-tint px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint hover:text-white disabled:opacity-60"
+                >
+                  {setLink.pending ? <PendingLabel>연결 중…</PendingLabel> : "세트 연결"}
+                </button>
+              </span>
+            ) : null}
+            {/* 시안 W-04: 시험 시작 왼쪽에 문항별 시간 설정 진입 — 시작 전에만 바꿀 수 있다 */}
+            <Link
+              href={`/host/rooms/${pin}/timing`}
+              className="flex h-13 items-center rounded-2xl px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint-tint"
+            >
+              문항별 시간 설정 ›
+            </Link>
+            <button
+              type="button"
+              onClick={onStart}
+              disabled={starting || Boolean(setLink)}
+              className="h-13 w-[180px] rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
+            >
+              {starting ? <PendingLabel>시작하는 중…</PendingLabel> : "시험 시작"}
+            </button>
+          </span>
         </>
       }
     >
