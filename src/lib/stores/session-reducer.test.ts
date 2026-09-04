@@ -85,6 +85,32 @@ describe("세션 리듀서 — 서버 이벤트 7종", () => {
     expect(next.currentQuestion).toEqual(QUESTION);
   });
 
+  it("이미 지나간 문항의 QUESTION_ENDED는 버린다 — 서버가 마감 이벤트를 되풀이해도 다음 문항 화면이 결과로 되돌아가지 않는다", () => {
+    const q2 = { ...QUESTION, sessionQuestionId: 101, orderNo: 2 };
+    const next = reduce(
+      initialSessionState,
+      event("QUESTION_STARTED", QUESTION),
+      event("QUESTION_ENDED", ENDED),
+      event("QUESTION_STARTED", q2),
+      // 1번 문항 마감이 늦게(또는 다시) 도착
+      event("QUESTION_ENDED", ENDED),
+    );
+
+    expect(next.currentQuestion).toEqual(q2);
+    expect(next.reveal).toBeNull();
+  });
+
+  it("같은 문항의 QUESTION_ENDED가 반복돼도 상태는 그대로다", () => {
+    const once = reduce(
+      initialSessionState,
+      event("QUESTION_STARTED", QUESTION),
+      event("QUESTION_ENDED", ENDED),
+    );
+    const twice = reduceSessionEvent(once, event("QUESTION_ENDED", ENDED));
+
+    expect(twice).toBe(once);
+  });
+
   it("RANKING_UPDATED는 순위를 통째로 교체한다", () => {
     const stale = { ...initialSessionState, ranking: RANKING };
     const next = reduce(stale, event("RANKING_UPDATED", [RANKING[0]]));
