@@ -56,18 +56,42 @@ function toJoinedLabel(joinedAt: string): string {
 }
 
 /**
- * GET /users/me → 프로필 카드.
- * 등급·칭호·다음 레벨은 **채우지 않는다** — 서버가 아직 계산하지 않아 자리를 비워 둔 값이라
- * Lv.1로 메우면 "새싹 등급"이라는 없는 사실을 만든다(`features/me/types.ts` Profile 주석).
+ * GET /users/me (+ GET /users/me/grade) → 프로필 카드.
+ *
+ * 등급은 `/users/me`가 아니라 **등급 응답**이 준다. 조회가 아직 안 끝났거나 실패하면
+ * `grade`를 넘기지 않고, 그때 화면은 뱃지를 **그리지 않는다** — Lv.1로 메우면
+ * "새싹 등급"이라는 없는 사실이 된다(`features/me/types.ts` Profile 주석).
  */
-export function toProfile(me: MyProfileResponse): Profile {
+export function toProfile(me: MyProfileResponse, grade?: GradeResponse): Profile {
   return {
     name: me.nickname,
     nickname: me.nickname,
     email: me.email ?? "",
     joinedLabel: toJoinedLabel(me.joinedAt),
     avatar: toAvatarKey(me.defaultAvatarId),
+    level: grade?.level,
+    levelTitle: grade?.levelName,
+    // 서버는 다음 등급까지 진행률을 0~1로 준다 — 화면은 %로 그린다
+    progress:
+      grade?.nextLevelProgress === undefined
+        ? undefined
+        : Math.round(grade.nextLevelProgress * 100),
+    nextLevel:
+      grade?.nextLevel === undefined
+        ? undefined
+        : {
+            level: grade.nextLevel,
+            roomsLeft: leftOf(grade, "ROOMS_HOSTED"),
+            studentsLeft: leftOf(grade, "TOTAL_STUDENTS"),
+          },
   };
+}
+
+/** 승급 조건 한 줄에서 남은 수. 서버가 그 조건을 안 주면 0 */
+function leftOf(grade: GradeResponse, type: string): number {
+  const row = grade.nextRequirements.find((r) => r.type === type);
+  if (row === undefined) return 0;
+  return Math.max(0, row.target - row.current);
 }
 
 const WIRE_METHOD_BY_PAY_METHOD: Record<PayMethod, PaymentMethod> = {

@@ -11,9 +11,9 @@ export type Profile = {
   joinedLabel: string;
   avatar: AvatarKey;
   /**
-   * 호스트 등급. **서버가 아직 계산하지 않는다** — `MyProfileResponse`에 등급·뱃지·별점 자리가
-   * 일부러 비어 있다(백엔드 주석: 0·null로 채우면 "등급 없음"으로 읽혀 오해를 만든다).
-   * 값이 없으면 화면은 뱃지·진행률을 **그리지 않는다**. 0으로 대체하지 말 것.
+   * 호스트 등급. `MyProfileResponse`에는 없고 **`GET /users/me/grade`가 계산해서 준다** —
+   * 그 조회가 아직 안 끝났거나 실패하면 값이 비고, 그때 화면은 뱃지·진행률을 **그리지 않는다**.
+   * 0·Lv.1로 대체하지 말 것(없는 사실을 만든다).
    */
   level?: number;
   levelTitle?: string;
