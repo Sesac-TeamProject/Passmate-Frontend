@@ -173,3 +173,12 @@ export function toRatingSubmitMessage(error: unknown): string {
   if (error.code === ERROR_CODES.SESSION_NOT_ENDED) return "수업이 끝난 뒤에 남길 수 있어요";
   return error.message;
 }
+
+/**
+ * 리포트 머리의 순위 문구. 총원은 `MySessionResultResponse`에 없어 보통 null이다 —
+ * 순위가 있으면 순위만 적고, 순위 자체가 없을 때만 "집계 중"이다.
+ */
+export function toRankText(rank: number | null, participantCount: number | null): string {
+  if (rank === null) return "집계 중";
+  return participantCount === null ? `${rank}위` : `${rank}위 / ${participantCount}명`;
+}
