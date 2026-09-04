@@ -168,7 +168,9 @@ function EditorContainer() {
       <ScreenError message={questionSet.error.message} onRetry={() => questionSet.refetch()} />
     );
 
-  const title = detail?.set.title ? `${detail.set.title} · 문제 준비` : "새 문제 세트 · 문제 준비";
+  // 상단은 세트 제목만 쓴다 — 어디에 있는지는 옆의 "문제 세트 › 수정하기" 칩이 말한다.
+  // 예전 "· 문제 준비"는 지운 3단계 플로우(2단계 이름)의 흔적이다.
+  const title = detail?.set.title ?? "새 문제 세트";
   const listMutationError =
     deleteQuestion.error ?? regenerate.error ?? (updateSet.isError ? updateSet.error : null);
 

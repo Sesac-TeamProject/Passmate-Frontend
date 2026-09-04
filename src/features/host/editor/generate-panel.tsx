@@ -2,7 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { PendingLabel } from "@/components/common/pending-label";
+import { Stepper } from "@/components/common/stepper";
 import type { QuestionType } from "@/features/host/types";
+import { cn } from "@/lib/utils";
 import type {
   AiGenerateRequest,
   Difficulty,
@@ -11,11 +13,12 @@ import type {
 import { QUESTION_TYPE_LABEL } from "./question-type-chip";
 import { DEFAULT_QUESTION_POINTS, DEFAULT_QUESTION_SECONDS } from "./types";
 
+/** 라벨은 시안(W-03) 문구다 — 서버 enum과 이름이 다르니 값만 그대로 보낸다 */
 const DIFFICULTY_OPTIONS: { value: Difficulty; label: string }[] = [
-  { value: "EASY", label: "초급" },
+  { value: "EASY", label: "쉬움" },
   // 서버 enum은 MEDIUM이 아니라 NORMAL이다 (ERD·dbml 쪽이 낡았다 — data-model.md §1)
-  { value: "NORMAL", label: "중급" },
-  { value: "HARD", label: "고급" },
+  { value: "NORMAL", label: "보통" },
+  { value: "HARD", label: "어려움" },
 ];
 
 const COUNT_TYPES: QuestionType[] = ["multiple", "essay", "ox"];
@@ -31,6 +34,12 @@ const MAX_GENERATE_COUNT = 20;
 
 /** 강의자료 본문 최대 길이 (`AiGenerateRequest.MATERIAL_MAX_LENGTH`) */
 const MATERIAL_MAX_LENGTH = 5000;
+
+/**
+ * 무료 생성 횟수. 서버 정책값(`AiPolicy.aiFreeLimit`)을 안내 문구에 복제해 둔 것이라
+ * 서버가 바꾸면 여기도 바꿔야 한다 — 잔여 횟수를 주는 응답이 생기면 이 상수는 지운다.
+ */
+const AI_FREE_LIMIT = 5;
 
 type Props = {
   onGenerate: (body: AiGenerateRequest) => void;
@@ -114,17 +123,24 @@ export function GeneratePanel({
               className="flex items-center justify-between rounded-xl bg-muted px-3.5 py-2"
             >
               <span className="text-label-lg text-ink">{QUESTION_TYPE_LABEL[t]}</span>
-              <input
-                type="number"
+              <Stepper
+                label={`${QUESTION_TYPE_LABEL[t]} 문항 수`}
+                value={counts[t]}
+                onChange={(next) => updateCount(t, next)}
                 min={0}
                 max={MAX_GENERATE_COUNT}
-                value={counts[t]}
-                onChange={(e) => updateCount(t, Number(e.target.value))}
-                className="h-8 w-16 rounded-lg bg-card px-2 text-right text-label-lg text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                step={1}
               />
             </div>
           ))}
         </div>
+        {/* 시안 W-03: 스테퍼 아래 합계 한 줄. 제한 시간·배점은 서버 기본값이라 "자동"이다 */}
+        <p className="flex items-center justify-between rounded-xl bg-surface-subtle px-3.5 py-2">
+          <span className="text-label-lg text-ink">문항 수 {total}문항</span>
+          <span className="text-label-md text-muted-foreground">
+            유형별 합계 · 시간 {DEFAULT_QUESTION_SECONDS}초 자동
+          </span>
+        </p>
       </Field>
       <Field label="강의자료 붙여넣기 (선택)">
         <textarea
@@ -138,19 +154,29 @@ export function GeneratePanel({
           {material.length} / {MATERIAL_MAX_LENGTH}자
         </span>
       </Field>
-      <Field label="난이도">
-        <select
-          className={`${FIELD} appearance-none`}
-          value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-        >
+      {/* 시안 W-03은 셀렉트가 아니라 세그먼트다 — 선택지가 셋뿐이라 한눈에 보인다 */}
+      <fieldset className="flex flex-col gap-1.5">
+        <legend className="text-label-lg text-muted-foreground">난이도</legend>
+        <div role="radiogroup" aria-label="난이도" className="flex gap-1 rounded-xl bg-muted p-1">
           {DIFFICULTY_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
+            <button
+              key={o.value}
+              type="button"
+              role="radio"
+              aria-checked={difficulty === o.value}
+              onClick={() => setDifficulty(o.value)}
+              className={cn(
+                "h-[38px] flex-1 rounded-lg text-label-lg transition-colors",
+                difficulty === o.value
+                  ? "bg-card text-mint-dark"
+                  : "text-muted-foreground hover:text-ink",
+              )}
+            >
               {o.label}
-            </option>
+            </button>
           ))}
-        </select>
-      </Field>
+        </div>
+      </fieldset>
 
       <button
         type="submit"
@@ -168,14 +194,27 @@ export function GeneratePanel({
           한 번에 {MAX_GENERATE_COUNT}개까지 만들 수 있어요
         </p>
       ) : (
-        <p className="text-label-md text-muted-foreground">약 30초 걸려요 · 최초 5회는 무료예요</p>
+        <p className="text-label-md text-muted-foreground">약 30초 걸려요</p>
       )}
+
       {/*
-        남은 무료 횟수 표시는 아직 못 넣는다 — 잔여 횟수를 주는 응답이 서버에 없다.
-        429 AI_FREE_LIMIT_EXCEEDED로 소진을 알 뿐이다(백엔드 질문 B-8 · DESIGN_GAPS G-1).
+        시안 W-03의 "AI 생성 비용" 박스. 시안 문구는 "이후 코인 차감"이지만 **서버는 차감하지
+        않는다** — 무료 한도를 넘기면 429 AI_FREE_LIMIT_EXCEEDED로 거절한다
+        (`AiQuestionService.verifyFreeLimit`, 2026-09-04 확인). 없는 결제를 적으면 거짓말이 되므로
+        소진 뒤 실제로 남는 길(직접 추가)을 적는다. 코인 차감이 붙으면 이 문구를 시안대로 되돌린다.
+
+        남은 무료 횟수(`AI 생성 n회 남음`)는 아직 못 그린다 — 백엔드에 `remainingFreeCount()`가
+        있지만 어느 응답에도 실리지 않는다(백엔드 요청 B-7 · DESIGN_GAPS G-1).
 
         PDF 업로드(`generate-from-file`)도 백엔드에 없다 — 위 텍스트 붙여넣기가 그 자리를 대신한다.
       */}
+      <p className="flex flex-col gap-0.5 rounded-xl bg-mint-tint px-3.5 py-2.5">
+        <span className="text-label-lg text-mint-dark">AI 생성 비용</span>
+        <span className="text-label-md text-mint-dark">
+          최초 {AI_FREE_LIMIT}회 무료 · 다 쓰면 직접 문항 추가로 이어 갈 수 있어요
+        </span>
+      </p>
+
       <button
         type="button"
         onClick={onAddManual}
