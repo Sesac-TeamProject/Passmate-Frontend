@@ -9,7 +9,7 @@ import { ERROR_CODES } from "@/lib/types/error-codes";
 import type { EditorQuestion, QuestionFormValues } from "./types";
 
 /** 서버 유형 ↔ 화면 유형. 서버는 `MCQ`, 화면은 `multiple`이다 */
-const VIEW_TYPE: Record<WireQuestionType, QuestionType> = {
+export const VIEW_TYPE: Record<WireQuestionType, QuestionType> = {
   MCQ: "multiple",
   OX: "ox",
   ESSAY: "essay",

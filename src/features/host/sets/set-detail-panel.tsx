@@ -10,7 +10,13 @@ const CHIP: Record<QuestionSet["composition"][number]["type"], string> = {
   ox: "bg-orange-soft text-orange",
 };
 
-type Props = { set: QuestionSet; onClone: () => void; cloning?: boolean };
+type Props = {
+  set: QuestionSet;
+  /** 문항 미리보기를 아직 읽는 중 — 자리를 스켈레톤으로 잡는다 */
+  previewLoading?: boolean;
+  onClone: () => void;
+  cloning?: boolean;
+};
 
 /**
  * 요약 한 줄. 총 배점·예상 시간은 계약(GET /question-sets)에 없어 adapt가 0으로 채운다 —
@@ -30,7 +36,7 @@ function metaLine(set: QuestionSet): string {
 }
 
 /** W-08 우측 패널 — 선택한 세트 요약·문항 미리보기·재활용 액션 */
-export function SetDetailPanel({ set, onClone, cloning }: Props) {
+export function SetDetailPanel({ set, previewLoading = false, onClone, cloning }: Props) {
   const more = set.questionCount - set.preview.length;
 
   return (
@@ -50,6 +56,16 @@ export function SetDetailPanel({ set, onClone, cloning }: Props) {
       )}
       <p className="text-label-md text-muted-foreground">{metaLine(set)}</p>
       <hr className="border-muted" />
+      {previewLoading && set.preview.length === 0 && (
+        <>
+          <h3 className="text-label-lg text-muted-foreground">문항 미리보기</h3>
+          <ol className="flex flex-col gap-2">
+            {Array.from({ length: Math.min(set.questionCount, 3) }, (_, i) => (
+              <li key={i} className="h-6 animate-pulse rounded-lg bg-muted" />
+            ))}
+          </ol>
+        </>
+      )}
       {set.preview.length > 0 && (
         <>
           <h3 className="text-label-lg text-muted-foreground">문항 미리보기</h3>

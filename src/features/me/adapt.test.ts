@@ -6,10 +6,17 @@ const ME: MyProfileResponse = {
   id: 5,
   nickname: "김민지",
   email: "minji@example.com",
-  defaultAvatarId: 1,
+  provider: "GOOGLE",
+  defaultAvatarId: "cat",
+  isAdmin: false,
   joinedAt: "2026-08-01T02:00:00",
   coinBalance: 0,
-  stats: { joinedRoomCount: 3, hostedRoomCount: 2 },
+  stats: {
+    joinedRoomCount: 3,
+    hostedRoomCount: 2,
+    hostedSessionCount: 2,
+    totalStudentCount: 40,
+  },
 };
 
 const GRADE: GradeResponse = {
