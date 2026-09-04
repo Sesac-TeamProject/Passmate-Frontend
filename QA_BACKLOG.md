@@ -220,12 +220,15 @@ pending 가드가 먼저 오면 뒤의 분기가 **도달 불가**가 된다.
 
 ## 3. 프런트 — 값이 틀리거나 낭비되는 것
 
-### 🟡 F-4. AI 분석 요청 버튼이 `DONE`에도 보인다
+### ✅ F-4. AI 분석 요청 버튼이 `DONE`에도 보인다 — **해결(2026-09-04)**
 
 - **어디**: `app/(participant)/result/[sessionId]/report/[questionNo]/page.tsx:69`
-- `canRequest`가 `analysisStatus !== "PENDING"`이라 **이미 끝난 분석에도 버튼이 남는다**.
-  다시 누르면 월 5회 무료 중 하나를 더 쓰거나 코인을 또 낸다.
-  `NOT_REQUESTED`·`FAILED`일 때만 의미가 있다.
+- `canRequest`가 `analysisStatus !== "PENDING"`이라 **이미 끝난 분석에도 버튼이 남았다.**
+  `NOT_REQUESTED`·`FAILED`일 때만 보이도록 고쳤다.
+- ⚠️ **처음 적은 근거는 틀렸다.** "다시 누르면 무료 횟수를 더 쓰거나 코인을 또 낸다"고 적었는데,
+  서버가 이미 막고 있다 — `EssayAnalysisService.request`가 `existing != null && !existing.isFailed`면
+  **차감 없이 기존 상태를 그대로 돌려준다**(백엔드 주석: "버튼을 두 번 눌렀다고 코인을 두 번 받지 않는다").
+  돈이 새는 문제가 아니라, **눌러도 아무 일이 없는 버튼**이 남아 있던 화면 문제였다.
 
 ### 🟡 F-5. 객관식 답이 뒤바뀔 수 있다
 
