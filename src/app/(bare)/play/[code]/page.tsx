@@ -6,7 +6,7 @@ import { ReconnectingBanner } from "@/components/common/reconnecting-banner";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
-import { toLiveQuestion, toSubmittedValue } from "@/features/participant/play/adapt";
+import { toLiveQuestion } from "@/features/participant/play/adapt";
 import { WaitingPage } from "@/features/participant/play/waiting-page";
 import { PlayPage } from "@/features/participant/play/play-page";
 import { readMyParticipant } from "@/lib/my-participant";
@@ -103,15 +103,16 @@ export default function Page() {
     const latestHint = hints.length > 0 ? hints[hints.length - 1] : null;
 
     /**
-     * 화면이 주는 값은 보기 키(A·B·C·D)나 서술형 본문이다.
-     * 서버는 **보기 원문**을 받으므로 여기서 바꿔 보낸다.
+     * 화면이 주는 값이 곧 서버가 받는 값이다 — 고른 보기의 **원문**, 서술형은 본문.
+     * 예전에는 여기서 한 번 더 키(A·B·C·D)로 되찾았는데 화면이 이미 원문을 넘기고 있어서,
+     * 보기 문구가 키를 닮으면 **다른 보기가 제출됐다**(QA_BACKLOG F-5).
      */
-    const handleSubmit = (choiceKeyOrText: string) => {
+    const handleSubmit = (submitted: string) => {
       if (roomId === null || submitAnswer.isPending) return;
       submitAnswer.mutate(
         {
           questionId: currentQuestion.questionId,
-          submitted: toSubmittedValue(question, choiceKeyOrText),
+          submitted,
         },
         { onSuccess: () => setSubmittedQuestionId(currentQuestion.questionId) },
       );
