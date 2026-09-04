@@ -3,7 +3,9 @@ import { AchievementBadge } from "@/features/me/achievement-badge";
 import { LevelEmblem } from "@/features/me/level-emblem";
 import type { Achievement } from "@/features/me/types";
 import { ReputationBadge } from "@/components/common/reputation-badge";
-import { InitialTile } from "@/components/common/initial-tile";
+import { StatusChip } from "@/components/common/status-chip";
+import { StudentAvatar } from "@/components/common/student-avatar";
+import type { AvatarKey } from "@/lib/types/dto";
 import { formatWon } from "@/lib/format";
 
 /** 프로필에 늘어놓는 방 카드 수 — 넘치면 "전체 보기"로 보낸다 */
@@ -21,6 +23,8 @@ export type HostRoom = {
 
 type Props = {
   nickname: string;
+  /** 캐릭터 아바타. 서버가 고른 적 없으면 기본값으로 접힌다 */
+  avatar: AvatarKey;
   /** 한 줄 소개. 없으면 감춘다 */
   intro: string | null;
   level: number;
@@ -48,6 +52,7 @@ function Stat({ value, label }: { value: string; label: string }) {
  */
 export function HostProfilePage({
   nickname,
+  avatar,
   intro,
   level,
   levelTitle,
@@ -60,9 +65,9 @@ export function HostProfilePage({
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-3.5 px-5 py-10">
       <div className="flex items-center gap-3.5">
-        {/* 시안은 캐릭터 아바타지만 HostProfileResponse에 avatarId가 없다 —
-            지어내지 않고 이름 이니셜 타일로 대신한다 (DESIGN_GAPS D-19) */}
-        <InitialTile label={nickname.slice(0, 1)} className="size-16 text-heading-md" />
+        {/* 시안대로 캐릭터 아바타. `HostProfileResponse.defaultAvatarId`가 생겨 이니셜 타일을
+            걷어냈다 (DESIGN_GAPS D-19 해소, 2026-09-04) */}
+        <StudentAvatar avatar={avatar} size={64} />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h1 className="truncate text-heading-md">{nickname} 선생님</h1>
           {levelTitle && (
@@ -114,9 +119,10 @@ export function HostProfilePage({
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="flex items-center gap-1.5">
                   <span className="truncate text-label-lg">{room.title}</span>
-                  <span className="shrink-0 rounded-full bg-orange-soft px-2 py-0.5 text-label-md text-orange">
+                  {/* 칩을 직접 그리다 무료 방까지 유료색(주황)으로 칠하고 있었다 — 공용 칩으로 되돌린다 */}
+                  <StatusChip tone={room.isPaid ? "paid" : "free"}>
                     {room.isPaid ? "유료" : "무료"}
-                  </span>
+                  </StatusChip>
                 </span>
                 <span className="truncate text-label-md text-muted-foreground">{room.meta}</span>
               </div>
