@@ -285,11 +285,29 @@ React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다. 둘 �
   새 객체를 만들어 `useSyncExternalStore`의 스냅샷이 매번 달라지는 탓으로 보인다
   (`readMyParticipant`도 같은 모양이다). 고치려면 스냅샷을 캐시해야 한다.
 
-### 🟡 F-8. 죽은 코드
+### ✅ F-8. 죽은 코드 — **해결(2026-09-04)**
 
-- `features/me/adapt.ts` `toHostRecord` — 쓰는 화면이 없다(그릴 카드 UI가 아직 없어 의도적).
-- `features/participant/pay/adapt.ts:51` — `formatSchedule(undefined, undefined)`는
-  항상 빈 문자열이다. 주변 `host.name: ""`·`level: 1`·`rating: 0`도 계약이 없어진 뒤 남은 상수다.
+- `features/me/adapt.ts` `toHostRecord` — **지웠다.** 딸린 `toAchievement`(비공개)와
+  `me/types.ts`의 `HostRecord`까지. 어느 화면도 그리지 않고 테스트도 없었다.
+  `openRooms: 0`·`settlementThisMonth: 0`처럼 채울 수 없다고 스스로 적어 둔 값도 들어 있었다.
+  "기록" 카드 UI가 생기면 그때 계약을 다시 보고 짜는 편이 낫다(git 이력에 남아 있다).
+  `toEarnedAchievement`·`AchievementBadge`는 공개 프로필이 쓰므로 그대로 둔다.
+- `features/participant/pay/adapt.ts` — **일정은 지우지 않고 연결했다.**
+  `RoomResponse`에 `scheduledAt`이 **있는데**(계약 확인) "이 응답에 없다"는 낡은 주석 때문에
+  `formatSchedule(undefined, undefined)`로 늘 빈 문자열을 만들고 있었다. 실제 필드를 넘기니
+  결제 화면에 "일정 8/28 (금) 20:00"이 뜬다(목으로 확인). 소요 시간은 계약에 없어 시간까지만.
+- 지어낸 상수(`host.name: ""`·`level: 1`·`rating: 0`·`students: 0`)는 걷어내고
+  `PaidRoom.host`를 **nullable**로 바꿨다. 화면은 이름의 빈 문자열이 아니라 `host === null`을
+  보고 감춘다. 단위 테스트 3건 추가.
+
+### 🟢 F-15. 결제 화면이 "최대 0명"이라고 말한다 (2026-09-04 발견)
+
+- **어디**: `features/participant/pay/adapt.ts` `capacity.max` · `room-info-card.tsx:45`
+- `maxParticipants`는 계약상 선택 항목인데 `?? 0`으로 접고, 화면은 그 값을 언제나
+  "최대 {n}명"으로 그린다 — 정원을 안 정한 방이 **"최대 0명"** 이 된다. 없는 숫자를 만드는 자리다.
+- F-8 정리 중 발견했다. `host`와 같은 계열이라 `max: number | null`로 바꾸고 그 문구만
+  감추면 되지만, **기존 테스트가 `capacity.max === 0`을 일부러 못박아 뒀다**(9/3 판단) —
+  뒤집기 전에 확인이 필요해 F-8에서는 손대지 않았다.
 
 ---
 

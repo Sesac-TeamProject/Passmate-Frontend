@@ -94,16 +94,6 @@ export type Achievement = {
   locked?: boolean;
 };
 
-/** 개설한 방(host) 실적. 지금은 어느 화면도 그리지 않는다(마이페이지에 "기록" 카드 UI가 없다) — adapt.ts에만 정의해 둔다 */
-export type HostRecord = {
-  /** 평균 별점은 받은 평가가 없으면 서버가 주지 않는다 — 0으로 채우지 않는다 */
-  stats: { rooms: number; rating: number | null; students: number };
-  badges: { earned: number; total: number; locked: number; items: Achievement[] };
-  openRooms: number;
-  /** 이번 달 정산 예정 금액(원) */
-  settlementThisMonth: number;
-};
-
 export type AttendedSession = {
   id: string;
   /**

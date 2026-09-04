@@ -5,8 +5,6 @@ import { formatShortDate, formatWon } from "@/lib/format";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
 import type {
-  BadgeResponse,
-  BadgesResponse,
   BadgeType,
   CoinBalanceResponse,
   CoinTransactionRow,
@@ -40,7 +38,6 @@ import {
   type AchievementBadgeKind,
   type AttendedSession,
   type CoinSummary,
-  type HostRecord,
   type LearningRecord,
   PAID_ROOM_MIN_LEVEL,
   type Profile,
@@ -366,49 +363,6 @@ export function toEarnedAchievement(type: BadgeType): Achievement {
     kind: meta?.kind ?? "empty",
     label: meta?.label,
     title: meta?.title ?? type,
-  };
-}
-
-function toAchievement(badge: BadgeResponse): Achievement {
-  const meta = BADGE_META[badge.code];
-
-  return {
-    id: badge.code,
-    kind: meta?.kind ?? "empty",
-    // 이름은 서버 문구를 그대로 쓴다 — 뱃지가 늘어도 프런트를 고치지 않는다
-    label: meta?.label,
-    title: badge.name,
-    locked: !badge.achieved,
-  };
-}
-
-/**
- * GET /users/me/grade + /badges → 개설한 방(host) 실적 카드.
- * 지금은 어느 화면도 이 값을 그리지 않는다(마이페이지에 "기록" 카드 UI가 없다) — 계약대로 정의만 해 둔다.
- */
-export function toHostRecord(
-  grade: GradeResponse | undefined,
-  badges: BadgesResponse | undefined,
-): HostRecord {
-  const items = (badges?.badges ?? []).map(toAchievement);
-
-  return {
-    stats: {
-      rooms: grade?.roomsHosted ?? 0,
-      // 받은 평가가 없으면 서버가 필드를 뺀다 — 0으로 채우면 "0점을 받았다"가 된다
-      rating: grade?.avgRating ?? null,
-      students: grade?.totalStudents ?? 0,
-    },
-    badges: {
-      earned: badges?.achievedCount ?? 0,
-      total: badges?.totalCount ?? items.length,
-      locked: (badges?.totalCount ?? items.length) - (badges?.achievedCount ?? 0),
-      items,
-    },
-    // 진행 중인 방 수 · 이번 달 정산액은 useHostedRooms/useEarnings에 계약이 있지만, 이 카드를 그리는
-    // 화면이 아직 없어(위 docstring 참고) 여기서는 채우지 않는다. 화면이 생기면 컨테이너가 두 훅을 더 호출해 채운다.
-    openRooms: 0,
-    settlementThisMonth: 0,
   };
 }
 

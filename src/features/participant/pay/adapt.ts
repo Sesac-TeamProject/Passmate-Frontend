@@ -1,6 +1,4 @@
-import { toAvatarKey } from "@/components/common/student-avatar";
 import { parseServerDateTime } from "@/lib/datetime";
-import { LEVEL_TITLE, levelTitle } from "@/lib/host-level";
 import type { PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
 import type { PaymentMethod, RoomResponse } from "@/lib/types/dto";
@@ -31,8 +29,13 @@ export function formatSchedule(
  * 결제 화면은 PIN이 아니라 방 id로 열린다(F-1) — 공개 방 목록에 PIN이 없어 카드가 id밖에
  * 줄 수 없기 때문이다. 화면에 보일 PIN은 이 응답이 실어 준다.
  *
- * 호스트 이름·별점·문항 수·일정은 이 응답에 없다. 시안이 그리던 자리지만 지어낼 근거가
- * 없어 비운다(DESIGN_GAPS).
+ * 호스트 정보(이름·등급·별점)와 문항 수는 이 응답에 없다 — 시안이 그리던 자리지만 지어낼
+ * 근거가 없어 **비운다**(DESIGN_GAPS). 예전에는 `name: ""`·`level: 1`·`rating: 0` 같은
+ * 상수를 채워 두고 화면이 이름의 빈 문자열을 보고 감췄는데, 없는 것은 없다고 적는 편이 낫다.
+ *
+ * 일정(`scheduledAt`)은 **응답에 있다** — 예전 주석이 "없다"고 적어 두는 바람에
+ * `formatSchedule(undefined, undefined)`로 늘 빈 문자열을 만들고 있었다(QA_BACKLOG F-8).
+ * 소요 시간은 계약에 없어 시간까지만 그린다.
  */
 export function toPaidRoom(room: RoomResponse): PaidRoom {
   return {
@@ -40,15 +43,8 @@ export function toPaidRoom(room: RoomResponse): PaidRoom {
     title: room.title,
     topic: room.topic ?? "",
     composition: "",
-    host: {
-      name: "",
-      avatar: toAvatarKey(null),
-      level: 1,
-      levelTitle: levelTitle(1) ?? LEVEL_TITLE[1],
-    },
-    rating: 0,
-    students: 0,
-    schedule: formatSchedule(undefined, undefined),
+    host: null,
+    schedule: formatSchedule(room.scheduledAt, undefined),
     capacity: { current: room.participantCount, max: room.maxParticipants ?? 0 },
     fee: room.fee ?? 0,
   };

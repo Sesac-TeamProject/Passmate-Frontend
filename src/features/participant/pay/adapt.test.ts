@@ -42,6 +42,21 @@ describe("toPaidRoom", () => {
     expect(paid.capacity.max).toBe(0);
     expect(paid.fee).toBe(0);
   });
+
+  it("일정이 있으면 그린다 — 예전엔 늘 빈 문자열이었다(F-8)", () => {
+    // 시간대에 흔들리지 않게 모양만 본다. 값은 parseServerDateTime이 로컬로 옮긴다
+    const paid = toPaidRoom(room({ scheduledAt: "2026-08-28T11:00:00" }));
+
+    expect(paid.schedule).toMatch(/^\d{1,2}\/\d{1,2} \(.\) \d{2}:\d{2}$/);
+  });
+
+  it("일정이 없으면 빈 문자열 — 화면이 그 줄을 감춘다", () => {
+    expect(toPaidRoom(room({ scheduledAt: undefined })).schedule).toBe("");
+  });
+
+  it("호스트 정보는 방 응답에 없어 통째로 비운다 — Lv.1·별점 0을 지어내지 않는다", () => {
+    expect(toPaidRoom(room()).host).toBeNull();
+  });
 });
 
 /**

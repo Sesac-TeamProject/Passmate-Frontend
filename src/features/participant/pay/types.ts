@@ -8,9 +8,18 @@ export type PaidRoom = {
   topic: string;
   /** 문항 구성. 예: "문항 8개" */
   composition: string;
-  host: { name: string; avatar: AvatarKey; level: number; levelTitle: string };
-  rating: number;
-  students: number;
+  /**
+   * 호스트 정보는 방 응답에 없다(`hostUserId`만 온다) — **통째로 없다**.
+   * 이름만 빈 문자열로 두고 등급·별점을 1·0으로 채우면 있지도 않은 사실을 만든다.
+   */
+  host: {
+    name: string;
+    avatar: AvatarKey;
+    level: number;
+    levelTitle: string;
+    rating: number;
+    students: number;
+  } | null;
   /** 예: "8/28 (금) 20:00 · 약 40분" */
   schedule: string;
   capacity: { current: number; max: number };
