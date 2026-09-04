@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
-import { firstErrorMessage, toSolvingStudents, toSubmittedCount } from "@/features/host/live/adapt";
+import {
+  firstErrorMessage,
+  pickSubmissionForQuestion,
+  toSolvingStudents,
+  toSubmittedCount,
+} from "@/features/host/live/adapt";
 import { LivePage } from "@/features/host/live/live-page";
 import { ProjectorDisconnected } from "@/features/host/live/projector-disconnected";
 import { useDisconnectedTooLong } from "@/features/host/live/use-disconnected-too-long";
@@ -49,9 +54,9 @@ export default function Page() {
   /**
    * 제출 집계는 호스트 토픽의 `SUBMISSION_UPDATED`로 실시간으로 온다.
    * 폴링은 이벤트를 놓쳤을 때를 위한 보조라 간격을 넉넉히 둔다 — 값은 스토어(이벤트)를 먼저 본다.
+   * 어느 쪽을 쓰든 **지금 문항 것인지 확인하고 쓴다**(아래 `pickSubmissionForQuestion`).
    */
   const submissions = useSubmissions(roomId, phase === "RUNNING", SUBMISSIONS_POLL_MS);
-  const submissionStatus = submission ?? submissions.data ?? null;
   const next = useNextQuestion(roomId ?? 0);
   const endCurrent = useEndCurrentQuestion(roomId ?? 0);
   const end = useEndSession(roomId ?? 0);
@@ -93,6 +98,11 @@ export default function Page() {
   if (!currentQuestion || phase !== "RUNNING")
     return <ScreenLoading label="문항을 여는 중이에요…" />;
 
+  const submissionStatus = pickSubmissionForQuestion(
+    currentQuestion.sessionQuestionId,
+    submission,
+    submissions.data,
+  );
   const submittedCount = toSubmittedCount(submissionStatus, participants.length);
   const question = toLiveQuestion(currentQuestion, submittedCount.submittedCount);
   const pending = next.isPending || endCurrent.isPending || end.isPending || lock.isPending;

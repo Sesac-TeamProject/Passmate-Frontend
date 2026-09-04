@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { QuestionEndedPayload, QuestionStartedPayload } from "@/lib/types/dto";
+import type {
+  QuestionEndedPayload,
+  QuestionStartedPayload,
+  SubmissionStatusPayload,
+} from "@/lib/types/dto";
 import type { FinalRankRow } from "./final-page";
-import { toPodium, toQuestionResult } from "./adapt";
+import { pickSubmissionForQuestion, toPodium, toQuestionResult } from "./adapt";
 
 const OX_QUESTION: QuestionStartedPayload = {
   sessionQuestionId: 32,
@@ -107,5 +111,38 @@ describe("toPodium", () => {
     const { podium, rest } = toPodium([]);
     expect(podium).toEqual([]);
     expect(rest).toEqual([]);
+  });
+});
+
+describe("pickSubmissionForQuestion", () => {
+  const status = (sessionQuestionId: number, submitCount: number): SubmissionStatusPayload => ({
+    sessionQuestionId,
+    submitCount,
+    participantCount: 24,
+    correctCount: 0,
+    correctRate: 0,
+    distribution: {},
+  });
+
+  it("지금 문항의 집계를 그대로 쓴다", () => {
+    expect(pickSubmissionForQuestion(56, status(56, 18))?.submitCount).toBe(18);
+  });
+
+  it("이전 문항의 집계는 버린다 — 새 문항에 옛 제출 수가 남으면 안 된다", () => {
+    expect(pickSubmissionForQuestion(57, status(56, 18))).toBeNull();
+  });
+
+  it("폴링이 낡았으면 이벤트 값을 쓴다", () => {
+    // 스토어(이벤트)가 먼저, 최대 3초 낡는 폴링 응답이 뒤
+    expect(pickSubmissionForQuestion(57, status(57, 3), status(56, 18))?.submitCount).toBe(3);
+  });
+
+  it("이벤트가 낡았으면 폴링 값을 쓴다 — 늦게 온 이벤트에 가리지 않는다", () => {
+    expect(pickSubmissionForQuestion(57, status(56, 18), status(57, 3))?.submitCount).toBe(3);
+  });
+
+  it("둘 다 없거나 둘 다 낡았으면 null", () => {
+    expect(pickSubmissionForQuestion(57, null, undefined)).toBeNull();
+    expect(pickSubmissionForQuestion(57, status(56, 18), status(55, 24))).toBeNull();
   });
 });
