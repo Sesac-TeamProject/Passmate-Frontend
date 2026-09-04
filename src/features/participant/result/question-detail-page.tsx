@@ -100,7 +100,8 @@ export function QuestionDetailPage({
           <AnswerBox
             label="내가 고른 답"
             value={detail.myAnswer ?? "답하지 않았어요"}
-            tone="mine"
+            // 맞힌 문항에서 내 답을 오답 색으로 칠하지 않는다
+            tone={detail.isCorrect ? "correct" : "wrong"}
           />
           {/* 서술형은 정해진 정답이 없다 — 빈 상자를 세우면 "정답이 없다"가 아니라 "못 불러왔다"로 읽힌다 */}
           {detail.correctAnswer !== null ? (
@@ -186,7 +187,7 @@ function AnswerBox({
 }: {
   label: string;
   value: string;
-  tone: "mine" | "correct";
+  tone: "wrong" | "correct";
 }) {
   return (
     <div

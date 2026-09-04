@@ -96,8 +96,14 @@ export function reduceSessionEvent(state: SessionState, event: ServerEvent): Ses
         submission: null,
       };
 
-    case "QUESTION_ENDED":
-      return { ...state, reveal: event.payload };
+    case "QUESTION_ENDED": {
+      const ended = event.payload;
+      // 이미 지나간 문항의 마감(늦게 왔거나 서버가 되풀이한 것)은 버린다 —
+      // 다음 문항이 열린 뒤에 도착하면 진행 화면이 결과 화면으로 되돌아간다
+      if (state.currentQuestion && ended.orderNo < state.currentQuestion.orderNo) return state;
+      if (state.reveal?.sessionQuestionId === ended.sessionQuestionId) return state;
+      return { ...state, reveal: ended };
+    }
 
     case "RANKING_UPDATED":
       // 서버가 매번 전체 순위를 보내므로 통째로 교체한다(부분 갱신이 아니다)

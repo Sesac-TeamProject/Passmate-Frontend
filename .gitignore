@@ -42,3 +42,6 @@ next-env.d.ts
 
 # 예시 env는 공유한다
 !.env.example
+
+# Claude Code 개인 설정 (권한·로컬 옵션)
+.claude/settings.local.json

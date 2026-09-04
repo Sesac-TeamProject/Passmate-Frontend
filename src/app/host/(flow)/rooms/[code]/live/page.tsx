@@ -9,7 +9,7 @@ import { LivePage } from "@/features/host/live/live-page";
 import { ProjectorDisconnected } from "@/features/host/live/projector-disconnected";
 import { useDisconnectedTooLong } from "@/features/host/live/use-disconnected-too-long";
 // 문항 → 뷰 타입 변환은 학생 화면과 같은 함수를 쓴다(중복 정의 금지)
-import { toLiveQuestion } from "@/features/participant/play/adapt";
+import { choicesOf, toLiveQuestion } from "@/features/participant/play/adapt";
 import { useHostRoomId } from "@/lib/queries/use-rooms";
 import {
   useEndCurrentQuestion,
@@ -103,9 +103,7 @@ export default function Page() {
     <LivePage
       question={question}
       // 보기별 제출 수는 **보기 원문이 키인 맵**으로 온다 — 문항의 보기 순서대로 꺼낸다
-      counts={(currentQuestion.choices ?? []).map(
-        (text) => submissionStatus?.distribution[text] ?? 0,
-      )}
+      counts={choicesOf(currentQuestion).map((text) => submissionStatus?.distribution[text] ?? 0)}
       students={toSolvingStudents(participants)}
       isLocked={screenLocked}
       isLastQuestion={currentQuestion.orderNo === currentQuestion.totalCount}

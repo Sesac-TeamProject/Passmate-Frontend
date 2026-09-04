@@ -2,23 +2,38 @@ import { StudentAvatar } from "@/components/common/student-avatar";
 import type { Student } from "@/features/host/types";
 import { cn } from "@/lib/utils";
 
-/** 제출 여부까지 붙은 참가자 — 계약의 SubmissionParticipant에서 온다 */
+/** 제출 여부까지 붙은 참가자. 누가 냈는지는 아직 계약에 없어 지금은 늘 false다 */
 export type SolvingStudent = Student & { submitted: boolean };
 
-type Props = { students: SolvingStudent[] };
+type Props = {
+  students: SolvingStudent[];
+  /** 제출한 학생 수 — 서버 집계(`SUBMISSION_UPDATED`). 개인별로는 모르니 숫자로만 보여 준다 */
+  submittedCount: number;
+};
+
+/** 개인별 제출 여부를 아는가(계약이 생기면 true) — 모르면 이름을 "안 낸 학생"으로 부르지 않는다 */
+function knowsWho(students: SolvingStudent[]): boolean {
+  return students.some((s) => s.submitted);
+}
 
 /**
  * W-05 제출 현황 레일 (펼침 300px).
  * 제출한 학생은 민트 배경 + 링 + "제출" 칩, 아직 푸는 학생은 평범한 행 + "풀이 중".
+ * 개인별 제출을 모르는 동안은 집계(제출 n / m)만 적고, 아직 안 낸 학생도 인원수로만 말한다.
  */
-export function LiveRail({ students }: Props) {
-  const pending = students.filter((s) => !s.submitted);
+export function LiveRail({ students, submittedCount }: Props) {
+  const known = knowsWho(students);
+  const pending = known ? students.filter((s) => !s.submitted) : [];
+  const pendingCount = known ? pending.length : Math.max(students.length - submittedCount, 0);
 
   return (
     <div className="flex h-full flex-col">
       <div className="px-[26px] pt-7 pb-[18px]">
         <p className="text-body-md text-muted-foreground">지금 {students.length}명이</p>
         <p className="text-heading-md">같이 풀고 있어요</p>
+        <p className="mt-2 text-label-lg text-mint-dark">
+          제출 {submittedCount} / {students.length}
+        </p>
       </div>
 
       <ul className="flex flex-col gap-2 border-t px-3.5 pt-2.5">
@@ -40,20 +55,22 @@ export function LiveRail({ students }: Props) {
               <span className="shrink-0 rounded-full bg-mint px-3.5 py-1 text-label-md font-bold text-white">
                 제출
               </span>
-            ) : (
+            ) : known ? (
               <span className="shrink-0 text-body-md text-muted-foreground">풀이 중</span>
-            )}
+            ) : null}
           </li>
         ))}
       </ul>
 
-      {pending.length > 0 && (
+      {pendingCount > 0 && (
         <div className="mt-auto px-[26px] pb-8">
           <div className="border-t pt-5">
             <p className="text-label-md font-bold tracking-[0.08em] text-muted-foreground">
               아직 안 낸 학생
             </p>
-            <p className="mt-2 text-heading-md">{pending.map((s) => s.name).join(" · ")}</p>
+            <p className="mt-2 text-heading-md">
+              {known ? pending.map((s) => s.name).join(" · ") : `${pendingCount}명`}
+            </p>
           </div>
         </div>
       )}
@@ -62,9 +79,7 @@ export function LiveRail({ students }: Props) {
 }
 
 /** W-05 제출 현황 레일 (접힘 72px) — 제출/전체 카운트 + 제출한 학생만 링 강조 */
-export function LiveRailMini({ students }: Props) {
-  const submittedCount = students.filter((s) => s.submitted).length;
-
+export function LiveRailMini({ students, submittedCount }: Props) {
   return (
     <div className="flex h-full flex-col items-center pt-8">
       <p className="text-heading-lg text-mint">{submittedCount}</p>

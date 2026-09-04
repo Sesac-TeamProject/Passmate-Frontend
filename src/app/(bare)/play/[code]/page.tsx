@@ -64,6 +64,13 @@ export default function Page() {
     setSubmittedQuestionId(null);
   }
 
+  // 이전 문항의 제출 실패 문구가 다음 문항까지 남지 않게 뮤테이션 상태도 문항마다 비운다
+  const resetSubmit = submitAnswer.reset;
+  const currentQuestionId = currentQuestion?.questionId ?? null;
+  useEffect(() => {
+    resetSubmit();
+  }, [currentQuestionId, resetSubmit]);
+
   useEffect(() => {
     if (phase === "FINISHED" && roomId !== null) router.replace(`/result/${roomId}`);
   }, [phase, roomId, router]);

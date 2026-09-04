@@ -1,5 +1,6 @@
 import { toAvatarKey } from "@/components/common/student-avatar";
 import type { ChoiceKey, QuestionResult, Student } from "@/features/host/types";
+import { choicesOf } from "@/features/participant/play/adapt";
 import type {
   ParticipantResponse,
   QuestionEndedPayload,
@@ -11,6 +12,7 @@ import type {
 import type { FinalRankRow } from "./final-page";
 import type { HardestQuestion, SessionSummary } from "./final-rail";
 import type { SolvingStudent } from "./live-rail";
+import type { PodiumEntry } from "./podium";
 
 const CHOICE_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
 
@@ -54,7 +56,8 @@ export function toQuestionResult(
   ranking: RankingEntry[],
   question: QuestionStartedPayload | null,
 ): QuestionResult {
-  const choices = question?.choices ?? null;
+  // OX는 서버 보기가 없어 choicesOf가 O·X를 채운다 — 학생 화면과 같은 순서
+  const choices = question ? choicesOf(question) : null;
   const distribution = (choices ?? []).map((text, i) => ({
     key: CHOICE_KEYS[i] ?? "D",
     text,
@@ -111,6 +114,19 @@ export function toFinalRanking(
     score: r.totalScore,
     correctCount: correctById.get(r.participantId) ?? null,
   }));
+}
+
+/**
+ * W-12 포디움(최대 3자리)과 4위부터의 목록으로 가른다.
+ * 참가자가 3명이 안 돼도 있는 만큼 포디움에 올린다 — 1·2위가 "4위부터"로 밀리면 안 된다.
+ */
+export function toPodium(rows: FinalRankRow[]): { podium: PodiumEntry[]; rest: FinalRankRow[] } {
+  return {
+    podium: rows
+      .slice(0, 3)
+      .map((r) => ({ student: r.student, score: r.score, correctCount: r.correctCount })),
+    rest: rows.slice(3),
+  };
 }
 
 /** W-12 레일의 세션 요약. 진행 시간은 계약에 없어 늘 null이다 (DESIGN_GAPS D-16) */

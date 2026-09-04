@@ -1,4 +1,5 @@
 import { formatDuration, formatNumber } from "@/lib/format";
+import { toRankText } from "./adapt";
 
 type Props = {
   roomTitle: string;
@@ -6,7 +7,7 @@ type Props = {
   subtitle: string;
   correctCount: number;
   questionCount: number;
-  /** 순위·총원 중 하나라도 없으면 "집계 중"으로 적는다 */
+  /** 순위가 없을 때만 "집계 중". 총원은 계약에 없어 보통 null — 그러면 순위만 적는다 */
   rank: number | null;
   participantCount: number | null;
   accuracyPercent: number;
@@ -29,8 +30,7 @@ export function ReportSummaryCard({
   score,
   onSavePdf,
 }: Props) {
-  const rankText =
-    rank === null || participantCount === null ? "집계 중" : `${rank}위 / ${participantCount}명`;
+  const rankText = toRankText(rank, participantCount);
   const elapsedText = elapsedSeconds === null ? "—" : formatDuration(elapsedSeconds);
 
   return (
