@@ -59,9 +59,10 @@ function JoinContainer() {
     if (!room.data || join.isPending) return;
     setPaidGuest(false);
 
-    // 유료 방 — 회원은 결제 화면으로, 비로그인은 로그인부터 태운다
+    // 유료 방 — 회원은 결제 화면으로, 비로그인은 로그인부터 태운다.
+    // 결제 화면은 PIN이 아니라 방 id로 연다(F-1).
     if (isPaidRoom) {
-      if (status === "authenticated") router.push(`/pay/${values.pin}`);
+      if (status === "authenticated") router.push(`/pay/${roomId}`);
       else setPaidGuest(true);
       return;
     }
@@ -72,7 +73,7 @@ function JoinContainer() {
         onSuccess: () => router.push(`/play/${values.pin}`),
         // 게이트는 서버에 있다 — 결제 화면을 건너뛰고 입장을 직접 불러도 402로 막힌다.
         onError: (error) => {
-          if (isErrorCode(error, ERROR_CODES.ENTRY_FEE_REQUIRED)) router.push(`/pay/${values.pin}`);
+          if (isErrorCode(error, ERROR_CODES.ENTRY_FEE_REQUIRED)) router.push(`/pay/${roomId}`);
         },
       },
     );
@@ -94,7 +95,7 @@ function JoinContainer() {
       onSubmit={handleSubmit}
       pending={join.isPending}
       errorMessage={errorMessage}
-      loginHref={paidGuest ? `/login?next=${encodeURIComponent(`/pay/${values.pin}`)}` : null}
+      loginHref={paidGuest ? `/login?next=${encodeURIComponent(`/pay/${roomId}`)}` : null}
       room={room.data ? toRoomPreview(room.data) : null}
       nickname={nicknameCheck.data ?? null}
       onPickSuggestion={(nickname) => setValues((prev) => ({ ...prev, nickname }))}

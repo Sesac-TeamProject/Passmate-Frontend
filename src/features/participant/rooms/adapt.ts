@@ -33,15 +33,15 @@ export function toTiming(
 /**
  * GET /rooms/public 항목 → 공개 방 목록 카드.
  *
- * 응답에 **PIN이 없다** — 목록에서 바로 입장할 수 없고, 학생은 PIN·QR을 받아야 한다.
- * 카드 식별에는 방 id를 쓴다.
+ * 응답에 **PIN이 없다** — 무료 방은 입장 폼에서 PIN을 받아야 하고, 유료 방은 결제 화면을
+ * 방 id로 연다(F-1). 그래서 카드가 싣는 식별자는 `roomId` 하나다.
  *
  * "인기" 배지는 그리지 않는다 — 해당 필드가 없고, `sort=POPULAR`의 앞자리로 흉내 내면
  * 필터를 바꿀 때마다 배지가 뒤집힌다.
  */
 export function toPublicRoomItems(items: PublicRoomResponse[]): PublicRoomItem[] {
   return items.map((room) => ({
-    code: String(room.id),
+    roomId: room.id,
     title: room.title,
     topic: room.topic ?? "",
     type: room.type === "PAID" ? "paid" : "free",

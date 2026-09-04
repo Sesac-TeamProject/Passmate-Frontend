@@ -33,7 +33,8 @@ export default function Page() {
   const create = useCreateRoom();
 
   const [joinValues, setJoinValues] = useState<JoinValues>(INITIAL_JOIN_VALUES);
-  const [paidGuestPin, setPaidGuestPin] = useState<string | null>(null);
+  // 유료 방인데 비로그인이라 결제로 못 보낸 방. 로그인 후 돌아올 곳을 만드는 데 쓴다.
+  const [paidGuestRoomId, setPaidGuestRoomId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [pinMissing, setPinMissing] = useState(false);
   const [defaultsApplied, setDefaultsApplied] = useState(false);
@@ -51,7 +52,7 @@ export default function Page() {
   }
 
   const handleJoin = () => {
-    setPaidGuestPin(null);
+    setPaidGuestRoomId(null);
     join.mutate(
       {
         pin: joinValues.pin,
@@ -63,11 +64,12 @@ export default function Page() {
             router.push(`/play/${joinValues.pin}`);
             return;
           }
-          // 유료 방 — 회원은 결제로, 게스트는 카드에 로그인 안내
+          // 유료 방 — 회원은 결제로, 게스트는 카드에 로그인 안내.
+          // 결제 화면은 PIN이 아니라 방 id로 연다(F-1) — 조회 응답이 실어 준 id를 그대로 쓴다.
           if (status === "authenticated") {
-            router.push(`/pay/${joinValues.pin}`);
+            router.push(`/pay/${data.room.id}`);
           } else {
-            setPaidGuestPin(joinValues.pin);
+            setPaidGuestRoomId(data.room.id);
           }
         },
       },
@@ -90,7 +92,7 @@ export default function Page() {
 
   const errorMessage = join.isPending
     ? null
-    : paidGuestPin
+    : paidGuestRoomId !== null
       ? PAID_ROOM_LOGIN_MESSAGE
       : join.isError
         ? toJoinErrorMessage(join.error)
@@ -111,9 +113,10 @@ export default function Page() {
           onSubmit: handleJoin,
           pending: join.isPending,
           errorMessage,
-          loginHref: paidGuestPin
-            ? `/login?next=${encodeURIComponent(`/pay/${paidGuestPin}`)}`
-            : null,
+          loginHref:
+            paidGuestRoomId !== null
+              ? `/login?next=${encodeURIComponent(`/pay/${paidGuestRoomId}`)}`
+              : null,
         }}
         onCreateRoom={() => setCreateOpen(true)}
       />
