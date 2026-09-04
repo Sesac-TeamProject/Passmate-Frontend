@@ -312,12 +312,17 @@ function toSessionDateLabel(room: JoinedRoom): string {
   return `${date.getMonth() + 1}/${date.getDate()} (${weekday})`;
 }
 
-/** GET /users/me/rooms/joined → W-13 참여한 방 · 참여 기록 */
+/**
+ * GET /users/me/rooms/joined → W-13 참여한 방 · 참여 기록.
+ *
+ * 정답률은 서버가 소수로 준다(16.666…) — 시안은 정수 한 자리("71%")라 여기서 반올림한다.
+ * 화면에서 `toFixed`를 부르지 않고 뷰 타입에 정수로 담는 편이 다른 화면과 어긋날 일이 없다.
+ */
 export function toLearningRecord(page: JoinedRoomsResponse): LearningRecord {
   return {
     stats: {
       sessions: page.summary.completedSessionCount,
-      accuracy: page.summary.averageAccuracy,
+      accuracy: Math.round(page.summary.averageAccuracy),
       averageRank: page.summary.averageRank,
     },
     weakTopics: page.summary.weakTopics,

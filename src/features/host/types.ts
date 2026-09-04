@@ -73,8 +73,14 @@ export type LiveQuestion = {
 
 /** 문항 결과 (W-06) */
 export type QuestionResult = {
+  /** 문항 유형. 서술형은 정답·정답률·응답 분포 자리를 모범답안으로 바꾼다 */
+  type: QuestionType;
   /** 정답 보기 키. 서술형처럼 보기 정답이 없으면 null */
   correct: ChoiceKey | null;
+  /** 서술형 모범답안(마감 이벤트 `answer`). 서버가 안 주면 null */
+  modelAnswer: string | null;
+  /** 해설·채점 기준(마감 이벤트 `explanation`). 서버가 안 주면 null */
+  explanation: string | null;
   distribution: { key: ChoiceKey; text: string; count: number }[];
   /** 정답률(%) */
   accuracy: number;

@@ -45,6 +45,39 @@ describe("toQuestionResult", () => {
     );
     expect(result.correct).toBeNull();
     expect(result.distribution).toEqual([]);
+    expect(result.type).toBe("essay");
+  });
+
+  it("서술형의 answer는 보기 정답이 아니라 모범답안 본문이다", () => {
+    const essay = { ...OX_QUESTION, type: "ESSAY" as const };
+    const result = toQuestionResult(
+      {
+        ...OX_ENDED,
+        answer: "싱글턴은 컨테이너당 인스턴스가 하나다.",
+        explanation: "핵심어 두 개를 쓰면 만점",
+        distribution: {},
+      },
+      [],
+      essay,
+    );
+
+    expect(result.modelAnswer).toBe("싱글턴은 컨테이너당 인스턴스가 하나다.");
+    expect(result.explanation).toBe("핵심어 두 개를 쓰면 만점");
+    // 보기 정답 자리는 여전히 비어 있어야 한다 — 모범답안을 보기 키로 읽으면 안 된다
+    expect(result.correct).toBeNull();
+  });
+
+  it("객관식·OX의 answer는 모범답안 자리에 들어가지 않는다", () => {
+    const result = toQuestionResult(OX_ENDED, [], OX_QUESTION);
+
+    expect(result.type).toBe("ox");
+    expect(result.modelAnswer).toBeNull();
+  });
+
+  it("문항 정보가 없어도(재접속) 분포가 비면 서술형으로 다룬다", () => {
+    const result = toQuestionResult({ ...OX_ENDED, distribution: {} }, [], null);
+
+    expect(result.type).toBe("essay");
   });
 });
 

@@ -1,5 +1,6 @@
 import { toAvatarKey } from "@/components/common/student-avatar";
-import type { ChoiceKey, QuestionResult, Student } from "@/features/host/types";
+import { VIEW_TYPE } from "@/features/host/editor/adapt";
+import type { ChoiceKey, QuestionResult, QuestionType, Student } from "@/features/host/types";
 import { choicesOf } from "@/features/participant/play/adapt";
 import type {
   ParticipantResponse,
@@ -64,8 +65,20 @@ export function toQuestionResult(
     count: reveal.distribution[text] ?? 0,
   }));
 
+  // 문항 정보가 없으면(재접속 직후) 보기 유무로 가른다 — 분포가 비면 서술형처럼 다룬다
+  const type: QuestionType = question
+    ? VIEW_TYPE[question.type]
+    : distribution.length === 0
+      ? "essay"
+      : "multiple";
+  const isEssay = type === "essay";
+
   return {
+    type,
     correct: toCorrectKey(reveal.answer ?? null, choices),
+    // 서술형에서 answer는 보기 정답이 아니라 **모범답안 본문**이다
+    modelAnswer: isEssay ? (reveal.answer ?? null) : null,
+    explanation: reveal.explanation ?? null,
     distribution,
     accuracy: reveal.correctRate,
     accuracyDelta: 0,
