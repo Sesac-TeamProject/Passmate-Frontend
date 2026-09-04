@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { ERROR_CODES } from "./error-codes";
 
 /**
- * 백엔드 `common/exception/ErrorCode.kt`(develop @ 9e39ce3)에서 그대로 옮긴 이름 47개.
+ * 백엔드 `common/exception/ErrorCode.kt`(develop @ 9e39ce3)에서 그대로 옮긴 이름 53개.
  * 결제 7개(ENTRY_FEE_REQUIRED·PAYMENT_*·ALREADY_PAID·ALREADY_REFUNDED·REFUND_WINDOW_CLOSED·
- * NOT_PAID_ROOM)는 코인·참가비 PR #29~#32에서 늘었다.
+ * NOT_PAID_ROOM)는 코인·참가비 PR #29~#32에서 늘었고, 별점 4개·게스트 기록 2개는
+ * 그 기능이 실제로 구현되면서 늘었다.
  * 서버는 enum 이름을 code로 내보낸다 — 이 목록과 어긋나면 화면 분기가 조용히 죽는다.
  */
 const SERVER_ENUM_NAMES = [
@@ -55,10 +56,17 @@ const SERVER_ENUM_NAMES = [
   "AI_GENERATION_FAILED",
   "AI_ANALYSIS_FAILED",
   "EXTERNAL_API_ERROR",
+  "RATING_NOT_ALLOWED",
+  "SESSION_NOT_ENDED",
+  "ALREADY_RATED",
+  "RATING_WINDOW_CLOSED",
+  "GUEST_RECORD_EXPIRED",
+  "GUEST_RECORD_ALREADY_CLAIMED",
 ] as const;
 
-/** 서버 enum에 아직 없다 — 해당 기능(별점·게스트 기록 전환)이 미구현이라서. 구현되면 서버가 추가한다. */
-const UNVERIFIED = ["ALREADY_RATED", "RECORD_PURGED"] as const;
+// 예전에는 "서버에 아직 없는 코드"를 담는 UNVERIFIED 목록이 있었는데, 거기 넣어 둔
+// `RECORD_PURGED`는 서버에 아예 없는 이름이었고 화면은 영영 타지 않는 분기를 들고 있었다.
+// 목록을 없앤다 — 서버 enum에 없는 코드는 프런트도 들고 있지 않는다.
 
 describe("ERROR_CODES", () => {
   it("모든 값이 키와 같다 (서버가 enum 이름을 그대로 내보낸다)", () => {
@@ -68,16 +76,15 @@ describe("ERROR_CODES", () => {
   });
 
   it("서버 enum에 없는 코드를 들고 있지 않다", () => {
-    const allowed = new Set<string>([...SERVER_ENUM_NAMES, ...UNVERIFIED]);
+    const allowed = new Set<string>(SERVER_ENUM_NAMES);
     const unknown = Object.keys(ERROR_CODES).filter((k) => !allowed.has(k));
     expect(unknown).toEqual([]);
   });
 
-  it("서버 enum 47개를 빠짐없이 들고 있다", () => {
-    expect(SERVER_ENUM_NAMES).toHaveLength(47);
+  it("서버 enum을 빠짐없이 들고 있고, 그 밖의 것은 없다", () => {
     const missing = SERVER_ENUM_NAMES.filter((name) => !(name in ERROR_CODES));
     expect(missing).toEqual([]);
-    expect(Object.keys(ERROR_CODES)).toHaveLength(SERVER_ENUM_NAMES.length + UNVERIFIED.length);
+    expect(Object.keys(ERROR_CODES)).toHaveLength(SERVER_ENUM_NAMES.length);
   });
 
   it("화면이 실제로 분기하는 코드가 모두 있다", () => {
@@ -96,6 +103,9 @@ describe("ERROR_CODES", () => {
       "ALREADY_PAID",
       "PAYMENT_NOT_COMPLETED",
       "REFUND_WINDOW_CLOSED",
+      "ALREADY_RATED",
+      "RATING_WINDOW_CLOSED",
+      "RATING_NOT_ALLOWED",
     ]) {
       expect(ERROR_CODES).toHaveProperty(code);
     }

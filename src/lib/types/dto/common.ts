@@ -56,8 +56,10 @@ export type AnalysisStatus = "NOT_REQUESTED" | "PENDING" | "DONE" | "FAILED";
 export type AuthProvider = "GOOGLE";
 
 /**
- * @draft 호스트 등급 1~5 (새싹·성장·검증된 운영자·인기 운영자·마스터).
- * 서버는 아직 등급을 계산하지 않는다 — `HostReputation.level`이 비어 있으면 등급 UI를 숨긴다.
+ * 호스트 등급 1~5 (새싹·성장·검증된 운영자·인기 운영자·마스터).
+ *
+ * `GET /users/me/grade`가 실제 값을 계산해 준다(승급 조건별 진행도까지). 다만 방 목록·공개
+ * 프로필의 요약(`HostReputation.level`)은 비어 올 수 있다 — **없으면 Lv.1로 채우지 말고 감춘다.**
  */
 export type HostLevel = 1 | 2 | 3 | 4 | 5;
 /**

@@ -4,7 +4,8 @@ export type RoomFeeType = "free" | "paid";
 
 /** 인기 방 카드 (홈 캐러셀 · /rooms 공개 목록 공용) */
 export type PopularRoom = {
-  code: string;
+  /** 방 id. 공개 방 응답에 PIN이 없어 카드가 아는 유일한 식별자다(F-1) */
+  roomId: number;
   /** 주제 칩. 예: "백엔드" */
   topic: string;
   type: RoomFeeType;

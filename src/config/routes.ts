@@ -14,7 +14,7 @@ export type RouteMeta = {
   /** 화면 설명 (기획서 §7) */
   description: string;
   area: Area;
-  /** 사이드바에서 활성으로 표시할 내비 항목의 path. 자기 경로가 내비에 없는 화면만 지정 (예: /pay/[code] → /home) */
+  /** 사이드바에서 활성으로 표시할 내비 항목의 path. 자기 경로가 내비에 없는 화면만 지정 (예: /pay/[roomId] → /home) */
   nav?: string;
 };
 
@@ -193,8 +193,8 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "participant",
   },
   {
-    path: "/pay/[code]",
-    sample: "/pay/482913",
+    path: "/pay/[roomId]",
+    sample: "/pay/7",
     title: "유료 방 결제",
     description:
       "방 정보·참가자 정보 확인, 코인 잔액 확인 → 부족분 포트원 충전 → 코인 차감, 결제 완료 후 대기실 입장 (회원 전용)",
@@ -374,7 +374,7 @@ export function routesByArea(area: Area): RouteMeta[] {
   return ROUTES.filter((r) => r.area === area);
 }
 
-/** 실제 pathname(/pay/482913)에 해당하는 라우트. 동적 세그먼트([code] 등)는 아무 값이나 허용. 없으면 undefined */
+/** 실제 pathname(/pay/7)에 해당하는 라우트. 동적 세그먼트([roomId] 등)는 아무 값이나 허용. 없으면 undefined */
 export function matchRoute(pathname: string): RouteMeta | undefined {
   return ROUTES.find((r) =>
     new RegExp("^" + r.path.replace(/\[[^\]]+\]/g, "[^/]+") + "$").test(pathname),

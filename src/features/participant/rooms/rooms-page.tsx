@@ -16,8 +16,8 @@ type Props = {
 };
 
 function roomHref(room: PublicRoomItem) {
-  // 홈 캐러셀(popular-rooms.tsx)과 같은 규칙 — 방 code 딥링크가 정해지면 두 곳을 함께 고친다
-  return room.type === "paid" ? `/pay/${room.code}` : "/join";
+  // 홈 캐러셀(popular-rooms.tsx)과 같은 규칙 — 유료는 방 id, 무료는 입장 폼(F-1)
+  return room.type === "paid" ? `/pay/${room.roomId}` : "/join";
 }
 
 /** P-Web 공개 방 목록 (시안 프레임 FPbky) — 검색 · 필터 칩 · 3열 카드 · 더 보기 */
@@ -85,7 +85,7 @@ export function RoomsPage({
       ) : (
         <div className="grid grid-cols-3 gap-6">
           {rooms.map((room) => (
-            <RoomListItem key={room.code} room={room} href={roomHref(room)} />
+            <RoomListItem key={room.roomId} room={room} href={roomHref(room)} />
           ))}
 
           {/* 07 보드 "더 보기 · 무한 스크롤" — 위쪽은 건드리지 않고 끝에 스켈레톤 줄만 덧붙인다 */}

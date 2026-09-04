@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PendingLabel } from "@/components/common/pending-label";
+import { RATING_COMMENT_MAX } from "@/lib/types/dto";
 import type { RatingTag, SubmitRatingRequest } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
 import { RATING_TAG_LABEL, RATING_TAGS, STAR_LABEL } from "./rating-tags";
@@ -113,10 +114,19 @@ export function RatingSheet({
         </div>
 
         <label className="mt-2 flex flex-col gap-2">
-          <span className="text-label-lg text-muted-foreground">한 줄 후기 (선택)</span>
+          <span className="flex items-baseline justify-between text-label-lg text-muted-foreground">
+            한 줄 후기 (선택)
+            {/* 서버가 500자에서 400을 낸다 — 다 쓰고 나서 알면 늦다 */}
+            {comment.length > RATING_COMMENT_MAX - 100 ? (
+              <span className="tabular-nums">
+                {comment.length} / {RATING_COMMENT_MAX}자
+              </span>
+            ) : null}
+          </span>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
+            maxLength={RATING_COMMENT_MAX}
             placeholder="선생님께 한 마디 남겨 주세요"
             rows={3}
             className="resize-none rounded-xl bg-muted px-4 py-3 text-body-lg text-ink outline-none placeholder:text-ink-disabled focus-visible:ring-2 focus-visible:ring-ring"

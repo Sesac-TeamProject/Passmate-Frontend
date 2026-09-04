@@ -147,6 +147,51 @@ React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다.
 `POST /users/me/devices`(푸시 토큰, 웹은 해당 없을 수 있음) ·
 `POST /admin/grades/evaluate`(관리자)
 
-## 6. 계속 `@draft`인 17개 (백엔드에도 없음)
+## 6. 계속 `@draft`인 11개 (백엔드에도 없음)
 
-관리자 10 · 코인/결제 6 · 파일 기반 출제 1. 실서버 404가 정상이고 화면은 "준비 중"으로 접는다.
+관리자 10 · 파일 기반 출제 1. 실서버 404가 정상이고 화면은 "준비 중"으로 접는다.
+
+**2026-09-04 갱신** — 코인/결제 6은 PR #18로 붙었고, 그때까지 `@draft`였던 13경로(평가 제출 ·
+게스트 기록 이관 · 첨삭 저장 · 세트 복제 · 음성 힌트 2 · 마이페이지 확장 5 · 신고)도 백엔드에
+구현돼 실계약 대조를 마쳤다. 대조에서 나온 어긋남은 아래 F-9~F-11로 적고 모두 고쳤다.
+
+### 🟡 F-12. 코인이 충분해도 "충전한다"고 말한다 — **시안 대기(2026-09-04)**
+
+- **어디**: `src/features/participant/pay/coin-charge-card.tsx:143`(포트원 결제 금액) · `:165`(CTA 문구)
+- **무엇**: 부족분이 0이어도 충전 카드가 그대로 그려진다. 잔액 12,000 C · 참가비 10,000 C인데
+  "포트원 결제 금액 ₩10,000", 버튼은 "₩10,000 충전 → 10,000 C 차감하고 입장"이다.
+  충전 프리셋도 `CHARGE_OPTIONS.find((a) => a >= 0)`이라 가장 작은 10,000을 고른다.
+- **실제 동작은 맞다**: `pay/[roomId]/page.tsx`가 `shortfall <= 0`이면 충전을 건너뛰고 참가비만
+  차감한다. **돈이 더 나가지는 않고 문구만 틀렸다** — 결제창을 기대한 사용자가 그냥 입장된다.
+- **왜 이제 보이나**: F-1 때문에 목록에서 이 화면에 닿을 수 없었다. 길을 열자 드러났다.
+- **왜 아직 안 고쳤나**: **시안에 이 상태가 없다**(부족분 0인 결제 화면). 지어내면 시안과
+  어긋나므로 디자이너 요청 후에 붙인다 — `DESIGN_GAPS.md` §3 W-11 행에 적었다.
+
+### 🟢 F-13. 목의 단건 방 조회가 공개 목록을 못 따라간다 — **목 전용(2026-09-04)**
+
+- **어디**: `src/lib/mocks/rooms.ts:35` — `let rooms = [{ ...DEMO_ROOM }]`
+- **무엇**: 목의 `GET /rooms/public`은 `PUBLIC_ROOMS` 7개를 뿌리는데 `GET /rooms/{roomId}`가
+  아는 방은 `DEMO_ROOM`(id 1) 하나다. 그래서 목 모드의 `/rooms` 목록에서 유료 카드
+  "인덱스와 실행 계획 실전"(id 204)을 누르면 "없는 방이에요"가 뜬다.
+- **실서버는 정상**이다 — 목록에 실린 방은 단건 조회도 된다.
+- **왜 고쳐야 하나**: `CLAUDE.md`의 "목은 계약 거울" 규칙 위반이다. 목이 실서버보다 좁으면
+  목에서만 깨지고, 그걸 실제 버그로 오인하게 된다.
+
+### ✅ F-9. 별점 태그 enum 3개가 서버와 다름 — **해결(2026-09-04)**
+
+목을 보고 짠 이름이라 `GOOD_DIFFICULTY`·`HELPFUL_HINTS`·`GOOD_QUALITY`가 서버의
+`FAIR_DIFFICULTY`·`HELPFUL_HINT`·`GOOD_QUESTIONS`와 어긋나 있었다. 태그를 고르고 별점을 내면
+400이 났고 `CLEAR_EXPLANATION`·`GOOD_PACING`만 우연히 통과했다. 문구도 서버 enum의 label로 맞췄다.
+계약 테스트: `src/lib/types/dto/ratings.test.ts`.
+
+### ✅ F-10. 음성 힌트 업로드가 서버 시그니처와 다름 — **해결(2026-09-04)**
+
+multipart 파트 이름이 `audio`였는데 서버는 `@RequestPart("file")`이고(→ 400),
+`durationMs`는 `@RequestParam`이라 쿼리인데 폼에 담고 있었다(→ 길이가 빈 채 저장).
+`requestMultipart`에 쿼리 인자를 더해 고쳤다. 계약 테스트: `src/lib/api/sessions.test.ts`.
+
+### ✅ F-11. 오류 코드 6개 어긋남 — **해결(2026-09-04)**
+
+`RECORD_PURGED`는 서버에 없는 이름이었고(실제는 `GUEST_RECORD_EXPIRED`) 화면이 영영 타지 않는
+분기를 들고 있었다. `RATING_NOT_ALLOWED`·`RATING_WINDOW_CLOSED`·`SESSION_NOT_ENDED`·
+`GUEST_RECORD_ALREADY_CLAIMED`가 빠져 있었다. 서버 enum은 47개 → **53개**다.

@@ -1,4 +1,5 @@
 import { AppError } from "@/lib/types/app-error";
+import { RATING_COMMENT_MAX, RATING_TAG_MAX } from "@/lib/types/dto";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 import type {
   AnswerResultView,
@@ -11,9 +12,11 @@ import type {
   ParticipantResultRow,
   QuestionResponse,
   HostReviewRequest,
+  RoomRatingResponse,
   ReviewTargetAnswer,
   ReviewTargetListResponse,
   SessionResultsResponse,
+  SubmitRatingRequest,
   TeacherReviewResponse,
 } from "@/lib/types/dto";
 import { DEMO_ROOM, DEMO_ROOM_ID, PARTICIPANTS, SET_QUESTIONS } from "./fixtures";
@@ -337,7 +340,7 @@ export function mockReviewTargets(url: URL): ReviewTargetListResponse {
   };
 }
 
-/** @draft PUT /rooms/{roomId}/answers/{answerId}/review — 백엔드 미구현. 목에서만 성공한다 */
+/** PUT /rooms/{roomId}/answers/{answerId}/review — 첨삭 등록·수정(upsert) */
 export function mockPostReview(answerId: number, body: HostReviewRequest): TeacherReviewResponse {
   return {
     answerId,
@@ -353,11 +356,37 @@ export function mockPostReview(answerId: number, body: HostReviewRequest): Teach
   };
 }
 
-/** @draft POST /rooms/{roomId}/ratings — 백엔드 미구현. 세션당 1회만 받는다 */
-export function mockSubmitRating(): undefined {
+/**
+ * POST /rooms/{roomId}/ratings — 세션당 1회. 201로 접수된 평가를 돌려준다.
+ *
+ * 서버의 제약(`RoomRatingRequest`)을 그대로 막는다 — 별점 1~5, 태그 최대 5개, 후기 500자.
+ * 목이 받아 주면 목에서만 통과하고 실서버에서 400이 난다.
+ */
+export function mockSubmitRating(body: SubmitRatingRequest): RoomRatingResponse {
+  const stars = body?.stars;
+  const invalid =
+    typeof stars !== "number" || !Number.isInteger(stars) || stars < 1 || stars > 5
+      ? "별점은 1~5입니다."
+      : (body.tags?.length ?? 0) > RATING_TAG_MAX
+        ? `태그는 ${RATING_TAG_MAX}개까지입니다.`
+        : (body.comment?.length ?? 0) > RATING_COMMENT_MAX
+          ? `후기는 ${RATING_COMMENT_MAX}자를 넘을 수 없습니다.`
+          : null;
+  if (invalid) {
+    throw new AppError("ValidationFailed", {
+      code: ERROR_CODES.INVALID_INPUT,
+      serverMessage: invalid,
+    });
+  }
   if (rated) throw new AppError("Conflict", { code: ERROR_CODES.ALREADY_RATED });
   rated = true;
-  return undefined;
+  return {
+    id: 1,
+    stars: body.stars,
+    tags: body.tags ?? [],
+    ...(body.comment ? { comment: body.comment } : {}),
+    createdAt: new Date().toISOString().slice(0, 19),
+  };
 }
 
 /** 테스트 전용 — 결과 목의 모듈 상태를 되돌린다 */

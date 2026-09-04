@@ -4,7 +4,6 @@ import { PttButton } from "@/components/common/ptt-button";
 import { ReconnectingBanner } from "@/components/common/reconnecting-banner";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import type { LiveQuestion } from "@/features/host/types";
-import { IS_MOCK } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { ChoiceRow, type ChoiceRowState } from "./choice-row";
 import { LiveRail, LiveRailMini, type SolvingStudent } from "./live-rail";
@@ -97,22 +96,20 @@ export function LivePage({
             )}
             <div className="flex items-center gap-5">
               {/*
-                음성 힌트(PTT)는 **백엔드에 없다** — `voicehint` 패키지 자체가 없어 실서버에서는
-                업로드가 404다. 목 모드에서만 보여 준다: 실서버에서 누르면 실패하는 버튼을 두면
-                "고장 났다"로 읽힌다(US10, 이번 범위 밖).
+                음성 힌트(PTT). 예전에는 `IS_MOCK`일 때만 보여 줬는데, 그 이유(백엔드에 `voicehint`
+                패키지가 없어 실서버 404)가 사라졌다 — 백엔드에 구현됐고 업로드 시그니처도 맞췄다
+                (파트 이름 `file`, `durationMs`는 쿼리). 게이트를 닫아 두면 고친 경로를 아무도 못 탄다.
 
                 TODO(design): 새 시안 하단바는 "정답 공개 / 다음 문항" 2개뿐이고 PTT·화면 잠금이 없다.
                 PTT 플로우 시트는 "선생님 웹 · W-05"에서 누른다고 못박아 서로 어긋난다 —
                 디자이너 확인 전까지 두 조작을 남겨 둔다(HANDOVER 결정 1번).
               */}
-              {IS_MOCK ? (
-                <PttButton
-                  onRecorded={onHint}
-                  onError={onHintError}
-                  uploading={hintUploading}
-                  disabled={frozen}
-                />
-              ) : null}
+              <PttButton
+                onRecorded={onHint}
+                onError={onHintError}
+                uploading={hintUploading}
+                disabled={frozen}
+              />
               <button
                 type="button"
                 onClick={onToggleLock}

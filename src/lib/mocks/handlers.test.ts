@@ -3,6 +3,7 @@ import { AppError } from "@/lib/types/app-error";
 import { MOCK_ROUTES, resolveMock } from "./handlers";
 import { __resetQuestionSetsForTests } from "./question-sets";
 import { __resetRoomsForTests } from "./rooms";
+import { __resetMeForTests } from "./me";
 import { __resetSessionForTests } from "./session";
 
 const SAMPLE: Record<string, string> = {
@@ -24,6 +25,7 @@ describe("mocks/handlers", () => {
   // session.ts의 phase, rooms.ts의 방·참가자는 모듈 스코프 상태라 테스트 간에 남는다
   // (예: 라우트 스윕이 방을 닫으면 그 PIN은 이후 404다) — 매 테스트 전에 되돌린다.
   beforeEach(() => {
+    __resetMeForTests();
     __resetSessionForTests();
     __resetRoomsForTests();
     __resetQuestionSetsForTests();
@@ -183,7 +185,12 @@ describe("mocks/handlers", () => {
         () => me.getGrade(),
         () => me.getBadges(),
         () => me.getNotificationSettings(),
-        () => me.putNotificationSettings({ sessionStart: true }),
+        () =>
+          me.putNotificationSettings({
+            sessionStart: true,
+            ratingRequest: true,
+            settlementDone: false,
+          }),
         () => me.getHostProfile(42),
         () => me.postReport({ targetType: "USER", targetId: 42, type: "SPAM", reason: "도배해요" }),
         () => me.claimGuestRecord("mock-guest-record-token"),

@@ -11,7 +11,8 @@ export type PublicRoomTiming =
   | { kind: "unknown" };
 
 export type PublicRoomItem = {
-  code: string;
+  /** 방 id. 공개 방 응답에 PIN이 없어 카드가 아는 유일한 식별자다(F-1) */
+  roomId: number;
   title: string;
   topic: string;
   type: RoomFeeType;

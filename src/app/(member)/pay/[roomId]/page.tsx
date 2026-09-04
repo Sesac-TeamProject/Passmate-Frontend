@@ -8,6 +8,7 @@ import { ScreenLoading } from "@/components/common/screen-loading";
 import {
   toPaidRoom,
   toPayErrorMessage,
+  toPayGate,
   wireMethodFromPayMethod,
 } from "@/features/participant/pay/adapt";
 import type { PaymentReceipt } from "@/features/participant/pay/payment-complete-card";
@@ -30,7 +31,7 @@ import {
   useEntryPayment,
 } from "@/lib/queries/use-payments";
 import { useMe } from "@/lib/queries/use-me";
-import { useJoinRoom, useRoomByPin } from "@/lib/queries/use-rooms";
+import { useJoinRoom, useRoom } from "@/lib/queries/use-rooms";
 
 const INITIAL_VALUES: PayFormValues = {
   nickname: "",
@@ -44,15 +45,17 @@ const INITIAL_VALUES: PayFormValues = {
  * W-11 컨테이너 — 방 조회·코인 잔액·참가자 프로필 기본값을 쿼리로 소유하고,
  * 결제 버튼은 잔액이 충분하면 참가비만 차감, 부족하면 코인 충전(포트원)→확인→차감을 거쳐 대기실로 보낸다.
  */
-export default function Page({ params }: { params: Promise<{ code: string }> }) {
-  const { code: pin } = use(params);
+export default function Page({ params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId: roomIdParam } = use(params);
   const router = useRouter();
 
-  const room = useRoomByPin(pin);
+  // 공개 방 목록에 PIN이 없어 카드가 방 id만 준다 — 결제 화면은 id로 연다(F-1).
+  // 주소가 방 id 모양이 아니면 null로 두고 아래에서 안내로 끝낸다.
+  const parsedRoomId = Number(roomIdParam);
+  const roomId = Number.isSafeInteger(parsedRoomId) && parsedRoomId > 0 ? parsedRoomId : null;
+  const room = useRoom(roomId);
   const balanceQuery = useCoinBalance();
   const me = useMe();
-
-  const roomId = room.data?.id ?? null;
 
   const createCharge = useCreateCharge();
   const confirmCharge = useConfirmCharge();
@@ -110,18 +113,23 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
     setPending(readPendingPayment(roomId));
   }
 
-  // 유료 방이 아니면 결제할 게 없다 — 대기실로 보낸다.
+  // 결제할 게 없는 무료 방은 대기실로 보낸다. 입장은 PIN으로 하고, 그 PIN은 방 조회가 실어 준다.
+  const gate = room.data ? toPayGate(room.data) : null;
   useEffect(() => {
-    if (room.data && room.data.type !== "PAID") router.replace(`/play/${pin}`);
-  }, [room.data, pin, router]);
+    if (room.data && gate === "free") router.replace(`/play/${room.data.pin}`);
+  }, [room.data, gate, router]);
 
+  // 주소가 방 id 모양이 아니다 — 쿼리를 걸지 않았으니 로딩으로 두면 영영 돌기만 한다.
+  if (roomId === null) return <ScreenError message="없는 방이에요" />;
   if (room.isPending) return <ScreenLoading />;
   if (room.isError)
     return <ScreenError message={toPayErrorMessage(room.error)} onRetry={() => room.refetch()} />;
+  // PIN 조회와 달리 id 조회는 끝난 방도 200으로 준다 — 결제 폼 대신 안내로 끝낸다.
+  if (gate === "closed") return <ScreenError message="이미 끝난 방이에요" />;
   // 무료 방 — 위 effect가 대기실로 보낸다. 그 사이 화면은 로딩으로만 보인다.
-  if (room.data.type !== "PAID") return <ScreenLoading />;
+  if (gate !== "payable") return <ScreenLoading />;
 
-  const paidRoom = toPaidRoom(room.data, pin);
+  const paidRoom = toPaidRoom(room.data);
 
   /** 단계 진행 상태를 sessionStorage와 화면 state에 함께 남긴다. */
   const savePending = (next: PendingPayment) => {
@@ -163,7 +171,7 @@ export default function Page({ params }: { params: Promise<{ code: string }> }) 
       forgetPending(roomId);
       setReceipt({
         paymentId: receiptValues.paymentNo,
-        roomCode: pin,
+        roomCode: paidRoom.code,
         roomTitle: paidRoom.title,
         chargeAmount: receiptValues.chargeAmount,
         payMethod: values.payMethod,

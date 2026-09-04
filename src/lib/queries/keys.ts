@@ -41,7 +41,7 @@ export const qk = {
   /** 마감된 문항의 정답·해설·분포 */
   questionResult: (roomId: number, questionId: number) =>
     ["rooms", roomId, "session", "questions", questionId, "result"] as const,
-  /** @draft 음성 힌트 — 백엔드 미구현 */
+  /** 음성 힌트 */
   hints: (roomId: number) => ["rooms", roomId, "session", "hints"] as const,
   /** status·page 무관 전체 무효화용 prefix — 문항이 바뀌면 어느 페이지의 요약도 낡는다 */
   questionSetsRoot: ["question-sets"] as const,

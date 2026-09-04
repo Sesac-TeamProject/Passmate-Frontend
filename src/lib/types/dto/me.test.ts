@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { mockCumulativeReport, mockJoinedRooms } from "@/lib/mocks/me";
+import {
+  __resetMeForTests,
+  mockCumulativeReport,
+  mockJoinedRooms,
+  mockNotificationSettings,
+  mockPutNotificationSettings,
+} from "@/lib/mocks/me";
+import { ERROR_CODES } from "@/lib/types/error-codes";
 import { expectContract } from "./expect-contract";
 
 /**
@@ -72,5 +79,35 @@ describe("마이페이지 계약", () => {
   it("시각은 오프셋 없는 UTC naive 문자열이다", () => {
     const room = mockJoinedRooms(new URL("http://x/users/me/rooms/joined")).rooms.content[1];
     expect(room.endedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
+  });
+
+  /**
+   * 알림 설정은 **부분 갱신이 아니다.** 서버가 일부러 셋 다 `@NotNull`로 받는다 —
+   * 토글 하나를 끄면서 나머지를 실수로 되돌리는 것을 막으려는 설계다.
+   * 한 번 `Partial`로 바꿨다가 실서버에서 400을 맞았다.
+   */
+  it("알림 설정 PUT은 세 항목을 다 보내야 한다 — 빠지면 400", () => {
+    __resetMeForTests();
+    const saved = mockPutNotificationSettings({
+      sessionStart: false,
+      ratingRequest: true,
+      settlementDone: true,
+    });
+
+    expectContract(saved, ["sessionStart", "ratingRequest", "settlementDone"]);
+    expect(saved.sessionStart).toBe(false);
+    expect(() =>
+      // @ts-expect-error 타입이 먼저 막는다 — 목도 서버처럼 막는지 함께 본다
+      mockPutNotificationSettings({ sessionStart: true }),
+    ).toThrowError(expect.objectContaining({ code: ERROR_CODES.INVALID_INPUT }));
+  });
+
+  it("알림 설정 GET은 세 항목이 반드시 온다 — optional로 두면 화면이 false로 오해한다", () => {
+    __resetMeForTests();
+    const settings = mockNotificationSettings();
+
+    expectContract(settings, ["sessionStart", "ratingRequest", "settlementDone"]);
+    // 앞 테스트가 끄고 간 값이 새어 들어오면 여기서 잡힌다
+    expect(settings).toEqual({ sessionStart: true, ratingRequest: true, settlementDone: true });
   });
 });
