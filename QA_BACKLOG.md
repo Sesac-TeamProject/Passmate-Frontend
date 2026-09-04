@@ -261,13 +261,29 @@ pending 가드가 먼저 오면 뒤의 분기가 **도달 불가**가 된다.
   63(제출 1)이 남는다 — 그게 화면에 그려지던 값이다. 고친 화면은 정상 집계를 그대로 보여준다
   (제출 1/1 · 분포 "마 1명").
 
-### 🟡 F-7. 렌더 중 부수효과 2곳
+### ✅ F-7. 렌더 중 부수효과 2곳 — **해결(2026-09-04)**
 
-React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다.
+React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다. 둘 다 `useEffect`로 옮겼다.
 
-- `lib/queries/use-rooms.ts:78` — 렌더 본문에서 `writeHostRoomId`(sessionStorage 쓰기)
-- `app/(participant)/result/[sessionId]/page.tsx:73` — 렌더 본문에서 `claim.mutate`
-  (게스트 기록 이관이 중복 요청될 수 있다)
+- `lib/queries/use-rooms.ts:78` — 렌더 본문에서 `writeHostRoomId`(sessionStorage 쓰기).
+  **눈으로 확인**: 방을 만들고 대기실을 열면 효과가 `passmate.hostRoom.<pin>`을 쓰고,
+  세션을 끝내 `GET /rooms/pin/{pin}`이 404가 된 뒤에도 최종 화면이 그 값으로 이어진다.
+- `app/(participant)/result/[sessionId]/page.tsx:73` — 렌더 본문에서 `claim.mutate`.
+  잠금은 state가 아니라 **ref**로 뒀다 — StrictMode의 두 번째 실행은 첫 실행의 setState가
+  반영되기 전에 오므로 state로는 못 막는다(원래 코드의 `claimTried`가 그랬다).
+
+> ⚠️ 확인 중 **이관이 애초에 한 번도 나가지 않는다**는 것을 발견했다 → 아래 F-14.
+
+### 🔴 F-14. 게스트 기록 이관이 아예 나가지 않는다 (2026-09-04 발견)
+
+- **어디**: `app/(participant)/result/[sessionId]/page.tsx` — `isMember && guestRecord` 조건
+- 회원으로 로그인한 채(`GET /users/me` 200) 게스트 기록이 남아 있는 방의 결과 화면을 열어도
+  `POST /guest-records/claim`이 **한 번도 나가지 않는다.** 화면 안에서 찍어 보면
+  `isMember`가 계속 `false`다 — 이 화면은 `RequireAuth` 밖이라 회원 세션을 못 알아본다.
+- **F-7 수정 전후가 똑같다**(고치기 전 코드로도 안 나간다) — 옮긴 것과 무관한 별개 문제다.
+- 곁다리로 같은 화면이 **한 번 열 때 50번 넘게 다시 그려진다.** `readGuestRecord`가 호출마다
+  새 객체를 만들어 `useSyncExternalStore`의 스냅샷이 매번 달라지는 탓으로 보인다
+  (`readMyParticipant`도 같은 모양이다). 고치려면 스냅샷을 캐시해야 한다.
 
 ### 🟡 F-8. 죽은 코드
 
