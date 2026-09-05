@@ -280,16 +280,32 @@ React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다. 둘 �
 
 > ⚠️ 확인 중 **이관이 애초에 한 번도 나가지 않는다**는 것을 발견했다 → 아래 F-14.
 
-### 🔴 F-14. 게스트 기록 이관이 아예 나가지 않는다 (2026-09-04 발견)
+### ✅ F-14. 게스트 기록 이관이 아예 나가지 않는다 — **해결(2026-09-05)**
 
-- **어디**: `app/(participant)/result/[sessionId]/page.tsx` — `isMember && guestRecord` 조건
-- 회원으로 로그인한 채(`GET /users/me` 200) 게스트 기록이 남아 있는 방의 결과 화면을 열어도
-  `POST /guest-records/claim`이 **한 번도 나가지 않는다.** 화면 안에서 찍어 보면
-  `isMember`가 계속 `false`다 — 이 화면은 `RequireAuth` 밖이라 회원 세션을 못 알아본다.
-- **F-7 수정 전후가 똑같다**(고치기 전 코드로도 안 나간다) — 옮긴 것과 무관한 별개 문제다.
-- 곁다리로 같은 화면이 **한 번 열 때 50번 넘게 다시 그려진다.** `readGuestRecord`가 호출마다
-  새 객체를 만들어 `useSyncExternalStore`의 스냅샷이 매번 달라지는 탓으로 보인다
-  (`readMyParticipant`도 같은 모양이다). 고치려면 스냅샷을 캐시해야 한다.
+- **어디였나**: `lib/guest-token-storage.ts` `readGuestRecord` (화면이 아니라 **저장소**였다)
+- **9/4에 적은 원인은 틀렸다.** "이 화면은 `RequireAuth` 밖이라 회원 세션을 못 알아본다"고 했지만,
+  `SessionBootstrap`이 **루트 레이아웃(`app/layout.tsx:26`)에 이미 마운트돼 있다** — 세션 복원은
+  앱 어디서나 돈다. 가드 밖이라서가 아니었다.
+- **진짜 원인은 곁다리로 적어 둔 "50번 다시 그려진다" 쪽이었다. 증상 둘이 원인 하나다.**
+  1. `readGuestRecord`가 호출마다 새 객체를 만든다.
+  2. React는 `useSyncExternalStore` 스냅샷을 `Object.is`로 비교한다
+     (react-dom `checkIfSnapshotChanged`) → **항상 달라졌다**고 보고 커밋마다 `forceStoreRerender`.
+  3. 같은 루트에 동기 렌더가 겹쳐 `nestedUpdateCount`가 오르고, **50**(`NESTED_UPDATE_LIMIT`)을
+     넘는 순간 `getRootForUpdatedFiber`가 **"Maximum update depth exceeded"를 던진다.**
+     관찰된 "50번 넘게"는 우연이 아니라 이 상수였다.
+  4. 이 크래시는 마운트 후 수 ms 안에 난다 — `POST /auth/refresh` + `GET /users/me`가
+     돌아오기 훨씬 전이다. 그래서 **`isMember`는 false인 채로 컴포넌트가 죽고**, 이관 효과는
+     영영 실행되지 않는다. F-7 수정 전후가 같았던 것도 이 때문이다(렌더든 효과든 똑같이 죽는다).
+- **고친 것**: `readGuestRecord`가 보관된 값이 그대로면 **같은 객체를 돌려준다**(값 비교 캐시).
+  화면 코드는 건드리지 않았다. 테스트 3건(과잉 캐시로 바꾸면 기존 2건까지 4건이 깨지는 것 확인).
+- `useSyncExternalStore` 나머지 5곳은 전부 원시값을 돌려준다 — 불안정한 스냅샷은 여기 하나뿐이었다
+  (`readMyParticipant`도 화면에서 `?.participantId ?? null`로 접어 읽으므로 안전하다).
+- **서버 쪽은 처음부터 정상이었다**(2026-09-05 실서버 curl 확인): 방 41에 게스트로 입장 →
+  회원 토큰으로 `POST /guest-records/claim` **200** → 같은 토큰 재시도 **409
+  `GUEST_RECORD_ALREADY_CLAIMED`**(프런트 `TERMINAL_CLAIM_CODES`와 일치).
+  세션 복원의 `refresh`가 게스트 Bearer를 달고 나가는 것도 확인했으나 **200**이라 무해하다.
+- **아직 브라우저로 확인하지 못했다** — 확장이 연결돼 있지 않았다. 이관이 실제로 나가는 것은
+  결과 화면을 열어 네트워크에서 `POST /guest-records/claim`을 보는 것으로 마무리해야 한다.
 
 ### ✅ F-8. 죽은 코드 — **해결(2026-09-04)**
 

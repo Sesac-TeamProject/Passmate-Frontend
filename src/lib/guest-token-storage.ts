@@ -89,9 +89,38 @@ export function readGuestRecords(now: number = Date.now()): GuestRecord[] {
   return alive;
 }
 
-/** 방 하나의 기록. 결과 화면의 "가입하고 기록 저장하기"가 이 값을 읽는다 */
+/**
+ * 마지막으로 돌려준 기록. 값이 그대로면 **같은 객체를 다시 돌려주기 위해** 들고 있는다.
+ *
+ * 결과 화면이 이 함수를 `useSyncExternalStore`의 스냅샷으로 읽는데, React는 스냅샷을
+ * `Object.is`로 비교한다(react-dom `checkIfSnapshotChanged`). 호출마다 새 객체를 만들면
+ * 항상 달라졌다고 보고 커밋마다 `forceStoreRerender`를 걸어 동기 렌더가 겹치고,
+ * 50번(`NESTED_UPDATE_LIMIT`)을 넘기면 React가 "Maximum update depth exceeded"를 던진다.
+ * 화면이 그렇게 죽으면 게스트 기록 이관 효과도 실행되지 못한다(QA_BACKLOG F-14).
+ */
+let lastRead: GuestRecord | null = null;
+
+function isSameRecord(a: GuestRecord | null, b: GuestRecord | null): boolean {
+  if (a === null || b === null) return a === b;
+  return (
+    a.guestToken === b.guestToken &&
+    a.roomId === b.roomId &&
+    a.participantId === b.participantId &&
+    a.savedAt === b.savedAt
+  );
+}
+
+/**
+ * 방 하나의 기록. 결과 화면의 "가입하고 기록 저장하기"가 이 값을 읽는다.
+ * 보관된 값이 그대로면 **같은 객체**를 돌려준다(위 `lastRead` 설명).
+ */
 export function readGuestRecord(roomId: number, now: number = Date.now()): GuestRecord | null {
-  return readGuestRecords(now).find((r) => r.roomId === roomId) ?? null;
+  const found = readGuestRecords(now).find((r) => r.roomId === roomId) ?? null;
+
+  if (isSameRecord(lastRead, found)) return lastRead;
+
+  lastRead = found;
+  return found;
 }
 
 /** 입장 응답의 `guestToken`을 방 정보와 함께 보관한다. 같은 방은 최신 값으로 덮어쓴다 */

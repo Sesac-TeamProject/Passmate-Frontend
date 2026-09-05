@@ -103,3 +103,37 @@ describe("게스트 이관 기록 슬롯 (localStorage · 7일)", () => {
     expect(readGuestRecords()).toEqual([]);
   });
 });
+
+/**
+ * 결과 화면(`result/[sessionId]`)은 이 값을 `useSyncExternalStore`의 스냅샷으로 읽는다.
+ * React는 스냅샷을 `Object.is`로 비교하므로(react-dom `checkIfSnapshotChanged`),
+ * 호출마다 새 객체를 만들면 **항상 달라졌다고 보고** 커밋마다 `forceStoreRerender`를 건다 —
+ * 50번 겹치면 React가 "Maximum update depth exceeded"를 던져 화면이 죽는다(QA_BACKLOG F-14).
+ */
+describe("이관 기록 스냅샷 안정성 (useSyncExternalStore)", () => {
+  it("보관된 값이 그대로면 같은 객체를 돌려준다 — 새 객체를 만들면 화면이 무한히 다시 그려진다", () => {
+    writeGuestRecord({ guestToken: "a", roomId: 1, participantId: 11 });
+
+    expect(readGuestRecord(1)).toBe(readGuestRecord(1));
+  });
+
+  it("값이 바뀌면 새 객체를 돌려준다 — 캐시가 갱신을 막으면 안 된다", () => {
+    writeGuestRecord({ guestToken: "old", roomId: 1, participantId: 11 });
+    const before = readGuestRecord(1);
+
+    writeGuestRecord({ guestToken: "new", roomId: 1, participantId: 12 });
+    const after = readGuestRecord(1);
+
+    expect(after).not.toBe(before);
+    expect(after?.guestToken).toBe("new");
+  });
+
+  it("이관에 성공해 기록이 사라지면 null로 바뀐다 — 캐시가 지워진 값을 붙들지 않는다", () => {
+    writeGuestRecord({ guestToken: "a", roomId: 1, participantId: 11 });
+    readGuestRecord(1);
+
+    clearGuestRecord(1);
+
+    expect(readGuestRecord(1)).toBeNull();
+  });
+});
