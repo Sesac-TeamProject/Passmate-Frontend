@@ -83,6 +83,26 @@ describe("toQuestionResult", () => {
 
     expect(result.type).toBe("essay");
   });
+
+  it("문항 정보가 없어도(재접속) 분포가 차 있으면 객관식으로 다룬다", () => {
+    // 서버가 준 분포를 봐야 한다. 보기에서 만든 배열을 보면 문항이 없을 때 늘 비어 있어
+    // 객관식이 통째로 서술형으로 분류된다(QA_BACKLOG F-17)
+    const result = toQuestionResult(OX_ENDED, [], null);
+
+    expect(result.type).toBe("multiple");
+    // 서술형이 아니므로 answer를 모범답안 자리에 넣으면 안 된다
+    expect(result.modelAnswer).toBeNull();
+  });
+
+  it("정답률은 정수로 접는다 — 서버는 16.666…처럼 소수로 준다", () => {
+    const result = toQuestionResult(
+      { ...OX_ENDED, correctRate: 16.666666666666668 },
+      [],
+      OX_QUESTION,
+    );
+
+    expect(result.accuracy).toBe(17);
+  });
 });
 
 function row(rank: number): FinalRankRow {

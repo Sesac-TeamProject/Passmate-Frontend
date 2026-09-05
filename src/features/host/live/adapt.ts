@@ -65,10 +65,14 @@ export function toQuestionResult(
     count: reveal.distribution[text] ?? 0,
   }));
 
-  // 문항 정보가 없으면(재접속 직후) 보기 유무로 가른다 — 분포가 비면 서술형처럼 다룬다
+  /*
+    문항 정보가 없으면(재접속 직후) **서버가 준 분포**로 가른다 — 서술형만 빈 객체다
+    (`dto/session.ts`). 위 `distribution`은 `choices`로 만드는데 `choices`는 이 분기에
+    들어올 때 항상 null이라, 그것을 보면 객관식이 통째로 서술형으로 분류됐다(F-17).
+  */
   const type: QuestionType = question
     ? VIEW_TYPE[question.type]
-    : distribution.length === 0
+    : Object.keys(reveal.distribution).length === 0
       ? "essay"
       : "multiple";
   const isEssay = type === "essay";
@@ -80,7 +84,8 @@ export function toQuestionResult(
     modelAnswer: isEssay ? (reveal.answer ?? null) : null,
     explanation: reveal.explanation ?? null,
     distribution,
-    accuracy: reveal.correctRate,
+    // 서버는 소수로 준다(16.666…) — 리포트 화면과 같은 기준으로 정수로 접는다
+    accuracy: Math.round(reveal.correctRate),
     accuracyDelta: 0,
     ranking: ranking.map((r) => ({
       rank: r.rank,
