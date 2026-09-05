@@ -42,12 +42,15 @@ export function SettlementTable({ rows }: Props) {
       </div>
       {/* 유료 방을 아직 안 연 선생님은 0건이다 — 헤더만 남겨 두면 표가 깨진 것처럼 보인다 */}
       {rows.length === 0 && (
-        <p
-          role="row"
-          className="border-t px-4 py-10 text-center text-body-md text-muted-foreground"
-        >
-          아직 정산 내역이 없어요. 유료 방을 열면 참가비 정산이 여기에 쌓여요
-        </p>
+        <div role="row" className="border-t">
+          {/* role="row"는 cell을 가져야 한다 — 없으면 리더가 이 줄을 통째로 건너뛴다 */}
+          <span
+            role="cell"
+            className="block px-4 py-10 text-center text-body-md text-muted-foreground"
+          >
+            아직 정산 내역이 없어요. 유료 방을 열면 참가비 정산이 여기에 쌓여요
+          </span>
+        </div>
       )}
       {rows.map((row) => (
         <div key={row.id} role="row" className={cn(GRID_CLASS, "border-t")}>

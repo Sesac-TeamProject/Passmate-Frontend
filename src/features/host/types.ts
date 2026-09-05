@@ -12,15 +12,15 @@ export type QuestionType = "multiple" | "essay" | "ox";
 export type QuestionSet = {
   id: string;
   title: string;
-  /** "객관식 5 · 서술형 3 · 8문항" 형태의 요약 */
-  summary: string;
+  /** "객관식 5 · 서술형 3 · 8문항" 형태의 요약. 목록 응답에는 없어 비어 온다 */
+  summary?: string;
   questionCount: number;
   tile: { label: string; tone: TileTone };
   /** 유형별 문항 수 (W-08 상세 칩) */
   composition: { type: QuestionType; count: number }[];
   totalPoints: number;
-  /** 예상 소요(분) */
-  minutes: number;
+  /** 예상 소요(분). 서버가 안 주면 null — 0분으로 채우지 않는다 */
+  minutes: number | null;
   /** 사용 이력. 없으면 미사용 */
   usage?: { count: number; lastUsed: string };
   /** 문항 미리보기 (앞 몇 개) */

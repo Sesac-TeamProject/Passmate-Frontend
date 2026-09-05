@@ -22,12 +22,13 @@ export function toQuestionSets(items: QuestionSetSummaryResponse[]): QuestionSet
   return items.map((s) => ({
     id: String(s.id),
     title: s.title,
-    summary: "",
+    // 목록 응답에는 유형별 개수가 없다 — 카드가 이 줄을 통째로 감춘다
+    summary: undefined,
     questionCount: s.questionCount,
     tile: { label: s.title.slice(0, 1), tone: "mint" },
     composition: [],
     totalPoints: s.totalPoints,
-    minutes: s.estimatedSeconds ? Math.ceil(s.estimatedSeconds / 60) : 0,
+    minutes: s.estimatedSeconds ? Math.ceil(s.estimatedSeconds / 60) : null,
     usage:
       s.usageCount > 0 ? { count: s.usageCount, lastUsed: toShortDate(s.lastUsedAt) } : undefined,
     preview: [],
@@ -35,8 +36,8 @@ export function toQuestionSets(items: QuestionSetSummaryResponse[]): QuestionSet
   }));
 }
 
-/** 우측 패널 미리보기에 보여 줄 문항 수 — 시안은 3줄 뒤에 "··· N문항 더" */
-const PREVIEW_COUNT = 3;
+/** 우측 패널 미리보기에 보여 줄 문항 수 — 시안은 3줄 뒤에 "··· N문항 더". 스켈레톤도 이 수를 쓴다 */
+export const PREVIEW_COUNT = 3;
 
 /** 칩 순서는 시안 고정이다(객관식 → 서술형 → OX) — 없는 유형은 빼고 그린다 */
 const COMPOSITION_ORDER: QuestionType[] = ["multiple", "essay", "ox"];

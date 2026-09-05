@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PREVIEW_COUNT } from "./adapt";
 import type { QuestionSet } from "@/features/host/types";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,7 @@ function metaLine(set: QuestionSet): string {
   const parts: string[] = [];
 
   if (set.totalPoints > 0) parts.push(`총 배점 ${set.totalPoints}`);
-  if (set.minutes > 0) parts.push(`예상 ${set.minutes}분`);
+  if (set.minutes !== null) parts.push(`예상 ${set.minutes}분`);
 
   if (!set.usage) parts.push("미사용");
   else if (set.usage.lastUsed) parts.push(`마지막 사용 ${set.usage.lastUsed}`);
@@ -60,7 +61,7 @@ export function SetDetailPanel({ set, previewLoading = false, onClone, cloning }
         <>
           <h3 className="text-label-lg text-muted-foreground">문항 미리보기</h3>
           <ol className="flex flex-col gap-2">
-            {Array.from({ length: Math.min(set.questionCount, 3) }, (_, i) => (
+            {Array.from({ length: Math.min(set.questionCount, PREVIEW_COUNT) }, (_, i) => (
               <li key={i} className="h-6 animate-pulse rounded-lg bg-muted" />
             ))}
           </ol>

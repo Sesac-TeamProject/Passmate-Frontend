@@ -73,6 +73,21 @@ describe("toProfile", () => {
     });
   });
 
+  it("서버가 안 준 승급 조건은 비운다 — 0으로 채우면 '이미 채웠다'로 읽힌다", () => {
+    const ratingOnly: GradeResponse = {
+      ...GRADE,
+      nextRequirements: [
+        { type: "AVG_RATING", label: "평균 별점", current: 4.2, target: 4.5, met: false },
+      ],
+    };
+
+    expect(toProfile(ME, ratingOnly).nextLevel).toEqual({
+      level: 4,
+      roomsLeft: null,
+      studentsLeft: null,
+    });
+  });
+
   it("최고 등급이면 다음 등급 자리를 비운다", () => {
     const top: GradeResponse = { ...GRADE, nextLevel: undefined, nextLevelProgress: undefined };
 

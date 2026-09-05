@@ -51,7 +51,8 @@ export function PreviewDialog({ open, onOpenChange, title, questions }: Props) {
                   <ol className="flex flex-col gap-1.5">
                     {q.choices.map((choice, i) => (
                       <li
-                        key={choice}
+                        // 보기는 순서로만 구분된다 — 본문이 겹칠 수 있어 인덱스를 키로 쓴다
+                        key={i}
                         className={cn(
                           "rounded-xl px-3.5 py-2 text-label-lg",
                           choice === q.answer

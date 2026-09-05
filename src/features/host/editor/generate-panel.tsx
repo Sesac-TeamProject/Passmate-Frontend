@@ -134,11 +134,12 @@ export function GeneratePanel({
             </div>
           ))}
         </div>
-        {/* 시안 W-03: 스테퍼 아래 합계 한 줄. 제한 시간·배점은 서버 기본값이라 "자동"이다 */}
+        {/* 시안 W-03: 스테퍼 아래 합계 한 줄. 제한 시간·배점은 이 화면이 값을 실어 보낸다
+            — "자동"이 아니므로 그렇게 적지 않는다(문항별 시간은 나중에 바꿀 수 있다) */}
         <p className="flex items-center justify-between rounded-xl bg-surface-subtle px-3.5 py-2">
           <span className="text-label-lg text-ink">문항 수 {total}문항</span>
           <span className="text-label-md text-muted-foreground">
-            유형별 합계 · 시간 {DEFAULT_QUESTION_SECONDS}초 자동
+            유형별 합계 · 문항당 {DEFAULT_QUESTION_SECONDS}초
           </span>
         </p>
       </Field>

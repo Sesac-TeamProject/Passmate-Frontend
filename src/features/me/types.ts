@@ -20,7 +20,8 @@ export type Profile = {
   /** 현재 레벨로 열리는 권한. 예: "유료 방 개설 가능" */
   levelPerk?: string;
   /** 다음 레벨까지 남은 실적 */
-  nextLevel?: { level: number; roomsLeft: number; studentsLeft: number };
+  /** 서버가 그 조건을 안 주면 각 칸은 null이다 — 0으로 채우지 않는다 */
+  nextLevel?: { level: number; roomsLeft: number | null; studentsLeft: number | null };
   /** 다음 레벨까지 진행률(%) */
   progress?: number;
 };

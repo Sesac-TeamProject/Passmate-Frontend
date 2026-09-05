@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { QuestionResponse, QuestionSetDetailResponse } from "@/lib/types/dto";
-import { toSetDetail } from "./adapt";
+import type {
+  QuestionResponse,
+  QuestionSetDetailResponse,
+  QuestionSetSummaryResponse,
+} from "@/lib/types/dto";
+import { toQuestionSets, toSetDetail } from "./adapt";
 
 function question(
   over: Partial<QuestionResponse> & { id: number; orderNo: number },
@@ -69,5 +73,31 @@ describe("toSetDetail", () => {
 
   it("문항이 없으면 칩도 미리보기도 비운다", () => {
     expect(toSetDetail(detail([]))).toEqual({ composition: [], preview: [] });
+  });
+});
+
+function summaryItem(over: Partial<QuestionSetSummaryResponse> = {}): QuestionSetSummaryResponse {
+  return {
+    id: 19,
+    title: "Spring 기초",
+    status: "CONFIRMED",
+    questionCount: 4,
+    totalPoints: 400,
+    usageCount: 0,
+    ...over,
+  };
+}
+
+describe("toQuestionSets", () => {
+  it("목록 응답에는 유형별 개수가 없어 요약을 비운다 — 빈 문자열을 카드에 흘리지 않는다", () => {
+    expect(toQuestionSets([summaryItem()])[0].summary).toBeUndefined();
+  });
+
+  it("예상 시간이 비어 오면 그 자리도 비운다 — 0분을 지어내지 않는다", () => {
+    expect(toQuestionSets([summaryItem({ estimatedSeconds: undefined })])[0].minutes).toBeNull();
+  });
+
+  it("예상 시간이 오면 분으로 올림한다", () => {
+    expect(toQuestionSets([summaryItem({ estimatedSeconds: 90 })])[0].minutes).toBe(2);
   });
 });

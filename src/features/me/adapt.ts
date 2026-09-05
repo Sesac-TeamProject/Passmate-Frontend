@@ -84,10 +84,14 @@ export function toProfile(me: MyProfileResponse, grade?: GradeResponse): Profile
   };
 }
 
-/** 승급 조건 한 줄에서 남은 수. 서버가 그 조건을 안 주면 0 */
-function leftOf(grade: GradeResponse, type: string): number {
+/**
+ * 승급 조건 한 줄에서 남은 수. **서버가 그 조건을 안 주면 비운다** —
+ * 0으로 채우면 "이미 채웠다"와 구분되지 않는다(등급마다 조건이 다르고 `AVG_RATING`만
+ * 거는 등급도 있다). 값이 비는 자리는 지어내지 않고 화면이 감춘다.
+ */
+function leftOf(grade: GradeResponse, type: string): number | null {
   const row = grade.nextRequirements.find((r) => r.type === type);
-  if (row === undefined) return 0;
+  if (row === undefined) return null;
   return Math.max(0, row.target - row.current);
 }
 
