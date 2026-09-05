@@ -128,6 +128,17 @@ describe("이관 기록 스냅샷 안정성 (useSyncExternalStore)", () => {
     expect(after?.guestToken).toBe("new");
   });
 
+  it("방 두 개를 번갈아 읽어도 각각 같은 객체를 돌려준다 — 캐시가 한 칸이면 서로 밀어낸다", () => {
+    writeGuestRecord({ guestToken: "a", roomId: 1, participantId: 11 });
+    writeGuestRecord({ guestToken: "b", roomId: 2, participantId: 22 });
+
+    const first1 = readGuestRecord(1);
+    const first2 = readGuestRecord(2);
+
+    expect(readGuestRecord(1)).toBe(first1);
+    expect(readGuestRecord(2)).toBe(first2);
+  });
+
   it("이관에 성공해 기록이 사라지면 null로 바뀐다 — 캐시가 지워진 값을 붙들지 않는다", () => {
     writeGuestRecord({ guestToken: "a", roomId: 1, participantId: 11 });
     readGuestRecord(1);
