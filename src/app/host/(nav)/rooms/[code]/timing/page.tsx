@@ -38,12 +38,17 @@ export default function Page() {
   const [preset, setPreset] = useState<number | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  if (room.isPending || detail.isPending || questionSet.isPending) return <ScreenLoading />;
+  // 세 조회가 앞의 결과에 매달려 있다(pin → roomId → setId → 세트). 뒤 조회는 앞이 끝나기 전까지
+  // `enabled: false`이고 그 상태도 `isPending`이라, pending을 한 줄로 묶으면 앞 조회의 에러도
+  // "세트 없음"도 뒤의 분기에 닿지 못하고 로딩만 돈다 — 조회마다 pending → error 순으로 가른다.
+  if (room.isPending) return <ScreenLoading />;
   if (room.isError)
     return <ScreenError message={room.error.message} onRetry={() => room.refetch()} />;
+  if (detail.isPending) return <ScreenLoading />;
   if (detail.isError)
     return <ScreenError message={detail.error.message} onRetry={() => detail.refetch()} />;
   if (setId === null) return <ScreenError message={NO_SET_MESSAGE} />;
+  if (questionSet.isPending) return <ScreenLoading />;
   if (questionSet.isError)
     return (
       <ScreenError message={questionSet.error.message} onRetry={() => questionSet.refetch()} />

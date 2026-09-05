@@ -47,7 +47,9 @@ export function SetCard({
         )}
       </div>
       <span className="text-heading-sm text-ink">{set.title}</span>
-      <span className="text-label-md text-muted-foreground">{set.summary}</span>
+      {set.summary ? (
+        <span className="text-label-md text-muted-foreground">{set.summary}</span>
+      ) : null}
       <div className="flex items-center justify-between">
         <span className="text-label-md text-muted-foreground">
           {set.usage ? `${set.usage.count}회 사용 · ${set.usage.lastUsed}` : "미사용"}

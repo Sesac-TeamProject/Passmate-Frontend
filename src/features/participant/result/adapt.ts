@@ -80,6 +80,22 @@ export function toReportRows(questions: AnswerResultView[]): ReportRow[] {
   });
 }
 
+/**
+ * "AI 분석 요청" 버튼을 보일지.
+ *
+ * 서술형이고 회원일 때만이다 — 게스트는 눌러도 403이라 버튼이 거짓말이 된다.
+ * 상태로는 `NOT_REQUESTED`·`FAILED` 둘뿐이다. 이미 걸린 건(`PENDING`)과 끝난 건(`DONE`)은
+ * 서버가 **차감 없이 그대로 돌려주므로**(`EssayAnalysisService.request`) 눌러도 화면이 그대로다.
+ */
+export function canRequestAnalysis(
+  type: QuestionType,
+  isMember: boolean,
+  status: AnalysisStatus,
+): boolean {
+  if (type !== "ESSAY" || !isMember) return false;
+  return status === "NOT_REQUESTED" || status === "FAILED";
+}
+
 function toAnalysis(
   status: AnalysisStatus,
   analysis: EssayAnalysisView | undefined,

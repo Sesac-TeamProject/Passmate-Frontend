@@ -1,5 +1,6 @@
 import { toAvatarKey } from "@/components/common/student-avatar";
-import type { ChoiceKey, QuestionResult, Student } from "@/features/host/types";
+import { VIEW_TYPE } from "@/features/host/editor/adapt";
+import type { ChoiceKey, QuestionResult, QuestionType, Student } from "@/features/host/types";
 import { choicesOf } from "@/features/participant/play/adapt";
 import type {
   ParticipantResponse,
@@ -64,10 +65,27 @@ export function toQuestionResult(
     count: reveal.distribution[text] ?? 0,
   }));
 
+  /*
+    문항 정보가 없으면(재접속 직후) **서버가 준 분포**로 가른다 — 서술형만 빈 객체다
+    (`dto/session.ts`). 위 `distribution`은 `choices`로 만드는데 `choices`는 이 분기에
+    들어올 때 항상 null이라, 그것을 보면 객관식이 통째로 서술형으로 분류됐다(F-17).
+  */
+  const type: QuestionType = question
+    ? VIEW_TYPE[question.type]
+    : Object.keys(reveal.distribution).length === 0
+      ? "essay"
+      : "multiple";
+  const isEssay = type === "essay";
+
   return {
+    type,
     correct: toCorrectKey(reveal.answer ?? null, choices),
+    // 서술형에서 answer는 보기 정답이 아니라 **모범답안 본문**이다
+    modelAnswer: isEssay ? (reveal.answer ?? null) : null,
+    explanation: reveal.explanation ?? null,
     distribution,
-    accuracy: reveal.correctRate,
+    // 서버는 소수로 준다(16.666…) — 리포트 화면과 같은 기준으로 정수로 접는다
+    accuracy: Math.round(reveal.correctRate),
     accuracyDelta: 0,
     ranking: ranking.map((r) => ({
       rank: r.rank,
@@ -176,6 +194,21 @@ export function toSolvingStudents(participants: ParticipantResponse[]): SolvingS
     avatar: toAvatarKey(p.avatarId),
     submitted: false,
   }));
+}
+
+/**
+ * 지금 열려 있는 문항의 제출 집계만 고른다.
+ *
+ * 후보는 이벤트(스토어)와 폴링 응답 둘인데 **어느 쪽도 이전 문항 것일 수 있다** —
+ * 폴링 캐시는 방 단위라 새 문항이 열려도 다음 조회(최대 3초) 전까지 옛 값이고,
+ * 이벤트도 새 문항이 열린 뒤에 늦게 도착할 수 있다. 문항이 다르면 버린다 —
+ * 프로젝터에 이전 문항의 "18/24 제출"이 뜬 채 새 문항이 시작되면 안 된다.
+ */
+export function pickSubmissionForQuestion(
+  sessionQuestionId: number,
+  ...candidates: (SubmissionStatusPayload | null | undefined)[]
+): SubmissionStatusPayload | null {
+  return candidates.find((c) => c?.sessionQuestionId === sessionQuestionId) ?? null;
 }
 
 /** 진행 중 제출 집계 → 화면이 쓰는 "n/m" 한 쌍. 아직 못 받았으면 0/참가자 수 */

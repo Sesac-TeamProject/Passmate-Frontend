@@ -8,12 +8,14 @@ import {
   toCloneErrorMessage,
   toDeleteErrorMessage,
   toQuestionSets,
+  toSetDetail,
 } from "@/features/host/sets/adapt";
 import { SetsPage } from "@/features/host/sets/sets-page";
 import { SetsSkeleton } from "@/features/host/sets/sets-skeleton";
 import {
   useDeleteQuestionSet,
   useDuplicateQuestionSet,
+  useQuestionSet,
   useQuestionSets,
 } from "@/lib/queries/use-question-sets";
 
@@ -26,6 +28,22 @@ export default function Page() {
   const remove = useDeleteQuestionSet();
   // 삭제는 되돌릴 수 없으니 한 번 묻는다
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  // 우측 패널이 보여 줄 세트. 고르기 전에는 첫 세트다
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const list = sets.data ? toQuestionSets(sets.data.content) : [];
+  const selected = list.find((s) => s.id === selectedId) ?? list[0] ?? null;
+  /**
+   * 목록 응답에는 문항 본문이 없다 — 유형 칩·미리보기를 채우려면 **고른 세트의 상세**를
+   * 따로 읽어야 한다. 목록만 읽던 예전 화면은 그래서 미리보기가 늘 비어 있었다.
+   */
+  const detail = useQuestionSet(selected === null ? null : Number(selected.id));
+  // 세트를 바꾸는 사이 이전 세트의 문항이 잠깐 남지 않게 id가 맞을 때만 붙인다
+  const detailMatches = detail.data !== undefined && String(detail.data.set.id) === selected?.id;
+  const selectedWithPreview =
+    selected !== null && detailMatches
+      ? { ...selected, ...toSetDetail(detail.data as NonNullable<typeof detail.data>) }
+      : selected;
 
   if (sets.isPending) return <SetsSkeleton />;
   if (sets.isError)
@@ -46,7 +64,10 @@ export default function Page() {
   return (
     <>
       <SetsPage
-        sets={toQuestionSets(sets.data.content)}
+        sets={list}
+        selected={selectedWithPreview}
+        onSelect={setSelectedId}
+        detailLoading={selected !== null && detail.isPending}
         onClone={handleClone}
         cloning={duplicate.isPending}
         cloneError={duplicate.isError ? toCloneErrorMessage(duplicate.error) : null}

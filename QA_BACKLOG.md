@@ -169,6 +169,26 @@ v6 시안 `W-05/W-06 서술형 케이스`가 지금 계약으로는 못 채운�
 `GlobalExceptionHandler`는 500) 프로세스 재시작도 없었다(PID 35949, 11:47 기동). **그 시각의 서버 로그**를 봐야 한다.
 프런트는 503을 "점검 중"(E-500)으로 올리므로 오판이 커진다.
 
+### 🟡 B-14. 방 리포트의 **문항 단위** 선생님 코멘트를 저장할 곳이 없다 (2026-09-04 소스 확인)
+
+시안 W-07 우측 패널의 "선생님 코멘트"는 **문항 하나에 대해 학생 전체에게 남기는 첨삭**이다.
+서버에 있는 첨삭은 `PUT /rooms/{roomId}/answers/{answerId}/review` — **답안(학생) 단위**뿐이고
+(`TeacherReviewController.kt:49`), 문항 단위로 저장할 자리가 엔티티에도 없다.
+
+- 지금 화면: 버튼을 잠그고 "지금은 학생별 답안에만 첨삭을 남길 수 있어요"로 안내한다.
+- 정할 것: **문항 단위 코멘트를 만들 것인가**(예: `PUT /rooms/{roomId}/questions/{questionId}/comment`),
+  아니면 **시안에서 이 칸을 빼고** 학생별 첨삭으로 일원화할 것인가. 디자이너 확인도 함께 필요하다.
+
+### 🟢 B-15. 회원으로도 들어갔던 방의 게스트 이관이 **일반 `CONFLICT`**로 와서 프런트가 종결로 못 본다 (2026-09-05)
+
+- `GuestClaimService.claim` 마지막 분기: 같은 방에 회원으로 참여한 줄이 있으면
+  `ErrorCode.CONFLICT("이미 회원으로 참여한 방입니다.")`. **전용 코드가 없다.**
+- 프런트는 `GUEST_RECORD_EXPIRED`·`GUEST_RECORD_ALREADY_CLAIMED`만 종결로 보고 표를 지운다.
+  일반 `CONFLICT`는 일시 실패로 취급해 표를 남기므로, **결과 화면을 열 때마다 7일 내내 같은 409를 다시 낸다**
+  (방 33이 지금 이 상태 — host2가 9/4에 회원 "호스트본인"으로도 들어간 방).
+- **요청**: 이 분기에 전용 코드(예: `GUEST_RECORD_MEMBER_ALREADY_JOINED`)를 달아 달라.
+  프런트는 그 코드를 `TERMINAL_CLAIM_CODES`에 넣기만 하면 된다(1줄).
+
 ---
 
 ## 2. 프런트 — 화면이 안 열리는 것 (우선)
@@ -196,7 +216,7 @@ v6 시안 `W-05/W-06 서술형 케이스`가 지금 계약으로는 못 채운�
   분기 자체가 발화하지 않는다. 잔액의 원천도 `GET /users/me`의 `coinBalance`에서
   `GET /users/me/coins`로 옮겼다(`features/me/adapt.ts`의 `toCoinSummary`).
 
-### 🟡 F-3. 비활성 쿼리 때문에 무한 로딩 2곳
+### ✅ F-3. 비활성 쿼리 때문에 무한 로딩 2곳 — **해결(2026-09-04)**
 
 TanStack Query v5에서 `enabled: false`인 쿼리는 `isPending === true`다.
 pending 가드가 먼저 오면 뒤의 분기가 **도달 불가**가 된다.
@@ -206,44 +226,217 @@ pending 가드가 먼저 오면 뒤의 분기가 **도달 불가**가 된다.
 | `app/host/(nav)/rooms/[code]/timing/page.tsx:41` | 세트가 안 붙은 방을 열면 "연결된 문제 세트를 찾지 못했어요" 대신 영원히 로딩 |
 | `app/host/(flow)/rooms/[code]/lobby/page.tsx:75` | 잘못된 PIN으로 대기실에 들어가면 에러 대신 영원히 로딩                       |
 
+- 조회마다 **pending → error 순으로 차례차례** 가르도록 바꿨다. 적어 둔 2건 외에
+  timing의 PIN 조회·방 상세 **에러 분기도 같은 가드에 가려** 도달 불가였다(앞이 실패하면
+  뒤 쿼리가 비활성 → pending) — 함께 살렸다.
+- 로컬 실서버로 네 경우를 확인했다(고치기 전 재현 → 고친 뒤 해소): 세트 미연결 방 ·
+  잘못된 PIN · 세트가 붙은 방 · 정상 대기실.
+
 ---
 
 ## 3. 프런트 — 값이 틀리거나 낭비되는 것
 
-### 🟡 F-4. AI 분석 요청 버튼이 `DONE`에도 보인다
+### ✅ F-4. AI 분석 요청 버튼이 `DONE`에도 보인다 — **해결(2026-09-04)**
 
 - **어디**: `app/(participant)/result/[sessionId]/report/[questionNo]/page.tsx:69`
-- `canRequest`가 `analysisStatus !== "PENDING"`이라 **이미 끝난 분석에도 버튼이 남는다**.
-  다시 누르면 월 5회 무료 중 하나를 더 쓰거나 코인을 또 낸다.
-  `NOT_REQUESTED`·`FAILED`일 때만 의미가 있다.
+- `canRequest`가 `analysisStatus !== "PENDING"`이라 **이미 끝난 분석에도 버튼이 남았다.**
+  `NOT_REQUESTED`·`FAILED`일 때만 보이도록 고쳤다.
+- ⚠️ **처음 적은 근거는 틀렸다.** "다시 누르면 무료 횟수를 더 쓰거나 코인을 또 낸다"고 적었는데,
+  서버가 이미 막고 있다 — `EssayAnalysisService.request`가 `existing != null && !existing.isFailed`면
+  **차감 없이 기존 상태를 그대로 돌려준다**(백엔드 주석: "버튼을 두 번 눌렀다고 코인을 두 번 받지 않는다").
+  돈이 새는 문제가 아니라, **눌러도 아무 일이 없는 버튼**이 남아 있던 화면 문제였다.
 
-### 🟡 F-5. 객관식 답이 뒤바뀔 수 있다
+### ✅ F-5. 객관식 답이 뒤바뀔 수 있다 — **해결(2026-09-04)**
 
-- **어디**: `features/participant/play/adapt.ts:43` (`toSubmittedValue`)
-- `PlayCard`가 이미 보기 **원문**을 넘기는데, 어댑터가 그 값을 다시 `key`로 찾는다.
-  보기 텍스트가 `"A"`~`"D"` 같은 한 글자면 **다른 보기가 제출된다.**
-  지금은 보기 문구가 키처럼 생기지 않아서 우연히 맞고 있다.
+- **어디**: `features/participant/play/adapt.ts:43`(`toSubmittedValue`) · `play-card.tsx`
+- 같은 증상이 **두 곳**에서 났다. 표시용 A·B·C·D 글자로 보기를 되찾는 게 공통 원인이다.
+  1. `PlayCard`가 이미 보기 **원문**을 넘기는데 컨테이너가 그 값을 다시 `key`로 찾았다 →
+     보기 문구가 `"A"`~`"D"`를 닮으면 다른 보기가 제출된다. `toSubmittedValue`를 없애고
+     화면이 준 값을 그대로 보낸다.
+  2. `PlayCard`가 고른 보기를 **키로** 기억했다 → `CHOICE_KEYS[i] ?? "D"`라서 보기가 넷을
+     넘으면 키가 겹친다. 순번(index)으로 기억하도록 바꿨다.
+- **보기 개수 상한이 없다**(실서버 확인). 에디터의 "+ 보기 추가"에 제한이 없고 백엔드
+  `QuestionRequests`에도 `@Size`가 없다 — 보기 5개짜리 문항이 그대로 저장된다.
+- 로컬 실서버로 재현 → 해소를 확인했다. 문구가 `["D","C","B","A"]`인 문항에서 첫 줄(배지 A ·
+  문구 "D")을 고르면 **고치기 전에는 `"A"`가 저장되고 오답 처리**됐고, 고친 뒤에는 `"D"`로
+  맞게 저장된다. 보기 5개 문항에서 5번째를 고르는 경우도 `"마"`로 바르게 저장된다.
+- 🟡 **남은 것(디자이너 질문)**: 보기가 다섯 개 이상이면 배지 글자가 `D·D`로 **겹쳐 보인다**.
+  제출은 이제 바르지만 표시가 어긋난다 — E·F로 늘릴지, 보기 수를 4개로 제한할지 정해야 한다.
+  (`CHOICE_KEYS`·`ChoiceKey`·`CHOICE_CLASS`는 호스트 진행·결과 화면도 함께 쓴다.)
 
-### 🟡 F-6. 진행 화면 제출 수가 최대 3초 낡는다
+- 실서버 재확인(2026-09-05, 방 42·세트 21): 역순 보기에서 "D"를 고르니 호스트 집계가 `{"D": 1}`·정답 1.
+  보기 5개 문항은 **배지가 D·D로 겹쳐 보이는 것을 화면에서 확인**(제출은 "마"로 바르게 나감) — 디자이너 질문 유지.
+
+### ✅ F-6. 진행 화면 제출 수가 최대 3초 낡는다 — **해결(2026-09-04)**
 
 - **어디**: `app/host/(flow)/rooms/[code]/live/page.tsx:54`
 - 폴링 결과를 현재 문항과 대조하지 않아, 새 문항이 열린 직후 **이전 문항의 집계**가
-  잠깐 그대로 보인다(교실 프로젝터에 "18/24 제출"이 뜬 채 시작). 두 값 모두
-  `sessionQuestionId`를 들고 있으니 그것으로 거르면 된다.
+  잠깐 그대로 보였다(교실 프로젝터에 "18/24 제출"이 뜬 채 시작).
+- `features/host/live/adapt.ts`에 `pickSubmissionForQuestion`을 두고 **두 출처를 모두**
+  `sessionQuestionId`로 거른다. 스토어(이벤트)는 `QUESTION_STARTED`에서 비워지지만
+  **늦게 도착한 이벤트**도 낡을 수 있어 폴링과 같은 기준으로 판단한다. 단위 테스트 5건.
+- 실서버로 두 값의 `sessionQuestionId`가 같은 값임을 확인했다(스냅샷 `currentQuestion` 63 =
+  `GET …/session/current/submissions` 63). 문항을 넘기면 둘 다 64가 되고, 프런트 캐시에만
+  63(제출 1)이 남는다 — 그게 화면에 그려지던 값이다. 고친 화면은 정상 집계를 그대로 보여준다
+  (제출 1/1 · 분포 "마 1명").
 
-### 🟡 F-7. 렌더 중 부수효과 2곳
+### ✅ F-7. 렌더 중 부수효과 2곳 — **해결(2026-09-04)**
 
-React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다.
+React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다. 둘 다 `useEffect`로 옮겼다.
 
-- `lib/queries/use-rooms.ts:78` — 렌더 본문에서 `writeHostRoomId`(sessionStorage 쓰기)
-- `app/(participant)/result/[sessionId]/page.tsx:73` — 렌더 본문에서 `claim.mutate`
-  (게스트 기록 이관이 중복 요청될 수 있다)
+- `lib/queries/use-rooms.ts:78` — 렌더 본문에서 `writeHostRoomId`(sessionStorage 쓰기).
+  **눈으로 확인**: 방을 만들고 대기실을 열면 효과가 `passmate.hostRoom.<pin>`을 쓰고,
+  세션을 끝내 `GET /rooms/pin/{pin}`이 404가 된 뒤에도 최종 화면이 그 값으로 이어진다.
+- `app/(participant)/result/[sessionId]/page.tsx:73` — 렌더 본문에서 `claim.mutate`.
+  잠금은 state가 아니라 **ref**로 뒀다 — StrictMode의 두 번째 실행은 첫 실행의 setState가
+  반영되기 전에 오므로 state로는 못 막는다(원래 코드의 `claimTried`가 그랬다).
 
-### 🟡 F-8. 죽은 코드
+> ⚠️ 확인 중 **이관이 애초에 한 번도 나가지 않는다**는 것을 발견했다 → 아래 F-14.
 
-- `features/me/adapt.ts` `toHostRecord` — 쓰는 화면이 없다(그릴 카드 UI가 아직 없어 의도적).
-- `features/participant/pay/adapt.ts:51` — `formatSchedule(undefined, undefined)`는
-  항상 빈 문자열이다. 주변 `host.name: ""`·`level: 1`·`rating: 0`도 계약이 없어진 뒤 남은 상수다.
+### ✅ F-14. 게스트 기록 이관이 아예 나가지 않는다 — **해결(2026-09-05)**
+
+- **어디였나**: `lib/guest-token-storage.ts` `readGuestRecord` (화면이 아니라 **저장소**였다)
+- **9/4에 적은 원인은 틀렸다.** "이 화면은 `RequireAuth` 밖이라 회원 세션을 못 알아본다"고 했지만,
+  `SessionBootstrap`이 **루트 레이아웃(`app/layout.tsx:26`)에 이미 마운트돼 있다** — 세션 복원은
+  앱 어디서나 돈다. 가드 밖이라서가 아니었다.
+- **진짜 원인은 곁다리로 적어 둔 "50번 다시 그려진다" 쪽이었다. 증상 둘이 원인 하나다.**
+  1. `readGuestRecord`가 호출마다 새 객체를 만든다.
+  2. React는 `useSyncExternalStore` 스냅샷을 `Object.is`로 비교한다
+     (react-dom `checkIfSnapshotChanged`) → **항상 달라졌다**고 보고 커밋마다 `forceStoreRerender`.
+  3. 같은 루트에 동기 렌더가 겹쳐 `nestedUpdateCount`가 오르고, **50**(`NESTED_UPDATE_LIMIT`)을
+     넘는 순간 `getRootForUpdatedFiber`가 **"Maximum update depth exceeded"를 던진다.**
+     관찰된 "50번 넘게"는 우연이 아니라 이 상수였다.
+  4. 이 크래시는 마운트 후 수 ms 안에 난다 — `POST /auth/refresh` + `GET /users/me`가
+     돌아오기 훨씬 전이다. 그래서 **`isMember`는 false인 채로 컴포넌트가 죽고**, 이관 효과는
+     영영 실행되지 않는다. F-7 수정 전후가 같았던 것도 이 때문이다(렌더든 효과든 똑같이 죽는다).
+- **고친 것**: `readGuestRecord`가 보관된 값이 그대로면 **같은 객체를 돌려준다**(값 비교 캐시).
+  화면 코드는 건드리지 않았다. 테스트 3건(과잉 캐시로 바꾸면 기존 2건까지 4건이 깨지는 것 확인).
+- `useSyncExternalStore` 나머지 5곳은 전부 원시값을 돌려준다 — 불안정한 스냅샷은 여기 하나뿐이었다
+  (`readMyParticipant`도 화면에서 `?.participantId ?? null`로 접어 읽으므로 안전하다).
+- **서버 쪽은 처음부터 정상이었다**(2026-09-05 실서버 curl 확인): 방 41에 게스트로 입장 →
+  회원 토큰으로 `POST /guest-records/claim` **200** → 같은 토큰 재시도 **409
+  `GUEST_RECORD_ALREADY_CLAIMED`**(프런트 `TERMINAL_CLAIM_CODES`와 일치).
+  세션 복원의 `refresh`가 게스트 Bearer를 달고 나가는 것도 확인했으나 **200**이라 무해하다.
+- **브라우저 전체 흐름으로 확인했다(2026-09-05)**: 방 42에 게스트로 입장 → 2문항 풀이 → 결과 화면
+  ("7일 안에 가입하면…" 안내, "가입하고 이 기록 저장하기") → 새 회원 `f14-claimer`로 개발 로그인 →
+  `/result/42`로 복귀 → **`POST /guest-records/claim` 200** → localStorage의 방 42 표 삭제 →
+  회원 화면(가입 버튼·7일 안내 없음). 콘솔에 "Maximum update depth" 없음.
+  9/4에 남아 있던 방 33 표로도 열자마자 요청이 나갔다(409 — 아래 B-15).
+  이관 직후 화면이 404에 멈추는 것은 별개 문제로 갈라 F-16에 적었다.
+
+### ✅ F-8. 죽은 코드 — **해결(2026-09-04)**
+
+- `features/me/adapt.ts` `toHostRecord` — **지웠다.** 딸린 `toAchievement`(비공개)와
+  `me/types.ts`의 `HostRecord`까지. 어느 화면도 그리지 않고 테스트도 없었다.
+  `openRooms: 0`·`settlementThisMonth: 0`처럼 채울 수 없다고 스스로 적어 둔 값도 들어 있었다.
+  "기록" 카드 UI가 생기면 그때 계약을 다시 보고 짜는 편이 낫다(git 이력에 남아 있다).
+  `toEarnedAchievement`·`AchievementBadge`는 공개 프로필이 쓰므로 그대로 둔다.
+- `features/participant/pay/adapt.ts` — **일정은 지우지 않고 연결했다.**
+  `RoomResponse`에 `scheduledAt`이 **있는데**(계약 확인) "이 응답에 없다"는 낡은 주석 때문에
+  `formatSchedule(undefined, undefined)`로 늘 빈 문자열을 만들고 있었다. 실제 필드를 넘기니
+  결제 화면에 "일정 8/28 (금) 20:00"이 뜬다(목으로 확인). 소요 시간은 계약에 없어 시간까지만.
+- 지어낸 상수(`host.name: ""`·`level: 1`·`rating: 0`·`students: 0`)는 걷어내고
+  `PaidRoom.host`를 **nullable**로 바꿨다. 화면은 이름의 빈 문자열이 아니라 `host === null`을
+  보고 감춘다. 단위 테스트 3건 추가.
+
+### ✅ F-15. 결제 화면이 "최대 0명"이라고 말한다 — **해결(2026-09-05)**
+
+- **어디였나**: `features/participant/pay/adapt.ts` `capacity.max` · `room-info-card.tsx:45`
+- `maxParticipants`는 계약상 선택 항목인데 `?? 0`으로 접고, 화면은 그 값을 언제나
+  "최대 {n}명"으로 그렸다 — 정원을 안 정한 방이 **"최대 0명"** 이 됐다.
+- **없는 숫자를 지어내는 것보다 나빴다.** 백엔드 `Room.isFull()`(`Room.kt:187`)이
+  `maxParticipants?.let { participantCount >= it } ?: false` — **null은 정원 제한 없음**이다.
+  즉 "무제한"인 방을 화면이 "최대 0명"(= 아무도 못 들어옴)이라고, **뜻을 정반대로** 말하고 있었다.
+- **고친 것**: 문구 판단을 화면이 아니라 어댑터로 내렸다(F-4와 같은 방식 — 이 리포에는
+  컴포넌트 테스트가 없어서, 화면에 두면 잠글 수 없다). `formatCapacity(current, max)` 신규 ·
+  `PaidRoom.capacity`를 `string`으로 · 카드는 그리기만 한다.
+  같은 필드를 다루는 입장 화면(`join/adapt.ts:55`)이 이미 이렇게 가르고 있었다 — 그쪽에 맞췄다.
+- **9/3 판단(`capacity.max === 0` 못박기)은 뒤집었다** — 사용자 확인을 받고 바꿨다.
+  테스트는 정원 있음/없음 두 갈래로 다시 썼다(옛 코드로 되돌려 실패 확인).
+
+### ✅ F-16. 이관은 됐는데 화면은 "찾는 정보가 없어요"에 멈춘다 — **해결(2026-09-05, F-14 확인 중 발견)**
+
+- **어디였나**: `lib/queries/use-me.ts` `useClaimGuestRecord` — 성공해도 아무 쿼리를 무효화하지 않았다.
+- 회원으로 `/result/{roomId}`에 돌아오면 `results/me`가 이관보다 **먼저** 나간다. 그때는 이 계정에
+  참가 기록이 없어 **404**이고, 그 뒤 이관이 200으로 붙어도 같은 조회를 다시 부르지 않아
+  화면이 NotFound("찾는 정보가 없어요")에 멈춘다. "다시 시도"를 누르면 200이 나는 것으로 확인.
+- **고친 것**: `onSuccess`에서 `qk.myResult(roomId)`를 무효화한다(`use-ratings.ts`와 같은 방식,
+  코드 패턴 규칙 "뮤테이션 성공 시 invalidateQueries"). 브라우저에서 방 34 표 + 새 회원
+  `f14-claimer2`로 재확인: `results/me` 404 → 이관 200 → **`results/me` 200 재조회** → 별점 시트.
+- 단위 테스트는 없다 — 이 리포에 훅 테스트 기반이 없다(`environment: node`). 브라우저 흐름으로 잠갔다.
+
+### ✅ F-17. 재접속하면 객관식이 서술형으로 분류된다 — **해결(2026-09-05, 코드 리뷰)**
+
+- **어디였나**: `features/host/live/adapt.ts` `toQuestionResult`
+- 이 브랜치(`7ad85db`)가 넣은 `distribution.length === 0 ? "essay" : "multiple"`에서 `distribution`은
+  `choices`로 만드는데, `choices`는 그 분기(문항 정보 없음)에 들어올 때 **항상 null**이다.
+  즉 `"multiple"`은 **도달 불가**였고 모든 재접속 결과가 서술형이 됐다.
+- 증상: 호스트가 프로젝터를 새로고침한 뒤 객관식을 마감하면 "모범 답안"에 정답 보기 원문이 뜨고,
+  정답률 자리가 "AI 분석이 리포트에 담겨요"로 덮여 **정답률이 사라진다**.
+- **고친 것**: 서버가 준 `reveal.distribution`을 본다(서술형만 빈 객체 — `dto/session.ts`). 테스트 1건.
+- 곁다리로 **프로젝터 정답률 반올림 누락**도 함께 고쳤다. 같은 커밋 제목이 "정답률을 정수로"였는데
+  리포트 3곳만 `Math.round`가 붙고 이 화면은 raw였다 — 6명 중 1명이면 `16.666666666666668%`가
+  큰 글씨로 떴다. 테스트 1건.
+
+### ✅ F-18. 이관 기록 스냅샷 캐시가 방마다 나뉘어 있지 않았다 — **해결(2026-09-05, 코드 리뷰)**
+
+- F-14에서 넣은 `lastRead`가 모듈 전역 **한 칸**이라, 호출부가 결과 화면 하나뿐이라서 성립하던 것이다.
+  다른 화면이 다른 roomId로 같이 읽으면 두 호출이 칸을 번갈아 밀어내 **둘 다 매번 새 객체**를 받고,
+  F-14가 고친 "Maximum update depth exceeded"가 그대로 돌아온다.
+- **고친 것**: `Map<roomId, GuestRecord | null>`. 테스트 1건(방 두 개를 번갈아 읽어도 각각 안정적).
+
+### ✅ F-19. 세트가 없는 대기실에도 "문항별 시간 설정" 링크가 보인다 — **해결(2026-09-05, 코드 리뷰)**
+
+- 이 브랜치(`aab02f9`)가 붙인 링크가 `setLink ? … : null` 블록 **밖**에 있어 무조건 그려졌다.
+  `setLink`가 있다는 건 곧 세트가 연결 안 됐다는 뜻이라(바로 아래 시험 시작 버튼도 그것으로 잠긴다),
+  누르면 timing 화면의 `if (setId === null)` 가드에 곧장 걸려 "연결된 문제 세트를 찾지 못했어요"가 뜬다.
+  세트를 연결하러 온 사람에게 **반드시 실패하는 길**을 놓아둔 셈이었다.
+- **고친 것**: `setLink`가 있으면 감춘다.
+
+### ✅ F-20. 지어낸 값·죽은 문구 정리 — **해결(2026-09-05, 코드 리뷰)**
+
+- `me/adapt.ts` `leftOf` — 서버가 안 준 승급 조건을 **0**으로 채웠다. 등급마다 조건이 달라
+  `AVG_RATING`만 거는 등급도 있는데, 0은 "이미 채웠다"와 구분되지 않는다 → `number | null`. 테스트 1건.
+- `sets/adapt.ts` `summary: ""` — 카드가 조건 없이 그려 **모든 세트 카드에 빈 줄**이 하나씩 들어갔다
+  → `summary?`로 바꾸고 카드가 감춘다. `minutes: 0`도 `number | null`로. 테스트 3건.
+- `editor/page.tsx` — 제목 폴백이 `??`라 **빈 문자열을 통과**시켰다(상단 h1과 미리보기 다이얼로그
+  이름이 통째로 빔) → `||`.
+- `preview-dialog.tsx` — 보기 **본문**을 React key로 썼다(`key={choice}`). 본문이 겹치면 키가 충돌하고
+  정답 강조도 두 줄에 걸린다 → `key={i}`. 같은 파일 `question-form.tsx`가 이미 그렇게 하고 있었다.
+- `generate-panel.tsx` — "시간 30초 **자동**"이라 적어 놓고 실제로는 이 화면이 `timeLimitSec`를
+  실어 보낸다(서버 기본값이 아니다) → "문항당 30초"로 고치고 주석도 사실에 맞췄다.
+- `settlement-table.tsx` — 빈 상태가 `role="row"`인데 안에 `role="cell"`이 없어 리더가 그 줄을
+  통째로 건너뛴다 → cell로 감쌌다.
+- `set-detail-panel.tsx` — 스켈레톤이 `PREVIEW_COUNT`를 리터럴 `3`으로 복제하고 있었다 → 상수를 잇는다.
+
+---
+
+## 3-2. 코드 리뷰에서 나왔지만 **프론트만으로 못 끝나는 것** (2026-09-05)
+
+### 🔴 F-21 / B-16. 보기가 5개 이상이면 프로젝터가 정답을 잃는다
+
+- `features/host/live/adapt.ts` `toCorrectKey`가 `index < CHOICE_KEYS.length`(=4)로 잘라,
+  정답이 5번째 이후 보기면 **null**을 돌려준다 → `result-page.tsx:127`이 멀쩡한 객관식에 대고
+  **"정답이 등록되지 않은 문항이에요"**를 띄운다. 같은 이유로 `key={d.key}`에 React 중복 key가 가고
+  "많이 고른 오답" 강조도 엉뚱한 행을 잡는다.
+- **실제로 만들 수 있다**: 세트 21의 2번 문항이 그 경우다(보기 [가,나,다,라,마], 정답 "마" = index 4).
+  에디터 "+ 보기 추가"에 상한이 없고 백엔드 `QuestionRequests`에도 `@Size`가 없다.
+- **프론트만으로 못 정한다** — 배지 글자를 E·F로 늘릴지, 보기를 4개로 제한할지가 **디자이너 질문**이고
+  (이미 올려 둠) 백엔드 `@Size` 여부도 함께 정해야 한다. 정해지면 프론트는 그대로 따라간다.
+
+### 🟡 B-17. 순위 변동·정답률 변동을 줄 값이 계약에 없다
+
+- `toQuestionResult`가 `change: 0`·`accuracyDelta: 0`을 모든 행에 박는데, `result-rail.tsx`의
+  `RankChange`는 **0을 `—`로** 그린다 → 프로젝터가 매 문항 TOP5 전원을 "변동 없음"으로 말한다.
+  실제로는 **추적하지 않는 값**이다.
+- 지난 순위·지난 정답률이 계약에 없어 프론트가 할 수 있는 것은 "지어내지 않기"까지다.
+  이 칸을 살릴지(= 서버가 직전 값을 실어 줄지) 정해 주면 그때 맞춘다.
+
+### 🟡 B-7(재확인). AI 무료 생성 횟수를 화면이 숫자로 약속하고 있다
+
+- `generate-panel.tsx`의 `AI_FREE_LIMIT = 5`는 서버 정책값(`AiPolicy.aiFreeLimit`)을 복제한 것이라
+  서버가 바꾸면 화면이 조용히 거짓말을 한다. **B-7(잔여 횟수를 주는 응답)이 들어오면 이 상수를 지운다.**
+  그때까지는 그대로 둔다 — 프론트가 지금 할 수 있는 것은 숫자를 빼는 것뿐인데 안내가 더 나빠진다.
 
 ---
 

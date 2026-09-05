@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { Button } from "@/components/ui/button";
-import { toQuestionDetail } from "@/features/participant/result/adapt";
+import { canRequestAnalysis, toQuestionDetail } from "@/features/participant/result/adapt";
 import { QuestionDetailPage } from "@/features/participant/result/question-detail-page";
 import { useQuestionResult } from "@/lib/queries/use-session-control";
 import {
@@ -62,12 +62,7 @@ export default function Page() {
   const hasPrev = questions.some((q) => q.orderNo === no - 1);
   const hasNext = questions.some((q) => q.orderNo === no + 1);
 
-  /**
-   * 요청 버튼은 **서술형이고, 회원이고, 아직 분석 중이 아닐 때만** 보인다.
-   * 게스트에게 보여 주면 눌러도 403이라 버튼이 거짓말이 된다.
-   */
-  const canRequest =
-    answer.data.type === "ESSAY" && isMember && answer.data.analysisStatus !== "PENDING";
+  const canRequest = canRequestAnalysis(answer.data.type, isMember, answer.data.analysisStatus);
 
   return (
     <QuestionDetailPage

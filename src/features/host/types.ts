@@ -12,15 +12,15 @@ export type QuestionType = "multiple" | "essay" | "ox";
 export type QuestionSet = {
   id: string;
   title: string;
-  /** "객관식 5 · 서술형 3 · 8문항" 형태의 요약 */
-  summary: string;
+  /** "객관식 5 · 서술형 3 · 8문항" 형태의 요약. 목록 응답에는 없어 비어 온다 */
+  summary?: string;
   questionCount: number;
   tile: { label: string; tone: TileTone };
   /** 유형별 문항 수 (W-08 상세 칩) */
   composition: { type: QuestionType; count: number }[];
   totalPoints: number;
-  /** 예상 소요(분) */
-  minutes: number;
+  /** 예상 소요(분). 서버가 안 주면 null — 0분으로 채우지 않는다 */
+  minutes: number | null;
   /** 사용 이력. 없으면 미사용 */
   usage?: { count: number; lastUsed: string };
   /** 문항 미리보기 (앞 몇 개) */
@@ -73,8 +73,14 @@ export type LiveQuestion = {
 
 /** 문항 결과 (W-06) */
 export type QuestionResult = {
+  /** 문항 유형. 서술형은 정답·정답률·응답 분포 자리를 모범답안으로 바꾼다 */
+  type: QuestionType;
   /** 정답 보기 키. 서술형처럼 보기 정답이 없으면 null */
   correct: ChoiceKey | null;
+  /** 서술형 모범답안(마감 이벤트 `answer`). 서버가 안 주면 null */
+  modelAnswer: string | null;
+  /** 해설·채점 기준(마감 이벤트 `explanation`). 서버가 안 주면 null */
+  explanation: string | null;
   distribution: { key: ChoiceKey; text: string; count: number }[];
   /** 정답률(%) */
   accuracy: number;

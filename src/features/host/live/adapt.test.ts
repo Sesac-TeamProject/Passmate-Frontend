@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { QuestionEndedPayload, QuestionStartedPayload } from "@/lib/types/dto";
+import type {
+  QuestionEndedPayload,
+  QuestionStartedPayload,
+  SubmissionStatusPayload,
+} from "@/lib/types/dto";
 import type { FinalRankRow } from "./final-page";
-import { toPodium, toQuestionResult } from "./adapt";
+import { pickSubmissionForQuestion, toPodium, toQuestionResult } from "./adapt";
 
 const OX_QUESTION: QuestionStartedPayload = {
   sessionQuestionId: 32,
@@ -45,6 +49,59 @@ describe("toQuestionResult", () => {
     );
     expect(result.correct).toBeNull();
     expect(result.distribution).toEqual([]);
+    expect(result.type).toBe("essay");
+  });
+
+  it("서술형의 answer는 보기 정답이 아니라 모범답안 본문이다", () => {
+    const essay = { ...OX_QUESTION, type: "ESSAY" as const };
+    const result = toQuestionResult(
+      {
+        ...OX_ENDED,
+        answer: "싱글턴은 컨테이너당 인스턴스가 하나다.",
+        explanation: "핵심어 두 개를 쓰면 만점",
+        distribution: {},
+      },
+      [],
+      essay,
+    );
+
+    expect(result.modelAnswer).toBe("싱글턴은 컨테이너당 인스턴스가 하나다.");
+    expect(result.explanation).toBe("핵심어 두 개를 쓰면 만점");
+    // 보기 정답 자리는 여전히 비어 있어야 한다 — 모범답안을 보기 키로 읽으면 안 된다
+    expect(result.correct).toBeNull();
+  });
+
+  it("객관식·OX의 answer는 모범답안 자리에 들어가지 않는다", () => {
+    const result = toQuestionResult(OX_ENDED, [], OX_QUESTION);
+
+    expect(result.type).toBe("ox");
+    expect(result.modelAnswer).toBeNull();
+  });
+
+  it("문항 정보가 없어도(재접속) 분포가 비면 서술형으로 다룬다", () => {
+    const result = toQuestionResult({ ...OX_ENDED, distribution: {} }, [], null);
+
+    expect(result.type).toBe("essay");
+  });
+
+  it("문항 정보가 없어도(재접속) 분포가 차 있으면 객관식으로 다룬다", () => {
+    // 서버가 준 분포를 봐야 한다. 보기에서 만든 배열을 보면 문항이 없을 때 늘 비어 있어
+    // 객관식이 통째로 서술형으로 분류된다(QA_BACKLOG F-17)
+    const result = toQuestionResult(OX_ENDED, [], null);
+
+    expect(result.type).toBe("multiple");
+    // 서술형이 아니므로 answer를 모범답안 자리에 넣으면 안 된다
+    expect(result.modelAnswer).toBeNull();
+  });
+
+  it("정답률은 정수로 접는다 — 서버는 16.666…처럼 소수로 준다", () => {
+    const result = toQuestionResult(
+      { ...OX_ENDED, correctRate: 16.666666666666668 },
+      [],
+      OX_QUESTION,
+    );
+
+    expect(result.accuracy).toBe(17);
   });
 });
 
@@ -74,5 +131,38 @@ describe("toPodium", () => {
     const { podium, rest } = toPodium([]);
     expect(podium).toEqual([]);
     expect(rest).toEqual([]);
+  });
+});
+
+describe("pickSubmissionForQuestion", () => {
+  const status = (sessionQuestionId: number, submitCount: number): SubmissionStatusPayload => ({
+    sessionQuestionId,
+    submitCount,
+    participantCount: 24,
+    correctCount: 0,
+    correctRate: 0,
+    distribution: {},
+  });
+
+  it("지금 문항의 집계를 그대로 쓴다", () => {
+    expect(pickSubmissionForQuestion(56, status(56, 18))?.submitCount).toBe(18);
+  });
+
+  it("이전 문항의 집계는 버린다 — 새 문항에 옛 제출 수가 남으면 안 된다", () => {
+    expect(pickSubmissionForQuestion(57, status(56, 18))).toBeNull();
+  });
+
+  it("폴링이 낡았으면 이벤트 값을 쓴다", () => {
+    // 스토어(이벤트)가 먼저, 최대 3초 낡는 폴링 응답이 뒤
+    expect(pickSubmissionForQuestion(57, status(57, 3), status(56, 18))?.submitCount).toBe(3);
+  });
+
+  it("이벤트가 낡았으면 폴링 값을 쓴다 — 늦게 온 이벤트에 가리지 않는다", () => {
+    expect(pickSubmissionForQuestion(57, status(56, 18), status(57, 3))?.submitCount).toBe(3);
+  });
+
+  it("둘 다 없거나 둘 다 낡았으면 null", () => {
+    expect(pickSubmissionForQuestion(57, null, undefined)).toBeNull();
+    expect(pickSubmissionForQuestion(57, status(56, 18), status(55, 24))).toBeNull();
   });
 });

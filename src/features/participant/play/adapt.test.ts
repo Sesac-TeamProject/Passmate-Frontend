@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { QuestionStartedPayload } from "@/lib/types/dto";
-import { toLiveQuestion, toSubmittedValue } from "./adapt";
+import { toLiveQuestion } from "./adapt";
 
 const BASE: QuestionStartedPayload = {
   sessionQuestionId: 30,
@@ -37,13 +37,5 @@ describe("toLiveQuestion", () => {
   it("서술형은 보기가 없다", () => {
     const q = toLiveQuestion({ ...BASE, type: "ESSAY", choices: undefined }, 0);
     expect(q.choices).toEqual([]);
-  });
-});
-
-describe("toSubmittedValue", () => {
-  it("OX 보기 키는 서버가 받는 'O'/'X' 원문으로 바뀐다", () => {
-    const q = toLiveQuestion({ ...BASE, type: "OX", choices: undefined }, 0);
-    expect(toSubmittedValue(q, "A")).toBe("O");
-    expect(toSubmittedValue(q, "B")).toBe("X");
   });
 });

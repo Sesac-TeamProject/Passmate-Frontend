@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import type { ChoiceKey, LiveQuestion } from "@/features/host/types";
+import type { LiveQuestion } from "@/features/host/types";
 import { CHOICE_CLASS } from "@/features/host/live/choice-letter";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,9 @@ export function PlayCard({
   hasSubmitted = false,
   banner,
 }: Props) {
-  const [selected, setSelected] = useState<ChoiceKey | null>(null);
+  // 고른 보기는 **순번**으로 기억한다 — 표시용 A·B·C·D 글자는 보기가 넷을 넘으면
+  // 중복되므로(`CHOICE_KEYS[i] ?? "D"`) 글자로 되찾으면 다른 보기가 잡힌다(QA_BACKLOG F-5).
+  const [selected, setSelected] = useState<number | null>(null);
   const [essay, setEssay] = useState("");
   const [remaining, setRemaining] = useState(q.remaining);
   const [syncedIndex, setSyncedIndex] = useState(q.index);
@@ -49,7 +51,7 @@ export function PlayCard({
 
   const isEssay = q.type === "essay";
   const disabled = hasSubmitted || submitting;
-  const content = isEssay ? essay.trim() : (q.choices.find((c) => c.key === selected)?.text ?? "");
+  const content = isEssay ? essay.trim() : (q.choices[selected ?? -1]?.text ?? "");
   const canSubmit = !disabled && content.length > 0;
 
   const handleSubmit = () => {
@@ -84,15 +86,15 @@ export function PlayCard({
           />
         ) : (
           <ol className="flex flex-col gap-3.5">
-            {q.choices.map((c) => {
-              const active = selected === c.key;
+            {q.choices.map((c, i) => {
+              const active = selected === i;
               return (
-                <li key={c.key}>
+                <li key={i}>
                   <button
                     type="button"
                     aria-pressed={active}
                     disabled={disabled}
-                    onClick={() => setSelected(c.key)}
+                    onClick={() => setSelected(i)}
                     className={cn(
                       "flex h-12 w-full items-center gap-3 rounded-xl px-3.5 text-label-lg transition-colors disabled:opacity-60",
                       active ? "bg-mint text-white" : "bg-muted text-ink hover:bg-mint-bg",

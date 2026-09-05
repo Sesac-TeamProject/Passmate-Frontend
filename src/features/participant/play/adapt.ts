@@ -47,14 +47,3 @@ export function toLiveQuestion(
     submitted: submittedCount,
   };
 }
-
-/**
- * 보기 키(A·B·C·D) → 서버에 보낼 값.
- * 서버는 **보기 원문**을 받는다(인덱스가 아니다). OX는 "O"/"X", 서술형은 본문 그대로.
- */
-export function toSubmittedValue(question: LiveQuestion, choiceKeyOrText: string): string {
-  if (question.type === "essay") return choiceKeyOrText;
-
-  const choice = question.choices.find((c) => c.key === choiceKeyOrText);
-  return choice ? choice.text : choiceKeyOrText;
-}

@@ -5,8 +5,6 @@ import { formatShortDate, formatWon } from "@/lib/format";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
 import type {
-  BadgeResponse,
-  BadgesResponse,
   BadgeType,
   CoinBalanceResponse,
   CoinTransactionRow,
@@ -40,7 +38,6 @@ import {
   type AchievementBadgeKind,
   type AttendedSession,
   type CoinSummary,
-  type HostRecord,
   type LearningRecord,
   PAID_ROOM_MIN_LEVEL,
   type Profile,
@@ -56,18 +53,46 @@ function toJoinedLabel(joinedAt: string): string {
 }
 
 /**
- * GET /users/me → 프로필 카드.
- * 등급·칭호·다음 레벨은 **채우지 않는다** — 서버가 아직 계산하지 않아 자리를 비워 둔 값이라
- * Lv.1로 메우면 "새싹 등급"이라는 없는 사실을 만든다(`features/me/types.ts` Profile 주석).
+ * GET /users/me (+ GET /users/me/grade) → 프로필 카드.
+ *
+ * 등급은 `/users/me`가 아니라 **등급 응답**이 준다. 조회가 아직 안 끝났거나 실패하면
+ * `grade`를 넘기지 않고, 그때 화면은 뱃지를 **그리지 않는다** — Lv.1로 메우면
+ * "새싹 등급"이라는 없는 사실이 된다(`features/me/types.ts` Profile 주석).
  */
-export function toProfile(me: MyProfileResponse): Profile {
+export function toProfile(me: MyProfileResponse, grade?: GradeResponse): Profile {
   return {
     name: me.nickname,
     nickname: me.nickname,
     email: me.email ?? "",
     joinedLabel: toJoinedLabel(me.joinedAt),
     avatar: toAvatarKey(me.defaultAvatarId),
+    level: grade?.level,
+    levelTitle: grade?.levelName,
+    // 서버는 다음 등급까지 진행률을 0~1로 준다 — 화면은 %로 그린다
+    progress:
+      grade?.nextLevelProgress === undefined
+        ? undefined
+        : Math.round(grade.nextLevelProgress * 100),
+    nextLevel:
+      grade?.nextLevel === undefined
+        ? undefined
+        : {
+            level: grade.nextLevel,
+            roomsLeft: leftOf(grade, "ROOMS_HOSTED"),
+            studentsLeft: leftOf(grade, "TOTAL_STUDENTS"),
+          },
   };
+}
+
+/**
+ * 승급 조건 한 줄에서 남은 수. **서버가 그 조건을 안 주면 비운다** —
+ * 0으로 채우면 "이미 채웠다"와 구분되지 않는다(등급마다 조건이 다르고 `AVG_RATING`만
+ * 거는 등급도 있다). 값이 비는 자리는 지어내지 않고 화면이 감춘다.
+ */
+function leftOf(grade: GradeResponse, type: string): number | null {
+  const row = grade.nextRequirements.find((r) => r.type === type);
+  if (row === undefined) return null;
+  return Math.max(0, row.target - row.current);
 }
 
 const WIRE_METHOD_BY_PAY_METHOD: Record<PayMethod, PaymentMethod> = {
@@ -288,12 +313,17 @@ function toSessionDateLabel(room: JoinedRoom): string {
   return `${date.getMonth() + 1}/${date.getDate()} (${weekday})`;
 }
 
-/** GET /users/me/rooms/joined → W-13 참여한 방 · 참여 기록 */
+/**
+ * GET /users/me/rooms/joined → W-13 참여한 방 · 참여 기록.
+ *
+ * 정답률은 서버가 소수로 준다(16.666…) — 시안은 정수 한 자리("71%")라 여기서 반올림한다.
+ * 화면에서 `toFixed`를 부르지 않고 뷰 타입에 정수로 담는 편이 다른 화면과 어긋날 일이 없다.
+ */
 export function toLearningRecord(page: JoinedRoomsResponse): LearningRecord {
   return {
     stats: {
       sessions: page.summary.completedSessionCount,
-      accuracy: page.summary.averageAccuracy,
+      accuracy: Math.round(page.summary.averageAccuracy),
       averageRank: page.summary.averageRank,
     },
     weakTopics: page.summary.weakTopics,
@@ -337,49 +367,6 @@ export function toEarnedAchievement(type: BadgeType): Achievement {
     kind: meta?.kind ?? "empty",
     label: meta?.label,
     title: meta?.title ?? type,
-  };
-}
-
-function toAchievement(badge: BadgeResponse): Achievement {
-  const meta = BADGE_META[badge.code];
-
-  return {
-    id: badge.code,
-    kind: meta?.kind ?? "empty",
-    // 이름은 서버 문구를 그대로 쓴다 — 뱃지가 늘어도 프런트를 고치지 않는다
-    label: meta?.label,
-    title: badge.name,
-    locked: !badge.achieved,
-  };
-}
-
-/**
- * GET /users/me/grade + /badges → 개설한 방(host) 실적 카드.
- * 지금은 어느 화면도 이 값을 그리지 않는다(마이페이지에 "기록" 카드 UI가 없다) — 계약대로 정의만 해 둔다.
- */
-export function toHostRecord(
-  grade: GradeResponse | undefined,
-  badges: BadgesResponse | undefined,
-): HostRecord {
-  const items = (badges?.badges ?? []).map(toAchievement);
-
-  return {
-    stats: {
-      rooms: grade?.roomsHosted ?? 0,
-      // 받은 평가가 없으면 서버가 필드를 뺀다 — 0으로 채우면 "0점을 받았다"가 된다
-      rating: grade?.avgRating ?? null,
-      students: grade?.totalStudents ?? 0,
-    },
-    badges: {
-      earned: badges?.achievedCount ?? 0,
-      total: badges?.totalCount ?? items.length,
-      locked: (badges?.totalCount ?? items.length) - (badges?.achievedCount ?? 0),
-      items,
-    },
-    // 진행 중인 방 수 · 이번 달 정산액은 useHostedRooms/useEarnings에 계약이 있지만, 이 카드를 그리는
-    // 화면이 아직 없어(위 docstring 참고) 여기서는 채우지 않는다. 화면이 생기면 컨테이너가 두 훅을 더 호출해 채운다.
-    openRooms: 0,
-    settlementThisMonth: 0,
   };
 }
 

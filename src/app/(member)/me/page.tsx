@@ -13,7 +13,7 @@ import {
 } from "@/features/me/adapt";
 import { MyPage } from "@/features/me/my-page";
 import { useLogout } from "@/lib/queries/use-auth";
-import { useMe } from "@/lib/queries/use-me";
+import { useGrade, useMe } from "@/lib/queries/use-me";
 import { useCoinBalance, useEarnings, useSettlementAccount } from "@/lib/queries/use-payments";
 import { AppError } from "@/lib/types/app-error";
 
@@ -24,6 +24,9 @@ export default function Page() {
   const logout = useLogout();
 
   const me = useMe();
+  // 이름 옆 등급 뱃지(시안 C-02). 등급은 /users/me가 아니라 따로 준다 —
+  // 이 조회가 늦거나 실패해도 나머지는 그대로 보여야 하므로 로딩·에러 게이트에 넣지 않는다.
+  const grade = useGrade();
   const coins = useCoinBalance();
   const earnings = useEarnings();
   // 정산 계좌는 화면에 은행 · 마스킹 번호 요약만 필요해 이 컨테이너에서도 함께 조회한다(retry:false — 미등록은 404)
@@ -55,7 +58,7 @@ export default function Page() {
   return (
     <>
       <MyPage
-        profile={toProfile(me.data)}
+        profile={toProfile(me.data, grade.data)}
         joinedRooms={me.data.stats.joinedRoomCount}
         hostedRooms={me.data.stats.hostedRoomCount}
         coinSummary={toCoinSummary(coins.data)}

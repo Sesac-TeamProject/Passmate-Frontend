@@ -59,6 +59,29 @@ export function LoginPage({ onGoogleClick, devLogin }: Props) {
             <span className="text-label-lg text-foreground">Google로 계속하기</span>
           </Button>
 
+          {/* 시안 C-01: 게스트 입장은 카드 밖 링크가 아니라 "또는" 아래의 두 번째 버튼이다 */}
+          <div className="flex items-center gap-3">
+            <span aria-hidden className="h-px flex-1 bg-border" />
+            <span className="text-label-md text-muted-foreground">또는</span>
+            <span aria-hidden className="h-px flex-1 bg-border" />
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/join"
+              className="flex h-13 items-center justify-center rounded-[14px] bg-mint text-label-lg text-white transition-colors hover:bg-mint-dark"
+            >
+              PIN으로 게스트 입장
+            </Link>
+            {/*
+              약관·개인정보처리방침 문서가 아직 없다 — 페이지를 만들기 전에 링크를 걸면 404다.
+              문서가 생기면 이 문장의 두 이름에 링크를 건다.
+            */}
+            <p className="text-center text-label-md text-muted-foreground">
+              계속하면 이용약관과 개인정보처리방침에 동의하는 것으로 봐요
+            </p>
+          </div>
+
           {devLogin ? (
             <form
               className="flex flex-col gap-2 border-t pt-5"
@@ -92,13 +115,6 @@ export function LoginPage({ onGoogleClick, devLogin }: Props) {
             </form>
           ) : null}
         </div>
-
-        <p className="flex items-center gap-1">
-          <span className="text-body-md text-muted-foreground">방 코드만 있다면</span>
-          <Link href="/join" className="text-label-lg text-mint">
-            PIN으로 게스트 입장 →
-          </Link>
-        </p>
       </FitToViewport>
     </main>
   );

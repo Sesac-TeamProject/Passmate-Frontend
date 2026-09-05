@@ -72,8 +72,11 @@ export default function Page() {
     startSession();
   };
 
-  if (room.isPending || detail.isPending) return <ScreenLoading />;
+  // 방 상세는 roomId가 나오기 전까지 `enabled: false`이고 그 상태도 `isPending`이다 —
+  // pending을 한 줄로 묶으면 잘못된 PIN(= PIN 조회 실패)에 에러 대신 로딩만 돈다.
+  if (room.isPending) return <ScreenLoading />;
   if (room.error) return <ScreenError message={room.error.message} />;
+  if (detail.isPending) return <ScreenLoading />;
   if (detail.isError)
     return <ScreenError message={detail.error.message} onRetry={() => detail.refetch()} />;
 

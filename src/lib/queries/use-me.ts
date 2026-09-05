@@ -157,6 +157,8 @@ const TERMINAL_CLAIM_CODES: readonly string[] = [
 ];
 
 export function useClaimGuestRecord() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ guestToken, roomId }: { guestToken: string; roomId: number }) => {
       try {
@@ -168,6 +170,12 @@ export function useClaimGuestRecord() {
         throw error;
       }
       clearGuestRecord(roomId);
+    },
+    // 결과 화면은 회원으로 돌아온 순간 `results/me`를 먼저 부르는데, 그때는 아직 이 계정에
+    // 참가 기록이 없어 404다. 이관이 붙고 나면 같은 조회가 200이므로 다시 부르게 한다 —
+    // 안 그러면 이관은 됐는데 화면은 "찾는 정보가 없어요"에 멈춘다(QA_BACKLOG F-16).
+    onSuccess: (_data, { roomId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.myResult(roomId) });
     },
   });
 }
