@@ -24,6 +24,18 @@ export function formatSchedule(
 }
 
 /**
+ * 참여 인원 문구. 정원이 없으면 "최대 n명"을 **아예 말하지 않는다**.
+ *
+ * 서버에서 `maxParticipants`가 비어 오는 것은 0명이 아니라 **무제한**이다
+ * (백엔드 `Room.isFull()`: null이면 정원 제한 없음). `?? 0`으로 접어 두는 바람에
+ * 정원을 안 정한 방이 "최대 0명"이라고 말하고 있었다 — 없는 숫자를 지어낼 뿐 아니라
+ * 뜻이 정반대였다(QA_BACKLOG F-15). 입장 화면(`join/adapt.ts`)은 이미 이렇게 가른다.
+ */
+export function formatCapacity(current: number, max: number | null | undefined): string {
+  return max != null ? `${current}명 참여 중 · 최대 ${max}명` : `${current}명 참여 중`;
+}
+
+/**
  * GET /rooms/{roomId} 응답 → 방 정보 카드 뷰 타입.
  *
  * 결제 화면은 PIN이 아니라 방 id로 열린다(F-1) — 공개 방 목록에 PIN이 없어 카드가 id밖에
@@ -45,7 +57,7 @@ export function toPaidRoom(room: RoomResponse): PaidRoom {
     composition: "",
     host: null,
     schedule: formatSchedule(room.scheduledAt, undefined),
-    capacity: { current: room.participantCount, max: room.maxParticipants ?? 0 },
+    capacity: formatCapacity(room.participantCount, room.maxParticipants),
     fee: room.fee ?? 0,
   };
 }

@@ -22,7 +22,8 @@ export type PaidRoom = {
   } | null;
   /** 예: "8/28 (금) 20:00 · 약 40분" */
   schedule: string;
-  capacity: { current: number; max: number };
+  /** 예: "4명 참여 중 · 최대 30명". 정원이 없으면 "4명 참여 중"까지만 */
+  capacity: string;
   /** 참가비(코인, 1 C = ₩1) */
   fee: number;
 };

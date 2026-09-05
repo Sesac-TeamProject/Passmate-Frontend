@@ -32,15 +32,19 @@ describe("toPaidRoom", () => {
   it("정원·참가비는 응답 그대로 옮긴다", () => {
     const paid = toPaidRoom(room({ participantCount: 4, maxParticipants: 30, fee: 3000 }));
 
-    expect(paid.capacity).toEqual({ current: 4, max: 30 });
+    expect(paid.capacity).toBe("4명 참여 중 · 최대 30명");
     expect(paid.fee).toBe(3000);
   });
 
-  it("정원·참가비가 비어 오면 0으로 접는다 — 없는 숫자를 지어내지 않는다", () => {
-    const paid = toPaidRoom(room({ maxParticipants: undefined, fee: undefined }));
+  it("참가비가 비어 오면 0으로 접는다", () => {
+    expect(toPaidRoom(room({ fee: undefined })).fee).toBe(0);
+  });
 
-    expect(paid.capacity.max).toBe(0);
-    expect(paid.fee).toBe(0);
+  it("정원이 비어 오면 최대 인원을 아예 말하지 않는다 — 서버에서 없음은 0명이 아니라 무제한이다", () => {
+    const paid = toPaidRoom(room({ participantCount: 4, maxParticipants: undefined }));
+
+    expect(paid.capacity).toBe("4명 참여 중");
+    expect(paid.capacity).not.toContain("최대");
   });
 
   it("일정이 있으면 그린다 — 예전엔 늘 빈 문자열이었다(F-8)", () => {

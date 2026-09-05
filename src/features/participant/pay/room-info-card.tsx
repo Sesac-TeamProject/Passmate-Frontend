@@ -40,10 +40,7 @@ export function RoomInfoCard({ room }: Props) {
       <div className="h-px bg-border" />
 
       {room.schedule ? <KeyValueRow label="일정" value={room.schedule} /> : null}
-      <KeyValueRow
-        label="참가 인원"
-        value={`${room.capacity.current}명 참여 중 · 최대 ${room.capacity.max}명`}
-      />
+      <KeyValueRow label="참가 인원" value={room.capacity} />
       <KeyValueRow label="참가비" value={`${formatWon(room.fee)} (1회 세션)`} />
     </section>
   );
