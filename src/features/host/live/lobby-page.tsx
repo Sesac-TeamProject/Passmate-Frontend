@@ -169,13 +169,20 @@ export function LobbyPage({
                 </button>
               </span>
             ) : null}
-            {/* 시안 W-04: 시험 시작 왼쪽에 문항별 시간 설정 진입 — 시작 전에만 바꿀 수 있다 */}
-            <Link
-              href={`/host/rooms/${pin}/timing`}
-              className="flex h-13 items-center rounded-2xl px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint-tint"
-            >
-              문항별 시간 설정 ›
-            </Link>
+            {/*
+              시안 W-04: 시험 시작 왼쪽에 문항별 시간 설정 진입 — 시작 전에만 바꿀 수 있다.
+              `setLink`가 있다는 건 아직 세트를 연결하지 않았다는 뜻이라(바로 아래 시험 시작
+              버튼도 그것으로 잠긴다) 그때는 감춘다 — 누르면 timing 화면이 곧장 "연결된 문제
+              세트를 찾지 못했어요"로 떨어진다(F-19).
+            */}
+            {setLink ? null : (
+              <Link
+                href={`/host/rooms/${pin}/timing`}
+                className="flex h-13 items-center rounded-2xl px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint-tint"
+              >
+                문항별 시간 설정 ›
+              </Link>
+            )}
             <button
               type="button"
               onClick={onStart}
