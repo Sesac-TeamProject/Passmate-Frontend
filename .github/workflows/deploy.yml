@@ -73,8 +73,13 @@ jobs:
           push: true
           # 태그 = 커밋 SHA. 롤백은 SSM 의 WEB_IMAGE_TAG 를 이전 SHA 로 되돌리고 배포를 다시 도는 것
           tags: ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+          # 개발용 로그인 칸은 이 브랜치(main) 배포에서 끈다.
+          # develop 을 Run workflow 로 올릴 땐 **develop 의 이 파일**이 도는데, 거기에는
+          # 이 줄도 env.ts 의 플래그도 없어서 칸이 그대로 나온다 — 그게 테스트용으로 의도한 것이다.
+          # 배포 대상 서버는 한 대(=passmate.kr)라, develop 을 올려 두는 동안은 공개 주소에도 뜬다.
           build-args: |
             NEXT_PUBLIC_API_BASE_URL=${{ env.API_BASE_URL }}
+            NEXT_PUBLIC_ENABLE_DEV_LOGIN=off
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
