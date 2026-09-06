@@ -112,6 +112,11 @@
   /* 이니셜 아바타 peach (사이드바 프로필·순위 원) */
   --color-avatar-peach: var(--avatar-peach);
   --color-avatar-peach-foreground: var(--avatar-peach-foreground);
+  /* 타사 브랜드 마크 — 우리 팔레트가 아니라 상대가 정해 둔 값이다. 로고 SVG에서만 쓴다 */
+  --color-brand-google-red: var(--brand-google-red);
+  --color-brand-google-blue: var(--brand-google-blue);
+  --color-brand-google-yellow: var(--brand-google-yellow);
+  --color-brand-google-green: var(--brand-google-green);
 
   /* --- 프로젝터 모드 전용 (design.pen "프로젝터 모드 — 디자인 규칙" · W-04·05·06·12) ---
      교실 뒤에서 보는 화면이라 앱·웹과 규칙이 다르다: 흰 바탕 + 헤어라인, 카드·그림자 없음. */
@@ -275,6 +280,12 @@
   --orange-soft: #fdefde;
   --avatar-peach: #f8c6a4;
   --avatar-peach-foreground: #7a3a11;
+
+  /* Google 브랜드 4색 (로그인 버튼 G 마크). 구글 브랜드 가이드가 정한 값이라 우리가 조정하지 않는다 */
+  --brand-google-red: #ea4335;
+  --brand-google-blue: #4285f4;
+  --brand-google-yellow: #fbbc05;
+  --brand-google-green: #34a853;
 
   /* 프로젝터 모드 전용 토큰 */
   --surface-subtle: #fafafb;

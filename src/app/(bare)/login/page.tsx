@@ -32,6 +32,8 @@ function LoginContainer() {
   const handleGoogleClick = () => {
     // TODO(설정): GIS 클라이언트 ID를 받으면 여기서 idToken을 받아
     // socialLogin("google", { idToken })를 부르고 토큰을 저장한다(research.md R-10).
+    // 그때 `next`도 같이 들고 가야 한다 — 지금은 만료 화면이 붙여 준 next가 콜백까지 가지 못해
+    // 로그인 뒤 하던 자리가 아니라 홈으로 떨어진다(auth/callback은 이미 next를 읽을 준비가 돼 있다).
     // 명세 v2에 서버 리다이렉트 진입점이 없어(POST /auth/login/{provider} 토큰 교환 방식)
     // 그때까지는 누를 곳이 없다.
   };

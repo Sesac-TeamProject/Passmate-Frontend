@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { BrandLogo } from "@/components/common/brand-logo";
+import { cn } from "@/lib/utils";
+import { PAGE_FRAME } from "@/components/layout/page-frame";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 /**
@@ -16,11 +18,7 @@ export function SiteHeader() {
 
   return (
     <header className="border-b bg-card">
-      {/*
-        시안은 로고·로그인이 본문 카드보다 한 뼘(약 40px) 바깥에 선다.
-        본문이 px-20 + max-w-1280이라 헤더는 max-w-1440 + px-10으로 맞춘다.
-      */}
-      <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between px-10">
+      <div className={cn(PAGE_FRAME, "flex h-14 items-center justify-between")}>
         <BrandLogo />
         {status === "unauthenticated" && (
           <Link
