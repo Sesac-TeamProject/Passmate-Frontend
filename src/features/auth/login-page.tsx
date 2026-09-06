@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/common/brand-logo";
+import { GoogleMark } from "@/components/common/google-mark";
 import { FitToViewport } from "@/components/common/fit-to-viewport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,9 +54,7 @@ export function LoginPage({ onGoogleClick, devLogin }: Props) {
             className="w-full gap-2 bg-card"
             onClick={onGoogleClick}
           >
-            <span aria-hidden className="text-label-lg text-blue">
-              G
-            </span>
+            <GoogleMark />
             <span className="text-label-lg text-foreground">Google로 계속하기</span>
           </Button>
 
