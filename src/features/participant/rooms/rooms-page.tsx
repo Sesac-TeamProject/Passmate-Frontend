@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/common/skeleton";
+import { PAGE_FRAME } from "@/components/layout/page-frame";
 import { cn } from "@/lib/utils";
 import { RoomListItem } from "./room-list-item";
 import { ROOM_FILTERS, type PublicRoomFilter, type PublicRoomItem } from "./types";
@@ -32,7 +33,8 @@ export function RoomsPage({
   onLoadMore,
 }: Props) {
   return (
-    <main className="flex flex-col gap-5 px-20 py-7">
+    // 헤더와 같은 규격을 써서 넓은 화면에서도 로고와 본문이 같은 세로선에서 시작한다
+    <main className={cn(PAGE_FRAME, "flex flex-col gap-5 py-7")}>
       <div className="flex flex-col gap-2">
         <h1 className="text-display-md text-ink">지금 열려 있는 방</h1>
         <p className="text-body-lg text-muted-foreground">

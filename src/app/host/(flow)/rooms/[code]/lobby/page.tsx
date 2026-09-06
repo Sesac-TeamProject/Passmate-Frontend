@@ -5,11 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
-import { toStudents } from "@/features/host/live/adapt";
+import { toStudents, toTimeLimitLabel } from "@/features/host/live/adapt";
 import { LobbyPage } from "@/features/host/live/lobby-page";
 import { toQuestionSetOptions } from "@/features/host/room-flow/adapt";
 import { formatDotDateWithDay } from "@/lib/format";
-import { useQuestionSets } from "@/lib/queries/use-question-sets";
+import { useQuestionSet, useQuestionSets } from "@/lib/queries/use-question-sets";
 import {
   useHostRoomId,
   useKickParticipant,
@@ -34,6 +34,8 @@ export default function Page() {
   // PIN 조회 응답에는 호스트용 정보(연결된 세트·정원)가 없다 — 방 상세를 따로 읽는다
   const detail = useRoom(roomId);
   const confirmedSets = useQuestionSets({ status: "CONFIRMED" });
+  // 방 응답에는 문항당 제한 시간이 없다 — 연결된 세트의 문항에서 읽는다(세트가 없으면 안 나간다)
+  const linkedSetDetail = useQuestionSet(detail.data?.questionSetId ?? null);
   const linkSet = useUpdateRoom();
   const [setIdToLink, setSetIdToLink] = useState("");
 
@@ -83,8 +85,6 @@ export default function Page() {
   const errorMessage = start.isError ? toSessionControlMessage(start.error) : null;
 
   const needsSet = detail.data.questionSetId === undefined;
-  // 연결된 세트의 문항 수 — 방 응답에는 없지만 이미 읽어 둔 확정 세트 목록에서 찾을 수 있다
-  const linkedSet = confirmedSets.data?.content.find((s) => s.id === detail.data.questionSetId);
   const handleLinkSet = () => {
     if (setIdToLink === "" || linkSet.isPending) return;
     linkSet.mutate({
@@ -106,9 +106,9 @@ export default function Page() {
         // 방 응답에 호스트 이름이 없다(hostUserId만 준다) — 지금 보는 사람이 호스트이므로 굳이 쓰지 않는다
         hostName={null}
         students={toStudents(participants)}
-        questionCount={linkedSet?.questionCount ?? null}
-        // 문항당 제한 시간은 문항마다 다르다 — 세트 요약의 예상 시간을 문항 수로 나눠 쓰지 않고 비워 둔다
-        timeLimitSec={null}
+        // 세트 목록은 첫 페이지만 오므로 거기서 찾으면 21번째 세트부터 비어 버린다 — 상세에서 읽는다
+        questionCount={linkedSetDetail.data?.set.questionCount ?? null}
+        timeLimitLabel={toTimeLimitLabel(linkedSetDetail.data?.questions)}
         isPaid={detail.data.type === "PAID"}
         maxParticipants={detail.data.maxParticipants ?? null}
         onStart={handleStart}

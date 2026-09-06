@@ -62,8 +62,8 @@ type Props = {
   hostName: string | null;
   students: Student[];
   questionCount: number | null;
-  /** 문항당 제한 시간(초). 호스트용 방 상세 계약이 없어 지금은 늘 null (DESIGN_GAPS D-6) */
-  timeLimitSec: number | null;
+  /** 문항당 제한 시간 문구("30초"·"20~90초"). 연결된 세트를 못 읽으면 null */
+  timeLimitLabel: string | null;
   isPaid: boolean;
   maxParticipants: number | null;
   onStart: () => void;
@@ -88,7 +88,7 @@ export function LobbyPage({
   hostName,
   students,
   questionCount,
-  timeLimitSec,
+  timeLimitLabel,
   isPaid,
   maxParticipants,
   onStart,
@@ -104,9 +104,10 @@ export function LobbyPage({
   const steps = toSteps(prettyPin, host);
   const meta = [
     { value: padCount(questionCount), label: "문항" },
-    { value: timeLimitSec === null ? "—" : `${timeLimitSec}초`, label: "문항당 제한" },
+    { value: timeLimitLabel ?? "—", label: "문항당 제한" },
     { value: isPaid ? "유료" : "무료", label: "방 유형", accent: true },
-    { value: maxParticipants === null ? "—" : `${maxParticipants}명`, label: "최대 인원" },
+    // 서버 계약: maxParticipants를 비우면 "제한 없음"이다 — 모르는 값이 아니라서 —로 두지 않는다
+    { value: maxParticipants === null ? "무제한" : `${maxParticipants}명`, label: "최대 인원" },
   ];
 
   return (

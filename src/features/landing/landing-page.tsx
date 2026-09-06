@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { BrandLogo, BrandMark } from "@/components/common/brand-logo";
+import { BrandMark } from "@/components/common/brand-logo";
 import { StudentAvatar } from "@/components/common/student-avatar";
 import { cn } from "@/lib/utils";
 import {
@@ -9,7 +9,6 @@ import {
   FEATURES,
   FOOTER_LINKS,
   HOW,
-  NAV_LINKS,
   PROOF_AVATARS,
   REVIEWS,
   STATS,
@@ -18,24 +17,12 @@ import {
   type MockupKey,
 } from "./content";
 import { FaqList } from "./faq-list";
+import { LandingNav } from "./landing-nav";
 import { PhoneMockup } from "./mockups/phone-mockup";
 import { STEP_VISUALS } from "./mockups/step-visuals";
 import { ScreenMockup, ShotCard } from "./mockups/screen-mockup";
 import { EditorMockup, LiveMockup, ReportMockup } from "./mockups/screen-mockups";
-
-/** 시안 폭 1440 안의 콘텐츠 폭 1200 (좌우 여백 120). 패딩 24를 더해 1248 이상에서 콘텐츠가 정확히 1200이 되게 한다 */
-const INNER = "mx-auto w-full max-w-[1248px] px-6";
-
-/** 랜딩 전용 버튼 — r14. 시안 nav [12,22] · 히어로/CTA [16,28] (공용 Button size=xl(h48·r12)과 규격이 달라 따로 둔다) */
-const BUTTON = {
-  base: "inline-flex shrink-0 items-center justify-center rounded-[14px] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-mint",
-  nav: "px-[22px] py-3 text-label-lg",
-  hero: "px-7 py-4 text-heading-sm",
-  mint: "bg-mint text-white hover:bg-mint-dark",
-  outline: "border bg-card text-ink hover:bg-muted",
-  white: "bg-card text-ink hover:bg-mint-tint",
-  ink: "bg-ink text-white hover:bg-mint-ink",
-} as const;
+import { BUTTON, INNER } from "./styles";
 
 /** 기능 섹션 목업 — 실제 화면 컴포넌트를 축소해 넣는다 ("실제 화면 중심") */
 const MOCKUPS: Record<MockupKey, ReactNode> = {
@@ -60,36 +47,6 @@ export function LandingPage() {
       </main>
       <LandingFooter />
     </div>
-  );
-}
-
-function LandingNav() {
-  return (
-    <header className="sticky top-0 z-10 bg-card py-[18px]">
-      <div className={cn(INNER, "flex items-center justify-between")}>
-        <BrandLogo size="lg" />
-        <nav className="flex items-center gap-7">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="text-label-lg text-muted-foreground transition-colors hover:text-ink"
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-        <div className="flex items-center gap-2.5">
-          <Link href="/login" className={cn(BUTTON.base, BUTTON.nav, BUTTON.outline)}>
-            로그인
-          </Link>
-          {/* TODO: 회원가입 라우트 없음 — 로그인으로 보낸다 */}
-          <Link href="/login" className={cn(BUTTON.base, BUTTON.nav, BUTTON.mint)}>
-            무료로 방 열기
-          </Link>
-        </div>
-      </div>
-    </header>
   );
 }
 

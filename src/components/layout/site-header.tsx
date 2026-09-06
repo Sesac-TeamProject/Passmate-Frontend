@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { BrandLogo } from "@/components/common/brand-logo";
+import { cn } from "@/lib/utils";
+import { PAGE_FRAME } from "@/components/layout/page-frame";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 /**
@@ -16,7 +18,7 @@ export function SiteHeader() {
 
   return (
     <header className="border-b bg-card">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+      <div className={cn(PAGE_FRAME, "flex h-14 items-center justify-between")}>
         <BrandLogo />
         {status === "unauthenticated" && (
           <Link
