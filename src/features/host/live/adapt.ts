@@ -5,6 +5,7 @@ import { choicesOf } from "@/features/participant/play/adapt";
 import type {
   ParticipantResponse,
   QuestionEndedPayload,
+  QuestionResponse,
   QuestionStartedPayload,
   RankingEntry,
   SessionResultsResponse,
@@ -16,6 +17,18 @@ import type { SolvingStudent } from "./live-rail";
 import type { PodiumEntry } from "./podium";
 
 const CHOICE_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
+
+/**
+ * 대기실 "문항당 제한" — 방 응답에는 없어서 연결된 세트의 문항에서 읽는다.
+ * 문항마다 다를 수 있으니 같으면 한 값, 다르면 범위로 보인다(평균을 지어내지 않는다).
+ */
+export function toTimeLimitLabel(questions: QuestionResponse[] | undefined): string | null {
+  if (!questions || questions.length === 0) return null;
+  const seconds = questions.map((q) => q.timeLimitSec);
+  const min = Math.min(...seconds);
+  const max = Math.max(...seconds);
+  return min === max ? `${min}초` : `${min}~${max}초`;
+}
 
 /** 참가자 목록 → 대기실·랭킹이 쓰는 학생 뷰 타입 */
 export function toStudents(participants: ParticipantResponse[]): Student[] {
