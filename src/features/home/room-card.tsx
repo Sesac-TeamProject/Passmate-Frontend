@@ -14,7 +14,8 @@ export function RoomCard({ room, href }: Props) {
   return (
     <article className="flex min-w-0 flex-1 flex-col gap-3 rounded-2xl border bg-card px-5 py-[18px]">
       <div className="flex items-center justify-between gap-2">
-        <StatusChip tone="topic">{room.topic}</StatusChip>
+        {/* 서버가 주제를 안 주는 방이 있다 — 빈 칩(작은 민트 알약)만 남으므로 아예 그리지 않는다 */}
+        {room.topic === "" ? <span /> : <StatusChip tone="topic">{room.topic}</StatusChip>}
         <StatusChip tone={room.type} size="lg">
           {room.type === "paid" ? "₩ 유료" : "무료"}
         </StatusChip>

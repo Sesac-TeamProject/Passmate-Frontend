@@ -2,6 +2,7 @@
 
 import { Fragment, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import type { Student } from "@/features/host/types";
 import { formatPin } from "@/lib/format";
 import { LobbyRail, LobbyRailMini } from "./lobby-rail";
@@ -61,8 +62,8 @@ type Props = {
   hostName: string | null;
   students: Student[];
   questionCount: number | null;
-  /** 문항당 제한 시간(초). 호스트용 방 상세 계약이 없어 지금은 늘 null (DESIGN_GAPS D-6) */
-  timeLimitSec: number | null;
+  /** 문항당 제한 시간 문구("30초"·"20~90초"). 연결된 세트를 못 읽으면 null */
+  timeLimitLabel: string | null;
   isPaid: boolean;
   maxParticipants: number | null;
   onStart: () => void;
@@ -87,7 +88,7 @@ export function LobbyPage({
   hostName,
   students,
   questionCount,
-  timeLimitSec,
+  timeLimitLabel,
   isPaid,
   maxParticipants,
   onStart,
@@ -103,9 +104,10 @@ export function LobbyPage({
   const steps = toSteps(prettyPin, host);
   const meta = [
     { value: padCount(questionCount), label: "문항" },
-    { value: timeLimitSec === null ? "—" : `${timeLimitSec}초`, label: "문항당 제한" },
+    { value: timeLimitLabel ?? "—", label: "문항당 제한" },
     { value: isPaid ? "유료" : "무료", label: "방 유형", accent: true },
-    { value: maxParticipants === null ? "—" : `${maxParticipants}명`, label: "최대 인원" },
+    // 서버 계약: maxParticipants를 비우면 "제한 없음"이다 — 모르는 값이 아니라서 —로 두지 않는다
+    { value: maxParticipants === null ? "무제한" : `${maxParticipants}명`, label: "최대 인원" },
   ];
 
   return (
@@ -142,39 +144,55 @@ export function LobbyPage({
               학생이 들어오는 대로 오른쪽에 쌓여요
             </p>
           )}
-          {setLink ? (
-            <span className="flex items-center gap-2">
-              <select
-                aria-label="연결할 문제 세트"
-                value={setLink.value}
-                onChange={(e) => setLink.onChange(e.target.value)}
-                className="h-13 rounded-2xl bg-muted px-4 text-body-md text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          <span className="flex items-center gap-3">
+            {setLink ? (
+              <span className="flex items-center gap-2">
+                <select
+                  aria-label="연결할 문제 세트"
+                  value={setLink.value}
+                  onChange={(e) => setLink.onChange(e.target.value)}
+                  className="h-13 rounded-2xl bg-muted px-4 text-body-md text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">세트 고르기</option>
+                  {setLink.options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.title} — {option.questionCount}문항
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={setLink.onSubmit}
+                  disabled={setLink.pending || setLink.value === ""}
+                  className="h-13 rounded-2xl bg-mint-tint px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint hover:text-white disabled:opacity-60"
+                >
+                  {setLink.pending ? <PendingLabel>연결 중…</PendingLabel> : "세트 연결"}
+                </button>
+              </span>
+            ) : null}
+            {/*
+              시안 W-04: 시험 시작 왼쪽에 문항별 시간 설정 진입 — 시작 전에만 바꿀 수 있다.
+              `setLink`가 있다는 건 아직 세트를 연결하지 않았다는 뜻이라(바로 아래 시험 시작
+              버튼도 그것으로 잠긴다) 그때는 감춘다 — 누르면 timing 화면이 곧장 "연결된 문제
+              세트를 찾지 못했어요"로 떨어진다(F-19).
+            */}
+            {setLink ? null : (
+              <Link
+                href={`/host/rooms/${pin}/timing`}
+                className="flex h-13 items-center rounded-2xl px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint-tint"
               >
-                <option value="">세트 고르기</option>
-                {setLink.options.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.title} — {option.questionCount}문항
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={setLink.onSubmit}
-                disabled={setLink.pending || setLink.value === ""}
-                className="h-13 rounded-2xl bg-mint-tint px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint hover:text-white disabled:opacity-60"
-              >
-                {setLink.pending ? <PendingLabel>연결 중…</PendingLabel> : "세트 연결"}
-              </button>
-            </span>
-          ) : null}
-          <button
-            type="button"
-            onClick={onStart}
-            disabled={starting || Boolean(setLink)}
-            className="h-13 w-[180px] rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
-          >
-            {starting ? <PendingLabel>시작하는 중…</PendingLabel> : "시험 시작"}
-          </button>
+                문항별 시간 설정 ›
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={onStart}
+              disabled={starting || Boolean(setLink)}
+              className="h-13 w-[180px] rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
+            >
+              {starting ? <PendingLabel>시작하는 중…</PendingLabel> : "시험 시작"}
+            </button>
+          </span>
         </>
       }
     >

@@ -7,11 +7,11 @@ import { ScreenLoading } from "@/components/common/screen-loading";
 import {
   toFinalRanking,
   toHardestQuestion,
+  toPodium,
   toReportAccuracy,
   toSessionSummary,
 } from "@/features/host/live/adapt";
 import { FinalPage } from "@/features/host/live/final-page";
-import type { PodiumEntry } from "@/features/host/live/podium";
 import { useHostRoomId, useRoom } from "@/lib/queries/use-rooms";
 import { useSessionResults } from "@/lib/queries/use-results";
 import { useSessionStore } from "@/lib/stores/session-store";
@@ -52,21 +52,14 @@ export default function Page() {
   const rows = toFinalRanking(source, results.data);
   const total = results.data?.summary.questionCount ?? totalCount;
 
-  const podium: [PodiumEntry, PodiumEntry, PodiumEntry] | null =
-    rows.length >= 3
-      ? [
-          { student: rows[0].student, score: rows[0].score, correctCount: rows[0].correctCount },
-          { student: rows[1].student, score: rows[1].score, correctCount: rows[1].correctCount },
-          { student: rows[2].student, score: rows[2].score, correctCount: rows[2].correctCount },
-        ]
-      : null;
+  const { podium, rest } = toPodium(rows);
 
   return (
     <FinalPage
       title={detail.data?.title ?? ""}
       questionTotal={total}
       podium={podium}
-      rest={podium ? rows.slice(3) : rows}
+      rest={rest}
       summary={toSessionSummary(results.data, rows.length, total)}
       accuracyByQuestion={toReportAccuracy(results.data, total)}
       hardest={toHardestQuestion(results.data)}

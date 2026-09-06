@@ -8,74 +8,215 @@
 
 ## 1. 백엔드에 넘길 것
 
-### 🔴 B-1. 서버가 KST를 UTC인 척 보낸다 — 학생이 답을 못 낸다
+> **2026-09-04 전수 재확인.** 백엔드 `9e39ce3`(9/3) 소스와 로컬 실서버로 항목을 하나씩 다시 봤다.
+> **옛 목록 중 다섯이 이미 해소돼 있었다** — 낡은 목록을 회의에 들고 가지 않으려고 전부 대조했다.
+> 살아남은 항목은 번호를 그대로 두고(B-1·B-3·B-4), 새로 확인한 것에 B-5부터 붙였다.
+>
+> ⚠️ 이 문서의 B-번호와 `DESIGN_GAPS.md` §4-3의 B-번호는 **서로 다른 체계**다. 원래 겹쳐 있었고,
+> 옮겨 적다 엉뚱한 항목을 가리킨 적이 있다. 백엔드에 보낼 때는 **이 문서 번호로 통일한다.**
 
-계약은 "오프셋 없는 **UTC**"인데 서버는 오프셋 없는 **KST**를 보낸다.
+### ✅ 해소 — 더 요청하지 않는다 (2026-09-04 확인)
+
+| 옛 항목                                        | 무엇으로 확인했나                                                                                                                                     |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~B-2~~ WebSocket 허용 origin이 `passmate.app` | `WebSocketConfig.kt:35`가 `corsProperties.originPatterns`(=`WEB_BASE_URL`)를 쓴다. 커밋 `dc64fbe` "WS 허용 오리진을 CORS 설정과 공유해 하드코딩 제거" |
+| ~~D-13~~ 참가비 이중 차감                      | `EntryPaymentService.pay`가 `activePaymentOf`로 막고 409 `ALREADY_PAID`를 던진다. 요청했던 그대로다                                                   |
+| ~~D-14~~ 로그인 토큰이 URL에 남음              | 리다이렉트가 아니라 `POST /auth/login/{provider}`로 인가 코드를 교환한다. 토큰이 쿼리스트링에 실리지 않는다                                           |
+| ~~D-19~~ 호스트 공개 프로필 아바타 없음        | `HostProfileResponse.defaultAvatarId`가 있다 → **남은 일은 프런트 쪽**(지금 이니셜 타일을 쓴다)                                                       |
+| ~~D-10~~ 세션 종료 최종 랭킹                   | `SessionService.kt:110`이 `SESSION_ENDED` 봉투에 랭킹 전체를 실어 보낸다                                                                              |
+
+### 🔴 B-5. 방 상세가 남의 PIN을 흘린다 — **가장 급하다**
+
+`GET /rooms/{roomId}`에 소유자 검사가 없다. `RoomController.kt:61`에 `@CurrentUser`가 없고
+`RoomQueryService.getRoom`에도 검사가 없는데, `RoomResponse`에는 `pin: String`이 들어 있다.
+
+2026-09-04 로컬 실서버 재현 (제3자 계정 토큰):
 
 ```
-실제 UTC     : 2026-09-03T02:20:00
-실제 KST     : 2026-09-03T11:20:00
-서버 endsAt  : 2026-09-03T11:19:31   ← KST 값을 오프셋 없이
+GET /rooms/7            (토큰 없음)        → 401
+GET /rooms/7            (남의 계정 토큰)   → 200 {"id":7,"pin":"028627","hostUserId":2,...}
+GET /rooms/public       (누구나)           → id 7 이 그대로 실려 있다
 ```
 
-프런트는 계약대로 UTC로 읽으므로 9시간이 어긋난다. 증상:
+**로그인만 하면 누구나 남의 방 PIN을 읽는다.** 공개 목록이 id를 뿌리니 요청 한 번 더면 얻어진다.
+같은 파일의 `RoomSummaryResponse`(PIN 조회 결과)는 "입장 화면에 필요한 최소 정보만 준다"며
+**일부러 pin을 뺐고**, `/rooms/public`도 스웨거에 "게스트도 조회할 수 있어 PIN 은 포함하지 않는다"고
+적혀 있다. 즉 **의도는 명확한데 상세 조회 한 곳만 새고 있다.**
 
-- 문항 타이머가 **540분**(=9시간)으로 표시된다 (제한 30초인데)
-- 별점 화면이 "**32시간** 안에 남길 수 있어요"라고 한다 (실제 24시간)
-- **학생이 답을 낼 수 없다** — 화면은 시간이 남았다고 하는데 서버는 이미 마감해 409
-  `QUESTION_NOT_RUNNING`을 준다. 눈으로 재현했다.
+> ⚠️ **그냥 막으면 프런트가 깨진다.** 유료 방 결제 화면(`/pay/[roomId]`)이 이 응답의 `pin`을 써서
+> 결제 후 `/play/{pin}`으로 보낸다. 참가자는 방 주인이 아니므로 단순 소유자 검사로는 못 지나간다.
+> **어느 쪽인지 정해 주세요**: ① 상세 응답에서 pin을 빼고, 참가 자격이 확인된 사람에게만
+> (참가비 결제 응답 또는 참가자 등록 응답에) pin을 실어 준다 ② 상세를 호스트 전용으로 막고
+> 참가자용 조회를 따로 판다. 프런트는 어느 쪽이든 맞춘다.
 
-원인은 JVM 시간대다. 백엔드 README의 로컬 실행법에 `-Duser.timezone=UTC`가 빠져 있다.
-운영 컨테이너는 UTC로 뜨지만, 로컬에서 `./gradlew bootRun`으로 띄우면 KST가 된다.
+### 🔴 B-6. 게스트 토큰이 1시간이라 긴 세션에서 끊긴다
 
-**요청**: README 실행법에 타임존 플래그를 넣거나, 앱이 기동 시 UTC를 강제하게 해 주세요.
+`JwtTokenProvider.issueGuestToken`이 `properties.accessTokenValiditySeconds`(3600초)를 그대로 쓴다.
+게스트에게는 리프레시 토큰이 없다(`JoinResult.accessToken`·`guestToken`뿐).
 
-### 🔴 B-2. WebSocket 허용 origin이 `passmate.app` — 운영에서 실시간이 전면 실패
+**1시간을 넘기는 수업에서 게스트가 답을 못 내게 된다.** 방 종료 시각까지로 늘리거나
+게스트 전용 재발급 경로가 필요하다.
 
-```kotlin
-// common/config/WebSocketConfig.kt
-registry.addEndpoint(ENDPOINT)
-    .setAllowedOriginPatterns("http://localhost:*", "https://*.passmate.app")
-```
+### 🟡 B-1. 로컬 실행에서만 서버가 KST를 UTC인 척 보낸다 — **범위가 줄었다**
 
-REST의 CORS는 `WEB_BASE_URL`(= `https://passmate.kr`)을 허용하는데 **WS만 `passmate.app`** 이다.
-운영 배포에서 STOMP 핸드셰이크가 거부되어 실시간 세션이 통째로 동작하지 않는다.
-(REST CORS처럼 `WEB_BASE_URL`을 읽게 하면 도메인이 바뀌어도 코드를 안 고쳐도 된다.)
+**운영은 문제없다.** `docker/Dockerfile`·`Dockerfile.runtime` 둘 다
+`ENV JAVA_OPTS="… -Duser.timezone=UTC"`이고 MySQL도 `--default-time-zone=+00:00`이다.
+
+남은 건 **README의 로컬 실행법**이다. `./gradlew bootRun --args='--spring.profiles.active=local'`에는
+타임존 플래그가 없어 맥에서 띄우면 JVM이 KST로 뜨고, 계약이 "오프셋 없는 UTC"라 웹이 9시간을
+잘못 읽는다(문항 타이머 540분, 학생이 답을 못 냄 — 눈으로 재현했다).
+
+**요청**: `build.gradle.kts`의 `bootRun`에 `systemProperty("user.timezone", "UTC")`를 넣어 주세요.
+README만 고치면 읽지 않은 사람에게 그대로 재현된다.
+(이 맥에서는 백엔드 `.env`에 `TZ=UTC`를 넣어 임시로 덮어 뒀다 — **다른 사람 로컬에서는 그대로다.**)
 
 ### 🟡 B-3. 대기실 입·퇴장 이벤트 미발행
 
-`PARTICIPANT_JOINED`·`PARTICIPANT_LEFT`가 enum에는 있으나 발행 코드가 없다.
+`PARTICIPANT_JOINED`·`PARTICIPANT_LEFT`가 `SessionEventType.kt:32-33`에 있으나 **발행하는 코드가
+어디에도 없다**(2026-09-04 재확인, grep 결과 enum 정의 두 줄뿐).
 프런트는 **3초 폴링**으로 버티고 있다 — 발행이 들어오면 폴링을 지운다.
 
-### 🟡 B-4. 끝난 방도 404
+### 🟡 B-4. 끝난 방도 404라 문구를 가를 수 없다
 
-없는 PIN과 끝난 방이 모두 404 `ROOM_NOT_FOUND`라 화면이 "없는 방"과 "이미 끝난 방"을
-구분해 안내하지 못한다. 410을 주면 문구를 가를 수 있다.
+없는 PIN과 끝난 방이 모두 404 `ROOM_NOT_FOUND`다(`ErrorCode.kt:39`, 410은 없다).
+`/join`에서 PIN을 친 학생에게 "없는 방"과 "이미 끝난 방"을 구분해 안내하지 못한다.
+`ROOM_ENDED`(410)를 주면 문구를 가를 수 있다.
+
+> 결제 화면(`/pay/[roomId]`)은 이제 방 상세의 `status`로 직접 가르므로 이 항목의 영향에서 벗어났다.
+> 남은 자리는 **PIN 입장 흐름 하나**다.
+
+### 🟡 B-7. AI 잔여 무료 횟수를 주는 응답이 없다 — **구현은 이미 있다**
+
+`AiQuestionService.remainingFreeCount(userId)`가 **이미 있는데**(`AiQuestionService.kt:49`,
+주석에 "화면에 'AI 생성 n회 남음'을 띄우는 데 쓴다"고까지 적혀 있다) **어떤 컨트롤러도 부르지
+않는다.** 그래서 화면은 429가 날 때까지 남은 횟수를 모른다 — 지금은 표시를 감춰 뒀다.
+
+**요청**: 서술형 분석 쪽이 이미 하는 방식(`remainingFreeAnalysis`,
+`AnswerAnalysisController.kt:61`)과 똑같이, 세트 상세나 생성 응답에 `remainingFreeGeneration`을
+실어 주세요. 계산은 이미 되어 있어 필드만 붙이면 된다.
+
+> **정책은 소스로 확정됐다** — `application.yml:65` `ai-free-limit: 5 # (호스트, 누적 — 명세 "최초 5회 무료")`,
+> `successCount`에 **날짜 필터가 없다.** 즉 **계정당 1회성 누적 5회이고 매일 리셋되지 않는다.**
+> 시안의 "오늘 다 썼어요 / 내일 다시 5회가 채워져요"는 구현과 어긋난다 → 디자이너 항목
+> (`DESIGN_GAPS.md` G-1의 세 질문 중 1번은 이걸로 답이 났다).
+
+### 🟡 B-8. 유료 방을 만들 수 있는 테스트 계정이 필요하다
+
+`GET /rooms/public?type=PAID` → **0건**이고 우리가 만들 수도 없다.
+유료 방 개설은 Lv.3부터인데(`RoomService.kt:127`, `PAID_ROOM_MIN_LEVEL = 3`) 요건이 이렇다:
+
+| Lv.3 요건                | 필요 | 지금 계정 |
+| ------------------------ | ---- | --------- |
+| 방 운영 횟수             | 20   | 3         |
+| 누적 학생 수             | 150  | 4         |
+| 평균 별점(평가 5건 이상) | 4.0  | 5.0 ✅    |
+
+**그래서 결제 흐름을 실서버에서 한 번도 못 탔다**(목 모드로만 확인). 시딩 계정이든 등급을 올린
+테스트 계정이든 하나 주시면 실서버에서 끝까지 확인할 수 있다. 로컬 DB를 우리가 직접 고치는 건
+하지 않는다.
+
+### 🟢 B-9. 정산 예금주 실명 확인이 죽어 있다
+
+`SettlementAccount`에 `verifiedAt`·`verified`가 있고 스웨거에도 "예금주 실명 확인 여부"라고
+적혀 있는데, **`verifiedAt`을 채우는 코드가 없다.** 계좌를 바꿀 때 `null`로 되돌리는 곳
+(`SettlementAccount.kt:60`)만 있다 → **항상 `false`로 나간다.**
+
+시안(W-10)은 "은행 조회 결과 ○○○"을 보여준다. 실명 조회를 붙일 계획인지, 아니면 필드를 빼고
+시안에서도 지울지 정해 주세요.
+
+### 🟢 B-10. 서술형 시안이 요구하는 계약 3종
+
+v6 시안 `W-05/W-06 서술형 케이스`가 지금 계약으로는 못 채운다. 상세는 `DESIGN_GAPS.md` G-3.
+
+| 필요한 것                                                     | 지금                                                                                                      |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 진행 중 학생별 3상태(미시작 / 작성 중 + 글자 수 / 제출 완료)  | 이벤트에 타이핑 상태·글자 수가 없다. 제출 여부만 안다                                                     |
+| AI 첨삭 **3분류 집계**("모두 담음 3명 / 일부 2명 / 누락 1명") | `EssayAnalysisView`는 `keyPoints`·`missingPoints`·`suggestions`·`summary` 자유 텍스트다. 분류 enum이 없다 |
+| **채점 기준**(rubric)                                         | 없다                                                                                                      |
+
+> ✅ **모범답안은 있다** — `question.answer`를 `ReviewTargetResponse.modelAnswer`로 호스트에게 준다.
+> 시안 요구 중 이 한 줄만 이미 채울 수 있다.
+
+### 🟢 B-11. 시안에 버튼은 있는데 부를 API가 없는 것 3종
+
+넷 중 하나(공개 목록 "오늘" 칩)는 해소됐고 셋이 남았다. 상세는 `DESIGN_GAPS.md` G-4.
+
+| 시안                                 | 필요한 것                      | 확인                                                  |
+| ------------------------------------ | ------------------------------ | ----------------------------------------------------- |
+| `W-06e` **[시간 30초 더 주기]**      | 진행 중 문항 제한시간 **연장** | 세션 컨트롤러에 연장 없음(`/current/end` 수동 마감만) |
+| `E-500` 칩 "예상 완료 · 오늘 14:30"  | 점검 정보                      | 헬스체크성 엔드포인트도 없음                          |
+| `P-Web 공개 방 목록` **[알림 받기]** | 시작 예정 방 알림 구독         | `notification`에 구독 개념 없음(설정 토글 3종뿐)      |
+
+셋 다 "**만들 계획이 있는가, 시안에서 뺄 것인가**"를 먼저 정해야 한다. 특히 `E-500`은 서버가
+죽었을 때 보여줄 화면이라 API로 받는 게 오히려 앞뒤가 안 맞는다 — 정적 파일·CDN 쪽이 맞을 수 있다.
+
+### 🔴 B-12. 문항 자동 마감이 DB에 안 남아 `QUESTION_ENDED`가 **매초** 다시 나간다 (2026-09-04 실서버 확인)
+
+`QuestionTimeoutScheduler.closeExpiredQuestions()`가 `@Transactional(readOnly = true)`인데 그 안에서 부르는
+`SessionService.endByTimeout()`(REQUIRED)이 같은 읽기 전용 트랜잭션에 **합류**한다. `sq.end(...)`의 변경이 flush되지
+않아 `endedAt`이 계속 null이고, 다음 1초 틱에 같은 문항을 또 찾아 `closeQuestion` → `QUESTION_ENDED` + `RANKING_UPDATED`를
+다시 발행한다. 호스트가 "다음 문항"을 눌러 `next()`가 쓰기 트랜잭션에서 닫아 줄 때까지 반복된다(브라우저 콘솔에서 20초 문항
+하나에 1,500건 넘게 찍혔다).
+
+- 프런트 영향: 다음 문항이 열린 뒤에도 1번 문항 `QUESTION_ENDED`가 계속 와서 진행 화면이 결과 화면으로 되돌아갔다(DESIGN_DIFF_20260904 Z1).
+  프런트는 지나간 문항의 마감 이벤트를 버리도록 방어했지만(`session-reducer.ts`), 이벤트 홍수 자체는 서버에서 막아야 한다.
+- 요청: 스케줄러의 `readOnly = true`를 빼거나, `endByTimeout`을 `REQUIRES_NEW`로. 재현: 문항 하나 시작 → 제한시간 뒤 WS 프레임 관찰.
+
+### 🔴 B-13. 호스트 REST(`session/start`·`next`)가 브라우저에서 **간헐적으로 503**을 돌려준다
+
+같은 요청을 curl로 보내면 204인데, 오늘 13:22·14:49·14:50에 웹에서 누른 `POST /rooms/{id}/session/start`·`/next`가 503으로
+왔다(동작 자체는 서버에서 수행됐다 — 스냅샷은 넘어가 있었다). 앱 코드에는 503을 내는 곳이 없고(`ErrorCode`에 503 없음,
+`GlobalExceptionHandler`는 500) 프로세스 재시작도 없었다(PID 35949, 11:47 기동). **그 시각의 서버 로그**를 봐야 한다.
+프런트는 503을 "점검 중"(E-500)으로 올리므로 오판이 커진다.
+
+### 🟡 B-14. 방 리포트의 **문항 단위** 선생님 코멘트를 저장할 곳이 없다 (2026-09-04 소스 확인)
+
+시안 W-07 우측 패널의 "선생님 코멘트"는 **문항 하나에 대해 학생 전체에게 남기는 첨삭**이다.
+서버에 있는 첨삭은 `PUT /rooms/{roomId}/answers/{answerId}/review` — **답안(학생) 단위**뿐이고
+(`TeacherReviewController.kt:49`), 문항 단위로 저장할 자리가 엔티티에도 없다.
+
+- 지금 화면: 버튼을 잠그고 "지금은 학생별 답안에만 첨삭을 남길 수 있어요"로 안내한다.
+- 정할 것: **문항 단위 코멘트를 만들 것인가**(예: `PUT /rooms/{roomId}/questions/{questionId}/comment`),
+  아니면 **시안에서 이 칸을 빼고** 학생별 첨삭으로 일원화할 것인가. 디자이너 확인도 함께 필요하다.
+
+### 🟢 B-15. 회원으로도 들어갔던 방의 게스트 이관이 **일반 `CONFLICT`**로 와서 프런트가 종결로 못 본다 (2026-09-05)
+
+- `GuestClaimService.claim` 마지막 분기: 같은 방에 회원으로 참여한 줄이 있으면
+  `ErrorCode.CONFLICT("이미 회원으로 참여한 방입니다.")`. **전용 코드가 없다.**
+- 프런트는 `GUEST_RECORD_EXPIRED`·`GUEST_RECORD_ALREADY_CLAIMED`만 종결로 보고 표를 지운다.
+  일반 `CONFLICT`는 일시 실패로 취급해 표를 남기므로, **결과 화면을 열 때마다 7일 내내 같은 409를 다시 낸다**
+  (방 33이 지금 이 상태 — host2가 9/4에 회원 "호스트본인"으로도 들어간 방).
+- **요청**: 이 분기에 전용 코드(예: `GUEST_RECORD_MEMBER_ALREADY_JOINED`)를 달아 달라.
+  프런트는 그 코드를 `TERMINAL_CLAIM_CODES`에 넣기만 하면 된다(1줄).
 
 ---
 
 ## 2. 프런트 — 화면이 안 열리는 것 (우선)
 
-### 🔴 F-1. 유료 방 카드가 전부 열리지 않는다
+### ✅ F-1. 유료 방 카드가 전부 열리지 않는다 — **해결(2026-09-04, PR #19)**
 
-- **어디**: `src/features/home/popular-rooms.tsx:16`, `src/features/participant/rooms/rooms-page.tsx:20`
-- **무엇**: 공개 방 계약에 `pin`이 없어 카드의 `code`를 `String(room.id)`로 바꿨는데
-  (`features/home/adapt.ts:12`, `features/participant/rooms/adapt.ts:44`),
-  유료 방 링크는 아직 `/pay/${room.code}`다.
-  `/pay/[code]`는 `useRoomByPin`으로 조회하므로 `GET /rooms/pin/1` → 404.
-- **결과**: 홈 인기 방·공개 방 목록의 **모든 유료 방이 에러 화면**으로 간다.
-- **메모**: 무료 방은 `/join`으로 우회했는데 유료 경로만 남았다. PIN 없이 결제 화면으로 갈
-  방법이 없으므로 `/join` 경유로 통일하거나, 서버에 공개 방 카드의 PIN을 요청해야 한다.
+- **무엇이었나**: 공개 방 계약에 `pin`이 없어 카드가 식별자로 방 id를 실었는데
+  (`code: String(room.id)`), 링크는 PIN 시절 그대로 `/pay/{code}`였다.
+  결제 화면이 그 값을 PIN으로 조회하니 `GET /rooms/pin/7` → 404. 서버 PIN은 항상 6자리라
+  id가 우연히 맞을 일도 없어 **간헐이 아니라 100% 실패**였다.
+- **어떻게 풀렸나**: 호출자 넷이 이미 전부 방 id를 쥐고 있어서 형식 판별 분기 없이
+  **라우트의 뜻을 하나로 정했다** — `/pay/[code]` → `/pay/[roomId]`, `useRoomByPin` → `useRoom`.
+  카드 뷰 타입의 `code: string`도 `roomId: number`로 바꿨다(이 이름이 착각의 원인이었다).
+  `/login?next=` 두 자리도 같이 고쳤다.
+- **같이 세운 것**: PIN 조회(`findByPinAndStatusIn`)가 끝난 방을 404로 막아 주던 안전망이
+  id 조회에는 없다(ENDED·CANCELED도 200). `toPayGate(room)`이 `payable`/`free`/`closed`를
+  가르고, 상태를 유·무료보다 **먼저** 본다. 계약 테스트 `features/participant/pay/adapt.test.ts`.
+- **남은 것**: 결제 화면에 닿게 되자 드러난 표시 오류가 **F-12**다.
 
-### 🔴 F-2. `/me`가 실서버에서 통째로 실패
+### ✅ F-2. `/me`가 실서버에서 통째로 실패 — **해결(2026-09-03)**
 
-- **어디**: `src/app/(member)/me/page.tsx:48`
-- **무엇**: 코인 잔액(`GET /users/me/coins`)은 `@draft`라 실서버 404인데,
-  `useCoinBalance`에 `retry: false`가 없고 컨테이너가 `if (coins.isError) return <ScreenError/>`다.
-- **결과**: 마이페이지 전체가 에러 화면이 되어 프로필·참여 기록·정산 요약에 접근할 수 없다.
-  바로 아래 정산 계좌 404는 접어서 처리하고 있어 **한 함수 안에서 규칙이 엇갈린다**.
+- **무엇이었나**: 코인 잔액(`GET /users/me/coins`)이 `@draft`라 실서버 404인데
+  컨테이너가 그 오류로 마이페이지 전체를 에러 화면으로 바꿨다.
+- **어떻게 풀렸나**: 백엔드 PR #29~#32로 지갑 API가 실제로 생겼다. 404가 나지 않으므로
+  분기 자체가 발화하지 않는다. 잔액의 원천도 `GET /users/me`의 `coinBalance`에서
+  `GET /users/me/coins`로 옮겼다(`features/me/adapt.ts`의 `toCoinSummary`).
 
-### 🟡 F-3. 비활성 쿼리 때문에 무한 로딩 2곳
+### ✅ F-3. 비활성 쿼리 때문에 무한 로딩 2곳 — **해결(2026-09-04)**
 
 TanStack Query v5에서 `enabled: false`인 쿼리는 `isPending === true`다.
 pending 가드가 먼저 오면 뒤의 분기가 **도달 불가**가 된다.
@@ -85,44 +226,238 @@ pending 가드가 먼저 오면 뒤의 분기가 **도달 불가**가 된다.
 | `app/host/(nav)/rooms/[code]/timing/page.tsx:41` | 세트가 안 붙은 방을 열면 "연결된 문제 세트를 찾지 못했어요" 대신 영원히 로딩 |
 | `app/host/(flow)/rooms/[code]/lobby/page.tsx:75` | 잘못된 PIN으로 대기실에 들어가면 에러 대신 영원히 로딩                       |
 
+- 조회마다 **pending → error 순으로 차례차례** 가르도록 바꿨다. 적어 둔 2건 외에
+  timing의 PIN 조회·방 상세 **에러 분기도 같은 가드에 가려** 도달 불가였다(앞이 실패하면
+  뒤 쿼리가 비활성 → pending) — 함께 살렸다.
+- 로컬 실서버로 네 경우를 확인했다(고치기 전 재현 → 고친 뒤 해소): 세트 미연결 방 ·
+  잘못된 PIN · 세트가 붙은 방 · 정상 대기실.
+
 ---
 
 ## 3. 프런트 — 값이 틀리거나 낭비되는 것
 
-### 🟡 F-4. AI 분석 요청 버튼이 `DONE`에도 보인다
+### ✅ F-4. AI 분석 요청 버튼이 `DONE`에도 보인다 — **해결(2026-09-04)**
 
 - **어디**: `app/(participant)/result/[sessionId]/report/[questionNo]/page.tsx:69`
-- `canRequest`가 `analysisStatus !== "PENDING"`이라 **이미 끝난 분석에도 버튼이 남는다**.
-  다시 누르면 월 5회 무료 중 하나를 더 쓰거나 코인을 또 낸다.
-  `NOT_REQUESTED`·`FAILED`일 때만 의미가 있다.
+- `canRequest`가 `analysisStatus !== "PENDING"`이라 **이미 끝난 분석에도 버튼이 남았다.**
+  `NOT_REQUESTED`·`FAILED`일 때만 보이도록 고쳤다.
+- ⚠️ **처음 적은 근거는 틀렸다.** "다시 누르면 무료 횟수를 더 쓰거나 코인을 또 낸다"고 적었는데,
+  서버가 이미 막고 있다 — `EssayAnalysisService.request`가 `existing != null && !existing.isFailed`면
+  **차감 없이 기존 상태를 그대로 돌려준다**(백엔드 주석: "버튼을 두 번 눌렀다고 코인을 두 번 받지 않는다").
+  돈이 새는 문제가 아니라, **눌러도 아무 일이 없는 버튼**이 남아 있던 화면 문제였다.
 
-### 🟡 F-5. 객관식 답이 뒤바뀔 수 있다
+### ✅ F-5. 객관식 답이 뒤바뀔 수 있다 — **해결(2026-09-04)**
 
-- **어디**: `features/participant/play/adapt.ts:43` (`toSubmittedValue`)
-- `PlayCard`가 이미 보기 **원문**을 넘기는데, 어댑터가 그 값을 다시 `key`로 찾는다.
-  보기 텍스트가 `"A"`~`"D"` 같은 한 글자면 **다른 보기가 제출된다.**
-  지금은 보기 문구가 키처럼 생기지 않아서 우연히 맞고 있다.
+- **어디**: `features/participant/play/adapt.ts:43`(`toSubmittedValue`) · `play-card.tsx`
+- 같은 증상이 **두 곳**에서 났다. 표시용 A·B·C·D 글자로 보기를 되찾는 게 공통 원인이다.
+  1. `PlayCard`가 이미 보기 **원문**을 넘기는데 컨테이너가 그 값을 다시 `key`로 찾았다 →
+     보기 문구가 `"A"`~`"D"`를 닮으면 다른 보기가 제출된다. `toSubmittedValue`를 없애고
+     화면이 준 값을 그대로 보낸다.
+  2. `PlayCard`가 고른 보기를 **키로** 기억했다 → `CHOICE_KEYS[i] ?? "D"`라서 보기가 넷을
+     넘으면 키가 겹친다. 순번(index)으로 기억하도록 바꿨다.
+- **보기 개수 상한이 없다**(실서버 확인). 에디터의 "+ 보기 추가"에 제한이 없고 백엔드
+  `QuestionRequests`에도 `@Size`가 없다 — 보기 5개짜리 문항이 그대로 저장된다.
+- 로컬 실서버로 재현 → 해소를 확인했다. 문구가 `["D","C","B","A"]`인 문항에서 첫 줄(배지 A ·
+  문구 "D")을 고르면 **고치기 전에는 `"A"`가 저장되고 오답 처리**됐고, 고친 뒤에는 `"D"`로
+  맞게 저장된다. 보기 5개 문항에서 5번째를 고르는 경우도 `"마"`로 바르게 저장된다.
+- 🟡 **남은 것(디자이너 질문)**: 보기가 다섯 개 이상이면 배지 글자가 `D·D`로 **겹쳐 보인다**.
+  제출은 이제 바르지만 표시가 어긋난다 — E·F로 늘릴지, 보기 수를 4개로 제한할지 정해야 한다.
+  (`CHOICE_KEYS`·`ChoiceKey`·`CHOICE_CLASS`는 호스트 진행·결과 화면도 함께 쓴다.)
 
-### 🟡 F-6. 진행 화면 제출 수가 최대 3초 낡는다
+- 실서버 재확인(2026-09-05, 방 42·세트 21): 역순 보기에서 "D"를 고르니 호스트 집계가 `{"D": 1}`·정답 1.
+  보기 5개 문항은 **배지가 D·D로 겹쳐 보이는 것을 화면에서 확인**(제출은 "마"로 바르게 나감) — 디자이너 질문 유지.
+
+### ✅ F-6. 진행 화면 제출 수가 최대 3초 낡는다 — **해결(2026-09-04)**
 
 - **어디**: `app/host/(flow)/rooms/[code]/live/page.tsx:54`
 - 폴링 결과를 현재 문항과 대조하지 않아, 새 문항이 열린 직후 **이전 문항의 집계**가
-  잠깐 그대로 보인다(교실 프로젝터에 "18/24 제출"이 뜬 채 시작). 두 값 모두
-  `sessionQuestionId`를 들고 있으니 그것으로 거르면 된다.
+  잠깐 그대로 보였다(교실 프로젝터에 "18/24 제출"이 뜬 채 시작).
+- `features/host/live/adapt.ts`에 `pickSubmissionForQuestion`을 두고 **두 출처를 모두**
+  `sessionQuestionId`로 거른다. 스토어(이벤트)는 `QUESTION_STARTED`에서 비워지지만
+  **늦게 도착한 이벤트**도 낡을 수 있어 폴링과 같은 기준으로 판단한다. 단위 테스트 5건.
+- 실서버로 두 값의 `sessionQuestionId`가 같은 값임을 확인했다(스냅샷 `currentQuestion` 63 =
+  `GET …/session/current/submissions` 63). 문항을 넘기면 둘 다 64가 되고, 프런트 캐시에만
+  63(제출 1)이 남는다 — 그게 화면에 그려지던 값이다. 고친 화면은 정상 집계를 그대로 보여준다
+  (제출 1/1 · 분포 "마 1명").
 
-### 🟡 F-7. 렌더 중 부수효과 2곳
+### ✅ F-7. 렌더 중 부수효과 2곳 — **해결(2026-09-04)**
 
-React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다.
+React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다. 둘 다 `useEffect`로 옮겼다.
 
-- `lib/queries/use-rooms.ts:78` — 렌더 본문에서 `writeHostRoomId`(sessionStorage 쓰기)
-- `app/(participant)/result/[sessionId]/page.tsx:73` — 렌더 본문에서 `claim.mutate`
-  (게스트 기록 이관이 중복 요청될 수 있다)
+- `lib/queries/use-rooms.ts:78` — 렌더 본문에서 `writeHostRoomId`(sessionStorage 쓰기).
+  **눈으로 확인**: 방을 만들고 대기실을 열면 효과가 `passmate.hostRoom.<pin>`을 쓰고,
+  세션을 끝내 `GET /rooms/pin/{pin}`이 404가 된 뒤에도 최종 화면이 그 값으로 이어진다.
+- `app/(participant)/result/[sessionId]/page.tsx:73` — 렌더 본문에서 `claim.mutate`.
+  잠금은 state가 아니라 **ref**로 뒀다 — StrictMode의 두 번째 실행은 첫 실행의 setState가
+  반영되기 전에 오므로 state로는 못 막는다(원래 코드의 `claimTried`가 그랬다).
 
-### 🟡 F-8. 죽은 코드
+> ⚠️ 확인 중 **이관이 애초에 한 번도 나가지 않는다**는 것을 발견했다 → 아래 F-14.
 
-- `features/me/adapt.ts` `toHostRecord` — 쓰는 화면이 없다(그릴 카드 UI가 아직 없어 의도적).
-- `features/participant/pay/adapt.ts:51` — `formatSchedule(undefined, undefined)`는
-  항상 빈 문자열이다. 주변 `host.name: ""`·`level: 1`·`rating: 0`도 계약이 없어진 뒤 남은 상수다.
+### ✅ F-14. 게스트 기록 이관이 아예 나가지 않는다 — **해결(2026-09-05)**
+
+- **어디였나**: `lib/guest-token-storage.ts` `readGuestRecord` (화면이 아니라 **저장소**였다)
+- **9/4에 적은 원인은 틀렸다.** "이 화면은 `RequireAuth` 밖이라 회원 세션을 못 알아본다"고 했지만,
+  `SessionBootstrap`이 **루트 레이아웃(`app/layout.tsx:26`)에 이미 마운트돼 있다** — 세션 복원은
+  앱 어디서나 돈다. 가드 밖이라서가 아니었다.
+- **진짜 원인은 곁다리로 적어 둔 "50번 다시 그려진다" 쪽이었다. 증상 둘이 원인 하나다.**
+  1. `readGuestRecord`가 호출마다 새 객체를 만든다.
+  2. React는 `useSyncExternalStore` 스냅샷을 `Object.is`로 비교한다
+     (react-dom `checkIfSnapshotChanged`) → **항상 달라졌다**고 보고 커밋마다 `forceStoreRerender`.
+  3. 같은 루트에 동기 렌더가 겹쳐 `nestedUpdateCount`가 오르고, **50**(`NESTED_UPDATE_LIMIT`)을
+     넘는 순간 `getRootForUpdatedFiber`가 **"Maximum update depth exceeded"를 던진다.**
+     관찰된 "50번 넘게"는 우연이 아니라 이 상수였다.
+  4. 이 크래시는 마운트 후 수 ms 안에 난다 — `POST /auth/refresh` + `GET /users/me`가
+     돌아오기 훨씬 전이다. 그래서 **`isMember`는 false인 채로 컴포넌트가 죽고**, 이관 효과는
+     영영 실행되지 않는다. F-7 수정 전후가 같았던 것도 이 때문이다(렌더든 효과든 똑같이 죽는다).
+- **고친 것**: `readGuestRecord`가 보관된 값이 그대로면 **같은 객체를 돌려준다**(값 비교 캐시).
+  화면 코드는 건드리지 않았다. 테스트 3건(과잉 캐시로 바꾸면 기존 2건까지 4건이 깨지는 것 확인).
+- `useSyncExternalStore` 나머지 5곳은 전부 원시값을 돌려준다 — 불안정한 스냅샷은 여기 하나뿐이었다
+  (`readMyParticipant`도 화면에서 `?.participantId ?? null`로 접어 읽으므로 안전하다).
+- **서버 쪽은 처음부터 정상이었다**(2026-09-05 실서버 curl 확인): 방 41에 게스트로 입장 →
+  회원 토큰으로 `POST /guest-records/claim` **200** → 같은 토큰 재시도 **409
+  `GUEST_RECORD_ALREADY_CLAIMED`**(프런트 `TERMINAL_CLAIM_CODES`와 일치).
+  세션 복원의 `refresh`가 게스트 Bearer를 달고 나가는 것도 확인했으나 **200**이라 무해하다.
+- **브라우저 전체 흐름으로 확인했다(2026-09-05)**: 방 42에 게스트로 입장 → 2문항 풀이 → 결과 화면
+  ("7일 안에 가입하면…" 안내, "가입하고 이 기록 저장하기") → 새 회원 `f14-claimer`로 개발 로그인 →
+  `/result/42`로 복귀 → **`POST /guest-records/claim` 200** → localStorage의 방 42 표 삭제 →
+  회원 화면(가입 버튼·7일 안내 없음). 콘솔에 "Maximum update depth" 없음.
+  9/4에 남아 있던 방 33 표로도 열자마자 요청이 나갔다(409 — 아래 B-15).
+  이관 직후 화면이 404에 멈추는 것은 별개 문제로 갈라 F-16에 적었다.
+
+### ✅ F-8. 죽은 코드 — **해결(2026-09-04)**
+
+- `features/me/adapt.ts` `toHostRecord` — **지웠다.** 딸린 `toAchievement`(비공개)와
+  `me/types.ts`의 `HostRecord`까지. 어느 화면도 그리지 않고 테스트도 없었다.
+  `openRooms: 0`·`settlementThisMonth: 0`처럼 채울 수 없다고 스스로 적어 둔 값도 들어 있었다.
+  "기록" 카드 UI가 생기면 그때 계약을 다시 보고 짜는 편이 낫다(git 이력에 남아 있다).
+  `toEarnedAchievement`·`AchievementBadge`는 공개 프로필이 쓰므로 그대로 둔다.
+- `features/participant/pay/adapt.ts` — **일정은 지우지 않고 연결했다.**
+  `RoomResponse`에 `scheduledAt`이 **있는데**(계약 확인) "이 응답에 없다"는 낡은 주석 때문에
+  `formatSchedule(undefined, undefined)`로 늘 빈 문자열을 만들고 있었다. 실제 필드를 넘기니
+  결제 화면에 "일정 8/28 (금) 20:00"이 뜬다(목으로 확인). 소요 시간은 계약에 없어 시간까지만.
+- 지어낸 상수(`host.name: ""`·`level: 1`·`rating: 0`·`students: 0`)는 걷어내고
+  `PaidRoom.host`를 **nullable**로 바꿨다. 화면은 이름의 빈 문자열이 아니라 `host === null`을
+  보고 감춘다. 단위 테스트 3건 추가.
+
+### ✅ F-15. 결제 화면이 "최대 0명"이라고 말한다 — **해결(2026-09-05)**
+
+- **어디였나**: `features/participant/pay/adapt.ts` `capacity.max` · `room-info-card.tsx:45`
+- `maxParticipants`는 계약상 선택 항목인데 `?? 0`으로 접고, 화면은 그 값을 언제나
+  "최대 {n}명"으로 그렸다 — 정원을 안 정한 방이 **"최대 0명"** 이 됐다.
+- **없는 숫자를 지어내는 것보다 나빴다.** 백엔드 `Room.isFull()`(`Room.kt:187`)이
+  `maxParticipants?.let { participantCount >= it } ?: false` — **null은 정원 제한 없음**이다.
+  즉 "무제한"인 방을 화면이 "최대 0명"(= 아무도 못 들어옴)이라고, **뜻을 정반대로** 말하고 있었다.
+- **고친 것**: 문구 판단을 화면이 아니라 어댑터로 내렸다(F-4와 같은 방식 — 이 리포에는
+  컴포넌트 테스트가 없어서, 화면에 두면 잠글 수 없다). `formatCapacity(current, max)` 신규 ·
+  `PaidRoom.capacity`를 `string`으로 · 카드는 그리기만 한다.
+  같은 필드를 다루는 입장 화면(`join/adapt.ts:55`)이 이미 이렇게 가르고 있었다 — 그쪽에 맞췄다.
+- **9/3 판단(`capacity.max === 0` 못박기)은 뒤집었다** — 사용자 확인을 받고 바꿨다.
+  테스트는 정원 있음/없음 두 갈래로 다시 썼다(옛 코드로 되돌려 실패 확인).
+
+### ✅ F-16. 이관은 됐는데 화면은 "찾는 정보가 없어요"에 멈춘다 — **해결(2026-09-05, F-14 확인 중 발견)**
+
+- **어디였나**: `lib/queries/use-me.ts` `useClaimGuestRecord` — 성공해도 아무 쿼리를 무효화하지 않았다.
+- 회원으로 `/result/{roomId}`에 돌아오면 `results/me`가 이관보다 **먼저** 나간다. 그때는 이 계정에
+  참가 기록이 없어 **404**이고, 그 뒤 이관이 200으로 붙어도 같은 조회를 다시 부르지 않아
+  화면이 NotFound("찾는 정보가 없어요")에 멈춘다. "다시 시도"를 누르면 200이 나는 것으로 확인.
+- **고친 것**: `onSuccess`에서 `qk.myResult(roomId)`를 무효화한다(`use-ratings.ts`와 같은 방식,
+  코드 패턴 규칙 "뮤테이션 성공 시 invalidateQueries"). 브라우저에서 방 34 표 + 새 회원
+  `f14-claimer2`로 재확인: `results/me` 404 → 이관 200 → **`results/me` 200 재조회** → 별점 시트.
+- 단위 테스트는 없다 — 이 리포에 훅 테스트 기반이 없다(`environment: node`). 브라우저 흐름으로 잠갔다.
+
+### ✅ F-17. 재접속하면 객관식이 서술형으로 분류된다 — **해결(2026-09-05, 코드 리뷰)**
+
+- **어디였나**: `features/host/live/adapt.ts` `toQuestionResult`
+- 이 브랜치(`7ad85db`)가 넣은 `distribution.length === 0 ? "essay" : "multiple"`에서 `distribution`은
+  `choices`로 만드는데, `choices`는 그 분기(문항 정보 없음)에 들어올 때 **항상 null**이다.
+  즉 `"multiple"`은 **도달 불가**였고 모든 재접속 결과가 서술형이 됐다.
+- 증상: 호스트가 프로젝터를 새로고침한 뒤 객관식을 마감하면 "모범 답안"에 정답 보기 원문이 뜨고,
+  정답률 자리가 "AI 분석이 리포트에 담겨요"로 덮여 **정답률이 사라진다**.
+- **고친 것**: 서버가 준 `reveal.distribution`을 본다(서술형만 빈 객체 — `dto/session.ts`). 테스트 1건.
+- 곁다리로 **프로젝터 정답률 반올림 누락**도 함께 고쳤다. 같은 커밋 제목이 "정답률을 정수로"였는데
+  리포트 3곳만 `Math.round`가 붙고 이 화면은 raw였다 — 6명 중 1명이면 `16.666666666666668%`가
+  큰 글씨로 떴다. 테스트 1건.
+
+### ✅ F-18. 이관 기록 스냅샷 캐시가 방마다 나뉘어 있지 않았다 — **해결(2026-09-05, 코드 리뷰)**
+
+- F-14에서 넣은 `lastRead`가 모듈 전역 **한 칸**이라, 호출부가 결과 화면 하나뿐이라서 성립하던 것이다.
+  다른 화면이 다른 roomId로 같이 읽으면 두 호출이 칸을 번갈아 밀어내 **둘 다 매번 새 객체**를 받고,
+  F-14가 고친 "Maximum update depth exceeded"가 그대로 돌아온다.
+- **고친 것**: `Map<roomId, GuestRecord | null>`. 테스트 1건(방 두 개를 번갈아 읽어도 각각 안정적).
+
+### ✅ F-19. 세트가 없는 대기실에도 "문항별 시간 설정" 링크가 보인다 — **해결(2026-09-05, 코드 리뷰)**
+
+- 이 브랜치(`aab02f9`)가 붙인 링크가 `setLink ? … : null` 블록 **밖**에 있어 무조건 그려졌다.
+  `setLink`가 있다는 건 곧 세트가 연결 안 됐다는 뜻이라(바로 아래 시험 시작 버튼도 그것으로 잠긴다),
+  누르면 timing 화면의 `if (setId === null)` 가드에 곧장 걸려 "연결된 문제 세트를 찾지 못했어요"가 뜬다.
+  세트를 연결하러 온 사람에게 **반드시 실패하는 길**을 놓아둔 셈이었다.
+- **고친 것**: `setLink`가 있으면 감춘다.
+
+### ✅ F-20. 지어낸 값·죽은 문구 정리 — **해결(2026-09-05, 코드 리뷰)**
+
+- `me/adapt.ts` `leftOf` — 서버가 안 준 승급 조건을 **0**으로 채웠다. 등급마다 조건이 달라
+  `AVG_RATING`만 거는 등급도 있는데, 0은 "이미 채웠다"와 구분되지 않는다 → `number | null`. 테스트 1건.
+- `sets/adapt.ts` `summary: ""` — 카드가 조건 없이 그려 **모든 세트 카드에 빈 줄**이 하나씩 들어갔다
+  → `summary?`로 바꾸고 카드가 감춘다. `minutes: 0`도 `number | null`로. 테스트 3건.
+- `editor/page.tsx` — 제목 폴백이 `??`라 **빈 문자열을 통과**시켰다(상단 h1과 미리보기 다이얼로그
+  이름이 통째로 빔) → `||`.
+- `preview-dialog.tsx` — 보기 **본문**을 React key로 썼다(`key={choice}`). 본문이 겹치면 키가 충돌하고
+  정답 강조도 두 줄에 걸린다 → `key={i}`. 같은 파일 `question-form.tsx`가 이미 그렇게 하고 있었다.
+- `generate-panel.tsx` — "시간 30초 **자동**"이라 적어 놓고 실제로는 이 화면이 `timeLimitSec`를
+  실어 보낸다(서버 기본값이 아니다) → "문항당 30초"로 고치고 주석도 사실에 맞췄다.
+- `settlement-table.tsx` — 빈 상태가 `role="row"`인데 안에 `role="cell"`이 없어 리더가 그 줄을
+  통째로 건너뛴다 → cell로 감쌌다.
+- `set-detail-panel.tsx` — 스켈레톤이 `PREVIEW_COUNT`를 리터럴 `3`으로 복제하고 있었다 → 상수를 잇는다.
+
+---
+
+## 3-2. 코드 리뷰에서 나왔지만 **프론트만으로 못 끝나는 것** (2026-09-05)
+
+### 🔴 F-21 / B-16. 보기가 5개 이상이면 프로젝터가 정답을 잃는다
+
+- `features/host/live/adapt.ts` `toCorrectKey`가 `index < CHOICE_KEYS.length`(=4)로 잘라,
+  정답이 5번째 이후 보기면 **null**을 돌려준다 → `result-page.tsx:127`이 멀쩡한 객관식에 대고
+  **"정답이 등록되지 않은 문항이에요"**를 띄운다. 같은 이유로 `key={d.key}`에 React 중복 key가 가고
+  "많이 고른 오답" 강조도 엉뚱한 행을 잡는다.
+- **실제로 만들 수 있다**: 세트 21의 2번 문항이 그 경우다(보기 [가,나,다,라,마], 정답 "마" = index 4).
+  에디터 "+ 보기 추가"에 상한이 없고 백엔드 `QuestionRequests`에도 `@Size`가 없다.
+- **프론트만으로 못 정한다** — 배지 글자를 E·F로 늘릴지, 보기를 4개로 제한할지가 **디자이너 질문**이고
+  (이미 올려 둠) 백엔드 `@Size` 여부도 함께 정해야 한다. 정해지면 프론트는 그대로 따라간다.
+
+### 🟡 B-17. 순위 변동·정답률 변동을 줄 값이 계약에 없다
+
+- `toQuestionResult`가 `change: 0`·`accuracyDelta: 0`을 모든 행에 박는데, `result-rail.tsx`의
+  `RankChange`는 **0을 `—`로** 그린다 → 프로젝터가 매 문항 TOP5 전원을 "변동 없음"으로 말한다.
+  실제로는 **추적하지 않는 값**이다.
+- 지난 순위·지난 정답률이 계약에 없어 프론트가 할 수 있는 것은 "지어내지 않기"까지다.
+  이 칸을 살릴지(= 서버가 직전 값을 실어 줄지) 정해 주면 그때 맞춘다.
+
+### 🟡 B-7(재확인). AI 무료 생성 횟수를 화면이 숫자로 약속하고 있다
+
+- `generate-panel.tsx`의 `AI_FREE_LIMIT = 5`는 서버 정책값(`AiPolicy.aiFreeLimit`)을 복제한 것이라
+  서버가 바꾸면 화면이 조용히 거짓말을 한다. **B-7(잔여 횟수를 주는 응답)이 들어오면 이 상수를 지운다.**
+  그때까지는 그대로 둔다 — 프론트가 지금 할 수 있는 것은 숫자를 빼는 것뿐인데 안내가 더 나빠진다.
+
+---
+
+## 3-3. 시안 대조에서 나온, 프론트만으로 못 끝나는 것 (2026-09-06)
+
+**전문은 백엔드 전달 문서에 있다** — `~/Desktop/Sesac/final-project/docs/BACKEND_REQUESTS_20260906.md`
+(슬랙으로 백엔드에 넘기는 문서라 리포에 두지 않는다). 현상·근거·요청 선택지·정해지면 프론트가
+할 일까지 그쪽에 적는다. 여기에는 번호와 한 줄만 남긴다.
+
+- 🔴 **B-18. 확정 세트라 "문항별 시간 설정"이 어떤 방에서도 저장되지 않는다** — 방에는 확정 세트만
+  붙는데(`status=CONFIRMED`만 고름) 확정 세트 문항은 409로 막힌다. 프론트는 확정 세트면 화면을
+  읽기 전용으로 잠갔다.
+- 🟡 **B-19. 자동 넘김(`autoAdvance`)을 담을 필드가 없다** (= D-15) — 화면은 토글을 잠가 둔다.
+- 🔴 **B-23. AI 문항 생성이 기본값(객관식 5·서술형 3)으로 항상 502** — 유형별 개수를 프롬프트로만
+  요구하고 결과를 엄격 검증한다. `{MCQ:2}`는 되고 `{MCQ:8}`·`{MCQ:5,ESSAY:3}`은 실패(로그로 확인).
+- 🟡 **B-22. 결제 수단 등록·삭제(빌링키) 계약이 없다** (= DESIGN_GAPS C-4) — 시안의 "+ 결제 수단 추가"를
+  못 만든다. 화면은 "기본 수단 1개 고르기"로 축소해 둔 상태다.
+- 🟡 **B-21. 호스트용 방 상세에 문항 수·호스트 이름이 없다** — 공개 방 목록(`PublicRoomResponse`)엔
+  둘 다 있는데 `RoomResponse`엔 없다. 대기실이 세트 목록·세트 상세를 더 읽어 메우고 있다.
+- 🔴 **B-20. 학생 리포트가 시안의 절반을 못 그린다** — 소요 시간·개념·반 정답률·반 평균 비교·추이가
+  전부 계약에 없다. 프론트는 빈 칸을 감추거나 `—`로 둔다.
 
 ---
 
@@ -144,6 +479,51 @@ React가 금지하는 패턴이고 StrictMode에서 두 번 실행된다.
 `POST /users/me/devices`(푸시 토큰, 웹은 해당 없을 수 있음) ·
 `POST /admin/grades/evaluate`(관리자)
 
-## 6. 계속 `@draft`인 17개 (백엔드에도 없음)
+## 6. 계속 `@draft`인 11개 (백엔드에도 없음)
 
-관리자 10 · 코인/결제 6 · 파일 기반 출제 1. 실서버 404가 정상이고 화면은 "준비 중"으로 접는다.
+관리자 10 · 파일 기반 출제 1. 실서버 404가 정상이고 화면은 "준비 중"으로 접는다.
+
+**2026-09-04 갱신** — 코인/결제 6은 PR #18로 붙었고, 그때까지 `@draft`였던 13경로(평가 제출 ·
+게스트 기록 이관 · 첨삭 저장 · 세트 복제 · 음성 힌트 2 · 마이페이지 확장 5 · 신고)도 백엔드에
+구현돼 실계약 대조를 마쳤다. 대조에서 나온 어긋남은 아래 F-9~F-11로 적고 모두 고쳤다.
+
+### 🟡 F-12. 코인이 충분해도 "충전한다"고 말한다 — **시안 대기(2026-09-04)**
+
+- **어디**: `src/features/participant/pay/coin-charge-card.tsx:143`(포트원 결제 금액) · `:165`(CTA 문구)
+- **무엇**: 부족분이 0이어도 충전 카드가 그대로 그려진다. 잔액 12,000 C · 참가비 10,000 C인데
+  "포트원 결제 금액 ₩10,000", 버튼은 "₩10,000 충전 → 10,000 C 차감하고 입장"이다.
+  충전 프리셋도 `CHARGE_OPTIONS.find((a) => a >= 0)`이라 가장 작은 10,000을 고른다.
+- **실제 동작은 맞다**: `pay/[roomId]/page.tsx`가 `shortfall <= 0`이면 충전을 건너뛰고 참가비만
+  차감한다. **돈이 더 나가지는 않고 문구만 틀렸다** — 결제창을 기대한 사용자가 그냥 입장된다.
+- **왜 이제 보이나**: F-1 때문에 목록에서 이 화면에 닿을 수 없었다. 길을 열자 드러났다.
+- **왜 아직 안 고쳤나**: **시안에 이 상태가 없다**(부족분 0인 결제 화면). 지어내면 시안과
+  어긋나므로 디자이너 요청 후에 붙인다 — `DESIGN_GAPS.md` §3 W-11 행에 적었다.
+
+### 🟢 F-13. 목의 단건 방 조회가 공개 목록을 못 따라간다 — **목 전용(2026-09-04)**
+
+- **어디**: `src/lib/mocks/rooms.ts:35` — `let rooms = [{ ...DEMO_ROOM }]`
+- **무엇**: 목의 `GET /rooms/public`은 `PUBLIC_ROOMS` 7개를 뿌리는데 `GET /rooms/{roomId}`가
+  아는 방은 `DEMO_ROOM`(id 1) 하나다. 그래서 목 모드의 `/rooms` 목록에서 유료 카드
+  "인덱스와 실행 계획 실전"(id 204)을 누르면 "없는 방이에요"가 뜬다.
+- **실서버는 정상**이다 — 목록에 실린 방은 단건 조회도 된다.
+- **왜 고쳐야 하나**: `CLAUDE.md`의 "목은 계약 거울" 규칙 위반이다. 목이 실서버보다 좁으면
+  목에서만 깨지고, 그걸 실제 버그로 오인하게 된다.
+
+### ✅ F-9. 별점 태그 enum 3개가 서버와 다름 — **해결(2026-09-04)**
+
+목을 보고 짠 이름이라 `GOOD_DIFFICULTY`·`HELPFUL_HINTS`·`GOOD_QUALITY`가 서버의
+`FAIR_DIFFICULTY`·`HELPFUL_HINT`·`GOOD_QUESTIONS`와 어긋나 있었다. 태그를 고르고 별점을 내면
+400이 났고 `CLEAR_EXPLANATION`·`GOOD_PACING`만 우연히 통과했다. 문구도 서버 enum의 label로 맞췄다.
+계약 테스트: `src/lib/types/dto/ratings.test.ts`.
+
+### ✅ F-10. 음성 힌트 업로드가 서버 시그니처와 다름 — **해결(2026-09-04)**
+
+multipart 파트 이름이 `audio`였는데 서버는 `@RequestPart("file")`이고(→ 400),
+`durationMs`는 `@RequestParam`이라 쿼리인데 폼에 담고 있었다(→ 길이가 빈 채 저장).
+`requestMultipart`에 쿼리 인자를 더해 고쳤다. 계약 테스트: `src/lib/api/sessions.test.ts`.
+
+### ✅ F-11. 오류 코드 6개 어긋남 — **해결(2026-09-04)**
+
+`RECORD_PURGED`는 서버에 없는 이름이었고(실제는 `GUEST_RECORD_EXPIRED`) 화면이 영영 타지 않는
+분기를 들고 있었다. `RATING_NOT_ALLOWED`·`RATING_WINDOW_CLOSED`·`SESSION_NOT_ENDED`·
+`GUEST_RECORD_ALREADY_CLAIMED`가 빠져 있었다. 서버 enum은 47개 → **53개**다.

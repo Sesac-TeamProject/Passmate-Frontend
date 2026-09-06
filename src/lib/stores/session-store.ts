@@ -23,7 +23,7 @@ type SessionStore = SessionState & {
   replaceWithSnapshot: (snapshot: SessionSnapshotResponse) => void;
   /** GET /participants 초기 로딩·폴링 결과 */
   setParticipants: (participants: SessionState["participants"]) => void;
-  /** @draft 음성 힌트 복구 — 목 전용 */
+  /** 음성 힌트 복구 */
   setHints: (hints: SessionState["hints"]) => void;
   setConnection: (c: ConnectionStatus) => void;
   /** 내가 방금 답을 냈다 — 서버는 "내 제출"을 이벤트로 알려주지 않는다 */

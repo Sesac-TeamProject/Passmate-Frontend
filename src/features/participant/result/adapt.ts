@@ -80,6 +80,22 @@ export function toReportRows(questions: AnswerResultView[]): ReportRow[] {
   });
 }
 
+/**
+ * "AI 분석 요청" 버튼을 보일지.
+ *
+ * 서술형이고 회원일 때만이다 — 게스트는 눌러도 403이라 버튼이 거짓말이 된다.
+ * 상태로는 `NOT_REQUESTED`·`FAILED` 둘뿐이다. 이미 걸린 건(`PENDING`)과 끝난 건(`DONE`)은
+ * 서버가 **차감 없이 그대로 돌려주므로**(`EssayAnalysisService.request`) 눌러도 화면이 그대로다.
+ */
+export function canRequestAnalysis(
+  type: QuestionType,
+  isMember: boolean,
+  status: AnalysisStatus,
+): boolean {
+  if (type !== "ESSAY" || !isMember) return false;
+  return status === "NOT_REQUESTED" || status === "FAILED";
+}
+
 function toAnalysis(
   status: AnalysisStatus,
   analysis: EssayAnalysisView | undefined,
@@ -157,11 +173,28 @@ export function toRatingDeadlineLabel(rating: RatingAvailability): string | null
   return `${hours}시간 안에 남길 수 있어요`;
 }
 
-/** 별점 제출 실패 문구 */
+/**
+ * 별점 제출 실패 문구.
+ *
+ * 서버가 막는 이유가 넷이고 문구가 다 다르다(`RatingBlockedReason`과 같은 판정을 쓴다).
+ * 코드로 갈라 주지 않으면 "권한이 없어요"·"이미 처리된 요청이에요" 같은 엉뚱한 기본 문구가 뜬다.
+ */
 export function toRatingSubmitMessage(error: unknown): string {
   if (!AppError.isAppError(error)) return "보내지 못했어요. 다시 시도해 주세요";
   // 방이 지워졌거나 참여하지 않은 방인 경우
   if (error.kind === "NotFound") return "이 방을 찾을 수 없어요";
   if (error.code === ERROR_CODES.ALREADY_RATED) return "이미 별점을 남겼어요";
+  if (error.code === ERROR_CODES.RATING_WINDOW_CLOSED) return "평가 기간이 지났어요";
+  if (error.code === ERROR_CODES.RATING_NOT_ALLOWED) return "답안을 낸 학생만 평가할 수 있어요";
+  if (error.code === ERROR_CODES.SESSION_NOT_ENDED) return "수업이 끝난 뒤에 남길 수 있어요";
   return error.message;
+}
+
+/**
+ * 리포트 머리의 순위 문구. 총원은 `MySessionResultResponse`에 없어 보통 null이다 —
+ * 순위가 있으면 순위만 적고, 순위 자체가 없을 때만 "집계 중"이다.
+ */
+export function toRankText(rank: number | null, participantCount: number | null): string {
+  if (rank === null) return "집계 중";
+  return participantCount === null ? `${rank}위` : `${rank}위 / ${participantCount}명`;
 }

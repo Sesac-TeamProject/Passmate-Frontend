@@ -10,6 +10,8 @@ export function Mascot({ className }: { className?: string }) {
       width={76}
       height={84}
       className={cn("pointer-events-none select-none", className)}
+      // 11KB PNG 한 장 — 최적화 파이프라인을 거치면 첫 표시가 늦어 대기실 카드가 빈 원으로 보인다(아바타와 같은 이유)
+      unoptimized
     />
   );
 }

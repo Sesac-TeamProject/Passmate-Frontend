@@ -61,7 +61,8 @@ export default function Page() {
         correctCount={result.data.correctCount}
         questionCount={questionCount}
         myRank={result.data.rank}
-        accuracyPercent={report.data.accuracy}
+        // 서버는 소수로 준다(16.666…) — 시안은 정수 한 자리("71%")다
+        accuracyPercent={Math.round(report.data.accuracy)}
         myScore={result.data.totalScore}
         rows={rows}
         wrongCount={wrongCount}

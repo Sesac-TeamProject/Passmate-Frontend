@@ -12,8 +12,8 @@ type Props = {
 };
 
 function roomHref(room: PopularRoom) {
-  // TODO(API): 무료는 PIN을 채운 입장 폼, 유료는 결제 화면 — 방 code 기준 딥링크 확정 후 조정
-  return room.type === "paid" ? `/pay/${room.code}` : "/join";
+  // 유료는 방 id로 결제 화면(F-1). 무료는 공개 목록에 PIN이 없어 입장 폼을 거친다.
+  return room.type === "paid" ? `/pay/${room.roomId}` : "/join";
 }
 
 /** 인기 방 섹션 (W-01 v6) — 3장/페이지 캐러셀. 페이지 인덱스만 갖는 UI 상태라 여기서 소유한다 */
@@ -45,7 +45,7 @@ export function PopularRooms({ rooms, className }: Props) {
 
       <div className="flex w-full gap-4">
         {visible.map((room) => (
-          <RoomCard key={room.code} room={room} href={roomHref(room)} />
+          <RoomCard key={room.roomId} room={room} href={roomHref(room)} />
         ))}
       </div>
 

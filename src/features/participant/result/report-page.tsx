@@ -96,7 +96,7 @@ export function ReportPage({
         <ReportQuestionTable rows={rows} onOpenQuestion={onOpenQuestion} />
 
         <section className="flex flex-col gap-2.5 pt-2">
-          <h2 className="text-label-lg text-ink">다음에 이렇게 해보세요</h2>
+          <h2 className="text-label-lg font-bold text-ink">다음에 이렇게 해보세요</h2>
           <div className="flex flex-wrap gap-4">
             {wrongCount > 0 && (
               <NextStep onClick={onRetryWrong} primary>
@@ -140,8 +140,8 @@ function NextStep({
       onClick={onClick}
       className={
         primary
-          ? "h-11 w-55 rounded-[10px] bg-mint text-label-md text-white transition-colors hover:bg-mint-dark"
-          : "h-11 w-55 rounded-[10px] border bg-card text-label-md text-ink transition-colors hover:bg-muted"
+          ? "h-11 w-55 rounded-[10px] bg-mint text-label-md font-bold text-white transition-colors hover:bg-mint-dark"
+          : "h-11 w-55 rounded-[10px] border bg-card text-label-md font-bold text-ink transition-colors hover:bg-muted"
       }
     >
       {children}

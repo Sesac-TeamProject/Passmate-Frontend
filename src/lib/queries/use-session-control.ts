@@ -139,7 +139,7 @@ export function toSubmitAnswerMessage(error: unknown): string {
   }
 }
 
-/** @draft GET /rooms/{roomId}/session/hints — 백엔드 미구현(실서버 404). 목 전용 */
+/** GET /rooms/{roomId}/session/hints — 이 방에 붙은 클립 목록 */
 export function useVoiceHints(roomId: number | null) {
   return useQuery({
     queryKey: qk.hints(roomId ?? 0),
@@ -148,7 +148,7 @@ export function useVoiceHints(roomId: number | null) {
   });
 }
 
-/** @draft POST /rooms/{roomId}/session/hints — 백엔드 미구현(실서버 404). 목 전용 */
+/** POST /rooms/{roomId}/session/hints — 클립 업로드(multipart). 파트 이름은 `file`, `durationMs`는 쿼리 */
 export function useUploadVoiceHint(roomId: number) {
   const queryClient = useQueryClient();
 

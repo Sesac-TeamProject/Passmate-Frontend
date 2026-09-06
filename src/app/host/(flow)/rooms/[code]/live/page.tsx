@@ -4,12 +4,17 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
-import { firstErrorMessage, toSolvingStudents, toSubmittedCount } from "@/features/host/live/adapt";
+import {
+  firstErrorMessage,
+  pickSubmissionForQuestion,
+  toSolvingStudents,
+  toSubmittedCount,
+} from "@/features/host/live/adapt";
 import { LivePage } from "@/features/host/live/live-page";
 import { ProjectorDisconnected } from "@/features/host/live/projector-disconnected";
 import { useDisconnectedTooLong } from "@/features/host/live/use-disconnected-too-long";
 // 문항 → 뷰 타입 변환은 학생 화면과 같은 함수를 쓴다(중복 정의 금지)
-import { toLiveQuestion } from "@/features/participant/play/adapt";
+import { choicesOf, toLiveQuestion } from "@/features/participant/play/adapt";
 import { useHostRoomId } from "@/lib/queries/use-rooms";
 import {
   useEndCurrentQuestion,
@@ -49,9 +54,9 @@ export default function Page() {
   /**
    * 제출 집계는 호스트 토픽의 `SUBMISSION_UPDATED`로 실시간으로 온다.
    * 폴링은 이벤트를 놓쳤을 때를 위한 보조라 간격을 넉넉히 둔다 — 값은 스토어(이벤트)를 먼저 본다.
+   * 어느 쪽을 쓰든 **지금 문항 것인지 확인하고 쓴다**(아래 `pickSubmissionForQuestion`).
    */
   const submissions = useSubmissions(roomId, phase === "RUNNING", SUBMISSIONS_POLL_MS);
-  const submissionStatus = submission ?? submissions.data ?? null;
   const next = useNextQuestion(roomId ?? 0);
   const endCurrent = useEndCurrentQuestion(roomId ?? 0);
   const end = useEndSession(roomId ?? 0);
@@ -93,6 +98,11 @@ export default function Page() {
   if (!currentQuestion || phase !== "RUNNING")
     return <ScreenLoading label="문항을 여는 중이에요…" />;
 
+  const submissionStatus = pickSubmissionForQuestion(
+    currentQuestion.sessionQuestionId,
+    submission,
+    submissions.data,
+  );
   const submittedCount = toSubmittedCount(submissionStatus, participants.length);
   const question = toLiveQuestion(currentQuestion, submittedCount.submittedCount);
   const pending = next.isPending || endCurrent.isPending || end.isPending || lock.isPending;
@@ -103,9 +113,7 @@ export default function Page() {
     <LivePage
       question={question}
       // 보기별 제출 수는 **보기 원문이 키인 맵**으로 온다 — 문항의 보기 순서대로 꺼낸다
-      counts={(currentQuestion.choices ?? []).map(
-        (text) => submissionStatus?.distribution[text] ?? 0,
-      )}
+      counts={choicesOf(currentQuestion).map((text) => submissionStatus?.distribution[text] ?? 0)}
       students={toSolvingStudents(participants)}
       isLocked={screenLocked}
       isLastQuestion={currentQuestion.orderNo === currentQuestion.totalCount}

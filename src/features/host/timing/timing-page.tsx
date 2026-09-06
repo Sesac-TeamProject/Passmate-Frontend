@@ -1,4 +1,4 @@
-import { Clock } from "lucide-react";
+import { Clock, Lock } from "lucide-react";
 import { Stepper } from "@/components/common/stepper";
 import { Switch } from "@/components/ui/switch";
 import { PendingLabel } from "@/components/common/pending-label";
@@ -19,7 +19,6 @@ export type TimingRow = {
   body: string;
   type: QuestionType;
   timeLimitSec: number;
-  points: number;
   /** 표시 전용 — 서버에 이 설정이 없어 저장되지 않는다(DESIGN_GAPS D-15) */
   autoAdvance: boolean;
 };
@@ -43,6 +42,8 @@ type Props = {
   onSave: () => void;
   saving?: boolean;
   errorMessage?: string | null;
+  /** 확정된 세트 — 서버가 문항 수정을 막는다. 편집 자체를 잠그고 이유를 보인다 */
+  readOnly?: boolean;
 };
 
 /** W-02b 문항별 시간 설정 — 일괄 적용 · 문항 목록 · 예상 진행 시간 세 카드 */
@@ -56,6 +57,7 @@ export function TimingPage({
   onSave,
   saving = false,
   errorMessage = null,
+  readOnly = false,
 }: Props) {
   const totalSec = rows.reduce((sum, r) => sum + r.timeLimitSec, 0);
 
@@ -67,6 +69,14 @@ export function TimingPage({
           {title} · {rows.length}문항
         </p>
       </header>
+
+      {readOnly && (
+        <p className="mt-2 flex items-center gap-2.5 rounded-[20px] border border-dashed bg-card px-6 py-4 text-body-md text-muted-foreground">
+          <Lock aria-hidden className="size-4 shrink-0" />
+          확정한 세트는 시간을 바꿀 수 없어요. 값만 확인할 수 있고, 바꾸려면 문제 세트에서 복제해 새
+          세트로 만들어야 해요
+        </p>
+      )}
 
       <section className="mt-2 flex items-center gap-6 rounded-[20px] border bg-card p-6">
         <div className="flex flex-col gap-1.5">
@@ -80,8 +90,9 @@ export function TimingPage({
                 type="button"
                 onClick={() => onPreset(sec)}
                 aria-pressed={preset === sec}
+                disabled={readOnly}
                 className={cn(
-                  "h-11 w-21 rounded-xl text-label-lg font-bold transition-colors",
+                  "h-11 w-21 rounded-xl text-label-lg font-bold transition-colors disabled:opacity-60",
                   preset === sec
                     ? "border-2 border-mint bg-mint-bg text-mint-dark"
                     : "border-[1.5px] hover:bg-muted",
@@ -95,7 +106,7 @@ export function TimingPage({
         <button
           type="button"
           onClick={onApplyPreset}
-          disabled={preset === null}
+          disabled={readOnly || preset === null}
           className="h-11 w-41 rounded-xl bg-mint text-label-lg font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
         >
           일괄 적용
@@ -107,7 +118,6 @@ export function TimingPage({
           <span className="flex-1">문항</span>
           <span className="w-24">유형</span>
           <span className="w-[190px]">제한 시간</span>
-          <span className="w-16">배점</span>
           <span className="w-24" title="서버에 아직 없는 설정이라 저장되지 않아요">
             자동 넘김
           </span>
@@ -137,9 +147,9 @@ export function TimingPage({
                   step={STEP_SEC}
                   unit="초"
                   label={`${row.no}번 문항 제한 시간`}
+                  disabled={readOnly}
                 />
               </span>
-              <span className="w-16 text-label-lg text-muted-foreground">{row.points}점</span>
               {/*
                 자동 넘김은 서버 계약에 없다(DESIGN_GAPS D-15) — 저장되지 않으므로 잠가 둔다.
                 켜지는 것처럼 보이게 두면 "설정했는데 안 먹는다"가 된다.
@@ -173,7 +183,7 @@ export function TimingPage({
         <button
           type="button"
           onClick={onSave}
-          disabled={saving}
+          disabled={saving || readOnly}
           className={cn(
             "h-11 w-41 rounded-xl bg-mint text-label-lg font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60",
             errorMessage ? "ml-6" : "ml-auto",

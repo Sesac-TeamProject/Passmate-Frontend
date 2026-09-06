@@ -53,6 +53,7 @@ export function ResultPage({
   const byId = new Map(students.map((s) => [s.id, s]));
   const student = (id: string): Student => byId.get(id) ?? { id, ...FALLBACK_STUDENT };
 
+  const isEssay = r.type === "essay";
   const correctIndex = r.distribution.findIndex((d) => d.key === r.correct);
   const correctText = correctIndex >= 0 ? r.distribution[correctIndex].text : null;
   const maxCount = Math.max(...r.distribution.map((d) => d.count), 0);
@@ -114,14 +115,16 @@ export function ResultPage({
       }
     >
       <div className="mt-8 flex items-start justify-between">
-        <div className="flex flex-col gap-3.5">
+        <div className="flex min-w-0 flex-col gap-3.5">
           <span className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
-            정답
+            {isEssay ? "모범 답안" : "정답"}
           </span>
-          {correctText === null ? (
-            <p className="text-heading-lg text-muted-foreground">
-              서술형 — 정답 대신 AI 분석이 리포트에 담겨요
+          {isEssay ? (
+            <p className="max-w-[760px] text-heading-lg text-ink">
+              {r.modelAnswer ?? "모범 답안이 등록되지 않은 문항이에요"}
             </p>
+          ) : correctText === null ? (
+            <p className="text-heading-lg text-muted-foreground">정답이 등록되지 않은 문항이에요</p>
           ) : (
             <div className="flex items-center gap-[18px]">
               <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-mint text-heading-md text-white">
@@ -132,45 +135,68 @@ export function ResultPage({
           )}
         </div>
 
-        <div className="flex flex-col items-end gap-3.5">
+        {/*
+          서술형은 채점이 AI 분석·첨삭으로 나중에 붙는다 — 마감 시점의 correctRate는 늘 0이라
+          "정답률 0%"는 없는 사실이 된다. 그 자리를 비우고 어디서 확인하는지 알려 준다.
+        */}
+        <div className="flex shrink-0 flex-col items-end gap-3.5">
           <span className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
-            정답률
+            {isEssay ? "채점" : "정답률"}
           </span>
-          <strong className="text-display-lg text-mint">{r.accuracy}%</strong>
-          {r.accuracyDelta !== 0 && (
-            <span className="text-body-md text-mint-dark">
-              {r.accuracyDelta > 0 ? "▲" : "▼"} 지난 문항보다 {Math.abs(r.accuracyDelta)}%p{" "}
-              {r.accuracyDelta > 0 ? "올랐어요" : "내렸어요"}
-            </span>
+          {isEssay ? (
+            <p className="text-heading-sm text-muted-foreground">AI 분석이 리포트에 담겨요</p>
+          ) : (
+            <>
+              <strong className="text-display-lg text-mint">{r.accuracy}%</strong>
+              {r.accuracyDelta !== 0 && (
+                <span className="text-body-md text-mint-dark">
+                  {r.accuracyDelta > 0 ? "▲" : "▼"} 지난 문항보다 {Math.abs(r.accuracyDelta)}%p{" "}
+                  {r.accuracyDelta > 0 ? "올랐어요" : "내렸어요"}
+                </span>
+              )}
+            </>
           )}
         </div>
       </div>
 
-      <div className="mt-8 border-t pt-7">
-        <h2 className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
-          응답 분포
-        </h2>
-        <ul className="mt-3.5 flex flex-col gap-2">
-          {r.distribution.map((d, i) => {
-            const state: ChoiceRowState =
-              d.key === r.correct
-                ? "correct"
-                : d.key === commonWrongKey
-                  ? "commonWrong"
-                  : "default";
-            return (
-              <ChoiceRow
-                key={d.key}
-                no={i + 1}
-                text={d.text}
-                count={d.count}
-                maxCount={maxCount}
-                state={state}
-              />
-            );
-          })}
-        </ul>
-      </div>
+      {/* 채점 기준·해설은 서버가 줄 때만 있다 */}
+      {isEssay && r.explanation !== null && (
+        <div className="mt-8 border-t pt-7">
+          <h2 className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
+            채점 기준
+          </h2>
+          <p className="mt-3.5 text-body-lg text-ink">{r.explanation}</p>
+        </div>
+      )}
+
+      {/* 서술형은 보기가 없어 분포가 늘 빈 표다 — 제목만 남기지 않고 섹션을 접는다 */}
+      {r.distribution.length > 0 && (
+        <div className="mt-8 border-t pt-7">
+          <h2 className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
+            응답 분포
+          </h2>
+          <ul className="mt-3.5 flex flex-col gap-2">
+            {r.distribution.map((d, i) => {
+              const state: ChoiceRowState =
+                d.key === r.correct
+                  ? "correct"
+                  : d.key === commonWrongKey
+                    ? "commonWrong"
+                    : "default";
+              return (
+                <ChoiceRow
+                  key={d.key}
+                  no={i + 1}
+                  text={d.text}
+                  count={d.count}
+                  maxCount={maxCount}
+                  state={state}
+                />
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {wrongStudents.length > 0 && (
         <div className="mt-7 border-t pt-6">

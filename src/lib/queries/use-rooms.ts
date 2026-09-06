@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import {
   checkNickname,
   closeRoom,
@@ -75,7 +75,12 @@ export function useHostRoomId(pin: string | null): {
     readCachedOnServer,
   );
 
-  if (pin && room.data) writeHostRoomId(pin, room.data.id);
+  // 조회가 성공하면 탭에 남겨 둔다. **효과에서** 쓴다 — 렌더 중 sessionStorage 쓰기는
+  // React가 금지하는 부수효과이고 StrictMode에서 두 번 실행된다(QA_BACKLOG F-7).
+  // 이번 렌더는 아래 `room.data?.id`를 먼저 쓰므로 한 박자 늦게 저장돼도 화면은 그대로다.
+  useEffect(() => {
+    if (pin && room.data) writeHostRoomId(pin, room.data.id);
+  }, [pin, room.data]);
 
   const roomId = room.data?.id ?? cached;
   return {

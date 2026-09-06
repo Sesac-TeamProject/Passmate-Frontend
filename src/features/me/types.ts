@@ -11,16 +11,17 @@ export type Profile = {
   joinedLabel: string;
   avatar: AvatarKey;
   /**
-   * 호스트 등급. **서버가 아직 계산하지 않는다** — `MyProfileResponse`에 등급·뱃지·별점 자리가
-   * 일부러 비어 있다(백엔드 주석: 0·null로 채우면 "등급 없음"으로 읽혀 오해를 만든다).
-   * 값이 없으면 화면은 뱃지·진행률을 **그리지 않는다**. 0으로 대체하지 말 것.
+   * 호스트 등급. `MyProfileResponse`에는 없고 **`GET /users/me/grade`가 계산해서 준다** —
+   * 그 조회가 아직 안 끝났거나 실패하면 값이 비고, 그때 화면은 뱃지·진행률을 **그리지 않는다**.
+   * 0·Lv.1로 대체하지 말 것(없는 사실을 만든다).
    */
   level?: number;
   levelTitle?: string;
   /** 현재 레벨로 열리는 권한. 예: "유료 방 개설 가능" */
   levelPerk?: string;
   /** 다음 레벨까지 남은 실적 */
-  nextLevel?: { level: number; roomsLeft: number; studentsLeft: number };
+  /** 서버가 그 조건을 안 주면 각 칸은 null이다 — 0으로 채우지 않는다 */
+  nextLevel?: { level: number; roomsLeft: number | null; studentsLeft: number | null };
   /** 다음 레벨까지 진행률(%) */
   progress?: number;
 };
@@ -92,16 +93,6 @@ export type Achievement = {
   title: string;
   /** 아직 획득하지 못한 뱃지 — opacity 0.3으로 그린다 */
   locked?: boolean;
-};
-
-/** 개설한 방(host) 실적. 지금은 어느 화면도 그리지 않는다(마이페이지에 "기록" 카드 UI가 없다) — adapt.ts에만 정의해 둔다 */
-export type HostRecord = {
-  /** 평균 별점은 받은 평가가 없으면 서버가 주지 않는다 — 0으로 채우지 않는다 */
-  stats: { rooms: number; rating: number | null; students: number };
-  badges: { earned: number; total: number; locked: number; items: Achievement[] };
-  openRooms: number;
-  /** 이번 달 정산 예정 금액(원) */
-  settlementThisMonth: number;
 };
 
 export type AttendedSession = {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/common/brand-logo";
+import { GoogleMark } from "@/components/common/google-mark";
 import { FitToViewport } from "@/components/common/fit-to-viewport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,11 +54,39 @@ export function LoginPage({ onGoogleClick, devLogin }: Props) {
             className="w-full gap-2 bg-card"
             onClick={onGoogleClick}
           >
-            <span aria-hidden className="text-label-lg text-blue">
-              G
-            </span>
+            <GoogleMark />
             <span className="text-label-lg text-foreground">Google로 계속하기</span>
           </Button>
+
+          {/* 시안 C-01: 게스트 입장은 카드 밖 링크가 아니라 "또는" 아래의 두 번째 버튼이다 */}
+          <div className="flex items-center gap-3">
+            <span aria-hidden className="h-px flex-1 bg-border" />
+            <span className="text-label-md text-ink-disabled">또는</span>
+            <span aria-hidden className="h-px flex-1 bg-border" />
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {/*
+              시안 C-01: 연한 민트 판 위 진한 민트 글자(볼드). 규격(h48·r12)은 위 Google 버튼과 같아야 해서
+              베끼지 않고 같은 size="xl" 을 쓴다 — 색만 시안 값으로 덮는다.
+            */}
+            <Button
+              size="xl"
+              variant="secondary"
+              className="w-full bg-mint-bg font-bold hover:bg-mint-tint"
+              nativeButton={false}
+              render={<Link href="/join" />}
+            >
+              PIN으로 게스트 입장
+            </Button>
+            {/*
+              약관·개인정보처리방침 문서가 아직 없다 — 페이지를 만들기 전에 링크를 걸면 404다.
+              문서가 생기면 이 문장의 두 이름에 링크를 건다.
+            */}
+            <p className="text-center text-label-md text-ink-disabled">
+              계속하면 이용약관과 개인정보 처리방침에 동의한 것으로 봅니다
+            </p>
+          </div>
 
           {devLogin ? (
             <form
@@ -92,13 +121,6 @@ export function LoginPage({ onGoogleClick, devLogin }: Props) {
             </form>
           ) : null}
         </div>
-
-        <p className="flex items-center gap-1">
-          <span className="text-body-md text-muted-foreground">방 코드만 있다면</span>
-          <Link href="/join" className="text-label-lg text-mint">
-            PIN으로 게스트 입장 →
-          </Link>
-        </p>
       </FitToViewport>
     </main>
   );

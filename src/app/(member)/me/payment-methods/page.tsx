@@ -24,7 +24,7 @@ export default function Page() {
 
   return (
     <PaymentMethodsPage
-      items={toPaymentMethodItems(balance.data.defaultMethod)}
+      items={toPaymentMethodItems(balance.data.defaultPaymentMethod)}
       onSetDefault={handleSetDefault}
       pending={update.isPending}
       errorMessage={update.isError ? toMeErrorMessage(update.error) : null}

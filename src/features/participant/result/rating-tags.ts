@@ -1,30 +1,28 @@
 import type { RatingTag } from "@/lib/types/dto";
 
 /**
- * 별점 태그 라벨 (design.pen "P-Web 별점 시트" 프레임 NSaex).
+ * 별점 태그 라벨.
  *
- * TODO(계약): 시안 라벨과 서버 enum의 대응이 확실하지 않다. 앞의 셋은 뜻이 겹치지만
- * 뒤의 둘은 추정이다 — HELPFUL_HINTS("힌트")를 시안은 "피드백"이라 부르고,
- * GOOD_QUALITY("품질")를 "분위기"라 부른다. 잘못 이으면 선생님 프로필에 엉뚱한 태그가
- * 쌓이는데 타입 검사에는 안 걸린다. DESIGN_GAPS G-8로 확인 요청 중.
+ * 문구는 **서버 enum이 들고 있는 label**을 그대로 쓴다(`rating/domain/RatingTag.kt`).
+ * API가 코드만 내려 주기 때문에 문구는 화면이 들고 있어야 하는데, 예전처럼 시안 문구로
+ * 뜻을 추측하면 `HELPFUL_HINT`("힌트")를 "피드백"이라 부르는 식으로 어긋난다 —
+ * 선생님 프로필에 엉뚱한 태그가 쌓이고 타입 검사에는 안 걸린다.
  */
 export const RATING_TAG_LABEL: Record<RatingTag, string> = {
-  CLEAR_EXPLANATION: "설명이 쉬웠어요",
-  GOOD_DIFFICULTY: "문제가 실전 같았어요",
-  GOOD_PACING: "진행이 매끄러웠어요",
-  /** 추정 */
-  HELPFUL_HINTS: "피드백이 자세해요",
-  /** 추정 */
-  GOOD_QUALITY: "분위기가 좋았어요",
+  CLEAR_EXPLANATION: "설명이 명확해요",
+  FAIR_DIFFICULTY: "난이도가 적당해요",
+  GOOD_PACING: "시간 배분이 좋아요",
+  HELPFUL_HINT: "힌트가 도움됐어요",
+  GOOD_QUESTIONS: "문제 품질이 좋아요",
 };
 
-/** 시안이 놓인 순서 그대로 */
+/** 서버 enum이 선언된 순서 그대로 */
 export const RATING_TAGS: RatingTag[] = [
   "CLEAR_EXPLANATION",
-  "GOOD_DIFFICULTY",
+  "FAIR_DIFFICULTY",
   "GOOD_PACING",
-  "HELPFUL_HINTS",
-  "GOOD_QUALITY",
+  "HELPFUL_HINT",
+  "GOOD_QUESTIONS",
 ];
 
 /**

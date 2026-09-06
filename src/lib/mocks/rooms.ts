@@ -1,7 +1,7 @@
 import { parseServerDateTime } from "@/lib/datetime";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { AppError } from "@/lib/types/app-error";
-import { AVATAR_KEYS, type AvatarKey } from "@/lib/types/dto";
+import { AVATAR_KEYS, type AvatarKey, PAYMENT_POLICY } from "@/lib/types/dto";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 import type {
   HostedRoomsResponse,
@@ -17,6 +17,9 @@ import type {
   RoomUpdateRequest,
 } from "@/lib/types/dto";
 import { DEMO_ROOM, HOSTED_ROOMS, PARTICIPANTS, PUBLIC_ROOMS } from "./fixtures";
+
+/** 서버 `PolicyProperties`가 검증하는 참가비 범위 — 목도 같은 값으로 막는다 */
+const { min: ENTRY_FEE_MIN, max: ENTRY_FEE_MAX } = PAYMENT_POLICY.entryFee;
 import { currentProfile } from "./me";
 
 /** 방(rooms) 도메인 목 응답. 입장 인원 등 상태가 필요한 값은 모듈 스코프에서 유지한다. */
@@ -71,12 +74,35 @@ export function mockRoomByPin(pin: string): RoomSummaryResponse {
 }
 
 /**
- * POST /rooms — 서버는 무료 방만 연다. PAID·BRANDED는 400 `UNSUPPORTED_ROOM_TYPE`이다
- * (등급으로 막는 게 아니다 — 유료 방 자체가 아직 없다).
+ * POST /rooms — FREE·PAID를 연다. BRANDED만 400 `UNSUPPORTED_ROOM_TYPE`이다.
+ *
+ * PAID는 `fee` 필수이고 범위를 벗어나면 400이다. FREE에 `fee`를 실어 보내도 400 —
+ * 서버 `PolicyProperties`가 검증하므로 안내 문구는 이 `message`를 그대로 쓴다.
+ * 등급(Lv.3) 검증은 서버가 실제 이력으로 판정하므로 목에서는 통과시킨다.
  */
 export function mockCreateRoom(body: RoomCreateRequest): RoomResponse {
-  if (body.type && body.type !== "FREE") {
-    throw new AppError("ValidationFailed", { code: ERROR_CODES.UNSUPPORTED_ROOM_TYPE });
+  if (body.type === "BRANDED") {
+    throw new AppError("ValidationFailed", {
+      code: ERROR_CODES.UNSUPPORTED_ROOM_TYPE,
+      status: 400,
+    });
+  }
+
+  const isPaid = body.type === "PAID";
+
+  if (isPaid && (body.fee == null || body.fee < ENTRY_FEE_MIN || body.fee > ENTRY_FEE_MAX)) {
+    throw new AppError("ValidationFailed", {
+      code: ERROR_CODES.INVALID_INPUT,
+      status: 400,
+      serverMessage: `참가비는 ${ENTRY_FEE_MIN.toLocaleString("ko-KR")} ~ ${ENTRY_FEE_MAX.toLocaleString("ko-KR")} C 사이여야 합니다.`,
+    });
+  }
+  if (!isPaid && body.fee != null) {
+    throw new AppError("ValidationFailed", {
+      code: ERROR_CODES.INVALID_INPUT,
+      status: 400,
+      serverMessage: "무료 방에는 참가비를 설정할 수 없습니다.",
+    });
   }
 
   const room: RoomResponse = {
@@ -86,7 +112,8 @@ export function mockCreateRoom(body: RoomCreateRequest): RoomResponse {
     ...(body.topic ? { topic: body.topic } : {}),
     pin: randomPin(),
     status: "WAITING",
-    type: "FREE",
+    type: isPaid ? "PAID" : "FREE",
+    ...(isPaid && body.fee != null ? { fee: body.fee } : {}),
     ...(body.questionSetId ? { questionSetId: body.questionSetId } : {}),
     hostUserId: currentProfile().id,
     ...(body.maxParticipants ? { maxParticipants: body.maxParticipants } : {}),

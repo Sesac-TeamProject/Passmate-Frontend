@@ -32,6 +32,11 @@ type AppErrorOptions = {
   /** 서버 오류 응답의 message. 화면에 그대로 쓰지 않고 콘솔·Sentry용으로만 보존한다. */
   serverMessage?: string | null;
   status?: number | null;
+  /**
+   * 서버가 **다음 행동에 필요할 때만** 붙여 주는 값. 지금은 402 `INSUFFICIENT_COINS`의
+   * `{required, balance, shortfall}` 하나다 — 부족분을 알려고 잔액을 다시 조회하지 않는다.
+   */
+  data?: unknown;
   cause?: unknown;
 };
 
@@ -74,6 +79,7 @@ export class AppError extends Error {
   readonly code: string | null;
   readonly serverMessage: string | null;
   readonly status: number | null;
+  readonly data: unknown;
 
   constructor(kind: AppErrorKind, options: AppErrorOptions = {}) {
     super(USER_MESSAGE[kind], { cause: options.cause });
@@ -82,12 +88,13 @@ export class AppError extends Error {
     this.code = options.code ?? null;
     this.serverMessage = options.serverMessage ?? null;
     this.status = options.status ?? null;
+    this.data = options.data ?? null;
   }
 
   /** HTTP 오류 응답 → AppError. 본문 `{code, message}`는 계약 §공통 오류 형식. */
   static fromResponse(
     status: number,
-    body: { code?: string | null; message?: string | null } | null,
+    body: { code?: string | null; message?: string | null; data?: unknown } | null,
   ): AppError {
     const kind = KIND_BY_STATUS[status] ?? "Unknown";
 
@@ -95,6 +102,7 @@ export class AppError extends Error {
       status,
       code: body?.code ?? null,
       serverMessage: body?.message ?? null,
+      data: body?.data ?? null,
     });
   }
 

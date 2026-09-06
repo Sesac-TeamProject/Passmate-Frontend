@@ -14,6 +14,8 @@ import {
   updateProfile,
 } from "@/lib/api/me";
 import { clearGuestRecord } from "@/lib/guest-token-storage";
+import { AppError } from "@/lib/types/app-error";
+import { ERROR_CODES } from "@/lib/types/error-codes";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type {
   NotificationSettingsDto,
@@ -142,15 +144,38 @@ export function useReport() {
 }
 
 /**
- * @draft POST /guest-records/claim — **백엔드 미구현**(실서버 404).
- * 성공하면 보관하던 표를 지운다. 아직 없는 API라 실패는 조용히 삼키고 표를 그대로 둔다 —
- * 서버가 생기면 다음 로그인에서 다시 시도된다.
+ * POST /guest-records/claim — 가입 직후 게스트 기록을 계정으로 옮긴다.
+ *
+ * 성공하면 보관하던 표를 지운다. **다시 시도해도 소용없는 실패에서도 지운다** —
+ * 기한이 지나 파기됐거나(`GUEST_RECORD_EXPIRED`) 이미 다른 계정에 붙은(`GUEST_RECORD_ALREADY_CLAIMED`)
+ * 표는 영원히 성공하지 않는데, 남겨 두면 결과 화면을 열 때마다 7일 내내 같은 요청을 다시 낸다.
+ * 그 밖의 실패(네트워크·5xx)는 표를 남겨 다음 기회에 다시 시도한다.
  */
+const TERMINAL_CLAIM_CODES: readonly string[] = [
+  ERROR_CODES.GUEST_RECORD_EXPIRED,
+  ERROR_CODES.GUEST_RECORD_ALREADY_CLAIMED,
+];
+
 export function useClaimGuestRecord() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ guestToken, roomId }: { guestToken: string; roomId: number }) => {
-      await claimGuestRecord(guestToken);
+      try {
+        await claimGuestRecord(guestToken);
+      } catch (error) {
+        if (AppError.isAppError(error) && TERMINAL_CLAIM_CODES.includes(error.code ?? "")) {
+          clearGuestRecord(roomId);
+        }
+        throw error;
+      }
       clearGuestRecord(roomId);
+    },
+    // 결과 화면은 회원으로 돌아온 순간 `results/me`를 먼저 부르는데, 그때는 아직 이 계정에
+    // 참가 기록이 없어 404다. 이관이 붙고 나면 같은 조회가 200이므로 다시 부르게 한다 —
+    // 안 그러면 이관은 됐는데 화면은 "찾는 정보가 없어요"에 멈춘다(QA_BACKLOG F-16).
+    onSuccess: (_data, { roomId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.myResult(roomId) });
     },
   });
 }

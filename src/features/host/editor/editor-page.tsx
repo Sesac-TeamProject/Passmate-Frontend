@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import { PendingLabel } from "@/components/common/pending-label";
 import { FlowTopBar } from "@/features/host/room-flow/flow-top-bar";
 import type { AiGenerateRequest } from "@/lib/types/dto";
 import { GeneratePanel } from "./generate-panel";
+import { PreviewDialog } from "./preview-dialog";
 import { QuestionForm } from "./question-form";
 import { QuestionList } from "./question-list";
 import type { EditorQuestion, QuestionFormValues } from "./types";
@@ -64,9 +68,19 @@ export function EditorPage({
   canConfirm,
   confirmError,
 }: Props) {
+  // 확정 전에 학생이 볼 모습을 훑는 창. 서버와 주고받는 게 없어 화면 안에서만 여닫는다
+  const [previewOpen, setPreviewOpen] = useState(false);
+
   return (
     <div className="flex min-h-screen flex-col">
-      <FlowTopBar backHref="/host/sets" title={title}>
+      <FlowTopBar backHref="/host/sets" title={title} badge="문제 세트 › 수정하기">
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(true)}
+          className="flex h-[42px] items-center rounded-[14px] bg-muted px-5 text-label-lg text-mint-dark transition-colors hover:bg-mint-tint"
+        >
+          미리보기
+        </button>
         <button
           type="button"
           onClick={onConfirm}
@@ -122,6 +136,13 @@ export function EditorPage({
           />
         </div>
       </main>
+
+      <PreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        title={title}
+        questions={questions}
+      />
     </div>
   );
 }

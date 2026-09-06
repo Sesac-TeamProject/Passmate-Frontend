@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
@@ -63,15 +63,23 @@ export default function Page() {
     readGuestRecordOnServer,
   );
   const claim = useClaimGuestRecord();
-  const [claimTried, setClaimTried] = useState(false);
-
-  if (!claimTried && isMember && guestRecord && !claim.isPending) {
-    setClaimTried(true);
-    claim.mutate(
+  // `mutate`는 렌더마다 새로 만들어지지 않는다 — 효과 의존성에 넣어도 다시 돌지 않는다
+  const claimMutate = claim.mutate;
+  /**
+   * 이관은 **효과에서** 한 번만 건다 — 렌더 중에 부르면 React가 금지하는 부수효과이고
+   * StrictMode에서 두 번 실행돼 같은 이관이 중복 요청된다(QA_BACKLOG F-7).
+   * 잠금은 state가 아니라 ref다 — StrictMode의 두 번째 실행은 첫 실행의 setState가
+   * 반영되기 전에 오므로 state로는 못 막는다.
+   */
+  const claimed = useRef(false);
+  useEffect(() => {
+    if (claimed.current || !isMember || !guestRecord) return;
+    claimed.current = true;
+    claimMutate(
       { guestToken: guestRecord.guestToken, roomId: guestRecord.roomId },
       { onError: () => undefined },
     );
-  }
+  }, [isMember, guestRecord, claimMutate]);
 
   if (result.isPending) return <ScreenLoading />;
   if (result.isError)

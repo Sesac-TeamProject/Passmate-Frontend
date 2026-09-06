@@ -7,6 +7,7 @@ import { toHostRooms } from "@/features/host/profile/adapt";
 import { HostProfilePage } from "@/features/host/profile/host-profile-page";
 import { toEarnedAchievement } from "@/features/me/adapt";
 import { useHostProfile } from "@/lib/queries/use-me";
+import { toAvatarKey } from "@/lib/types/dto";
 
 /** M-10 선생님 공개 프로필 컨테이너 — 인기 방 카드에서 선생님 이름을 누르면 온다 */
 export default function Page() {
@@ -22,6 +23,7 @@ export default function Page() {
   return (
     <HostProfilePage
       nickname={profile.data.nickname}
+      avatar={toAvatarKey(profile.data.defaultAvatarId)}
       // 계약에 한 줄 소개가 없다 — 화면이 그 줄을 감춘다
       intro={null}
       level={profile.data.level}

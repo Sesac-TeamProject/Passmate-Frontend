@@ -21,8 +21,9 @@ type Props = {
 };
 
 /**
- * 라우트 가드 (규칙 문서 §2-1, §8). 미로그인은 `/login?next=` 로 보내고,
- * 관리자가 아니면 권한 거부 화면을 보인다. UX용 가드이며 최종 권위는 서버 403이다.
+ * 라우트 가드 (규칙 문서 §2-1, §8). 미로그인은 `/login`으로 보내고(돌아올 곳은 붙이지 않는다 —
+ * 로그인은 홈에서 시작한다), 관리자가 아니면 권한 거부 화면을 보인다.
+ * 만료(E-401)만 `?next=`로 하던 자리를 들고 간다. UX용 가드이며 최종 권위는 서버 403이다.
  */
 export function RequireAuth({ adminOnly, children }: Props) {
   const status = useRestoreSession();
@@ -36,11 +37,14 @@ export function RequireAuth({ adminOnly, children }: Props) {
   const isAuthenticated = status === "authenticated";
   const hasRole = !adminOnly || profile?.isAdmin === true;
 
+  /** 만료 화면에서만 쓴다 — 하던 일이 있던 사람은 그 자리로 돌려보낸다 */
   const loginHref = `${LOGIN_PATH}?next=${encodeURIComponent(pathname)}`;
 
+  // 처음 로그인은 홈에서 시작한다. 미로그인으로 아무 화면에 들어왔다고 next를 붙이면
+  // 로그인 직후 마지막에 열어 둔 화면(예: 마이페이지)이 떠서 홈이 아닌 곳에서 시작하게 된다.
   useEffect(() => {
-    if (isUnauthenticated) router.replace(loginHref);
-  }, [isUnauthenticated, loginHref, router]);
+    if (isUnauthenticated) router.replace(LOGIN_PATH);
+  }, [isUnauthenticated, router]);
 
   // E-401 — 쓰던 도중에 끊긴 세션. 돌아올 곳을 next로 들고 간다.
   if (expired && status === "unauthenticated")

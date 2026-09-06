@@ -18,8 +18,8 @@ export type FinalRankRow = {
 type Props = {
   title: string;
   questionTotal: number;
-  /** 1~3위. 3명이 안 되면 포디움 대신 목록만 그린다 */
-  podium: [PodiumEntry, PodiumEntry, PodiumEntry] | null;
+  /** 1~3위 — 참가자가 적으면 있는 만큼(0~3자리). 비어 있으면 포디움을 그리지 않는다 */
+  podium: PodiumEntry[];
   /** 포디움에 오르지 못한 나머지 순위 */
   rest: FinalRankRow[];
   summary: SessionSummary;
@@ -104,14 +104,9 @@ export function FinalPage({
         </p>
       </div>
 
-      {podium && (
+      {podium.length > 0 && (
         <div className="mt-10">
-          <Podium
-            first={podium[0]}
-            second={podium[1]}
-            third={podium[2]}
-            questionTotal={questionTotal}
-          />
+          <Podium entries={podium} questionTotal={questionTotal} />
         </div>
       )}
 
@@ -151,7 +146,7 @@ export function FinalPage({
         </div>
       )}
 
-      {podium === null && rest.length === 0 && (
+      {podium.length === 0 && rest.length === 0 && (
         // 아무도 제출하지 않고 끝난 세션 — 비워 두면 본문 가운데가 통째로 빈다
         <p className="mt-10 border-t pt-10 text-center text-heading-md text-muted-foreground">
           순위에 올라온 학생이 없어요

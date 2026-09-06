@@ -39,9 +39,8 @@ export type PodiumEntry = {
 };
 
 type Props = {
-  first: PodiumEntry;
-  second: PodiumEntry;
-  third: PodiumEntry;
+  /** 1위부터 순서대로, 최대 3명. 없는 자리는 비운다 */
+  entries: PodiumEntry[];
   questionTotal: number;
 };
 
@@ -84,13 +83,17 @@ function Step({
   );
 }
 
-/** 1~3위 포디움 (2위 · 1위 · 3위 순으로 배치, 스탠드는 공통 바닥선에 맞춘다) */
-export function Podium({ first, second, third, questionTotal }: Props) {
+/**
+ * 1~3위 포디움 (2위 · 1위 · 3위 순으로 배치, 스탠드는 공통 바닥선에 맞춘다).
+ * 참가자가 1~2명이면 그 자리만 세운다 — 없는 순위를 지어내지 않는다.
+ */
+export function Podium({ entries, questionTotal }: Props) {
+  const [first, second, third] = entries;
   return (
     <div className="flex items-end justify-center gap-6">
-      <Step entry={second} place={2} questionTotal={questionTotal} />
-      <Step entry={first} place={1} questionTotal={questionTotal} />
-      <Step entry={third} place={3} questionTotal={questionTotal} />
+      {second && <Step entry={second} place={2} questionTotal={questionTotal} />}
+      {first && <Step entry={first} place={1} questionTotal={questionTotal} />}
+      {third && <Step entry={third} place={3} questionTotal={questionTotal} />}
     </div>
   );
 }

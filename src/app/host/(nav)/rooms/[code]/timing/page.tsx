@@ -38,12 +38,17 @@ export default function Page() {
   const [preset, setPreset] = useState<number | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  if (room.isPending || detail.isPending || questionSet.isPending) return <ScreenLoading />;
+  // 세 조회가 앞의 결과에 매달려 있다(pin → roomId → setId → 세트). 뒤 조회는 앞이 끝나기 전까지
+  // `enabled: false`이고 그 상태도 `isPending`이라, pending을 한 줄로 묶으면 앞 조회의 에러도
+  // "세트 없음"도 뒤의 분기에 닿지 못하고 로딩만 돈다 — 조회마다 pending → error 순으로 가른다.
+  if (room.isPending) return <ScreenLoading />;
   if (room.isError)
     return <ScreenError message={room.error.message} onRetry={() => room.refetch()} />;
+  if (detail.isPending) return <ScreenLoading />;
   if (detail.isError)
     return <ScreenError message={detail.error.message} onRetry={() => detail.refetch()} />;
   if (setId === null) return <ScreenError message={NO_SET_MESSAGE} />;
+  if (questionSet.isPending) return <ScreenLoading />;
   if (questionSet.isError)
     return (
       <ScreenError message={questionSet.error.message} onRetry={() => questionSet.refetch()} />
@@ -51,6 +56,9 @@ export default function Page() {
 
   const questions = questionSet.data.questions;
   const rows = toTimingRows(questions, edits);
+  // 방에는 확정 세트만 붙는데(방 생성·세트 연결 모두 status=CONFIRMED만 고른다) 확정 세트의 문항은
+  // 서버가 409로 막는다 — 고치게 뒀다가 저장에서 튕기지 말고 처음부터 읽기 전용으로 둔다.
+  const readOnly = questionSet.data.set.status === "CONFIRMED";
 
   // 일괄 적용은 개별로 바꾼 문항도 덮는다 — 시안 안내는 "저장 전 개별 수정"을 지키라는 뜻이 아니라
   // 프리셋을 누르기 전까지 손댄 값이 남아 있다는 설명이라, 적용 시점에는 전부 같은 값으로 맞춘다.
@@ -88,6 +96,7 @@ export default function Page() {
       onSave={save}
       saving={updateQuestion.isPending}
       errorMessage={saveError}
+      readOnly={readOnly}
     />
   );
 }

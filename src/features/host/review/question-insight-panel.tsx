@@ -9,7 +9,11 @@ type Props = {
   question: ReportQuestion;
   /** @draft 서버가 안 주면 채점 현황·AI 분석 칸이 접힌다 */
   insight: QuestionInsight | null;
-  /** 코멘트 저장 계약이 아직 없다 — false면 버튼을 잠그고 이유를 적는다 */
+  /**
+   * **문항 단위** 코멘트 저장 계약이 없다 — 서버에 있는 첨삭은 답안 단위
+   * (`PUT /rooms/{roomId}/answers/{answerId}/review`)뿐이라 이 칸은 저장할 곳이 없다.
+   * false면 버튼을 잠그고 이유를 적는다(2026-09-04 백엔드 소스 확인).
+   */
   canSaveComment: boolean;
   onSaveComment: (text: string) => void;
 };
@@ -82,7 +86,7 @@ export function QuestionInsightPanel({ question, insight, canSaveComment, onSave
           </button>
           {!canSaveComment && (
             <p className="text-label-md text-muted-foreground">
-              코멘트 저장은 백엔드 연동 후 열려요
+              지금은 학생별 답안에만 첨삭을 남길 수 있어요. 아래 학생 탭에서 답안을 골라 주세요
             </p>
           )}
         </section>

@@ -98,7 +98,13 @@ export function getVoiceHints(roomId: number): Promise<VoiceHintsResponse> {
   return request<VoiceHintsResponse>(`/rooms/${roomId}/session/hints`);
 }
 
-/** POST /rooms/{roomId}/session/hints — 클립 업로드(multipart). 지금 문항에 붙는다 */
+/**
+ * POST /rooms/{roomId}/session/hints — 클립 업로드(multipart). 지금 문항에 붙는다.
+ *
+ * 서버 시그니처를 그대로 따른다(`VoiceHintController.publish`) — 어기면 조용히 틀린다:
+ * 파트 이름은 **`file`**(`@RequestPart("file")`)이고, `durationMs`는 폼이 아니라
+ * **쿼리**다(`@RequestParam`). 201로 만들어진 힌트를 돌려준다.
+ */
 export function uploadVoiceHint(
   roomId: number,
   clip: Blob,
@@ -106,7 +112,6 @@ export function uploadVoiceHint(
   fileName = "hint.webm",
 ): Promise<VoiceHintEntry> {
   const form = new FormData();
-  form.append("audio", clip, fileName);
-  form.append("durationMs", String(durationMs));
-  return requestMultipart<VoiceHintEntry>(`/rooms/${roomId}/session/hints`, form);
+  form.append("file", clip, fileName);
+  return requestMultipart<VoiceHintEntry>(`/rooms/${roomId}/session/hints`, form, { durationMs });
 }

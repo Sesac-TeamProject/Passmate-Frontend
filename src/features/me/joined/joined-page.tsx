@@ -53,17 +53,20 @@ export function JoinedPage({
         />
       </section>
 
-      <div className="flex items-center gap-2">
-        <span className="text-label-lg text-muted-foreground">보완할 주제</span>
-        {learning.weakTopics.slice(0, 2).map((topic) => (
-          <span
-            key={topic}
-            className="rounded-full bg-orange-soft px-3 py-1.5 text-label-lg text-orange"
-          >
-            {topic}
-          </span>
-        ))}
-      </div>
+      {/* 약한 주제가 없으면 라벨만 덩그러니 남는다 — 줄 자체를 감춘다 */}
+      {learning.weakTopics.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-label-lg text-muted-foreground">보완할 주제</span>
+          {learning.weakTopics.slice(0, 2).map((topic) => (
+            <span
+              key={topic}
+              className="rounded-full bg-orange-soft px-3 py-1.5 text-label-lg text-orange"
+            >
+              {topic}
+            </span>
+          ))}
+        </div>
+      )}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-heading-sm text-ink">참여한 방 · 세션</h2>

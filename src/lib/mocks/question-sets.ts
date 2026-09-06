@@ -282,10 +282,6 @@ export async function mockGenerate(
   return created;
 }
 
-/**
- * @draft POST /question-sets/{setId}/duplicate — 백엔드 미구현(실서버 404).
- * 목에서만 동작한다.
- */
 /** DELETE /question-sets/{setId} — 목록에서만 감춘다(소프트 삭제) */
 export function mockDeleteQuestionSet(id: string | number): undefined {
   const target = find(id);

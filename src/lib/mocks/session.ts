@@ -347,11 +347,13 @@ export function mockHints(): VoiceHintsResponse {
 
 /**
  * POST /rooms/{roomId}/session/hints — 클립 업로드.
- * 라우트 스윕이 실제 FormData가 아닌 `{}`로도 호출하므로 `instanceof` 가드를 둔다.
+ *
+ * `durationMs`는 **쿼리**에서 읽는다 — 서버가 `@RequestParam`으로 받기 때문이다.
+ * 폼에서 읽으면 목만 통과하고 실서버에서는 빈 값이 된다.
  */
-export function mockUploadHint(form: FormData): VoiceHintEntry {
-  const raw = form instanceof FormData ? form.get("durationMs") : null;
-  const durationMs = typeof raw === "string" && raw !== "" ? Number(raw) : 5000;
+export function mockUploadHint(url: URL): VoiceHintEntry {
+  const raw = url.searchParams.get("durationMs");
+  const durationMs = raw !== null && raw !== "" ? Number(raw) : 5000;
   const hintId = nextHintId++;
   const question = currentQuestion();
   const entry: VoiceHintEntry = {

@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 type Props = {
   backHref: string;
   title: string;
-  /** 제목 옆 작은 칩. 예: "2/3 단계" */
+  /** 제목 옆 작은 칩. 예: "문제 세트 › 수정하기" */
   badge?: string;
-  /** 우측 슬롯 — 스텝 표시 또는 액션 버튼 */
+  /** 우측 슬롯 — 액션 버튼 또는 안내문 */
   children?: ReactNode;
 };
 

@@ -1,13 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import type { QuestionSet } from "@/features/host/types";
 import { SetCard } from "./set-card";
 import { SetDetailPanel } from "./set-detail-panel";
 
 type Props = {
   sets: QuestionSet[];
+  /** 우측 패널이 보여 줄 세트. 목록이 비면 null */
+  selected: QuestionSet | null;
+  onSelect: (setId: string) => void;
+  /** 고른 세트의 문항 미리보기를 아직 읽는 중 */
+  detailLoading?: boolean;
   onClone: (setId: string) => void;
   cloning?: boolean;
   /** 복제 실패 문구 — 서버에 복제 API가 아직 없다 */
@@ -21,6 +25,9 @@ type Props = {
 /** W-08 문제 세트 관리 — 목록 + 우측 상세 패널(세트 재활용) */
 export function SetsPage({
   sets,
+  selected,
+  onSelect,
+  detailLoading = false,
   onClone,
   cloning,
   cloneError = null,
@@ -28,9 +35,6 @@ export function SetsPage({
   deletingSetId = null,
   deleteError = null,
 }: Props) {
-  const [selectedId, setSelectedId] = useState(sets[0]?.id ?? null);
-  const selected = sets.find((s) => s.id === selectedId) ?? sets[0] ?? null;
-
   return (
     <div className="flex min-h-screen">
       <main className="flex flex-1 flex-col gap-[18px] py-7 pr-6 pl-8">
@@ -59,9 +63,9 @@ export function SetsPage({
               <SetCard
                 key={s.id}
                 set={s}
-                selected={s.id === selectedId}
+                selected={s.id === selected?.id}
                 deleting={s.id === deletingSetId}
-                onSelect={() => setSelectedId(s.id)}
+                onSelect={() => onSelect(s.id)}
                 onClone={() => onClone(s.id)}
                 onDelete={() => onDelete(s.id)}
                 cloning={cloning}
@@ -71,7 +75,12 @@ export function SetsPage({
         )}
       </main>
       {selected && (
-        <SetDetailPanel set={selected} onClone={() => onClone(selected.id)} cloning={cloning} />
+        <SetDetailPanel
+          set={selected}
+          previewLoading={detailLoading}
+          onClone={() => onClone(selected.id)}
+          cloning={cloning}
+        />
       )}
     </div>
   );
