@@ -25,7 +25,6 @@ export function toTimingRows(
     body: q.content,
     type: TYPE[q.type],
     timeLimitSec: edits[q.id] ?? q.timeLimitSec,
-    points: q.points,
     // 서버에 `autoAdvance` 필드가 없다(DESIGN_GAPS D-15) — 저장되지 않는 표시값이라
     // 화면도 스위치를 잠근다. 서술형만 꺼 보이는 것은 시안 기본값이다.
     autoAdvance: q.type !== "ESSAY",
