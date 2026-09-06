@@ -8,10 +8,11 @@
 
 ## 요약
 
-| 번호 | 한 줄                                                              | 급함    | 프런트 현재 처리                        | 상태      |
-| ---- | ------------------------------------------------------------------ | ------- | --------------------------------------- | --------- |
-| B-18 | 확정 세트라 "문항별 시간 설정"이 **어떤 방에서도** 저장되지 않는다 | 🔴 높음 | 확정 세트면 화면을 읽기 전용으로 잠갔다 | 답변 대기 |
-| B-19 | 자동 넘김(`autoAdvance`)을 담을 필드가 계약에 없다                 | 🟡 보통 | 토글을 잠가 뒀다                        | 답변 대기 |
+| 번호 | 한 줄                                                                                | 급함    | 프런트 현재 처리                        | 상태      |
+| ---- | ------------------------------------------------------------------------------------ | ------- | --------------------------------------- | --------- |
+| B-18 | 확정 세트라 "문항별 시간 설정"이 **어떤 방에서도** 저장되지 않는다                   | 🔴 높음 | 확정 세트면 화면을 읽기 전용으로 잠갔다 | 답변 대기 |
+| B-19 | 자동 넘김(`autoAdvance`)을 담을 필드가 계약에 없다                                   | 🟡 보통 | 토글을 잠가 뒀다                        | 답변 대기 |
+| B-20 | 학생 리포트가 시안의 절반을 못 그린다 — 소요 시간·개념·반 정답률·비교/추이 값이 없다 | 🔴 높음 | 값이 없는 칸과 카드는 감춘다            | 답변 대기 |
 
 ---
 
@@ -73,3 +74,55 @@ QuestionResponse -> id, orderNo, type, content, choices, answer, explanation, to
 
 **정해지면 프런트가 할 일**
 잠금을 풀고 `PUT …/questions/{questionId}` 본문에 함께 싣습니다. 안 넣기로 하면 열을 지웁니다.
+
+---
+
+## 🔴 B-20. 학생 리포트(P-Web `/result/{roomId}/report`)가 시안의 절반을 못 그린다
+
+**현상**
+시안에는 요약 KPI 4개 + 분석 카드 3장 + 문항표 8열이 있는데, 지금 화면은 다음이 비어 있습니다.
+프런트는 값을 지어내지 않고 그 자리를 감추거나 `—`로 둡니다.
+
+| 시안 자리                  | 필요한 값                   | 지금 계약 | 프런트 현재      |
+| -------------------------- | --------------------------- | --------- | ---------------- |
+| 요약 "소요 시간 11분 40초" | 내가 푸는 데 걸린 시간      | 없음      | `—`              |
+| 요약 "3위 / 24명"          | 참가자 수                   | 없음      | 순위만           |
+| 카드 "반 평균과 비교"      | 반 평균 정답률 · 1위 정답률 | 없음\*    | 카드 감춤        |
+| 카드 "이 방에서 나의 추이" | 같은 방 회차별 내 정답률    | 없음      | 카드 감춤        |
+| 카드 "개념별 정답률"       | 개념(주제)별 맞은/전체      | 없음      | 카드 감춤        |
+| 표 "개념" 열               | 문항의 주제                 | 없음      | 빈칸             |
+| 표 "반 정답률" 열          | 문항별 반 정답률            | 없음\*    | `—`              |
+| 표 "소요" 열               | 문항별 내 소요 시간         | 없음      | `—`              |
+| 버튼 "OO 복습 방 찾기"     | 약한 주제 이름              | 있음      | 주제가 비면 감춤 |
+
+\* 값 자체는 `GET /rooms/{roomId}/results`(요약 `avgCorrectRate`, 문항별 `correctRate`)에 있지만
+**호스트 전용**입니다("학생별 점수가 통째로 나가므로 호스트만"). 학생이 부를 수 있는 통로가 없습니다.
+
+**근거 (2026-09-06 `/v3/api-docs`)**
+
+- `GET /rooms/{roomId}/results/me` → `MySessionResultResponse`:
+  `rank, totalScore, correctCount, submitCount, questionCount, questions[], rating` —
+  **소요 시간·참가자 수 없음**
+- 문항 한 건 `AnswerResultView`:
+  `sessionQuestionId, questionId, orderNo, type, content, points, answer, explanation, submitted,
+isCorrect, score, finalScore, analysisStatus, analysis, teacherReview` —
+  **주제(topic)·반 정답률·제출 시각/소요 시간 없음**
+- `GET /rooms/{roomId}/reports/me` → `LearningReportResponse`:
+  `accuracy, totalScore, finalRank, weakTopics[], improvementPoints[]` —
+  **개념별 비율·반 평균·회차 추이 없음**(`weakTopics`는 주제 이름만)
+
+**요청 — 우선순위 순으로 나눠 주셔도 됩니다**
+
+1. (가장 값이 큼) `AnswerResultView`에 **`topic`**, **`correctRate`**(그 문항의 반 정답률),
+   **`elapsedMs` 또는 `submittedAt`** 추가 → 표의 개념·반 정답률·소요 3열이 한 번에 채워집니다.
+2. `MySessionResultResponse`에 **`elapsedMs`**(내 총 소요)와 **`participantCount`** 추가
+   → 요약 KPI "소요 시간"과 "3위 / 24명"이 채워집니다.
+3. `LearningReportResponse`에 **`classAvgAccuracy`·`topAccuracy`**, **`topicAccuracy[]`**
+   (주제별 맞은 수/전체 수) 추가 → "반 평균과 비교"·"개념별 정답률" 카드가 살아납니다.
+4. "이 방에서 나의 추이"는 **같은 방을 여러 번 참여한다는 개념**이 서버에 있는지부터 알려주세요.
+   없다면 이 카드는 시안에서 빼는 게 맞습니다(프런트에서 지웁니다).
+
+**정해지면 프런트가 할 일**
+`toReportRows`가 지금 `concept: ""`·`classAccuracyPercent: null`·`elapsedSeconds: null`로
+비워 두는 자리에 값을 꽂고, 컨테이너가 `null`로 넘기는 `comparison`·`trend`·`concepts`·
+`participantCount`·`elapsedSeconds`를 채웁니다. 화면은 이미 값이 오면 그리도록 만들어져 있습니다.
