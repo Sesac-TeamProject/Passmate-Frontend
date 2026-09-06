@@ -2,6 +2,8 @@
 
 import { Minus, Plus } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+
 type Props = {
   value: number;
   onChange: (next: number) => void;
@@ -24,7 +26,12 @@ export function Stepper({ value, onChange, min, max, step, unit, label, disabled
     <div
       role="group"
       aria-label={label}
-      className="flex h-10 w-[150px] items-center justify-between rounded-xl border-[1.5px] px-1"
+      aria-disabled={disabled || undefined}
+      className={cn(
+        "flex h-10 w-[150px] items-center justify-between rounded-xl border-[1.5px] px-1",
+        // 잠긴 스테퍼가 "값이 한계에 닿은 스테퍼"처럼 보이면 안 된다 — 판 전체를 죽인다
+        disabled && "bg-muted/40 text-muted-foreground opacity-70",
+      )}
     >
       <button
         type="button"

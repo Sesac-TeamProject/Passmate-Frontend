@@ -21,8 +21,9 @@ type Props = {
 };
 
 /**
- * 라우트 가드 (규칙 문서 §2-1, §8). 미로그인은 `/login?next=` 로 보내고,
- * 관리자가 아니면 권한 거부 화면을 보인다. UX용 가드이며 최종 권위는 서버 403이다.
+ * 라우트 가드 (규칙 문서 §2-1, §8). 미로그인은 `/login`으로 보내고(돌아올 곳은 붙이지 않는다 —
+ * 로그인은 홈에서 시작한다), 관리자가 아니면 권한 거부 화면을 보인다.
+ * 만료(E-401)만 `?next=`로 하던 자리를 들고 간다. UX용 가드이며 최종 권위는 서버 403이다.
  */
 export function RequireAuth({ adminOnly, children }: Props) {
   const status = useRestoreSession();

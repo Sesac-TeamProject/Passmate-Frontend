@@ -85,8 +85,6 @@ export default function Page() {
   const errorMessage = start.isError ? toSessionControlMessage(start.error) : null;
 
   const needsSet = detail.data.questionSetId === undefined;
-  // 연결된 세트의 문항 수 — 방 응답에는 없지만 이미 읽어 둔 확정 세트 목록에서 찾을 수 있다
-  const linkedSet = confirmedSets.data?.content.find((s) => s.id === detail.data.questionSetId);
   const handleLinkSet = () => {
     if (setIdToLink === "" || linkSet.isPending) return;
     linkSet.mutate({
@@ -108,7 +106,8 @@ export default function Page() {
         // 방 응답에 호스트 이름이 없다(hostUserId만 준다) — 지금 보는 사람이 호스트이므로 굳이 쓰지 않는다
         hostName={null}
         students={toStudents(participants)}
-        questionCount={linkedSet?.questionCount ?? null}
+        // 세트 목록은 첫 페이지만 오므로 거기서 찾으면 21번째 세트부터 비어 버린다 — 상세에서 읽는다
+        questionCount={linkedSetDetail.data?.set.questionCount ?? null}
         timeLimitLabel={toTimeLimitLabel(linkedSetDetail.data?.questions)}
         isPaid={detail.data.type === "PAID"}
         maxParticipants={detail.data.maxParticipants ?? null}

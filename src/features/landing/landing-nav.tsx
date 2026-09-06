@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type MouseEvent, useEffect, useState } from "react";
+import { type MouseEvent, type RefObject, useEffect, useRef, useState } from "react";
 import { BrandLogo } from "@/components/common/brand-logo";
 import { cn } from "@/lib/utils";
 import { BUTTON, INNER } from "./styles";
@@ -9,11 +9,11 @@ import { NAV_LINKS } from "./content";
 
 const NAV_HREFS = NAV_LINKS.map((link) => link.href);
 
-/** 지금 보고 있는 섹션의 판정선 — sticky 헤더(약 76) 바로 아래, 섹션의 scroll-mt-20(80)보다 넉넉히 아래 */
-const SPY_LINE = 100;
+/** 판정선을 헤더 바로 아래가 아니라 조금 더 내려 잡는다 — 섹션의 scroll-mt-20(80)보다 아래여야 클릭 직후에도 맞는다 */
+const SPY_GAP = 24;
 
 /** 판정선을 이미 지난 섹션 중 가장 마지막 것이 "지금 보고 있는" 섹션이다 (히어로 구간은 null) */
-function useActiveSection(): string | null {
+function useActiveSection(headerRef: RefObject<HTMLElement | null>): string | null {
   const [active, setActive] = useState<string | null>(null);
 
   useEffect(() => {
@@ -21,11 +21,18 @@ function useActiveSection(): string | null {
 
     const update = () => {
       frame = 0;
+      // 판정선은 sticky 헤더 높이에서 잰다 — 로고·메뉴가 바뀌어 헤더가 자라도 따라간다
+      const line = (headerRef.current?.getBoundingClientRect().height ?? 0) + SPY_GAP;
       let current: string | null = null;
       for (const href of NAV_HREFS) {
         const section = document.getElementById(href.slice(1));
-        if (section && section.getBoundingClientRect().top <= SPY_LINE) current = href;
+        if (section && section.getBoundingClientRect().top <= line) current = href;
       }
+      // 문서 끝에 닿으면 마지막 섹션을 활성으로 둔다 — FAQ 아래(CTA·푸터)가 짧아서
+      // 화면이 크면 FAQ가 판정선까지 못 올라온다
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      if (atBottom) current = NAV_HREFS.at(-1) ?? current;
       setActive(current);
     };
 
@@ -41,7 +48,7 @@ function useActiveSection(): string | null {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
     };
-  }, []);
+  }, [headerRef]);
 
   return active;
 }
@@ -63,10 +70,11 @@ function scrollToSection(event: MouseEvent<HTMLAnchorElement>, href: string) {
 
 /** L-01 랜딩 상단 바 — 스크롤·클릭 어느 쪽으로 옮겨도 지금 보고 있는 섹션 이름을 굵게 둔다 */
 export function LandingNav() {
-  const active = useActiveSection();
+  const headerRef = useRef<HTMLElement>(null);
+  const active = useActiveSection(headerRef);
 
   return (
-    <header className="sticky top-0 z-10 bg-card py-[18px]">
+    <header ref={headerRef} className="sticky top-0 z-10 bg-card py-[18px]">
       <div className={cn(INNER, "flex items-center justify-between")}>
         <BrandLogo size="lg" />
         <nav className="flex items-center gap-7">

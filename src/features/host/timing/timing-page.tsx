@@ -78,7 +78,7 @@ export function TimingPage({
         </p>
       )}
 
-      <section className="flex items-center gap-6 rounded-[20px] border bg-card p-6">
+      <section className="mt-2 flex items-center gap-6 rounded-[20px] border bg-card p-6">
         <div className="flex flex-col gap-1.5">
           <h2 className="text-heading-sm font-bold">모든 문항 한 번에</h2>
           <p className="text-body-md text-muted-foreground">개별로 바꾼 문항은 그대로 둡니다</p>

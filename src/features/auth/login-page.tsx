@@ -66,13 +66,19 @@ export function LoginPage({ onGoogleClick, devLogin }: Props) {
           </div>
 
           <div className="flex flex-col gap-3">
-            <Link
-              href="/join"
-              // 시안 C-01: 연한 민트 판 위 진한 민트 글자(볼드). 규격은 Google 버튼과 같다 (h48 · r12)
-              className="flex h-12 items-center justify-center rounded-xl bg-mint-bg text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint-tint"
+            {/*
+              시안 C-01: 연한 민트 판 위 진한 민트 글자(볼드). 규격(h48·r12)은 위 Google 버튼과 같아야 해서
+              베끼지 않고 같은 size="xl" 을 쓴다 — 색만 시안 값으로 덮는다.
+            */}
+            <Button
+              size="xl"
+              variant="secondary"
+              className="w-full bg-mint-bg font-bold hover:bg-mint-tint"
+              nativeButton={false}
+              render={<Link href="/join" />}
             >
               PIN으로 게스트 입장
-            </Link>
+            </Button>
             {/*
               약관·개인정보처리방침 문서가 아직 없다 — 페이지를 만들기 전에 링크를 걸면 404다.
               문서가 생기면 이 문장의 두 이름에 링크를 건다.
