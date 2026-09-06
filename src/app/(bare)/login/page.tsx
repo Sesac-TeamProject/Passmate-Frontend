@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { LoginPage } from "@/features/auth/login-page";
-import { IS_MOCK } from "@/lib/env";
+import { ENABLE_DEV_LOGIN, IS_MOCK } from "@/lib/env";
 import { useDevLogin } from "@/lib/queries/use-auth";
 import { safeNextPath } from "@/lib/safe-next";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -13,8 +13,9 @@ import { AppError } from "@/lib/types/app-error";
 /**
  * C-01 컨테이너. 이메일 로그인은 API 명세서 v2에서 보류로 확정돼 Google 하나만 남는다.
  *
- * 개발용 로그인(`POST /auth/dev-login`)은 **실서버에 붙었을 때만** 노출한다 —
+ * 개발용 로그인(`POST /auth/dev-login`)은 **NEXT_PUBLIC_ENABLE_DEV_LOGIN=1 일 때만** 노출한다 —
  * 목 모드는 이미 자동 로그인이라 겹치고, 운영 프로파일에는 이 API가 없어 404가 난다.
+ * 운영 배포(main)는 이 값을 켜지 않아 패널이 아예 그려지지 않는다.
  */
 function LoginContainer() {
   const router = useRouter();
@@ -47,7 +48,7 @@ function LoginContainer() {
     <LoginPage
       onGoogleClick={handleGoogleClick}
       devLogin={
-        IS_MOCK
+        IS_MOCK || !ENABLE_DEV_LOGIN
           ? undefined
           : {
               value: devKey,

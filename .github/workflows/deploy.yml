@@ -73,8 +73,12 @@ jobs:
           push: true
           # 태그 = 커밋 SHA. 롤백은 SSM 의 WEB_IMAGE_TAG 를 이전 SHA 로 되돌리고 배포를 다시 도는 것
           tags: ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+          # 개발용 로그인 칸은 **어느 브랜치를 배포하든 끈다.** 이 워크플로가 미는 곳은 늘
+          # 한 대뿐인 그 EC2 = passmate.kr 이다 — develop 을 Run workflow 로 올려도 운영이다.
+          # 그러니 브랜치로 가를 수 없다. 필요하면 로컬에서 켠다(.env.local 의 …ENABLE_DEV_LOGIN=1).
           build-args: |
             NEXT_PUBLIC_API_BASE_URL=${{ env.API_BASE_URL }}
+            NEXT_PUBLIC_ENABLE_DEV_LOGIN=off
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
