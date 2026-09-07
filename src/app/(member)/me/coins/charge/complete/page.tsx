@@ -23,7 +23,8 @@ function ChargeCompleteContainer() {
   const amount =
     Number.isFinite(amountParam) && amountParam > 0 ? amountParam : DEFAULT_CHARGE_AMOUNT;
   const methodParam = searchParams.get("method");
-  const payMethod: PayMethod = isPayMethod(methodParam) ? methodParam : "kakaopay";
+  // 서버가 실제 수단을 못 알아낸 결제는 method 쿼리가 없다 — 지어내지 않고 표기를 생략한다
+  const payMethod: PayMethod | null = isPayMethod(methodParam) ? methodParam : null;
 
   if (balance.isPending) return <ScreenLoading />;
   if (balance.isError)

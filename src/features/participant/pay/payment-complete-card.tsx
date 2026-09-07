@@ -11,7 +11,8 @@ export type PaymentReceipt = {
   roomTitle: string;
   /** 충전한 금액(원) */
   chargeAmount: number;
-  payMethod: PayMethod;
+  /** 실제로 쓴 수단(확정 응답의 포트원 조회값). 충전 없이 차감만 했거나 못 알아냈으면 null */
+  payMethod: PayMethod | null;
   /** 차감된 코인 */
   deducted: number;
   /** 차감 후 남은 코인 */
@@ -40,7 +41,7 @@ export function PaymentCompleteCard({ receipt }: Props) {
         <KeyValueRow label="방" value={receipt.roomTitle} />
         <KeyValueRow
           label="결제 · 차감"
-          value={`${formatWon(receipt.chargeAmount)} 충전 (${PAY_METHOD_LABEL[receipt.payMethod]}) → ${formatCoin(receipt.deducted)} 차감`}
+          value={`${formatWon(receipt.chargeAmount)} 충전${receipt.payMethod ? ` (${PAY_METHOD_LABEL[receipt.payMethod]})` : ""} → ${formatCoin(receipt.deducted)} 차감`}
         />
         <KeyValueRow label="결제 번호" value={receipt.paymentId} />
         <KeyValueRow

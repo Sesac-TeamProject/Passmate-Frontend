@@ -7,7 +7,8 @@ import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 type Props = {
   /** 충전한 코인(= 결제 금액, 1 C = ₩1) */
   amount: number;
-  payMethod: PayMethod;
+  /** 실제로 쓴 수단(서버가 포트원 조회로 기록). 못 알아낸 결제는 null — 표기를 생략한다 */
+  payMethod: PayMethod | null;
   /** 충전 후 보유 코인 */
   balanceAfter: number;
   onConfirm: () => void;
@@ -22,8 +23,8 @@ export function ChargeCompletePage({ amount, payMethod, balanceAfter, onConfirm 
       </div>
       <h2 className="text-heading-lg text-foreground">{formatNumber(amount)} C 충전 완료</h2>
       <p className="text-body-md text-muted-foreground">
-        보유 코인 {formatNumber(balanceAfter)} C · {PAY_METHOD_LABEL[payMethod]}{" "}
-        {formatKrwInline(amount)}
+        보유 코인 {formatNumber(balanceAfter)} C ·{" "}
+        {payMethod ? PAY_METHOD_LABEL[payMethod] : "포트원 결제"} {formatKrwInline(amount)}
       </p>
       <p className="text-label-md text-ink-disabled">
         결제 내역은 마이페이지 › 코인 · 결제에서 볼 수 있어요
