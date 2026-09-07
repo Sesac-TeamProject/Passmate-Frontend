@@ -69,6 +69,8 @@ export function NewRoomDialog({
   if (questionSetId === "" && firstSetId !== "") setQuestionSetId(firstSetId);
 
   const setItems = sets.map((s) => ({ value: s.id, label: `${s.title} (${s.questionCount}문항)` }));
+  // 확정 세트가 없으면 고를 것이 없다 — 셀렉트를 잠그고 제출도 막는다(폼 W-02와 같은 규칙)
+  const hasSets = sets.length > 0;
   // 서버가 등급을 못 준 경우(조회 실패)는 잠그지 않는다 — 없는 Lv.1을 지어내는 대신
   // 서버의 403 HOST_LEVEL_REQUIRED가 판정하게 둔다.
   const paidLocked = level !== null && level < PAID_ROOM_MIN_LEVEL;
@@ -130,10 +132,12 @@ export function NewRoomDialog({
             </label>
             <Select
               items={setItems}
-              value={questionSetId}
+              // 고른 값이 없을 때는 null이어야 placeholder가 나온다(빈 문자열은 값으로 친다)
+              value={questionSetId || null}
               onValueChange={(value) => {
                 if (value) setQuestionSetId(value);
               }}
+              disabled={!hasSets}
             >
               <SelectTrigger
                 id={setFieldId}
@@ -142,9 +146,10 @@ export function NewRoomDialog({
                   "justify-between border-0 text-label-lg data-[size=default]:h-12",
                 )}
               >
-                <SelectValue />
+                <SelectValue placeholder="확정한 세트가 없어요" />
               </SelectTrigger>
-              <SelectContent>
+              {/* 목록은 트리거 바로 아래로 순차 표시 — 겹쳐 띄우는 기본 동작은 어색하다 */}
+              <SelectContent side="bottom" align="start" alignItemWithTrigger={false}>
                 {setItems.map((item) => (
                   <SelectItem key={item.value} value={item.value} className="text-label-lg">
                     {item.label}
@@ -211,7 +216,7 @@ export function NewRoomDialog({
             >
               취소
             </Button>
-            <Button type="submit" size="xl" disabled={pending}>
+            <Button type="submit" size="xl" disabled={pending || !questionSetId}>
               {pending ? <PendingLabel>방 만드는 중…</PendingLabel> : "방 만들기 → PIN 발급"}
             </Button>
           </div>
