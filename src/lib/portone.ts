@@ -39,6 +39,17 @@ const PORTONE_PAY_METHOD: Record<PaymentMethod, "CARD" | "TRANSFER" | "EASY_PAY"
   BANK_TRANSFER: "TRANSFER",
 };
 
+/**
+ * 간편결제일 때 **어느 간편결제인지**는 이 값이 PG에 알려준다.
+ * 빠뜨리면 토스페이먼츠가 "간편 결제 수단은 필수 입력입니다"로 결제창 호출을 거부한다
+ * (2026-09-07 운영에서 실제로 난 사고). 지정하면 통합창 대신 해당 간편결제 UI로 직행한다.
+ */
+const EASY_PAY_PROVIDER: Partial<Record<PaymentMethod, "KAKAOPAY" | "NAVERPAY" | "TOSSPAY">> = {
+  KAKAOPAY: "KAKAOPAY",
+  NAVERPAY: "NAVERPAY",
+  TOSSPAY: "TOSSPAY",
+};
+
 export type PaymentResult =
   { ok: true; paymentId: string } | { ok: false; code: "CANCELLED" | "FAILED"; message: string };
 
@@ -69,6 +80,9 @@ export async function requestPayment(
       totalAmount: charge.amount,
       currency: "CURRENCY_KRW",
       payMethod: PORTONE_PAY_METHOD[method],
+      ...(EASY_PAY_PROVIDER[method]
+        ? { easyPay: { easyPayProvider: EASY_PAY_PROVIDER[method] } }
+        : {}),
     });
 
     // 리디렉션으로 빠지면 응답 없이 페이지가 떠난다 — 돌아온 뒤 다시 이어 붙인다
