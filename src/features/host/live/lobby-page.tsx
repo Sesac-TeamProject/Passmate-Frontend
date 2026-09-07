@@ -8,6 +8,13 @@ import { formatPin } from "@/lib/format";
 import { LobbyRail, LobbyRailMini } from "./lobby-rail";
 import { ProjectorShell } from "./projector-shell";
 import { PendingLabel } from "@/components/common/pending-label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // window.location을 읽는 QR은 서버 렌더에서 제외한다 — 자리는 회색 박스로 잡아 둔다.
 const JoinQr = dynamic(() => import("./join-qr").then((m) => m.JoinQr), {
@@ -145,31 +152,7 @@ export function LobbyPage({
             </p>
           )}
           <span className="flex items-center gap-3">
-            {setLink ? (
-              <span className="flex items-center gap-2">
-                <select
-                  aria-label="연결할 문제 세트"
-                  value={setLink.value}
-                  onChange={(e) => setLink.onChange(e.target.value)}
-                  className="h-13 rounded-2xl bg-muted px-4 text-body-md text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="">세트 고르기</option>
-                  {setLink.options.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.title} — {option.questionCount}문항
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={setLink.onSubmit}
-                  disabled={setLink.pending || setLink.value === ""}
-                  className="h-13 rounded-2xl bg-mint-tint px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint hover:text-white disabled:opacity-60"
-                >
-                  {setLink.pending ? <PendingLabel>연결 중…</PendingLabel> : "세트 연결"}
-                </button>
-              </span>
-            ) : null}
+            {setLink ? <SetLinkRow panel={setLink} /> : null}
             {/*
               시안 W-04: 시험 시작 왼쪽에 문항별 시간 설정 진입 — 시작 전에만 바꿀 수 있다.
               `setLink`가 있다는 건 아직 세트를 연결하지 않았다는 뜻이라(바로 아래 시험 시작
@@ -245,5 +228,53 @@ export function LobbyPage({
         ))}
       </ul>
     </ProjectorShell>
+  );
+}
+
+/**
+ * 세트가 아직 연결되지 않은 방의 하단 줄 — 세트 고르기 + 세트 연결.
+ * 네이티브 셀렉트는 프로젝터 화면에 OS 기본 목록을 그대로 띄워서 공용 Select로 바꿨다.
+ * 목록은 화면 맨 아래에 있는 트리거를 가리지 않도록 위로 편다.
+ */
+function SetLinkRow({ panel }: { panel: SetLinkPanel }) {
+  const items = panel.options.map((option) => ({
+    value: option.id,
+    label: `${option.title} — ${option.questionCount}문항`,
+  }));
+  // 확정 세트가 하나도 없으면 열어 봐야 빈 목록이다 — 잠그고 이유를 그 자리에 띄운다
+  const hasOptions = items.length > 0;
+
+  return (
+    <span className="flex items-center gap-2">
+      <Select
+        items={items}
+        // 고른 값이 없을 때는 null이어야 placeholder가 나온다(빈 문자열은 값으로 친다)
+        value={panel.value || null}
+        onValueChange={(value) => panel.onChange(value ?? "")}
+        disabled={!hasOptions}
+      >
+        <SelectTrigger
+          aria-label="연결할 문제 세트"
+          className="w-[220px] justify-between rounded-2xl border-0 bg-muted px-4 text-body-md text-ink focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-ring data-[size=default]:h-13"
+        >
+          <SelectValue placeholder={hasOptions ? "세트 고르기" : "확정한 세트가 없어요"} />
+        </SelectTrigger>
+        <SelectContent side="top" align="start" alignItemWithTrigger={false}>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value} className="text-body-md">
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <button
+        type="button"
+        onClick={panel.onSubmit}
+        disabled={panel.pending || panel.value === ""}
+        className="h-13 rounded-2xl bg-mint-tint px-5 text-label-lg font-bold text-mint-dark transition-colors hover:bg-mint hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {panel.pending ? <PendingLabel>연결 중…</PendingLabel> : "세트 연결"}
+      </button>
+    </span>
   );
 }
