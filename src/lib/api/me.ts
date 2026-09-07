@@ -1,4 +1,5 @@
 import type {
+  AiQuotaResponse,
   BadgesResponse,
   GuestClaimRequest,
   GuestClaimResponse,
@@ -32,6 +33,11 @@ export function getJoinedRooms(page = 0, size?: number): Promise<JoinedRoomsResp
 /** GET /users/me/report — 누적 학습 리포트(추이·취약 주제) */
 export function getCumulativeReport(): Promise<CumulativeReportResponse> {
   return request<CumulativeReportResponse>("/users/me/report");
+}
+
+/** GET /users/me/ai-quota — AI 생성 무료 한도·사용·잔여. 회원 전용 */
+export function getAiQuota(): Promise<AiQuotaResponse> {
+  return request<AiQuotaResponse>("/users/me/ai-quota");
 }
 
 /** GET /users/me/grade */

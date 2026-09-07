@@ -9,6 +9,8 @@ export const qk = {
   /** 누적 학습 리포트 */
   cumulativeReport: ["me", "report"] as const,
   grade: ["me", "grade"] as const,
+  /** AI 생성 무료 한도·잔여 — 생성·재생성이 성공하면 무효화한다 */
+  aiQuota: ["me", "ai-quota"] as const,
   badges: ["me", "badges"] as const,
   notifications: ["me", "notifications"] as const,
   coins: ["me", "coins"] as const,

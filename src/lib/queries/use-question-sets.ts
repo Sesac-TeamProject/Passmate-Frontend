@@ -65,6 +65,15 @@ function useInvalidateSet() {
   };
 }
 
+/** AI를 실제로 부른 뮤테이션만 쓴다 — 생성·재생성이 무료 한도를 공유한다(FR-076) */
+function useInvalidateAiQuota() {
+  const queryClient = useQueryClient();
+
+  return () => {
+    queryClient.invalidateQueries({ queryKey: qk.aiQuota });
+  };
+}
+
 /** PUT /question-sets/{setId} — 제목·설명·문항 순서 */
 export function useUpdateQuestionSet() {
   const invalidate = useInvalidateSet();
@@ -119,11 +128,15 @@ export function useDeleteQuestion() {
 /** POST …/questions/{questionId}/regenerate — 문항 하나만 AI로 다시 만든다(무료 횟수 소모) */
 export function useRegenerateQuestion() {
   const invalidate = useInvalidateSet();
+  const invalidateQuota = useInvalidateAiQuota();
 
   return useMutation({
     mutationFn: ({ setId, questionId }: { setId: number; questionId: number }) =>
       regenerateQuestion(setId, questionId),
-    onSuccess: (_data, { setId }) => invalidate(setId),
+    onSuccess: (_data, { setId }) => {
+      invalidate(setId);
+      invalidateQuota();
+    },
   });
 }
 
@@ -133,11 +146,15 @@ export function useRegenerateQuestion() {
  */
 export function useGenerateQuestions() {
   const invalidate = useInvalidateSet();
+  const invalidateQuota = useInvalidateAiQuota();
 
   return useMutation({
     mutationFn: ({ setId, body }: { setId: number; body: AiGenerateRequest }) =>
       generateQuestions(setId, body),
-    onSuccess: (_data, { setId }) => invalidate(setId),
+    onSuccess: (_data, { setId }) => {
+      invalidate(setId);
+      invalidateQuota();
+    },
   });
 }
 

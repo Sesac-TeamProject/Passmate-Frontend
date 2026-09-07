@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PendingLabel } from "@/components/common/pending-label";
 import { FlowTopBar } from "@/features/host/room-flow/flow-top-bar";
-import type { AiGenerateRequest } from "@/lib/types/dto";
+import type { AiGenerateRequest, AiQuotaResponse } from "@/lib/types/dto";
 import { GeneratePanel } from "./generate-panel";
 import { PreviewDialog } from "./preview-dialog";
 import { QuestionForm } from "./question-form";
@@ -28,6 +28,8 @@ type Props = {
   onGenerate: (body: AiGenerateRequest) => void;
   generating: boolean;
   generateError: string | null;
+  /** AI 무료 한도·잔여. 못 읽었으면 undefined */
+  aiQuota?: AiQuotaResponse;
   /** 열려 있을 때만 폼을 그린다 */
   form: FormState | null;
   onAddManual: () => void;
@@ -55,6 +57,7 @@ export function EditorPage({
   onGenerate,
   generating,
   generateError,
+  aiQuota,
   form,
   onAddManual,
   onEdit,
@@ -104,6 +107,7 @@ export function EditorPage({
           generating={generating}
           errorMessage={generateError}
           disabled={readOnly}
+          quota={aiQuota}
         />
 
         <div className="flex min-w-0 flex-1 flex-col gap-3">
