@@ -226,3 +226,14 @@ export type GuestClaimResponse = {
   finalRank?: number;
   claimedAt?: string;
 };
+
+/**
+ * GET /users/me/ai-quota — AI 문항 생성·재생성이 **공유하는** 무료 한도(FR-076).
+ * 한도를 화면이 복제하지 않으려고 서버가 셋을 함께 준다. 실패한 호출은 세지 않고,
+ * 한도를 넘겨도 `remainingCount`는 0 아래로 내려가지 않는다.
+ */
+export type AiQuotaResponse = {
+  freeLimit: number;
+  usedCount: number;
+  remainingCount: number;
+};

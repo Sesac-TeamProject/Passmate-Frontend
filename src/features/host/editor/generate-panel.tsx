@@ -6,6 +6,7 @@ import { Stepper } from "@/components/common/stepper";
 import type { QuestionType } from "@/features/host/types";
 import { cn } from "@/lib/utils";
 import type {
+  AiQuotaResponse,
   AiGenerateRequest,
   Difficulty,
   QuestionType as WireQuestionType,
@@ -35,12 +36,6 @@ const MAX_GENERATE_COUNT = 20;
 /** 강의자료 본문 최대 길이 (`AiGenerateRequest.MATERIAL_MAX_LENGTH`) */
 const MATERIAL_MAX_LENGTH = 5000;
 
-/**
- * 무료 생성 횟수. 서버 정책값(`AiPolicy.aiFreeLimit`)을 안내 문구에 복제해 둔 것이라
- * 서버가 바꾸면 여기도 바꿔야 한다 — 잔여 횟수를 주는 응답이 생기면 이 상수는 지운다.
- */
-const AI_FREE_LIMIT = 5;
-
 type Props = {
   onGenerate: (body: AiGenerateRequest) => void;
   onAddManual: () => void;
@@ -48,6 +43,8 @@ type Props = {
   errorMessage?: string | null;
   /** 확정된 세트에는 문항을 더할 수 없다 */
   disabled?: boolean;
+  /** AI 생성 무료 한도·잔여. 아직 못 읽었으면 undefined — 숫자를 지어내지 않고 한도만 안내한다 */
+  quota?: AiQuotaResponse;
 };
 
 const FIELD =
@@ -60,6 +57,7 @@ export function GeneratePanel({
   generating,
   errorMessage,
   disabled,
+  quota,
 }: Props) {
   const [topic, setTopic] = useState("");
   const [material, setMaterial] = useState("");
@@ -204,15 +202,20 @@ export function GeneratePanel({
         (`AiQuestionService.verifyFreeLimit`, 2026-09-04 확인). 없는 결제를 적으면 거짓말이 되므로
         소진 뒤 실제로 남는 길(직접 추가)을 적는다. 코인 차감이 붙으면 이 문구를 시안대로 되돌린다.
 
-        남은 무료 횟수(`AI 생성 n회 남음`)는 아직 못 그린다 — 백엔드에 `remainingFreeCount()`가
-        있지만 어느 응답에도 실리지 않는다(백엔드 요청 B-7 · DESIGN_GAPS G-1).
+        남은 횟수는 `GET /users/me/ai-quota`가 준다 — 한도를 화면 상수로 복제하지 않는다.
+        아직 못 읽었으면 숫자를 지어내지 않고 한도 안내만 남긴다.
+        생성·재생성이 한도를 공유하고(FR-076), 실패한 호출은 세지 않는다.
 
-        PDF 업로드(`generate-from-file`)도 백엔드에 없다 — 위 텍스트 붙여넣기가 그 자리를 대신한다.
+        PDF 업로드(`generate-from-file`)는 백엔드에 없다 — 위 텍스트 붙여넣기가 그 자리를 대신한다.
       */}
       <p className="flex flex-col gap-0.5 rounded-xl bg-mint-tint px-3.5 py-2.5">
         <span className="text-label-lg text-mint-dark">AI 생성 비용</span>
         <span className="text-label-md text-mint-dark">
-          최초 {AI_FREE_LIMIT}회 무료 · 다 쓰면 직접 문항 추가로 이어 갈 수 있어요
+          {quota === undefined
+            ? "무료 횟수를 다 쓰면 직접 문항 추가로 이어 갈 수 있어요"
+            : quota.remainingCount === 0
+              ? `무료 ${quota.freeLimit}회를 다 썼어요 · 직접 문항 추가로 이어 갈 수 있어요`
+              : `AI 생성 ${quota.remainingCount}회 남음 · 무료 ${quota.freeLimit}회 중 ${quota.usedCount}회 사용`}
         </span>
       </p>
 

@@ -3,6 +3,7 @@ import { getMe } from "@/lib/api/auth";
 import {
   claimGuestRecord,
   deleteMe,
+  getAiQuota,
   getBadges,
   getGrade,
   getHostProfile,
@@ -32,6 +33,20 @@ export function useMe() {
     queryKey: qk.me,
     queryFn: getMe,
     initialData: () => useAuthStore.getState().profile ?? undefined,
+    staleTime: ME_STALE_TIME_MS,
+  });
+}
+
+/**
+ * GET /users/me/ai-quota — AI 생성 무료 잔여 횟수.
+ *
+ * 한도를 화면 상수로 복제하지 않는다 — 서버 정책값이 바뀌면 화면이 조용히 거짓말을 한다.
+ * 생성·재생성이 성공하면 `qk.aiQuota`를 무효화해 숫자를 다시 읽는다.
+ */
+export function useAiQuota() {
+  return useQuery({
+    queryKey: qk.aiQuota,
+    queryFn: getAiQuota,
     staleTime: ME_STALE_TIME_MS,
   });
 }
