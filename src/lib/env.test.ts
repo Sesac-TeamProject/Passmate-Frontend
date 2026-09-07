@@ -54,3 +54,41 @@ describe("WS_URL", () => {
     expect(WS_URL).toBe("wss://ws.passmate.kr/ws");
   });
 });
+
+/**
+ * 운영 로그인 화면에 개발용 입장 칸이 새면 안 된다 — 켜는 값은 `"1"` 하나뿐이고
+ * 안 넘겼을 때(운영 기본값)와 CI가 main 에 넘기는 `"off"` 는 반드시 꺼져야 한다.
+ */
+describe("ENABLE_DEV_LOGIN", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('"1"일 때만 켜진다', async () => {
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_LOGIN", "1");
+
+    const { ENABLE_DEV_LOGIN } = await import("./env");
+
+    expect(ENABLE_DEV_LOGIN).toBe(true);
+  });
+
+  it.each(["", "off", "0", "true", "yes"])('"%s"는 꺼진 것으로 본다', async (value) => {
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_LOGIN", value);
+
+    const { ENABLE_DEV_LOGIN } = await import("./env");
+
+    expect(ENABLE_DEV_LOGIN).toBe(false);
+  });
+
+  it("값이 아예 없으면 꺼진다 — 운영이 기본값이다", async () => {
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_LOGIN", undefined);
+
+    const { ENABLE_DEV_LOGIN } = await import("./env");
+
+    expect(ENABLE_DEV_LOGIN).toBe(false);
+  });
+});

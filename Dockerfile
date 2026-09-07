@@ -3,6 +3,8 @@
 #   docker build --platform linux/arm64 \
 #     --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.passmate.kr -t passmate-web .
 #
+# 개발용 로그인 칸은 안 주면 꺼진 채로 구워진다. main 배포에서는 CI 가 안 준다.
+#
 # ⚠️ NEXT_PUBLIC_* 는 **빌드 시점에 번들에 박힌다.** 런타임 환경변수로는 바꿀 수 없어서
 # build-arg 로 받는다. 주소가 바뀌면 이미지를 다시 구워야 한다.
 #
@@ -26,9 +28,12 @@ ARG NEXT_PUBLIC_API_BASE_URL
 ARG NEXT_PUBLIC_WS_URL
 # Google 웹 클라이언트 ID — 시크릿이 아니라 공개 식별자다(번들에 그대로 실린다)
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+# 개발용 로그인 패널. `1` 일 때만 켜진다 — 안 넘기면 꺼진 채로 구워진다(운영이 기본값)
+ARG NEXT_PUBLIC_ENABLE_DEV_LOGIN
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NEXT_PUBLIC_ENABLE_DEV_LOGIN=$NEXT_PUBLIC_ENABLE_DEV_LOGIN
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
