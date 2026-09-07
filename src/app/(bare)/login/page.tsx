@@ -1,17 +1,27 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ScreenLoading } from "@/components/common/screen-loading";
+import { GoogleLoginButton } from "@/features/auth/google-login-button";
+import { LoginFailed } from "@/features/auth/login-failed";
 import { LoginPage } from "@/features/auth/login-page";
+import { LoginProgress } from "@/features/auth/login-progress";
+import { getMe, socialLogin } from "@/lib/api/auth";
 import { ENABLE_DEV_LOGIN, IS_MOCK } from "@/lib/env";
 import { useDevLogin } from "@/lib/queries/use-auth";
 import { safeNextPath } from "@/lib/safe-next";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { clearRefreshToken, writeRefreshToken } from "@/lib/token-storage";
 import { AppError } from "@/lib/types/app-error";
 
 /**
  * C-01 컨테이너. 이메일 로그인은 API 명세서 v2에서 보류로 확정돼 Google 하나만 남는다.
+ *
+ * Google 로그인은 **GIS idToken 방식** — 버튼(GoogleLoginButton)이 ID 토큰을 받아 오면
+ * 여기서 `POST /auth/login/google`로 교환한다. 리다이렉트 없이 같은 화면에서 끝나므로
+ * 만료 화면이 붙여 준 `next`가 그대로 살아 있다. 교환 중·실패 화면은
+ * auth/callback(인가 코드 플로우)과 같은 C-01a·C-01b를 쓴다.
  *
  * 개발용 로그인(`POST /auth/dev-login`)은 **NEXT_PUBLIC_ENABLE_DEV_LOGIN=1 일 때만** 노출한다 —
  * 목 모드는 이미 자동 로그인이라 겹치고, 운영 프로파일에는 이 API가 없어 404가 난다.
@@ -25,28 +35,47 @@ function LoginContainer() {
 
   const devLogin = useDevLogin();
   const [devKey, setDevKey] = useState("");
+  const [googlePhase, setGooglePhase] = useState<"idle" | "exchanging" | "failed">("idle");
 
   useEffect(() => {
     if (status === "authenticated") router.replace(next);
   }, [status, next, router]);
 
-  const handleGoogleClick = () => {
-    // TODO(설정): GIS 클라이언트 ID를 받으면 여기서 idToken을 받아
-    // socialLogin("google", { idToken })를 부르고 토큰을 저장한다(research.md R-10).
-    // 그때 `next`도 같이 들고 가야 한다 — 지금은 만료 화면이 붙여 준 next가 콜백까지 가지 못해
-    // 로그인 뒤 하던 자리가 아니라 홈으로 떨어진다(auth/callback은 이미 next를 읽을 준비가 돼 있다).
-    // 명세 v2에 서버 리다이렉트 진입점이 없어(POST /auth/login/{provider} 토큰 교환 방식)
-    // 그때까지는 누를 곳이 없다.
-  };
+  const handleIdToken = useCallback(
+    (idToken: string) => {
+      setGooglePhase("exchanging");
+      socialLogin("google", { idToken })
+        .then(async (res) => {
+          writeRefreshToken(res.refreshToken);
+          // 액세스 토큰을 먼저 스토어에 넣어야 이어지는 GET /users/me에 Authorization이 붙는다.
+          useAuthStore.getState().setAccessToken(res.accessToken);
+          // 로그인 응답의 user(UserSummary)에는 지표·코인·가입일이 없다 — 프로필은 GET /users/me가 원천이다.
+          const profile = await getMe();
+          useAuthStore.getState().setSession(res.accessToken, profile);
+          router.replace(next);
+        })
+        .catch(() => {
+          // 실패한 채 토큰이 남으면 요청에 계속 붙는다 — auth/callback과 똑같이 반드시 정리한다.
+          useAuthStore.getState().clearSession();
+          clearRefreshToken();
+          setGooglePhase("failed");
+        });
+    },
+    [next, router],
+  );
 
   const handleDevSubmit = () => {
     if (devLogin.isPending) return;
     devLogin.mutate({ key: devKey.trim() }, { onSuccess: () => router.replace(next) });
   };
 
+  if (googlePhase === "exchanging") return <LoginProgress />;
+  if (googlePhase === "failed")
+    return <LoginFailed reason="failed" onRetry={() => setGooglePhase("idle")} />;
+
   return (
     <LoginPage
-      onGoogleClick={handleGoogleClick}
+      googleButton={<GoogleLoginButton onIdToken={handleIdToken} />}
       devLogin={
         IS_MOCK || !ENABLE_DEV_LOGIN
           ? undefined

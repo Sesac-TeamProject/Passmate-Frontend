@@ -40,3 +40,10 @@ export function deriveWsUrl(apiBase: string): string {
       .replace(/\/$/, "") + "/ws"
   );
 }
+
+/**
+ * Google 웹 클라이언트 ID — GIS(Google Identity Services) 로그인 버튼이 쓴다.
+ * 시크릿이 아니라 공개 식별자다(번들에 그대로 실린다). 비우면 구글 버튼이 비활성화된다.
+ * 서버(POST /auth/login/google)가 같은 ID로 idToken의 aud를 검증하므로 값이 서로 같아야 한다.
+ */
+export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
