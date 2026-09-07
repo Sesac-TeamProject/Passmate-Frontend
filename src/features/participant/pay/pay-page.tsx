@@ -1,5 +1,4 @@
 import type { AvatarKey } from "@/components/common/student-avatar";
-import type { PayMethod } from "@/lib/portone";
 import { CoinChargeCard } from "./coin-charge-card";
 import { ParticipantInfoCard } from "./participant-info-card";
 import { PaymentCompleteCard, type PaymentReceipt } from "./payment-complete-card";
@@ -10,7 +9,6 @@ export type PayFormValues = {
   nickname: string;
   avatar: AvatarKey;
   chargeAmount: number;
-  payMethod: PayMethod;
   agreed: boolean;
 };
 
@@ -81,12 +79,10 @@ export function PayPage({
           fee={room.fee}
           chargeOptions={chargeOptions}
           chargeAmount={values.chargeAmount}
-          payMethod={values.payMethod}
           agreed={values.agreed}
           paying={paying}
           error={error}
           onChargeAmountChange={(chargeAmount) => onChange({ ...values, chargeAmount })}
-          onPayMethodChange={(payMethod) => onChange({ ...values, payMethod })}
           onAgreedChange={(agreed) => onChange({ ...values, agreed })}
           onSubmit={onSubmit}
         />

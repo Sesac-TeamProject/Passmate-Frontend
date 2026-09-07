@@ -28,27 +28,21 @@ export const PAY_METHOD_LABEL: Record<PayMethod, string> = {
 };
 
 /**
- * 서버 결제 수단 → 포트원 `payMethod` 구분코드.
- * 간편결제 3종은 모두 `EASY_PAY`이고 **어느 간편결제인지는 서버가 준 `channelKey`가 정한다.**
+ * 확정 응답의 서버 수단(`PaymentMethod`) → 화면 표시용 `PayMethod`.
+ * 결제창 안에서 고른 **실제 수단**은 서버가 포트원 조회로 알아내 확정 응답에 실어 준다 —
+ * 완료 화면은 그 값을 이 맵으로 라벨링한다.
  */
-const PORTONE_PAY_METHOD: Record<PaymentMethod, "CARD" | "TRANSFER" | "EASY_PAY"> = {
-  KAKAOPAY: "EASY_PAY",
-  NAVERPAY: "EASY_PAY",
-  TOSSPAY: "EASY_PAY",
-  CARD: "CARD",
-  BANK_TRANSFER: "TRANSFER",
+const PAY_METHOD_BY_WIRE: Record<PaymentMethod, PayMethod> = {
+  KAKAOPAY: "kakaopay",
+  NAVERPAY: "naverpay",
+  TOSSPAY: "tosspay",
+  CARD: "card",
+  BANK_TRANSFER: "transfer",
 };
 
-/**
- * 간편결제일 때 **어느 간편결제인지**는 이 값이 PG에 알려준다.
- * 빠뜨리면 토스페이먼츠가 "간편 결제 수단은 필수 입력입니다"로 결제창 호출을 거부한다
- * (2026-09-07 운영에서 실제로 난 사고). 지정하면 통합창 대신 해당 간편결제 UI로 직행한다.
- */
-const EASY_PAY_PROVIDER: Partial<Record<PaymentMethod, "KAKAOPAY" | "NAVERPAY" | "TOSSPAY">> = {
-  KAKAOPAY: "KAKAOPAY",
-  NAVERPAY: "NAVERPAY",
-  TOSSPAY: "TOSSPAY",
-};
+export function payMethodFromWire(method: PaymentMethod | null | undefined): PayMethod | null {
+  return method ? (PAY_METHOD_BY_WIRE[method] ?? null) : null;
+}
 
 export type PaymentResult =
   { ok: true; paymentId: string } | { ok: false; code: "CANCELLED" | "FAILED"; message: string };
@@ -64,10 +58,7 @@ function isUserCancel(code: string | undefined, message: string | undefined): bo
  * @param charge `POST /coins/charges`의 응답 그대로
  * @param method 화면이 고른 결제 수단(서버 전송값). 서버가 채널을 이미 골랐으므로 구분코드만 맞춘다
  */
-export async function requestPayment(
-  charge: CoinChargeResponse,
-  method: PaymentMethod,
-): Promise<PaymentResult> {
+export async function requestPayment(charge: CoinChargeResponse): Promise<PaymentResult> {
   // 목 모드: 띄울 결제창이 없다. 서버가 준 paymentId를 그대로 돌려준다
   if (IS_MOCK) return { ok: true, paymentId: charge.paymentId };
 
@@ -79,10 +70,10 @@ export async function requestPayment(
       orderName: charge.orderName,
       totalAmount: charge.amount,
       currency: "CURRENCY_KRW",
-      payMethod: PORTONE_PAY_METHOD[method],
-      ...(EASY_PAY_PROVIDER[method]
-        ? { easyPay: { easyPayProvider: EASY_PAY_PROVIDER[method] } }
-        : {}),
+      // 화면은 수단을 고르지 않는다 — 토스페이먼츠 일반결제창은 CARD 로 열어도
+      // 간편결제(카카오·네이버·토스)까지 함께 보여주고, 무엇을 골랐는지는
+      // 서버가 확정 때 포트원 조회로 기록한다(2026-09-07 실동작 확인).
+      payMethod: "CARD",
     });
 
     // 리디렉션으로 빠지면 응답 없이 페이지가 떠난다 — 돌아온 뒤 다시 이어 붙인다

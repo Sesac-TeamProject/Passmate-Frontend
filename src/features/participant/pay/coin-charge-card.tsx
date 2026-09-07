@@ -3,11 +3,8 @@ import { StatusChip } from "@/components/common/status-chip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PendingLabel } from "@/components/common/pending-label";
-import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 import { cn } from "@/lib/utils";
 import { formatCoin, formatWon } from "./format";
-
-const PAY_METHODS = Object.keys(PAY_METHOD_LABEL) as PayMethod[];
 
 /** 선택형 알약/라디오 행 공통 — 선택 mint-bg + 1.5px mint 테두리, 비선택 흰 카드 + 1px 테두리 */
 const SELECTABLE_CLASS = {
@@ -20,30 +17,30 @@ type Props = {
   fee: number;
   chargeOptions: readonly number[];
   chargeAmount: number;
-  payMethod: PayMethod;
   agreed: boolean;
   /** 결제창을 여는 중 — CTA 잠금 */
   paying: boolean;
   /** 결제 실패·취소 안내 문구 (없으면 숨김) */
   error?: string | null;
   onChargeAmountChange: (amount: number) => void;
-  onPayMethodChange: (method: PayMethod) => void;
   onAgreedChange: (agreed: boolean) => void;
   onSubmit: () => void;
 };
 
-/** 결제 카드 — 코인 요약 · 충전 금액 · 결제 수단 · 합계 · 동의 · CTA */
+/**
+ * 결제 카드 — 코인 요약 · 충전 금액 · 합계 · 동의 · CTA.
+ * 결제 수단 라디오는 뺐다(2026-09-07) — 포트원 결제창이 수단 선택을 겸하고,
+ * 실제로 쓴 수단은 서버가 포트원 조회로 기록한다.
+ */
 export function CoinChargeCard({
   balance,
   fee,
   chargeOptions,
   chargeAmount,
-  payMethod,
   agreed,
   paying,
   error,
   onChargeAmountChange,
-  onPayMethodChange,
   onAgreedChange,
   onSubmit,
 }: Props) {
@@ -106,35 +103,6 @@ export function CoinChargeCard({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2" role="radiogroup" aria-label="결제 수단">
-        {PAY_METHODS.map((method) => {
-          const selected = method === payMethod;
-          return (
-            <button
-              key={method}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              disabled={paying}
-              onClick={() => onPayMethodChange(method)}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3.5 py-3 text-label-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-mint disabled:opacity-50",
-                selected ? SELECTABLE_CLASS.on : SELECTABLE_CLASS.off,
-              )}
-            >
-              <span
-                aria-hidden
-                className={cn(
-                  "size-[18px] shrink-0 rounded-full",
-                  selected ? "bg-mint" : "border-[1.5px] bg-card",
-                )}
-              />
-              {PAY_METHOD_LABEL[method]}
-            </button>
-          );
-        })}
-      </div>
-
       <div className="h-px bg-border" />
 
       <div className="flex flex-col gap-2">
@@ -167,8 +135,8 @@ export function CoinChargeCard({
       </Button>
 
       <p className="text-label-md text-ink-disabled">
-        충전은 포트원(PortOne)으로 결제되고, 입장 시 코인이 차감돼요. 남은 코인은 다음 유료 방에 쓸
-        수 있어요
+        결제 수단은 포트원(PortOne) 결제창에서 골라요. 입장 시 코인이 차감되고, 남은 코인은 다음
+        유료 방에 쓸 수 있어요
       </p>
     </section>
   );
