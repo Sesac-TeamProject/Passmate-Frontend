@@ -1,6 +1,6 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { BrandLogo } from "@/components/common/brand-logo";
-import { GoogleMark } from "@/components/common/google-mark";
 import { FitToViewport } from "@/components/common/fit-to-viewport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,8 @@ export type DevLoginPanel = {
 };
 
 type Props = {
-  onGoogleClick?: () => void;
+  /** "Google로 계속하기" 버튼. GIS 배선을 포함하므로 컨테이너가 GoogleLoginButton으로 넘긴다 */
+  googleButton: ReactNode;
   devLogin?: DevLoginPanel;
 };
 
@@ -31,7 +32,7 @@ type Props = {
  *
  * 시안(b6JNW)은 1440×900에 상하 여백 74 — 뷰포트가 그보다 낮으면 FitToViewport가 전체를 비율 유지 축소해 스크롤을 없앤다.
  */
-export function LoginPage({ onGoogleClick, devLogin }: Props) {
+export function LoginPage({ googleButton, devLogin }: Props) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background">
       <FitToViewport className="flex flex-col items-center gap-5 py-[74px]">
@@ -47,16 +48,7 @@ export function LoginPage({ onGoogleClick, devLogin }: Props) {
             </p>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="xl"
-            className="w-full gap-2 bg-card"
-            onClick={onGoogleClick}
-          >
-            <GoogleMark />
-            <span className="text-label-lg text-foreground">Google로 계속하기</span>
-          </Button>
+          {googleButton}
 
           {/* 시안 C-01: 게스트 입장은 카드 밖 링크가 아니라 "또는" 아래의 두 번째 버튼이다 */}
           <div className="flex items-center gap-3">
