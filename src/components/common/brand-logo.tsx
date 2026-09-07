@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
@@ -62,18 +61,21 @@ export function BrandMark({
 }
 
 type Props = {
-  href?: string;
   /** sm: 32px 옅은 민트 마크(헤더·사이드바) · lg: 40px 민트 마크(랜딩·로그인·게스트 입장 카드) */
   size?: "sm" | "lg";
   className?: string;
 };
 
-/** 로고 심볼 + 패스메이트 워드마크. */
-export function BrandLogo({ href = "/", size = "sm", className }: Props) {
+/**
+ * 로고 심볼 + 패스메이트 워드마크. **누를 수 없는 표시 전용이다.**
+ * 링크였을 때는 작업 중(사이드바·상단바)에 누르면 랜딩으로 튕겼고, 랜딩 상단 바는
+ * 로그인 상태를 안 봐서 "로그인" 버튼이 그대로 떠 있었다.
+ */
+export function BrandLogo({ size = "sm", className }: Props) {
   return (
-    <Link href={href} className={cn("inline-flex items-center gap-2.5", className)}>
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
       <BrandMark size={size === "sm" ? 32 : 40} tone={size === "sm" ? "tint" : "mint"} />
       <span className="text-heading-md text-ink">패스메이트</span>
-    </Link>
+    </span>
   );
 }
