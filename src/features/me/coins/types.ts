@@ -18,8 +18,8 @@ export const COIN_HISTORY_FILTERS: CoinHistoryFilter[] = ["all", "charge", "use"
 
 export type CoinHistoryItem = {
   id: string;
-  /** YYYY-MM-DD */
-  date: string;
+  /** "8/22" — 서버 `createdAt`(UTC naive)을 로컬 날짜로 바꾼 표기. 어댑터가 만든다 */
+  dateLabel: string;
   title: string;
   /** 양수 = 충전 · 환급, 음수 = 사용 */
   amount: number;

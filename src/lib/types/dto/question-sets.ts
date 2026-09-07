@@ -104,6 +104,7 @@ export type AiGenerateRequest = {
   difficulty?: Difficulty;
   /** 강의자료 본문 ≤5000자. 넣으면 이 범위 안에서 출제한다 */
   material?: string;
+  /** 생략하면 서버가 유형별 기본을 넣는다 — 객관식·OX 30초, 서술형 90초. 넣으면 전 문항에 그 값 */
   timeLimitSec?: number;
   points?: number;
 };

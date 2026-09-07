@@ -1,7 +1,7 @@
 import type { StatItem } from "@/components/common/stat-cards";
 import { toAvatarKey } from "@/components/common/student-avatar";
 import { parseServerDateTime } from "@/lib/datetime";
-import { formatShortDate, formatWon } from "@/lib/format";
+import { formatWon } from "@/lib/format";
 import { PAY_METHOD_LABEL, type PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
 import type {
@@ -136,7 +136,9 @@ export function toCoinSummary(coins: CoinBalanceResponse): CoinSummary {
       : "등록된 결제 수단 없음",
     lastTransaction: recent
       ? {
-          dateLabel: formatShortDate(recent.createdAt),
+          // createdAt 은 "2026-09-07T07:06:15.475263" 같은 시각 문자열이다 — 날짜만 자르는
+          // formatShortDate 에 넣으면 일 자리가 "07T07:…" 이 되어 "9/NaN" 이 났다
+          dateLabel: toShortDate(recent.createdAt),
           title: toCoinHistoryTitle(recent),
           amount: recent.amount,
         }
@@ -153,8 +155,9 @@ const COIN_TX_TYPE_LABEL: Record<CoinTransactionType, string> = {
 };
 
 /**
- * 내역 한 줄의 제목. `description`은 **차감 그 시점의** 방 제목 + 영수증 번호라
- * 방 제목이 나중에 바뀌어도 흔들리지 않는다 — 있으면 그대로 쓴다.
+ * 내역 한 줄의 제목. `description`은 서버가 **그 시점에** 화면 문구 그대로 박아 둔 값이다
+ * ("카카오페이 충전" · "{방 제목} 참가비", C-02-9) — 방 제목이 나중에 바뀌어도 흔들리지 않는다.
+ * 있으면 그대로 쓰고, 없을 때만 종류 이름으로 대신한다.
  */
 function toCoinHistoryTitle(row: CoinTransactionRow): string {
   return row.description ?? COIN_TX_TYPE_LABEL[row.type];
@@ -164,7 +167,7 @@ function toCoinHistoryTitle(row: CoinTransactionRow): string {
 export function toCoinHistory(items: CoinTransactionRow[]): CoinHistoryItem[] {
   return items.map((item) => ({
     id: String(item.id),
-    date: item.createdAt,
+    dateLabel: toShortDate(item.createdAt),
     title: toCoinHistoryTitle(item),
     amount: item.amount,
   }));

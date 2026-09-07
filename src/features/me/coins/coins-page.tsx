@@ -7,7 +7,7 @@ import {
 } from "@/features/me/coins/types";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
 import { SettingsList } from "@/features/me/settings/settings-list";
-import { formatNumber, formatShortDate } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -62,7 +62,7 @@ function CoinHistoryRow({ item }: { item: CoinHistoryItem }) {
   const positive = item.amount > 0;
   return (
     <div className="flex items-center gap-4 px-5 py-4">
-      <span className="text-label-md text-muted-foreground">{formatShortDate(item.date)}</span>
+      <span className="text-label-md text-muted-foreground">{item.dateLabel}</span>
       <span className="min-w-0 flex-1 truncate text-label-lg text-foreground">{item.title}</span>
       <span className={cn("text-label-lg", positive ? "text-mint-dark" : "text-foreground")}>
         {positive ? "+" : "-"}
