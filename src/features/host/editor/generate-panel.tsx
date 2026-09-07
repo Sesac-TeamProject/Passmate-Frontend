@@ -12,7 +12,7 @@ import type {
   QuestionType as WireQuestionType,
 } from "@/lib/types/dto";
 import { QUESTION_TYPE_LABEL } from "./question-type-chip";
-import { DEFAULT_QUESTION_POINTS, DEFAULT_QUESTION_SECONDS } from "./types";
+import { DEFAULT_ESSAY_SECONDS, DEFAULT_QUESTION_POINTS, DEFAULT_QUESTION_SECONDS } from "./types";
 
 /** 라벨은 시안(W-03) 문구다 — 서버 enum과 이름이 다르니 값만 그대로 보낸다 */
 const DIFFICULTY_OPTIONS: { value: Difficulty; label: string }[] = [
@@ -92,7 +92,8 @@ export function GeneratePanel({
       difficulty,
       // 자료를 넣으면 그 범위 안에서 출제한다. 비어 있으면 키를 아예 빼서 보낸다
       ...(material.trim() ? { material: material.trim() } : {}),
-      timeLimitSec: DEFAULT_QUESTION_SECONDS,
+      // 제한시간은 보내지 않는다 — 서버가 유형별 기본(객관식·OX 30초, 서술형 90초)을 넣는다.
+      // 30초를 박아 보내던 때는 서술형까지 30초가 됐다(W-02b "서술형은 기본 90초").
       points: DEFAULT_QUESTION_POINTS,
     });
   }
@@ -137,7 +138,7 @@ export function GeneratePanel({
         <p className="flex items-center justify-between rounded-xl bg-surface-subtle px-3.5 py-2">
           <span className="text-label-lg text-ink">문항 수 {total}문항</span>
           <span className="text-label-md text-muted-foreground">
-            유형별 합계 · 문항당 {DEFAULT_QUESTION_SECONDS}초
+            유형별 합계 · 객관식·OX {DEFAULT_QUESTION_SECONDS}초 · 서술형 {DEFAULT_ESSAY_SECONDS}초
           </span>
         </p>
       </Field>

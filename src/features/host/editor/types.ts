@@ -37,6 +37,8 @@ export type QuestionFormValues = {
 /** 서버 기본값과 같게 둔다 (`QuestionRequest.DEFAULT_*`) */
 export const DEFAULT_QUESTION_POINTS = 100;
 export const DEFAULT_QUESTION_SECONDS = 30;
+/** 서술형 기본 제한시간(초). 서버 `QuestionType.ESSAY.defaultTimeLimitSec`와 같은 값 — 안내 문구에만 쓴다 */
+export const DEFAULT_ESSAY_SECONDS = 90;
 
 export const EMPTY_QUESTION_FORM: QuestionFormValues = {
   type: "multiple",
