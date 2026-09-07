@@ -30,6 +30,9 @@ env:
   # 주소가 바뀌면 여기를 고치고 다시 배포해야 한다.
   # WS 주소는 lib/env.ts 가 이 값에서 유도한다(https://api… → wss://api…/ws)
   API_BASE_URL: https://api.passmate.kr
+  # Google 웹 클라이언트 ID(GIS 로그인). 공개 식별자라 시크릿이 아니다 —
+  # 어차피 번들에 실려 passmate.kr 방문자 모두에게 보인다. 서버의 GOOGLE_CLIENT_ID 와 같아야 aud 검증이 통과한다
+  GOOGLE_CLIENT_ID: 806560773397-3anpgravtn4heol165uekbr5mas99kk2.apps.googleusercontent.com
 
 jobs:
   deploy:
@@ -75,6 +78,7 @@ jobs:
           tags: ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
           build-args: |
             NEXT_PUBLIC_API_BASE_URL=${{ env.API_BASE_URL }}
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
