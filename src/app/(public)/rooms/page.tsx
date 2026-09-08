@@ -7,6 +7,7 @@ import { RoomsPage } from "@/features/participant/rooms/rooms-page";
 import { RoomsSkeleton } from "@/features/participant/rooms/rooms-skeleton";
 import type { PublicRoomFilter } from "@/features/participant/rooms/types";
 import { useInfinitePublicRooms } from "@/lib/queries/use-rooms";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import type { PublicRoomSearch } from "@/lib/types/dto";
 
 /** 검색어를 글자마다 보내지 않도록 기다리는 시간 */
@@ -34,7 +35,14 @@ export default function Page() {
     return () => clearTimeout(timer);
   }, [input]);
 
-  const rooms = useInfinitePublicRooms({ sort: "POPULAR", q: search, ...toFilterQuery(filter) });
+  // 세션 복원이 끝난 뒤에 묻는다 — 복원 전에는 회원 토큰이 아직 없어 요청이 방에 들어갔다 나온
+  // 게스트 토큰을 대신 달고 나갔고, 그 첫 응답(403)이 화면에 굳었다(2026-09-09 시나리오 테스트 S-07).
+  // 복원이 끝나면 회원은 자기 토큰으로, 비회원은 토큰 없이 같은 목록을 본다
+  const authStatus = useAuthStore((s) => s.status);
+  const rooms = useInfinitePublicRooms(
+    { sort: "POPULAR", q: search, ...toFilterQuery(filter) },
+    { enabled: authStatus === "authenticated" || authStatus === "unauthenticated" },
+  );
 
   if (rooms.isPending) return <RoomsSkeleton />;
   if (rooms.isError)

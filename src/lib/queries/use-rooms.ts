@@ -138,13 +138,17 @@ export function usePublicRooms(search: PublicRoomSearch) {
  * 커서가 아니라 **오프셋 페이지**라 다음 페이지는 `page + 1`이고, 끝은 `hasNext`가 알려준다.
  * 홈 캐러셀은 첫 페이지만 쓰므로 usePublicRooms를 그대로 둔다.
  */
-export function useInfinitePublicRooms(search: Omit<PublicRoomSearch, "page">) {
+export function useInfinitePublicRooms(
+  search: Omit<PublicRoomSearch, "page">,
+  options: { enabled?: boolean } = {},
+) {
   return useInfiniteQuery({
     queryKey: qk.publicRoomsInfinite(search),
     queryFn: ({ pageParam }) => getPublicRooms({ ...search, page: pageParam }),
     initialPageParam: 0,
     getNextPageParam: (last) => (last.hasNext ? last.page + 1 : undefined),
     placeholderData: keepPreviousData,
+    enabled: options.enabled ?? true,
   });
 }
 
