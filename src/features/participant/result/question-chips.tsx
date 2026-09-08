@@ -8,6 +8,7 @@ const VERDICT = {
   PARTIAL: { label: "부분", cls: "bg-yellow-soft text-choice-c-foreground" },
   PENDING: { label: "분석 중", cls: "bg-muted text-muted-foreground" },
   UNKNOWN: { label: "미채점", cls: "bg-muted text-muted-foreground" },
+  MISSED: { label: "미제출", cls: "bg-muted text-muted-foreground" },
 } as const satisfies Record<ReportVerdict, { label: string; cls: string }>;
 
 type Props = {

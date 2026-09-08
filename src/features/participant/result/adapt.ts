@@ -27,18 +27,20 @@ const VERDICT_LABEL: Record<ReportVerdict, string> = {
   PARTIAL: "부분",
   PENDING: "분석 중",
   UNKNOWN: "미채점",
+  MISSED: "미제출",
 };
 
 /**
  * 문항 한 줄의 판정 칩.
  *
  * 서버는 `isCorrect`를 **서술형에 주지 않는다**(자동 채점하지 않는다) — 그 자리는 AI 분석 상태로
- * 대신한다. 안 낸 문항은 정오가 아니라 "미채점"이다.
+ * 대신한다. 안 낸 문항은 "미제출" — 낸 서술형이 첨삭을 기다리는 "미채점"과 다르다.
+ * 객관식을 안 냈는데 "미채점"이라 찍히면 채점이 밀린 것처럼 읽힌다(2026-09-09 시나리오 테스트).
  */
-function toVerdict(
+export function toVerdict(
   question: Pick<AnswerResultView, "submitted" | "isCorrect" | "analysisStatus">,
 ): ReportVerdict {
-  if (question.submitted === undefined) return "UNKNOWN";
+  if (question.submitted === undefined) return "MISSED";
   if (question.isCorrect === true) return "CORRECT";
   if (question.isCorrect === false) return "WRONG";
   // 서술형이 AI 채점을 마친 상태 — 표는 이 자리를 "부분"이라 부른다(부분 점수 판정은 서버 몫)

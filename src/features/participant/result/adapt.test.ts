@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canRequestAnalysis, toRankText } from "./adapt";
+import { canRequestAnalysis, toRankText, toVerdict } from "./adapt";
 
 describe("toRankText", () => {
   it("순위만 있으면 총원 없이 순위를 적는다 — 총원은 계약에 없다", () => {
@@ -35,5 +35,19 @@ describe("canRequestAnalysis", () => {
   it("서술형이 아니면 숨긴다", () => {
     expect(canRequestAnalysis("MCQ", true, "NOT_REQUESTED")).toBe(false);
     expect(canRequestAnalysis("OX", true, "NOT_REQUESTED")).toBe(false);
+  });
+});
+
+describe("toVerdict", () => {
+  it("안 낸 문항은 미제출 — 채점이 밀린 미채점과 다르다", () => {
+    expect(toVerdict({ analysisStatus: "NOT_REQUESTED" })).toBe("MISSED");
+  });
+
+  it("낸 객관식은 정오로, 낸 서술형은 분석 상태로 판정한다", () => {
+    expect(toVerdict({ submitted: "B", isCorrect: true, analysisStatus: "NOT_REQUESTED" })).toBe("CORRECT");
+    expect(toVerdict({ submitted: "B", isCorrect: false, analysisStatus: "NOT_REQUESTED" })).toBe("WRONG");
+    expect(toVerdict({ submitted: "본문", analysisStatus: "NOT_REQUESTED" })).toBe("UNKNOWN");
+    expect(toVerdict({ submitted: "본문", analysisStatus: "PENDING" })).toBe("PENDING");
+    expect(toVerdict({ submitted: "본문", analysisStatus: "DONE" })).toBe("PARTIAL");
   });
 });
