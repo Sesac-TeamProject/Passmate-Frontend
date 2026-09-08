@@ -11,12 +11,16 @@ import type {
   PageResponse,
   ParticipantResponse,
   PublicRoomResponse,
+  QuestionTimeEntry,
   RoomCreateRequest,
+  RoomQuestionTimesRequest,
+  RoomQuestionTimesResponse,
   RoomResponse,
   RoomSummaryResponse,
   RoomUpdateRequest,
 } from "@/lib/types/dto";
 import { DEMO_ROOM, HOSTED_ROOMS, PARTICIPANTS, PUBLIC_ROOMS } from "./fixtures";
+import { findSetQuestions } from "./question-sets";
 
 /** 서버 `PolicyProperties`가 검증하는 참가비 범위 — 목도 같은 값으로 막는다 */
 const { min: ENTRY_FEE_MIN, max: ENTRY_FEE_MAX } = PAYMENT_POLICY.entryFee;
@@ -36,6 +40,9 @@ let rooms: RoomResponse[] = [{ ...DEMO_ROOM }];
 
 let participants: ParticipantResponse[] = [...PARTICIPANTS];
 let nextParticipantId = 17;
+
+/** 방이 덮어쓴 문항별 시간 — 서버 `room.question_time_overrides`·`question_auto_advance`. roomId → 항목 */
+let questionTimes = new Map<number, QuestionTimeEntry[]>();
 
 function randomPin(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -166,7 +173,61 @@ export function mockUpdateRoom(roomId: string, body: RoomUpdateRequest): RoomRes
     ...(body.scheduledAt !== undefined ? { scheduledAt: body.scheduledAt } : {}),
   };
   rooms = rooms.map((r) => (r.id === room.id ? updated : r));
+  // 세트가 바뀌면 덮어쓴 시간은 예전 세트의 questionId를 가리킨다 — 서버처럼 비운다
+  if (body.questionSetId !== undefined && body.questionSetId !== room.questionSetId) {
+    questionTimes.delete(room.id);
+  }
   return updated;
+}
+
+/**
+ * GET /rooms/{roomId}/question-times — 세트 문항 + 이 방이 덮어쓴 값. 호스트만.
+ * 정답·해설은 싣지 않는다. 세트를 아직 연결하지 않았으면 409 `QUESTION_SET_REQUIRED`.
+ */
+export function mockQuestionTimes(roomId: string): RoomQuestionTimesResponse {
+  const room = findRoom(roomId);
+  if (room.questionSetId === undefined)
+    throw new AppError("Conflict", { code: ERROR_CODES.QUESTION_SET_REQUIRED });
+
+  const overrides = new Map((questionTimes.get(room.id) ?? []).map((t) => [t.questionId, t]));
+  const questions = findSetQuestions(room.questionSetId).map((q) => {
+    const override = overrides.get(q.id);
+    return {
+      questionId: q.id,
+      orderNo: q.orderNo,
+      type: q.type,
+      content: q.content,
+      defaultTimeLimitSec: q.timeLimitSec,
+      timeLimitSec: override?.timeLimitSec ?? q.timeLimitSec,
+      overridden: override !== undefined,
+      autoAdvance: override?.autoAdvance ?? false,
+    };
+  });
+  return {
+    roomId: room.id,
+    questionSetId: room.questionSetId,
+    estimatedSeconds: questions.reduce((sum, q) => sum + q.timeLimitSec, 0),
+    questions,
+  };
+}
+
+/**
+ * PUT /rooms/{roomId}/question-times — **전체 교체**. 본문에 없는 문항은 세트 기본값으로 돌아간다.
+ * WAITING일 때만(409 `CONFLICT`). 응답은 조회와 같은 모양.
+ */
+export function mockUpdateQuestionTimes(
+  roomId: string,
+  body: RoomQuestionTimesRequest,
+): RoomQuestionTimesResponse {
+  const room = findRoom(roomId);
+  if (room.status !== "WAITING")
+    throw new AppError("Conflict", {
+      code: ERROR_CODES.CONFLICT,
+      serverMessage: "문항별 시간은 대기 중일 때만 바꿀 수 있습니다.",
+    });
+  // 세트에 없는 문항은 서버가 400으로 거른다 — 목은 계약 밖 바디(`{}`)에도 TypeError 없이 응답한다
+  questionTimes.set(room.id, body.times ?? []);
+  return mockQuestionTimes(roomId);
 }
 
 /** POST /rooms/{roomId}/close — WAITING이면 CANCELED, RUNNING이면 ENDED */
@@ -310,6 +371,7 @@ export function __resetRoomsForTests(): void {
     ended: [...HOSTED_ROOMS.ended],
   };
   participants = [...PARTICIPANTS];
+  questionTimes = new Map();
   nextHostedRoomId = 104;
   nextParticipantId = 17;
 }

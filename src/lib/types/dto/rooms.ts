@@ -1,4 +1,4 @@
-import type { RoomStatus, RoomType } from "./common";
+import type { QuestionType, RoomStatus, RoomType } from "./common";
 
 /**
  * 방·참가자 — 백엔드 `room/dto/*.kt` 1:1 (`contracts/rest-api.md` §2-5).
@@ -201,4 +201,54 @@ export type HostedRoomsResponse = {
   reputation: HostReputation;
   active: ActiveHostedRoom[];
   ended: EndedHostedRoom[];
+};
+
+/**
+ * 방 문항별 시간(W-02b) — 백엔드 `room/dto/RoomQuestionTimeDtos.kt` 1:1.
+ *
+ * 방에는 확정 세트만 붙고 확정 세트의 문항은 고칠 수 없다(409). 그래서 시간은 세트가 아니라
+ * **방이 덮어쓴다**(`room.question_time_overrides`) — 같은 세트를 쓰는 다른 방은 그대로다.
+ * 세션 시작 시 이 값이 `session_question`으로 복사된다(백엔드 질문 B-18 결정 (b), 2026-09-07).
+ */
+
+/** 문항 하나의 제한시간·자동 넘김 */
+export type QuestionTimeEntry = {
+  questionId: number;
+  /** 5~600 */
+  timeLimitSec: number;
+  /** 시간 만료로 마감되면 다음 문항을 자동으로 연다. 생략하면 false */
+  autoAdvance?: boolean;
+};
+
+/**
+ * PUT /rooms/{roomId}/question-times — **전체 교체**. 본문에 없는 문항은 세트 기본값으로 돌아가고
+ * 자동 넘김도 꺼진다. 빈 배열이면 전부 초기화. WAITING일 때만(409 `CONFLICT`)
+ */
+export type RoomQuestionTimesRequest = { times: QuestionTimeEntry[] };
+
+/** 문항 한 줄 — 세트 기본값과 이 방에서 쓸 값. 정답·해설은 오지 않는다(프로젝터에 뜰 수 있다) */
+export type RoomQuestionTimeView = {
+  questionId: number;
+  orderNo: number;
+  type: QuestionType;
+  content: string;
+  /** 세트에 적힌 제한시간(초) */
+  defaultTimeLimitSec: number;
+  /** 이 방에서 쓸 제한시간(초). 덮어쓴 값이 없으면 기본값과 같다 */
+  timeLimitSec: number;
+  /** 이 방에서 덮어쓴 문항인지 */
+  overridden: boolean;
+  autoAdvance: boolean;
+};
+
+/**
+ * GET /rooms/{roomId}/question-times · PUT 응답. 호스트만.
+ * 세트를 아직 연결하지 않은 방은 409 `QUESTION_SET_REQUIRED`다.
+ */
+export type RoomQuestionTimesResponse = {
+  roomId: number;
+  questionSetId: number;
+  /** 이 방 기준 예상 소요 시간(초, 문항 제한시간 합) */
+  estimatedSeconds: number;
+  questions: RoomQuestionTimeView[];
 };

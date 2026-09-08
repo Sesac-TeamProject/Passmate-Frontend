@@ -6,7 +6,9 @@ import {
   mockJoinRoom,
   mockParticipants,
   mockPublicRooms,
+  mockQuestionTimes,
   mockRoomByPin,
+  mockUpdateQuestionTimes,
 } from "@/lib/mocks/rooms";
 import { expectContract } from "./expect-contract";
 
@@ -167,5 +169,61 @@ describe("내가 만든 방 계약", () => {
       ["endedAt", "correctRate", "averageStars"],
     );
     expect(hosted.ended[0]).not.toHaveProperty("pin");
+  });
+});
+
+/**
+ * 백엔드 `room/dto/RoomQuestionTimeDtos.kt` (develop @ 546d513)와 1:1인지 고정한다.
+ * 시연 방(1번)은 세트 1번이 붙어 있고 그 세트에 문항이 있다.
+ */
+describe("방 문항별 시간 계약", () => {
+  const DEMO_ROOM_ID = "1";
+
+  it("GET …/question-times — 문항 줄에 세트 기본값·방 값·자동 넘김이 있고 정답·해설은 없다", () => {
+    const res = mockQuestionTimes(DEMO_ROOM_ID);
+
+    expectContract(res, ["roomId", "questionSetId", "estimatedSeconds", "questions"]);
+    expectContract(res.questions[0], [
+      "questionId",
+      "orderNo",
+      "type",
+      "content",
+      "defaultTimeLimitSec",
+      "timeLimitSec",
+      "overridden",
+      "autoAdvance",
+    ]);
+    expect(res.questions[0]).not.toHaveProperty("answer");
+    // 덮어쓴 게 없으면 방 값 = 세트 기본값, 합계는 방 값의 합
+    expect(res.questions.every((q) => q.timeLimitSec === q.defaultTimeLimitSec)).toBe(true);
+    expect(res.estimatedSeconds).toBe(res.questions.reduce((s, q) => s + q.timeLimitSec, 0));
+  });
+
+  it("PUT은 전체 교체 — 본문에 없는 문항은 세트 기본값으로 돌아가고 자동 넘김도 꺼진다", () => {
+    const [first, second] = mockQuestionTimes(DEMO_ROOM_ID).questions;
+
+    const saved = mockUpdateQuestionTimes(DEMO_ROOM_ID, {
+      times: [
+        { questionId: first.questionId, timeLimitSec: 45, autoAdvance: true },
+        { questionId: second.questionId, timeLimitSec: second.defaultTimeLimitSec },
+      ],
+    });
+    expect(saved.questions[0]).toMatchObject({
+      timeLimitSec: 45,
+      overridden: true,
+      autoAdvance: true,
+    });
+    // 기본값과 같은 값이라도 본문에 실었으면 덮어쓴 문항이다 — 자동 넘김은 생략하면 false
+    expect(saved.questions[1]).toMatchObject({ overridden: true, autoAdvance: false });
+
+    const reset = mockUpdateQuestionTimes(DEMO_ROOM_ID, {
+      times: [{ questionId: second.questionId, timeLimitSec: 60 }],
+    });
+    expect(reset.questions[0]).toMatchObject({
+      timeLimitSec: first.defaultTimeLimitSec,
+      overridden: false,
+      autoAdvance: false,
+    });
+    expect(reset.questions[1].timeLimitSec).toBe(60);
   });
 });

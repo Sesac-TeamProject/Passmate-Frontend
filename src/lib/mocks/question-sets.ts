@@ -32,6 +32,11 @@ let sets: MockSet[] = QUESTION_SETS.map((set) => ({
   questions: set.id === 1 ? SET_QUESTIONS.map((q) => ({ ...q })) : [],
 }));
 
+/** 방 문항별 시간 목(rooms.ts)이 세트 문항을 읽을 때 — 세트가 없으면 빈 배열 */
+export function findSetQuestions(setId: number): QuestionResponse[] {
+  return sets.find((s) => s.set.id === setId)?.questions ?? [];
+}
+
 let nextSetId = 1000;
 let nextQuestionId = 1000;
 let generateCount = 0;

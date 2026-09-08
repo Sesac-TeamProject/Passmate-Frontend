@@ -10,6 +10,7 @@ import type {
   QuestionRequest,
   QuestionSetUpdateRequest,
   RoomCreateRequest,
+  RoomQuestionTimesRequest,
   RoomUpdateRequest,
   ScreenLockRequest,
   SettlementAccountRequest,
@@ -81,8 +82,10 @@ import {
   mockLeaveRoom,
   mockParticipants,
   mockPublicRooms,
+  mockQuestionTimes,
   mockRoom,
   mockRoomByPin,
+  mockUpdateQuestionTimes,
   mockUpdateRoom,
 } from "./rooms";
 import {
@@ -142,6 +145,9 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /rooms/:roomId": (ctx) => mockRoom(ctx.params.roomId),
   "PUT /rooms/:roomId": (ctx) => mockUpdateRoom(ctx.params.roomId, asBody<RoomUpdateRequest>(ctx)),
   "POST /rooms/:roomId/close": (ctx) => mockCloseRoom(ctx.params.roomId),
+  "GET /rooms/:roomId/question-times": (ctx) => mockQuestionTimes(ctx.params.roomId),
+  "PUT /rooms/:roomId/question-times": (ctx) =>
+    mockUpdateQuestionTimes(ctx.params.roomId, asBody<RoomQuestionTimesRequest>(ctx)),
   "GET /users/me/rooms/hosted": () => mockHostedRooms(),
   "GET /rooms/public": (ctx) => mockPublicRooms(ctx.url),
   "POST /rooms/:roomId/participants": (ctx) =>
