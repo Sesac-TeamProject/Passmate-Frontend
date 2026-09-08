@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { HostedRoomsResponse } from "@/lib/types/dto";
-import { toLiveRoomHref, toMyRooms } from "./adapt";
+import { ROOM_LIST_ID, toHubActions, toLiveRoomHref, toMyRooms } from "./adapt";
 
 const REPUTATION: HostedRoomsResponse["reputation"] = {
   hostedSessionCount: 3,
@@ -63,5 +63,42 @@ describe("toMyRooms", () => {
     expect(canceled.canceled).toBe(true);
     expect(canceled.endedLabel).toMatch(/취소$/);
     expect(canceled.averageScore).toBeUndefined();
+  });
+});
+
+describe("toHubActions — 방 개수로 가른다", () => {
+  const openLive = (
+    active: HostedRoomsResponse["active"],
+    ended: HostedRoomsResponse["ended"] = [],
+  ) => toHubActions(toMyRooms(hosted({ active, ended })))[1];
+  const openReport = (ended: HostedRoomsResponse["ended"]) =>
+    toHubActions(toMyRooms(hosted({ ended })))[2];
+
+  it("진행 중인 방이 없으면 새 방 만들기로 보낸다", () => {
+    expect(openLive([])).toMatchObject({ href: "/host/rooms/new", hint: "진행 중인 방이 없어요" });
+  });
+
+  it("하나면 그 방으로 바로 — 시작 전이면 대기실, 시작했으면 진행 화면", () => {
+    expect(openLive([WAITING])).toMatchObject({ href: "/host/rooms/111111/lobby" });
+    expect(openLive([WAITING]).hint).toContain("대기 중");
+    expect(openLive([RUNNING])).toMatchObject({ href: "/host/rooms/222222/live" });
+  });
+
+  it("둘 이상이면 아래 목록으로 내려보낸다 — 가장 최근 방 하나만 열지 않는다", () => {
+    const action = openLive([WAITING, RUNNING]);
+    expect(action.href).toBe(`#${ROOM_LIST_ID}`);
+    expect(action.hint).toBe("2개 진행 중 · 아래에서 선택");
+  });
+
+  it("종료된 방 리포트 카드도 같은 규칙 — 취소한 방은 리포트가 없어 세지 않는다", () => {
+    expect(openReport([ENDED])).toMatchObject({ href: "/host/sessions/3/review", hint: "1개" });
+    expect(openReport([ENDED, CANCELED])).toMatchObject({
+      href: "/host/sessions/3/review",
+      hint: "1개",
+    });
+    expect(openReport([ENDED, { ...ENDED, roomId: 5 }])).toMatchObject({
+      href: `#${ROOM_LIST_ID}`,
+      hint: "2개 · 아래에서 선택",
+    });
   });
 });

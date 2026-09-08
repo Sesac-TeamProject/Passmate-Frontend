@@ -144,12 +144,22 @@ export function toHubStats(
   ];
 }
 
-/** W-09 오른쪽 행동 카드 3장 — 진행 중인 방이 없으면 힌트만 바뀐다 (시안 803:8821~8831) */
+/** "내 방" 목록 섹션의 id — 카드가 방 하나를 고를 수 없을 때 여기로 내려보낸다 */
+export const ROOM_LIST_ID = "my-rooms";
+
+/**
+ * W-09 오른쪽 행동 카드 3장 (시안 803:8821~8831). 방 개수로 가른다(2026-09-08 결정):
+ * 0개면 새 방 만들기로, 1개면 그 방으로 바로(시작 전이면 대기실), 2개 이상이면 아래 목록으로
+ * 내려보낸다 — 서버에 "진행 중인 방은 하나"라는 규칙이 없어 여럿이 정상 상태이고, 가장 최근 방
+ * 하나만 여는 건 나머지를 숨기는 셈이라 시안과 다르게 간다. 종료된 방 리포트 카드도 같은 규칙이다.
+ */
 export function toHubActions(rooms: MyRoom[]): HubAction[] {
   const live = rooms.filter((room) => room.status === "live");
-  const ended = rooms.filter((room) => room.status === "ended");
-  const firstLive = live[0];
-  const livePin = firstLive?.pin;
+  // 취소한 방은 세션이 없어 리포트도 없다 — 개수에서 뺀다
+  const ended = rooms.filter((room) => room.status === "ended" && !room.canceled);
+  const [onlyLive] = live;
+  const [onlyEnded] = ended;
+  const listHref = `#${ROOM_LIST_ID}`;
 
   return [
     { label: "새 방 만들기", href: "/host/rooms/new", primary: true },
@@ -158,18 +168,30 @@ export function toHubActions(rooms: MyRoom[]): HubAction[] {
       hint:
         live.length === 0
           ? "진행 중인 방이 없어요"
-          : [`${live.length}개`, livePin === undefined ? null : `PIN ${formatPin(livePin)}`]
-              .filter((part): part is string => part !== null)
-              .join(" · "),
-      href: firstLive === undefined ? "/host/rooms/new" : `/host/rooms/${firstLive.code}/live`,
+          : live.length === 1 && onlyLive !== undefined
+            ? [
+                onlyLive.phase === "RUNNING" ? "진행 중" : "대기 중",
+                onlyLive.pin === undefined ? null : `PIN ${formatPin(onlyLive.pin)}`,
+              ]
+                .filter((part): part is string => part !== null)
+                .join(" · ")
+            : `${live.length}개 진행 중 · 아래에서 선택`,
+      href:
+        onlyLive === undefined
+          ? "/host/rooms/new"
+          : live.length === 1
+            ? toLiveRoomHref(onlyLive)
+            : listHref,
     },
     {
       label: "종료된 방 리포트",
-      hint: `${ended.length}개`,
+      hint: ended.length <= 1 ? `${ended.length}개` : `${ended.length}개 · 아래에서 선택`,
       href:
-        ended[0] === undefined
+        onlyEnded === undefined
           ? "/host/rooms"
-          : `/host/sessions/${ended[0].reportId ?? ended[0].code}/review`,
+          : ended.length === 1
+            ? `/host/sessions/${onlyEnded.reportId ?? onlyEnded.code}/review`
+            : listHref,
     },
   ];
 }

@@ -17,7 +17,8 @@ export function HubActions({ actions }: Props) {
     <nav aria-label="방 바로가기" className="flex w-85 shrink-0 flex-col gap-[11px]">
       {actions.map((action) => (
         <Link
-          key={action.href}
+          // 진행 중·종료 카드가 둘 다 목록 앵커(#my-rooms)를 가리킬 수 있어 href 는 키가 못 된다
+          key={action.label}
           href={action.href}
           className={cn(
             "flex h-24 items-center justify-between rounded-[14px] px-6 transition-colors",
