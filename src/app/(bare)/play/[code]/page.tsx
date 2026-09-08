@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useBackRedirect } from "@/lib/use-back-redirect";
 import { ReconnectingBanner } from "@/components/common/reconnecting-banner";
 import { ScreenError } from "@/components/common/screen-error";
 import { AppError } from "@/lib/types/app-error";
@@ -32,8 +31,6 @@ export default function Page() {
   const roomId = room.data?.id ?? null;
   // 회원으로 들어왔으면 기록이 계정에 남는다 — 게스트에게는 그 약속을 하지 않는다
   const isMember = useAuthStore((s) => s.status) === "authenticated";
-  // 뒤로가기는 참여한 방 목록(회원)·첫 화면(게스트)으로 — PIN 입력 화면으로 되돌리지 않는다
-  useBackRedirect(isMember ? "/me/joined" : "/");
 
   const { reconnect } = useSessionConnection(roomId, { isHost: false });
 
