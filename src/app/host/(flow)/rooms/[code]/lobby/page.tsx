@@ -9,7 +9,7 @@ import { toStudents, toTimeLimitLabel } from "@/features/host/live/adapt";
 import { LobbyPage } from "@/features/host/live/lobby-page";
 import { toQuestionSetOptions } from "@/features/host/room-flow/adapt";
 import { formatDotDateWithDay } from "@/lib/format";
-import { useQuestionSet, useQuestionSets } from "@/lib/queries/use-question-sets";
+import { useQuestionSets } from "@/lib/queries/use-question-sets";
 import {
   useHostRoomId,
   useKickParticipant,
@@ -34,8 +34,6 @@ export default function Page() {
   // PIN 조회 응답에는 호스트용 정보(연결된 세트·정원)가 없다 — 방 상세를 따로 읽는다
   const detail = useRoom(roomId);
   const confirmedSets = useQuestionSets({ status: "CONFIRMED" });
-  // 방 응답에는 문항당 제한 시간이 없다 — 연결된 세트의 문항에서 읽는다(세트가 없으면 안 나간다)
-  const linkedSetDetail = useQuestionSet(detail.data?.questionSetId ?? null);
   const linkSet = useUpdateRoom();
   const [setIdToLink, setSetIdToLink] = useState("");
 
@@ -103,12 +101,12 @@ export default function Page() {
         pin={detail.data.pin}
         title={detail.data.title}
         dateLabel={detail.data.scheduledAt ? formatDotDateWithDay(detail.data.scheduledAt) : null}
-        // 방 응답에 호스트 이름이 없다(hostUserId만 준다) — 지금 보는 사람이 호스트이므로 굳이 쓰지 않는다
-        hostName={null}
+        hostName={detail.data.host.nickname}
         students={toStudents(participants)}
-        // 세트 목록은 첫 페이지만 오므로 거기서 찾으면 21번째 세트부터 비어 버린다 — 상세에서 읽는다
-        questionCount={linkedSetDetail.data?.set.questionCount ?? null}
-        timeLimitLabel={toTimeLimitLabel(linkedSetDetail.data?.questions)}
+        // 문항 수·제한시간은 방 상세가 준다(B-21) — 세트 상세를 더 읽지 않는다. 제한시간 범위는
+        // 세트 기본값이 아니라 **이 방이 덮어쓴 시간**(W-02b)이 반영된 값이라 세트에서 읽으면 틀린다.
+        questionCount={detail.data.questionCount ?? null}
+        timeLimitLabel={toTimeLimitLabel(detail.data)}
         isPaid={detail.data.type === "PAID"}
         maxParticipants={detail.data.maxParticipants ?? null}
         onStart={handleStart}

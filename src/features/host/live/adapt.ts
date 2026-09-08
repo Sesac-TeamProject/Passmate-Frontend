@@ -5,9 +5,9 @@ import { choicesOf } from "@/features/participant/play/adapt";
 import type {
   ParticipantResponse,
   QuestionEndedPayload,
-  QuestionResponse,
   QuestionStartedPayload,
   RankingEntry,
+  RoomResponse,
   SessionResultsResponse,
   SubmissionStatusPayload,
 } from "@/lib/types/dto";
@@ -19,14 +19,15 @@ import type { PodiumEntry } from "./podium";
 const CHOICE_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
 
 /**
- * 대기실 "문항당 제한" — 방 응답에는 없어서 연결된 세트의 문항에서 읽는다.
+ * 대기실 "문항당 제한" — 방 상세의 최소·최대(방이 덮어쓴 시간 반영, B-21)로 그린다.
  * 문항마다 다를 수 있으니 같으면 한 값, 다르면 범위로 보인다(평균을 지어내지 않는다).
  */
-export function toTimeLimitLabel(questions: QuestionResponse[] | undefined): string | null {
-  if (!questions || questions.length === 0) return null;
-  const seconds = questions.map((q) => q.timeLimitSec);
-  const min = Math.min(...seconds);
-  const max = Math.max(...seconds);
+export function toTimeLimitLabel(
+  room: Pick<RoomResponse, "minTimeLimitSec" | "maxTimeLimitSec">,
+): string | null {
+  const { minTimeLimitSec: min, maxTimeLimitSec: max } = room;
+  // 세트를 아직 연결하지 않은 방은 두 값이 빠져 온다 — 칩을 그리지 않는다
+  if (min === undefined || max === undefined) return null;
   return min === max ? `${min}초` : `${min}~${max}초`;
 }
 

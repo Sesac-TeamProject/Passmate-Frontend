@@ -5,7 +5,7 @@ import type {
   SubmissionStatusPayload,
 } from "@/lib/types/dto";
 import type { FinalRankRow } from "./final-page";
-import { pickSubmissionForQuestion, toPodium, toQuestionResult } from "./adapt";
+import { pickSubmissionForQuestion, toPodium, toQuestionResult, toTimeLimitLabel } from "./adapt";
 
 const OX_QUESTION: QuestionStartedPayload = {
   sessionQuestionId: 32,
@@ -164,5 +164,16 @@ describe("pickSubmissionForQuestion", () => {
   it("둘 다 없거나 둘 다 낡았으면 null", () => {
     expect(pickSubmissionForQuestion(57, null, undefined)).toBeNull();
     expect(pickSubmissionForQuestion(57, status(56, 18), status(55, 24))).toBeNull();
+  });
+});
+
+describe("toTimeLimitLabel", () => {
+  it("방 상세의 최소·최대로 그린다 — 같으면 한 값, 다르면 범위", () => {
+    expect(toTimeLimitLabel({ minTimeLimitSec: 30, maxTimeLimitSec: 30 })).toBe("30초");
+    expect(toTimeLimitLabel({ minTimeLimitSec: 30, maxTimeLimitSec: 90 })).toBe("30~90초");
+  });
+
+  it("세트를 아직 연결하지 않은 방(값이 빠짐)은 칩을 그리지 않는다", () => {
+    expect(toTimeLimitLabel({})).toBeNull();
   });
 });
