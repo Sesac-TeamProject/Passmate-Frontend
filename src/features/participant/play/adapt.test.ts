@@ -45,7 +45,10 @@ describe("toRevealView", () => {
   const ended = { answer: "prototype", explanation: "기본 스코프는 singleton이다." };
 
   it("고른 보기가 정답 원문과 같으면 correct, 다르면 wrong", () => {
-    expect(toRevealView(ended, mcq, 1, true)).toMatchObject({ outcome: "correct", correctIndex: 1 });
+    expect(toRevealView(ended, mcq, 1, true)).toMatchObject({
+      outcome: "correct",
+      correctIndex: 1,
+    });
     expect(toRevealView(ended, mcq, 0, true)).toMatchObject({ outcome: "wrong", correctIndex: 1 });
   });
 
@@ -63,7 +66,10 @@ describe("toRevealView", () => {
 
   it("OX는 O·X 원문으로 정답 보기를 찾는다", () => {
     const ox = toLiveQuestion({ ...BASE, type: "OX", choices: undefined }, 0);
-    expect(toRevealView({ answer: "X" }, ox, 1, true)).toMatchObject({ outcome: "correct", correctIndex: 1 });
+    expect(toRevealView({ answer: "X" }, ox, 1, true)).toMatchObject({
+      outcome: "correct",
+      correctIndex: 1,
+    });
   });
 
   it("서술형은 정오 대신 모범 답안을 싣고 빈 해설은 null로 접는다", () => {

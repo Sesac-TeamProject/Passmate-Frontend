@@ -172,7 +172,8 @@ export function toElapsedMinutes(
 ): number | null {
   if (!results?.startedAt || !results.endedAt) return null;
   const ms =
-    parseServerDateTime(results.endedAt).getTime() - parseServerDateTime(results.startedAt).getTime();
+    parseServerDateTime(results.endedAt).getTime() -
+    parseServerDateTime(results.startedAt).getTime();
   if (Number.isNaN(ms) || ms < 0) return null;
   return Math.max(1, Math.round(ms / 60_000));
 }
