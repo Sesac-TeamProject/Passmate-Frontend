@@ -4,8 +4,10 @@ import { useState } from "react";
 import type { EssayAnswer, QuestionInsight, SessionReport, Student } from "@/features/host/types";
 import { PendingLabel } from "@/components/common/pending-label";
 import { cn } from "@/lib/utils";
+import type { FinalRankRow } from "@/features/host/live/rank-columns";
 import { StudentReviewPanel, type ReviewDraft } from "./student-review-panel";
 import { ReportBody } from "./report-body";
+import { ReportOverview } from "./report-overview";
 import { ReportStats } from "./report-stats";
 
 const TABS = ["개요", "문항별", "학생별"] as const;
@@ -15,6 +17,8 @@ export type ExportFormat = "CSV" | "PDF";
 
 type Props = {
   report: SessionReport;
+  /** 개요 탭 — 세션 종료 화면과 같은 최종 순위 (1위부터) */
+  rankRows: FinalRankRow[];
   selectedQuestionId: string | null;
   onSelectQuestion: (id: string) => void;
   insight: QuestionInsight | null;
@@ -32,11 +36,14 @@ type Props = {
   reviewError: string | null;
   onExport: (format: ExportFormat) => void;
   exporting?: boolean;
+  /** 처음 열 탭. 랜딩 목업이 "문항별" 스냅숏을 보여줄 때만 지정한다 */
+  defaultTab?: Tab;
 };
 
 /** W-07 방 리포트 — 내가 만든 방 › 종료 카드 › "상세 보기" (시안 784:8825). 렌더 전용 */
 export function ReviewPage({
   report,
+  rankRows,
   selectedQuestionId,
   onSelectQuestion,
   insight,
@@ -53,8 +60,10 @@ export function ReviewPage({
   reviewError,
   onExport,
   exporting,
+  defaultTab = "개요",
 }: Props) {
-  const [tab, setTab] = useState<Tab>("문항별");
+  // 개요가 첫 탭이다 — 계약이 없어 비어 있던 동안만 문항별로 열어 두었다
+  const [tab, setTab] = useState<Tab>(defaultTab);
 
   const meta = [
     report.dateLabel,
@@ -143,9 +152,11 @@ export function ReviewPage({
             saveError={reviewError}
           />
         ) : (
-          <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed text-body-md text-muted-foreground">
-            {tab} 탭은 계약이 오면 채운다
-          </div>
+          <ReportOverview
+            title={report.title}
+            questionTotal={report.stats.questions}
+            rows={rankRows}
+          />
         )}
       </div>
     </main>
