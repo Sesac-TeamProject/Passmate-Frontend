@@ -1,4 +1,5 @@
 import { toAvatarKey } from "@/components/common/student-avatar";
+import type { FinalRankRow } from "@/features/host/live/rank-columns";
 import type {
   AnswerFinding,
   EssayAnswer,
@@ -88,6 +89,26 @@ function toStrugglers(students: ParticipantResultRow[], questionCount: number): 
     }))
     .sort((a, b) => (a.correctCount ?? -1) - (b.correctCount ?? -1))
     .slice(0, 5);
+}
+
+/**
+ * 개요 탭 순위 — 세션 종료 화면(W-12)과 같은 표를 그린다.
+ * 순위는 서버가 매긴 값을 그대로 쓰고 점수를 다시 계산하지 않는다(채점은 서버 권위).
+ * 한 문항도 내지 않은 학생은 정답 수를 비운다 — 미제출과 "0개 정답"은 다르다.
+ */
+export function toRankRows(students: ParticipantResultRow[]): FinalRankRow[] {
+  return [...students]
+    .sort((a, b) => a.rank - b.rank)
+    .map((student) => ({
+      rank: student.rank,
+      student: {
+        id: String(student.participantId),
+        name: student.nickname,
+        avatar: toAvatarKey(student.avatarId),
+      },
+      score: student.totalScore,
+      correctCount: student.submitCount === 0 ? null : student.correctCount,
+    }));
 }
 
 /**
