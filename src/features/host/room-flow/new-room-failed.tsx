@@ -20,7 +20,7 @@ type Props = {
 export function NewRoomFailed({ summary, onRetry, onBack, retrying }: Props) {
   return (
     <FailureScreen
-      header={<FlowTopBar backHref="/home" title="새 방 만들기" />}
+      header={<FlowTopBar backHref="/host/rooms" title="새 방 만들기" />}
       title="방을 만들지 못했어요"
       description={
         <>

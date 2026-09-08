@@ -3,6 +3,7 @@ import type { PayMethod } from "@/lib/portone";
 import { AppError } from "@/lib/types/app-error";
 import type { PaymentMethod, RoomResponse } from "@/lib/types/dto";
 import { ERROR_CODES } from "@/lib/types/error-codes";
+import { formatCoin, formatWon } from "./format";
 import type { PaidRoom } from "./types";
 
 /** ISO(scheduledAt) + estimatedMinutes(분) → "8/28 (금) 20:00 · 약 40분". 일정 없으면 빈 문자열, 소요 시간 없으면 시간까지만 */
@@ -110,4 +111,33 @@ const WIRE_METHOD_BY_PAY_METHOD: Record<PayMethod, PaymentMethod> = {
 /** 결제 카드가 쓰는 포트원 PayMethod → 서버 전송용 PaymentMethod */
 export function wireMethodFromPayMethod(method: PayMethod): PaymentMethod {
   return WIRE_METHOD_BY_PAY_METHOD[method];
+}
+
+/** 결제 카드가 그릴 계획 — 충전이 필요한지, CTA 문구, 포트원에 낼 금액 */
+export type PayPlan = {
+  /** 잔액이 참가비보다 모자란 만큼. 0 이면 충전 없이 코인만 차감한다 */
+  shortage: number;
+  needsCharge: boolean;
+  /** 포트원 결제창에 낼 금액. 충전이 필요 없으면 0 */
+  portoneAmount: number;
+  cta: string;
+};
+
+/**
+ * 보유 코인·참가비·고른 충전 금액 → 결제 카드 계획.
+ * 잔액이 충분하면 충전 단계가 통째로 빠진다 — 그런데도 "₩10,000 충전 → 500 C 차감하고 입장"이라
+ * 적혀 있어 2,100 C 를 가진 학생이 만 원을 내는 줄 알았다(2026-09-09 시나리오 테스트 S-03).
+ * 실제 요청은 이미 잔액이 충분하면 참가비만 차감하므로 문구·요약을 그 흐름에 맞춘다.
+ */
+export function toPayPlan(balance: number, fee: number, chargeAmount: number): PayPlan {
+  const shortage = Math.max(0, fee - balance);
+  const needsCharge = shortage > 0;
+  return {
+    shortage,
+    needsCharge,
+    portoneAmount: needsCharge ? chargeAmount : 0,
+    cta: needsCharge
+      ? `${formatWon(chargeAmount)} 충전 → ${formatCoin(fee)} 차감하고 입장`
+      : `${formatCoin(fee)} 차감하고 입장`,
+  };
 }

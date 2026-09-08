@@ -224,6 +224,29 @@ describe("toSessionSummary", () => {
   it("결과가 아직 없으면 null — 0%로 그리지 않는다", () => {
     expect(toSessionSummary(undefined, 3, 5).avgAccuracy).toBeNull();
   });
+
+  it("진행 시간은 시작·종료 시각의 차이(분)다 — 반올림, 1분 미만은 1분", () => {
+    const base = results([50]);
+    expect(
+      toSessionSummary(
+        { ...base, startedAt: "2026-09-08T15:47:53", endedAt: "2026-09-08T15:55:47" },
+        3,
+        1,
+      ).minutes,
+    ).toBe(8);
+    expect(
+      toSessionSummary(
+        { ...base, startedAt: "2026-09-08T15:47:53", endedAt: "2026-09-08T15:48:10" },
+        3,
+        1,
+      ).minutes,
+    ).toBe(1);
+  });
+
+  it("시작·종료 시각이 없으면 진행 시간은 null — 레일이 '—'로 그린다", () => {
+    expect(toSessionSummary(results([50]), 3, 1).minutes).toBeNull();
+    expect(toSessionSummary(undefined, 3, 1).minutes).toBeNull();
+  });
 });
 
 describe("toReportAccuracy", () => {

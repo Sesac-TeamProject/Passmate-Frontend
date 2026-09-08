@@ -1,13 +1,14 @@
 import { formatDuration } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/** 표 "결과" 칩 5종 — 채점은 서버가 하고 화면은 판정값을 옮기기만 한다 */
+/** 표 "결과" 칩 6종 — 채점은 서버가 하고 화면은 판정값을 옮기기만 한다 */
 const VERDICT = {
   CORRECT: { label: "정답", cls: "bg-mint-bg text-mint-dark" },
   WRONG: { label: "오답", cls: "bg-negative-bg text-negative-soft-foreground" },
   PARTIAL: { label: "부분", cls: "bg-yellow-soft text-choice-c-foreground" },
   PENDING: { label: "분석 중", cls: "bg-muted text-muted-foreground" },
   UNKNOWN: { label: "미채점", cls: "bg-muted text-muted-foreground" },
+  MISSED: { label: "미제출", cls: "bg-muted text-muted-foreground" },
 } as const;
 
 /** 표 "유형" 칩 — 시안은 객관식 회색 · 서술형 파랑 · OX 주황 */

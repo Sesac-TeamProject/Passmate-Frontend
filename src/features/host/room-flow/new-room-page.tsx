@@ -32,7 +32,7 @@ export function NewRoomPage({
 }: Props) {
   return (
     <div className="flex min-h-screen flex-col">
-      <FlowTopBar backHref="/home" title="새 방 만들기">
+      <FlowTopBar backHref="/host/rooms" title="새 방 만들기">
         <p className="text-label-lg text-muted-foreground">
           방 이름과 문제 세트를 정하면 PIN이 바로 발급돼요
         </p>
