@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useBackRedirect } from "@/lib/use-back-redirect";
 import { ReconnectingBanner } from "@/components/common/reconnecting-banner";
 import { ScreenError } from "@/components/common/screen-error";
+import { AppError } from "@/lib/types/app-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
 import { toLiveQuestion } from "@/features/participant/play/adapt";
@@ -30,6 +32,8 @@ export default function Page() {
   const roomId = room.data?.id ?? null;
   // 회원으로 들어왔으면 기록이 계정에 남는다 — 게스트에게는 그 약속을 하지 않는다
   const isMember = useAuthStore((s) => s.status) === "authenticated";
+  // 뒤로가기는 참여한 방 목록(회원)·첫 화면(게스트)으로 — PIN 입력 화면으로 되돌리지 않는다
+  useBackRedirect(isMember ? "/me/joined" : "/");
 
   const { reconnect } = useSessionConnection(roomId, { isHost: false });
 
@@ -75,7 +79,19 @@ export default function Page() {
     if (phase === "FINISHED" && roomId !== null) router.replace(`/result/${roomId}`);
   }, [phase, roomId, router]);
 
+  // 끝난 방(410)·없는 방(404)은 입장 화면에 머물 이유가 없다 — 세션이 끝났으니 메인으로
+  // (시나리오 테스트 "세션 종료 후 뒤로가기 시 입장 완료 화면 유지", 2026-09-08)
+  const roomGone =
+    room.isError &&
+    AppError.isAppError(room.error) &&
+    (room.error.status === 410 || room.error.kind === "NotFound");
+  useEffect(() => {
+    if (roomGone) router.replace(isMember ? "/home" : "/");
+  }, [roomGone, isMember, router]);
+
   if (room.isPending) return <ScreenLoading />;
+  // 메인으로 보내는 중에는 오류 화면 대신 로딩만 — "없거나 끝난 방" 문구가 깜빡이지 않게
+  if (roomGone) return <ScreenLoading />;
   if (room.isError)
     return <ScreenError message={room.error.message} onRetry={() => room.refetch()} />;
 

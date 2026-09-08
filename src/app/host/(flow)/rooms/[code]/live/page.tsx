@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useBackRedirect } from "@/lib/use-back-redirect";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import {
@@ -37,6 +38,8 @@ export default function Page() {
   const params = useParams<{ code: string }>();
   const pin = params.code;
   const router = useRouter();
+  // 뒤로가기는 내가 만든 방 목록으로 — 앞 화면(방 만들기·이전 단계)으로 돌아갈 이유가 없다
+  useBackRedirect("/host/rooms");
 
   const room = useHostRoomId(pin);
   const roomId = room.roomId;

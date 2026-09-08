@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useBackRedirect } from "@/lib/use-back-redirect";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toAvatarKey } from "@/components/common/student-avatar";
@@ -48,6 +49,8 @@ export default function Page() {
   const result = useMyResult(validRoomId);
   const rate = useSubmitRating(roomId);
   const isMember = useAuthStore((s) => s.status) === "authenticated";
+  // 세션이 끝난 뒤의 뒤로가기는 메인으로 — 입장 완료 화면에 다시 들어갈 이유가 없다
+  useBackRedirect(isMember ? "/home" : "/");
   const [rateSkipped, setRateSkipped] = useState(false);
 
   // sessionStorage는 서버 렌더에 없다 — 서버 스냅샷을 null로 둬 하이드레이션을 맞춘다
