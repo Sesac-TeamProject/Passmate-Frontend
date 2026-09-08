@@ -37,6 +37,7 @@ export default function Page() {
   const phase = useSessionStore((s) => s.phase);
   const currentQuestion = useSessionStore((s) => s.currentQuestion);
   const submitted = useSessionStore((s) => s.submitted);
+  const reveal = useSessionStore((s) => s.reveal);
   const hints = useSessionStore((s) => s.hints);
   const screenLocked = useSessionStore((s) => s.screenLocked);
   const connection = useSessionStore((s) => s.connection);
@@ -114,6 +115,9 @@ export default function Page() {
     // 제출 수는 서버가 학생에게 알려주지 않는다(호스트 토픽 전용) — 내 순위는 랭킹에서 찾는다
     const question = toLiveQuestion(currentQuestion, 0);
     const latestHint = hints.length > 0 ? hints[hints.length - 1] : null;
+    // 마감 결과는 **지금 열려 있는 문항의 것**일 때만 — 늦게 온 이전 문항 마감은 리듀서가 버리지만 한 번 더 지킨다
+    const currentReveal =
+      reveal && reveal.sessionQuestionId === currentQuestion.sessionQuestionId ? reveal : null;
 
     /**
      * 화면이 주는 값이 곧 서버가 받는 값이다 — 고른 보기의 **원문**, 서술형은 본문.
@@ -137,6 +141,7 @@ export default function Page() {
         onSubmit={handleSubmit}
         submitting={submitAnswer.isPending}
         hasSubmitted={submitted || submittedQuestionId === currentQuestion.questionId}
+        reveal={currentReveal}
         isLocked={screenLocked}
         hint={latestHint}
         errorMessage={submitAnswer.isError ? toSubmitAnswerMessage(submitAnswer.error) : null}

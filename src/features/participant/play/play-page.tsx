@@ -1,5 +1,5 @@
 import type { LiveQuestion } from "@/features/host/types";
-import type { VoiceHintEntry } from "@/lib/types/dto";
+import type { QuestionEndedPayload, VoiceHintEntry } from "@/lib/types/dto";
 import { HintBanner } from "./hint-banner";
 import { PlayCard } from "./play-card";
 
@@ -8,6 +8,8 @@ type Props = {
   onSubmit: (content: string) => void;
   submitting?: boolean;
   hasSubmitted?: boolean;
+  /** 이 문항의 마감 결과(정답·해설). 다음 문항이 열리기 전까지 카드가 결과를 보인다 */
+  reveal?: Pick<QuestionEndedPayload, "answer" | "explanation"> | null;
   /** 선생님이 화면을 잠갔을 때 카드 위에 덮는다 */
   isLocked?: boolean;
   /** 가장 최근 음성 힌트. 없으면 배너를 보이지 않는다 */
@@ -22,6 +24,7 @@ export function PlayPage({
   onSubmit,
   submitting = false,
   hasSubmitted = false,
+  reveal = null,
   isLocked = false,
   hint = null,
   errorMessage = null,
@@ -34,6 +37,7 @@ export function PlayPage({
           onSubmit={onSubmit}
           submitting={submitting}
           hasSubmitted={hasSubmitted}
+          reveal={reveal}
           banner={
             hint && (
               <HintBanner key={hint.hintId} clipUrl={hint.audioUrl} durationMs={hint.durationMs} />
