@@ -17,6 +17,7 @@ import {
   getRoomByPin,
   getRoomQuestionTimes,
   joinRoom,
+  rejoinRoom,
   kickParticipant,
   leaveRoom,
   updateRoom,
@@ -283,6 +284,26 @@ export function useJoinRoom(roomId: number | null) {
 function invalidateRoomCounts(queryClient: ReturnType<typeof useQueryClient>): void {
   queryClient.invalidateQueries({ queryKey: ["rooms", "public"] });
   queryClient.invalidateQueries({ queryKey: ["rooms", "pin"] });
+}
+
+/**
+ * POST /rooms/{roomId}/participants/me/rejoin — 참여한 방 목록에서 PIN 없이 돌아간다.
+ * 응답은 입장과 같은 모양이라 토큰·내 참가자 정보도 같은 자리에 다시 넣는다.
+ */
+export function useRejoinRoom() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (roomId: number) => {
+      const res = await rejoinRoom(roomId);
+      storeJoinResult(roomId, res, res.participant.nickname);
+      return { res, roomId };
+    },
+    onSuccess: ({ roomId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
+      invalidateRoomCounts(queryClient);
+    },
+  });
 }
 
 /**

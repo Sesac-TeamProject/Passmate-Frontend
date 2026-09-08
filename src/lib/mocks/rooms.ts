@@ -355,6 +355,18 @@ export function mockJoinRoom(roomId: string, body: JoinRoomRequest): JoinRoomRes
     : { participant };
 }
 
+/** POST /rooms/{roomId}/participants/me/rejoin — 나갔던 참가자 행을 되살린다(목은 첫 참가자를 "나"로 본다) */
+export function mockRejoinRoom(roomId: string): JoinRoomResponse {
+  const room = findRoom(roomId);
+  if (room.status !== "WAITING" && room.status !== "RUNNING")
+    throw new AppError("NotFound", { code: ERROR_CODES.ROOM_NOT_FOUND });
+  const me = participants[0];
+  if (!me) throw new AppError("NotFound", { code: ERROR_CODES.PARTICIPANT_NOT_FOUND });
+  return me.isGuest
+    ? { participant: me, accessToken: "mock-guest-access-token" }
+    : { participant: me };
+}
+
 /** GET /rooms/{roomId}/participants — **배열 그대로**(래퍼 없음) */
 export function mockParticipants(): ParticipantResponse[] {
   return participants;

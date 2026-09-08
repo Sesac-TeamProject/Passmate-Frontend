@@ -39,16 +39,20 @@ describe("마이페이지 계약", () => {
     expect(page.rooms).not.toHaveProperty("nextCursor");
   });
 
-  it("참여한 방 한 줄에 PIN·진행률이 없다 — 카드에서 바로 못 들어간다", () => {
-    const room = mockJoinedRooms(new URL("http://x/users/me/rooms/joined")).rooms.content[0];
+  it("참여한 방 한 줄 — 살아 있는 방만 PIN 을 주고(재입장용) 진행률은 없다", () => {
+    const rows = mockJoinedRooms(new URL("http://x/users/me/rooms/joined")).rooms.content;
+    const [active, ended] = rows;
 
     expectContract(
-      room,
+      active,
       ["roomId", "title", "hostNickname", "status", "questionCount", "hasReport"],
-      ["startedAt", "endedAt", "fee", "myScore", "myRank", "myAccuracy"],
+      ["pin", "startedAt", "endedAt", "fee", "myScore", "myRank", "myAccuracy"],
     );
-    expect(room).not.toHaveProperty("pin");
-    expect(room).not.toHaveProperty("progressLabel");
+    // 진행 중인 방은 PIN 으로 바로 다시 들어간다(2026-09-08). 끝난 방 PIN 은 다른 방이 쓰고 있을 수 있어 없다
+    expect(active.status).toBe("RUNNING");
+    expect(active.pin).toMatch(/^\d{6}$/);
+    expect(ended).not.toHaveProperty("pin");
+    expect(active).not.toHaveProperty("progressLabel");
   });
 
   it("누적 리포트는 추이와 취약 주제를 함께 준다", () => {

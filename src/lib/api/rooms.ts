@@ -99,6 +99,15 @@ export function joinRoom(roomId: number, body: JoinRoomRequest): Promise<JoinRoo
   return request<JoinRoomResponse>(`/rooms/${roomId}/participants`, { method: "POST", body });
 }
 
+/**
+ * POST /rooms/{roomId}/participants/me/rejoin — 이미 들어갔던 방에 PIN 없이 돌아간다.
+ * 나갔던 참가자 행이 되살아나고(점수·답안 유지), 게스트는 토큰을 새로 받는다.
+ * 강퇴자는 403 `ACCESS_DENIED`, 끝난 방은 410 `ROOM_ENDED`, 기록이 없으면 404.
+ */
+export function rejoinRoom(roomId: number): Promise<JoinRoomResponse> {
+  return request<JoinRoomResponse>(`/rooms/${roomId}/participants/me/rejoin`, { method: "POST" });
+}
+
 /** GET /rooms/{roomId}/participants — **배열 그대로** 온다(래퍼 없음) */
 export function getParticipants(roomId: number): Promise<ParticipantResponse[]> {
   return request<ParticipantResponse[]>(`/rooms/${roomId}/participants`);
