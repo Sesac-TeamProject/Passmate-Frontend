@@ -28,29 +28,40 @@ function toStartsLabel(scheduledAt: string | undefined): string | undefined {
  * GET /users/me/rooms/hosted → 방 목록 카드.
  * 서버가 진행 중·종료를 **나눠서** 주므로 둘을 이어 붙여 한 목록으로 만든다.
  * 끝난 방에는 PIN이 없다(종료 후 재사용된다) — 카드가 PIN 칩을 그리지 않는다.
+ * 시작 전에 닫은 방(CANCELED)도 종료 목록에 온다 — 시안의 상태가 둘뿐이라 종료 쪽에 두고 배지만 가른다.
  */
 export function toMyRooms(hosted: HostedRoomsResponse): MyRoom[] {
   const active: MyRoom[] = hosted.active.map((r) => ({
     code: r.pin,
     title: r.title,
     status: "live",
+    phase: r.status === "RUNNING" ? "RUNNING" : "WAITING",
     students: r.participantCount,
     pin: r.pin,
     startsLabel: toStartsLabel(r.scheduledAt),
     reportId: String(r.roomId),
   }));
 
-  const ended: MyRoom[] = hosted.ended.map((r) => ({
-    code: String(r.roomId),
-    title: r.title,
-    status: "ended",
-    students: r.studentCount,
-    endedLabel: toShortLabel(r.endedAt, "종료"),
-    averageScore: r.correctRate,
-    reportId: String(r.roomId),
-  }));
+  const ended: MyRoom[] = hosted.ended.map((r) => {
+    const canceled = r.status === "CANCELED";
+    return {
+      code: String(r.roomId),
+      title: r.title,
+      status: "ended",
+      canceled,
+      students: r.studentCount,
+      endedLabel: toShortLabel(r.endedAt, canceled ? "취소" : "종료"),
+      averageScore: r.correctRate,
+      reportId: String(r.roomId),
+    };
+  });
 
   return [...active, ...ended];
+}
+
+/** 진행 중인 방을 여는 주소 — 시작 전이면 대기실(W-04), 시작했으면 진행 화면(W-05) */
+export function toLiveRoomHref(room: MyRoom): string {
+  return `/host/rooms/${room.code}/${room.phase === "RUNNING" ? "live" : "lobby"}`;
 }
 
 /** 레벨 카드 혜택 칩 — 필요 레벨 이상이면 획득 처리 */

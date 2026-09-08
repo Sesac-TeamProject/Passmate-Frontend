@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { toLiveRoomHref } from "./adapt";
 import type { MyRoom } from "./types";
 
 type Props = { rooms: MyRoom[] };
@@ -24,7 +25,7 @@ export function RoomListCard({ rooms }: Props) {
                 live ? "bg-mint-bg text-mint-dark" : "bg-background text-ink-disabled",
               )}
             >
-              {live ? "진행 중" : "종료"}
+              {live ? "진행 중" : room.canceled ? "취소" : "종료"}
             </span>
 
             <span className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -34,12 +35,13 @@ export function RoomListCard({ rooms }: Props) {
 
             {live ? (
               <Link
-                href={`/host/rooms/${room.code}/live`}
+                href={toLiveRoomHref(room)}
                 className="shrink-0 text-label-md text-mint-dark transition-colors hover:text-mint"
               >
-                진행 화면 열기 ›
+                {room.phase === "RUNNING" ? "진행 화면 열기 ›" : "대기실 열기 ›"}
               </Link>
-            ) : (
+            ) : room.canceled ? null : (
+              // 시작 전에 닫은 방은 세션이 없어 리포트도 없다 — 링크를 두지 않는다
               <Link
                 href={`/host/sessions/${room.reportId ?? room.code}/review`}
                 className="shrink-0 text-label-md text-muted-foreground transition-colors hover:text-ink"
@@ -67,11 +69,13 @@ function describe(room: MyRoom): string {
           room.pin === undefined ? null : `PIN ${room.pin.slice(0, 3)} ${room.pin.slice(3)}`,
           room.startsLabel ?? null,
         ]
-      : [
-          room.endedLabel ?? null,
-          `학생 ${room.students}명`,
-          room.averageScore === undefined ? null : `평균 ${room.averageScore}%`,
-        ];
+      : room.canceled
+        ? [room.endedLabel ?? null]
+        : [
+            room.endedLabel ?? null,
+            `학생 ${room.students}명`,
+            room.averageScore === undefined ? null : `평균 ${room.averageScore}%`,
+          ];
 
   return parts.filter((part): part is string => part !== null && part !== "").join(" · ");
 }
