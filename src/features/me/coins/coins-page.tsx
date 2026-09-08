@@ -62,7 +62,10 @@ function CoinHistoryRow({ item }: { item: CoinHistoryItem }) {
   const positive = item.amount > 0;
   return (
     <div className="flex items-center gap-4 px-5 py-4">
-      <span className="text-label-md text-muted-foreground">{item.dateLabel}</span>
+      {/* 날짜 칸 너비를 고정한다 — "9/4"와 "12/31"의 폭이 달라 제목 시작점이 줄마다 어긋났다 */}
+      <span className="w-10 shrink-0 text-label-md text-muted-foreground tabular-nums">
+        {item.dateLabel}
+      </span>
       <span className="min-w-0 flex-1 truncate text-label-lg text-foreground">{item.title}</span>
       <span className={cn("text-label-lg", positive ? "text-mint-dark" : "text-foreground")}>
         {positive ? "+" : "-"}
