@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useBackRedirect } from "@/lib/use-back-redirect";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
@@ -28,6 +29,8 @@ export default function Page() {
   const params = useParams<{ code: string }>();
   const pin = params.code;
   const router = useRouter();
+  // 뒤로가기는 내가 만든 방 목록으로 — 앞 화면(방 만들기·이전 단계)으로 돌아갈 이유가 없다
+  useBackRedirect("/host/rooms");
 
   const room = useHostRoomId(pin);
   const roomId = room.roomId;
@@ -85,12 +88,18 @@ export default function Page() {
   const needsSet = detail.data.questionSetId === undefined;
   const handleLinkSet = () => {
     if (setIdToLink === "" || linkSet.isPending) return;
+    // PUT 은 전체 교체다 — 세트만 보내면 설명·주제·정원·예약이 지워진다
+    const { description, topic, maxParticipants, scheduledAt } = detail.data;
     linkSet.mutate({
       roomId: detail.data.id,
       body: {
         title: detail.data.title,
         questionSetId: Number(setIdToLink),
         isPublic: detail.data.isPublic,
+        ...(description !== undefined ? { description } : {}),
+        ...(topic !== undefined ? { topic } : {}),
+        ...(maxParticipants !== undefined ? { maxParticipants } : {}),
+        ...(scheduledAt !== undefined ? { scheduledAt } : {}),
       },
     });
   };

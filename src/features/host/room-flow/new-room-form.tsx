@@ -63,7 +63,10 @@ export function NewRoomForm({
 }: Props) {
   const setFieldId = useId();
   const [name, setName] = useState(initialValues?.title ?? "");
-  const [setId, setSetId] = useState(initialValues?.setId ?? preferredSetId ?? sets[0]?.id ?? "");
+  // 초안에 남은 빈 세트("")는 값이 아니다 — `??` 로 두면 에디터에서 돌아온 `?set=`과 첫 세트를 가린다
+  const [pickedSetId, setSetId] = useState(initialValues?.setId || preferredSetId || "");
+  // 세트 목록이 늦게 와도 첫 확정 세트를 골라 둔다 — 고른 것이 없으면 만들기가 잠겨 있었다
+  const setId = pickedSetId || sets[0]?.id || "";
   const [roomType, setRoomType] = useState<RoomType>(initialValues?.roomType ?? "free");
   const [fee, setFee] = useState(initialValues?.fee ?? DEFAULT_ENTRY_FEE);
 
