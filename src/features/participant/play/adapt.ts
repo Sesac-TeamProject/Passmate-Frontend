@@ -44,6 +44,7 @@ export function toLiveQuestion(
     points: question.points,
     seconds: question.timeLimitSec,
     remaining: Math.round(remainingMs(question.endsAt) / 1000),
+    endsAt: question.endsAt,
     submitted: submittedCount,
   };
 }
