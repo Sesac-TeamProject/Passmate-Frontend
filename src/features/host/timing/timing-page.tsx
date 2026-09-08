@@ -18,8 +18,9 @@ export type TimingRow = {
   no: number;
   body: string;
   type: QuestionType;
+  /** 이 방에서 쓸 값 — 세트 기본값이 아니라 방이 덮어쓴 값이다 */
   timeLimitSec: number;
-  /** 표시 전용 — 서버에 이 설정이 없어 저장되지 않는다(DESIGN_GAPS D-15) */
+  /** 시간 만료로 마감되면 결과를 잠깐 보여준 뒤 다음 문항을 자동으로 연다 — 방 단위 저장 */
   autoAdvance: boolean;
 };
 
@@ -39,10 +40,11 @@ type Props = {
   onPreset: (sec: number) => void;
   onApplyPreset: () => void;
   onChangeTime: (questionId: number, sec: number) => void;
+  onChangeAutoAdvance: (questionId: number, on: boolean) => void;
   onSave: () => void;
   saving?: boolean;
   errorMessage?: string | null;
-  /** 확정된 세트 — 서버가 문항 수정을 막는다. 편집 자체를 잠그고 이유를 보인다 */
+  /** 이미 시작한 방 — 서버가 409로 막는다. 편집 자체를 잠그고 이유를 보인다 */
   readOnly?: boolean;
 };
 
@@ -54,6 +56,7 @@ export function TimingPage({
   onPreset,
   onApplyPreset,
   onChangeTime,
+  onChangeAutoAdvance,
   onSave,
   saving = false,
   errorMessage = null,
@@ -73,8 +76,7 @@ export function TimingPage({
       {readOnly && (
         <p className="mt-2 flex items-center gap-2.5 rounded-[20px] border border-dashed bg-card px-6 py-4 text-body-md text-muted-foreground">
           <Lock aria-hidden className="size-4 shrink-0" />
-          확정한 세트는 시간을 바꿀 수 없어요. 값만 확인할 수 있고, 바꾸려면 문제 세트에서 복제해 새
-          세트로 만들어야 해요
+          시작한 방은 시간을 바꿀 수 없어요. 값만 확인할 수 있어요
         </p>
       )}
 
@@ -118,7 +120,10 @@ export function TimingPage({
           <span className="flex-1">문항</span>
           <span className="w-24">유형</span>
           <span className="w-[190px]">제한 시간</span>
-          <span className="w-24" title="서버에 아직 없는 설정이라 저장되지 않아요">
+          <span
+            className="w-24"
+            title="시간이 다 되면 결과를 잠깐 보여준 뒤 다음 문항으로 넘어가요"
+          >
             자동 넘김
           </span>
         </div>
@@ -151,14 +156,15 @@ export function TimingPage({
                 />
               </span>
               {/*
-                자동 넘김은 서버 계약에 없다(DESIGN_GAPS D-15) — 저장되지 않으므로 잠가 둔다.
-                켜지는 것처럼 보이게 두면 "설정했는데 안 먹는다"가 된다.
+                호스트가 "바로 마감"으로 닫으면 자동으로 넘어가지 않는다(리모컨을 잡은 상황) —
+                시간 만료로 마감된 경우에만 서버가 다음 문항을 연다. 마지막 문항은 자동 종료하지 않는다.
               */}
               <span className="w-24">
                 <Switch
                   checked={row.autoAdvance}
-                  disabled
-                  aria-label={`${row.no}번 문항 자동 넘김 (준비 중)`}
+                  onCheckedChange={(checked) => onChangeAutoAdvance(row.questionId, checked)}
+                  disabled={readOnly}
+                  aria-label={`${row.no}번 문항 자동 넘김`}
                 />
               </span>
             </li>

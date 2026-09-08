@@ -1,4 +1,4 @@
-import type { RoomStatus, RoomType } from "./common";
+import type { QuestionType, RoomStatus, RoomType } from "./common";
 
 /**
  * 방·참가자 — 백엔드 `room/dto/*.kt` 1:1 (`contracts/rest-api.md` §2-5).
@@ -54,7 +54,17 @@ export type RoomResponse = {
   type: RoomType;
   fee?: number;
   questionSetId?: number;
+  /** 연결한 세트의 문항 수. 세트를 아직 연결하지 않았으면 빠진다 */
+  questionCount?: number;
+  /** 이 방 기준 예상 소요 시간(초, 문항 제한시간 합 — 방이 덮어쓴 시간 반영). 세트가 없으면 빠진다 */
+  estimatedSeconds?: number;
+  /** 문항 제한시간의 최소(초). 전부 같으면 max와 같다. 방이 덮어쓴 시간 반영 */
+  minTimeLimitSec?: number;
+  /** 문항 제한시간의 최대(초). 방이 덮어쓴 시간 반영 */
+  maxTimeLimitSec?: number;
   hostUserId: number;
+  /** 호스트 — 대기실 머리말의 선생님 이름. 공개 방 카드와 같은 모양(2026-09-07, B-21) */
+  host: PublicRoomHostResponse;
   maxParticipants?: number;
   participantCount: number;
   isPublic: boolean;
@@ -184,10 +194,16 @@ export type ActiveHostedRoom = {
   currentQuestionNo: number;
 };
 
-/** 끝난 방 — PIN은 없다(활성 방 사이에서만 유일하고 종료 후 재사용된다) */
+/**
+ * 끝난 방 — PIN은 없다(활성 방 사이에서만 유일하고 종료 후 재사용된다).
+ * 시작 전에 닫은 방(CANCELED)도 여기 담긴다 — 시안(W-09·M-13)의 방 상태가 진행 중·종료 둘뿐이라
+ * 종료 쪽에 붙이고 `status`로 취소 배지를 가른다(2026-09-07 결정).
+ */
 export type EndedHostedRoom = {
   roomId: number;
   title: string;
+  /** ENDED | CANCELED */
+  status: RoomStatus;
   endedAt?: string;
   studentCount: number;
   /** 0~100 */
@@ -201,4 +217,54 @@ export type HostedRoomsResponse = {
   reputation: HostReputation;
   active: ActiveHostedRoom[];
   ended: EndedHostedRoom[];
+};
+
+/**
+ * 방 문항별 시간(W-02b) — 백엔드 `room/dto/RoomQuestionTimeDtos.kt` 1:1.
+ *
+ * 방에는 확정 세트만 붙고 확정 세트의 문항은 고칠 수 없다(409). 그래서 시간은 세트가 아니라
+ * **방이 덮어쓴다**(`room.question_time_overrides`) — 같은 세트를 쓰는 다른 방은 그대로다.
+ * 세션 시작 시 이 값이 `session_question`으로 복사된다(백엔드 질문 B-18 결정 (b), 2026-09-07).
+ */
+
+/** 문항 하나의 제한시간·자동 넘김 */
+export type QuestionTimeEntry = {
+  questionId: number;
+  /** 5~600 */
+  timeLimitSec: number;
+  /** 시간 만료로 마감되면 다음 문항을 자동으로 연다. 생략하면 false */
+  autoAdvance?: boolean;
+};
+
+/**
+ * PUT /rooms/{roomId}/question-times — **전체 교체**. 본문에 없는 문항은 세트 기본값으로 돌아가고
+ * 자동 넘김도 꺼진다. 빈 배열이면 전부 초기화. WAITING일 때만(409 `CONFLICT`)
+ */
+export type RoomQuestionTimesRequest = { times: QuestionTimeEntry[] };
+
+/** 문항 한 줄 — 세트 기본값과 이 방에서 쓸 값. 정답·해설은 오지 않는다(프로젝터에 뜰 수 있다) */
+export type RoomQuestionTimeView = {
+  questionId: number;
+  orderNo: number;
+  type: QuestionType;
+  content: string;
+  /** 세트에 적힌 제한시간(초) */
+  defaultTimeLimitSec: number;
+  /** 이 방에서 쓸 제한시간(초). 덮어쓴 값이 없으면 기본값과 같다 */
+  timeLimitSec: number;
+  /** 이 방에서 덮어쓴 문항인지 */
+  overridden: boolean;
+  autoAdvance: boolean;
+};
+
+/**
+ * GET /rooms/{roomId}/question-times · PUT 응답. 호스트만.
+ * 세트를 아직 연결하지 않은 방은 409 `QUESTION_SET_REQUIRED`다.
+ */
+export type RoomQuestionTimesResponse = {
+  roomId: number;
+  questionSetId: number;
+  /** 이 방 기준 예상 소요 시간(초, 문항 제한시간 합) */
+  estimatedSeconds: number;
+  questions: RoomQuestionTimeView[];
 };

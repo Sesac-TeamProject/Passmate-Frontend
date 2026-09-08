@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useId, useState, type ChangeEvent, type FormEvent } from "react";
+import { writeNewRoomDraft } from "@/lib/new-room-draft";
 import type { RoomCreateRequest } from "@/lib/types/dto";
 import {
   DEFAULT_ENTRY_FEE,
@@ -42,6 +43,8 @@ type Props = {
   editorHref: string;
   /** 없으면 빈 폼으로 시작한다 */
   initialValues?: NewRoomInitialValues;
+  /** 에디터에서 방금 확정한 세트(`?set=`). 임시 보관값보다 이 값이 이긴다 */
+  preferredSetId?: string;
 };
 
 const FIELD = "h-[54px] w-[440px] rounded-2xl bg-muted px-[18px]";
@@ -56,12 +59,23 @@ export function NewRoomForm({
   errorMessage,
   editorHref,
   initialValues,
+  preferredSetId,
 }: Props) {
   const setFieldId = useId();
   const [name, setName] = useState(initialValues?.title ?? "");
-  const [setId, setSetId] = useState(initialValues?.setId ?? sets[0]?.id ?? "");
+  const [setId, setSetId] = useState(initialValues?.setId ?? preferredSetId ?? sets[0]?.id ?? "");
   const [roomType, setRoomType] = useState<RoomType>(initialValues?.roomType ?? "free");
   const [fee, setFee] = useState(initialValues?.fee ?? DEFAULT_ENTRY_FEE);
+
+  /**
+   * 에디터를 다녀오면 이 화면은 새로 그려진다 — 적어 둔 값을 탭에 남겨 둔다.
+   * 되살리는 쪽은 컨테이너가 맡는다(`initialValues`) — 여기서는 쓰기만 한다.
+   * 빈 폼은 저장하지 않는다: 되살리기 전에 한 번 쓰면 남아 있던 값을 빈 값으로 덮는다.
+   */
+  useEffect(() => {
+    if (name.trim() === "") return;
+    writeNewRoomDraft({ title: name, setId, roomType, fee });
+  }, [name, setId, roomType, fee]);
 
   // 확정 세트가 하나도 없으면 고를 것이 없다 — 셀렉트를 잠그고 제출도 막는다.
   // 서버는 세트 없는 방을 만들어 주지만(대기실에서 연결 가능) 빈 셀렉트를 눌러 봐야

@@ -246,7 +246,7 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
         if (!payResult.ok) {
           // 취소는 되돌아온 것이지 실패가 아니다 — 화면을 갈아 끼우지 않고 폼 위에 한 줄만 남긴다.
           if (payResult.code === "CANCELLED") {
-            setError("결제가 취소됐어요 — 다시 시도해 주세요");
+            setError(payResult.message);
           } else {
             setFailure({ message: payResult.message, amount: chargeAmount });
           }
