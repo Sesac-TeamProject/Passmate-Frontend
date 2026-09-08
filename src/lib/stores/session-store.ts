@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { SessionSnapshotResponse } from "@/lib/types/dto";
 import type { ServerEvent } from "@/lib/types/events";
 import {
+  advancesSession,
   applySnapshot,
   initialSessionState,
   isStaleFrame,
@@ -37,8 +38,14 @@ export const useSessionStore = create<SessionStore>()((set, get) => ({
   snapshotTs: null,
 
   dispatch: (event) => {
-    const { snapshotTs } = get();
-    if (snapshotTs !== null && isStaleFrame(event.occurredAt, snapshotTs)) return;
+    const state = get();
+    // 세션을 앞으로 옮기는 프레임은 시계가 어긋나도 버리지 않는다 — 옛 프레임일 수 없다
+    if (
+      state.snapshotTs !== null &&
+      isStaleFrame(event.occurredAt, state.snapshotTs) &&
+      !advancesSession(event, state)
+    )
+      return;
     set((s) => reduceSessionEvent(s, event));
   },
 

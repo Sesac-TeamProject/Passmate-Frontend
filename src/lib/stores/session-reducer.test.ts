@@ -9,6 +9,7 @@ import type { ServerEvent } from "@/lib/types/events";
 import {
   applySnapshot,
   initialSessionState,
+  advancesSession,
   isStaleFrame,
   reduceSessionEvent,
   type SessionState,
@@ -257,5 +258,48 @@ describe("isStaleFrame", () => {
 
   it("읽을 수 없는 시각은 버리지 않는다", () => {
     expect(isStaleFrame("어제", snapshotTs)).toBe(false);
+  });
+});
+
+/**
+ * 시계가 어긋나면 멀쩡한 QUESTION_STARTED 까지 stale 로 버려져 학생이 이전 문항의 "제출 완료"에
+ * 갇혔다(시나리오 테스트, 2026-09-08). 세션을 앞으로 옮기는 프레임은 옛 프레임일 수 없다.
+ */
+describe("advancesSession", () => {
+  const started = (orderNo: number): ServerEvent => ({
+    type: "QUESTION_STARTED",
+    roomId: 1,
+    occurredAt: "2026-09-02T02:12:40",
+    payload: {
+      sessionQuestionId: orderNo,
+      questionId: orderNo,
+      orderNo,
+      totalCount: 3,
+      type: "OX",
+      content: "문항",
+      points: 100,
+      timeLimitSec: 20,
+      endsAt: "2026-09-02T02:13:00",
+    },
+  });
+
+  it("지금 문항보다 뒤 문항의 시작은 시각과 무관하게 살린다", () => {
+    const state = reduceSessionEvent(initialSessionState, started(1));
+    expect(advancesSession(started(2), state)).toBe(true);
+  });
+
+  it("같은 문항이나 앞 문항의 시작은 살리지 않는다 — 늦게 온 옛 프레임일 수 있다", () => {
+    const state = reduceSessionEvent(initialSessionState, started(2));
+    expect(advancesSession(started(2), state)).toBe(false);
+    expect(advancesSession(started(1), state)).toBe(false);
+  });
+
+  it("아직 끝나지 않은 세션의 SESSION_ENDED 는 살린다", () => {
+    expect(
+      advancesSession(
+        { type: "SESSION_ENDED", roomId: 1, occurredAt: "2026-09-02T02:12:40", payload: [] },
+        initialSessionState,
+      ),
+    ).toBe(true);
   });
 });
