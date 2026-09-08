@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/features/host/room-flow/adapt";
 import { NewRoomFailed } from "@/features/host/room-flow/new-room-failed";
 import { NewRoomPage } from "@/features/host/room-flow/new-room-page";
+import { clearNewRoomDraft, useNewRoomDraft } from "@/lib/new-room-draft";
 import { useGrade } from "@/lib/queries/use-me";
 import { useQuestionSets } from "@/lib/queries/use-question-sets";
 import { useCreateRoom } from "@/lib/queries/use-rooms";
@@ -23,8 +24,12 @@ const PIN_MISSING_MESSAGE =
   "방은 만들어졌지만 PIN을 받지 못했어요. 내가 만든 방에서 확인해 주세요.";
 
 /** W-02 방 만들기 컨테이너 — 확정 세트 목록·명성 등급을 읽고 POST /rooms 후 대기실로 보낸다. */
-export default function Page() {
+function NewRoomContainer() {
   const router = useRouter();
+  // 에디터가 세트를 확정하고 `?set=`으로 돌려보낸다 — 그 세트를 골라 둔다
+  const preferredSetId = useSearchParams().get("set") ?? undefined;
+  // 에디터로 나갔다 온 사이에 적어 둔 값. 서버 렌더에는 없어 하이드레이션 뒤에 들어온다
+  const draft = useNewRoomDraft();
   const sets = useQuestionSets({ status: "CONFIRMED" });
   const grade = useGrade();
   const create = useCreateRoom();
@@ -37,6 +42,8 @@ export default function Page() {
     setLastBody(body);
     create.mutate(body, {
       onSuccess: (res) => {
+        // 방이 만들어졌으면 임시 보관값은 할 일을 다했다
+        clearNewRoomDraft();
         if (res.pin) router.push(`/host/rooms/${res.pin}/lobby`);
         else setPinMissing(true);
       },
@@ -76,7 +83,20 @@ export default function Page() {
       onSubmit={handleSubmit}
       pending={create.isPending}
       errorMessage={errorMessage}
-      initialValues={lastBody ? toNewRoomInitialValues(lastBody) : undefined}
+      // 만들기 실패 후 되돌아온 값이 임시 보관값보다 최신이다
+      initialValues={lastBody ? toNewRoomInitialValues(lastBody) : (draft ?? undefined)}
+      preferredSetId={preferredSetId}
+      // 폼은 처음 그릴 때만 값을 읽는다 — 보관값이 들어오면 키를 바꿔 그 값으로 다시 세운다
+      key={draft === null ? "empty" : "restored"}
     />
+  );
+}
+
+// useSearchParams()는 App Router에서 Suspense 경계가 필요하다(없으면 next build 실패)
+export default function Page() {
+  return (
+    <Suspense fallback={<ScreenLoading />}>
+      <NewRoomContainer />
+    </Suspense>
   );
 }

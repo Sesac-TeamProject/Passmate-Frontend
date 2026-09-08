@@ -11,6 +11,8 @@ type Props = {
   errorMessage?: string | null;
   /** 실패 화면(W-02e)에서 돌아왔을 때 복원할 입력값 */
   initialValues?: NewRoomInitialValues;
+  /** 에디터에서 방금 확정한 세트 id (`?set=`) */
+  preferredSetId?: string;
 };
 
 /**
@@ -26,6 +28,7 @@ export function NewRoomPage({
   pending,
   errorMessage,
   initialValues,
+  preferredSetId,
 }: Props) {
   return (
     <div className="flex min-h-screen flex-col">
@@ -43,6 +46,7 @@ export function NewRoomPage({
           errorMessage={errorMessage}
           editorHref="/host/editor"
           initialValues={initialValues}
+          preferredSetId={preferredSetId}
         />
       </main>
     </div>
