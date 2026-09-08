@@ -76,6 +76,7 @@ export function LivePage({
       <ProjectorShell
         rail={<LiveRail students={students} submittedCount={q.submitted} />}
         railCollapsed={<LiveRailMini students={students} submittedCount={q.submitted} />}
+        railLabel="참여자"
         top={
           <>
             <QuestionRail current={q.index} total={q.total} />

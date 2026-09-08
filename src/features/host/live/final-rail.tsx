@@ -88,11 +88,18 @@ export function FinalRailMini({
   accuracyByQuestion,
 }: Pick<Props, "summary" | "accuracyByQuestion">) {
   return (
-    <div className="flex h-full flex-col items-center pt-8">
+    // 접어도 참여 인원·문항 수는 남긴다 — 접힌 화면에 평균만 뜨면 무엇의 평균인지 알 수 없다
+    <div className="flex h-full flex-col items-center px-2 pt-8 pb-6">
       <p className="text-heading-md text-mint">
         {summary.avgAccuracy === null ? "—" : `${summary.avgAccuracy}%`}
       </p>
       <p className="text-label-md text-muted-foreground">평균</p>
+
+      <div className="mt-4 flex flex-col items-center gap-2">
+        <p className="text-label-lg text-ink">{summary.studentCount}명</p>
+        <p className="text-label-lg text-ink">{summary.questionCount}문항</p>
+      </div>
+
       <div className="mt-5 h-px w-10 bg-border" />
 
       <div className="mt-5">

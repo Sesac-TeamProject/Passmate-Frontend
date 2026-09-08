@@ -84,6 +84,7 @@ export function ResultPage({
         />
       }
       railCollapsed={<ResultRailMini rows={rows} />}
+      railLabel="순위"
       top={
         <>
           <QuestionRail current={questionIndex} total={questionTotal} />

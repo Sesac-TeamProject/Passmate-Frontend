@@ -17,6 +17,8 @@ type Props = {
   rail?: ReactNode;
   /** 오른쪽 레일 접힘(72px) 내용. `rail`이 있을 때만 쓴다 */
   railCollapsed?: ReactNode;
+  /** 접기 버튼이 읽어 주는 이름. 화면마다 레일 내용이 달라 부모가 정한다("참여자"·"세션 요약") */
+  railLabel?: string;
 };
 
 /**
@@ -34,7 +36,14 @@ type Props = {
  *
  * 접힘 여부는 서버 상태가 아닌 순수 표시 상태라 껍데기가 직접 들고 있는다.
  */
-export function ProjectorShell({ top, children, bottom, rail, railCollapsed }: Props) {
+export function ProjectorShell({
+  top,
+  children,
+  bottom,
+  rail,
+  railCollapsed,
+  railLabel = "패널",
+}: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const hasRail = rail !== undefined;
 
@@ -68,12 +77,13 @@ export function ProjectorShell({ top, children, bottom, rail, railCollapsed }: P
             type="button"
             onClick={() => setCollapsed((v) => !v)}
             aria-expanded={!collapsed}
-            aria-label={collapsed ? "참여자 레일 펼치기" : "참여자 레일 접기"}
+            aria-label={collapsed ? `${railLabel} 펼치기` : `${railLabel} 접기`}
             className="absolute top-1/2 left-0 z-10 flex h-[72px] w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[14px] border bg-card text-muted-foreground shadow-md transition-colors hover:text-foreground"
           >
             {collapsed ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
           </button>
-          {collapsed ? railCollapsed : rail}
+          {/* 문항이 많으면 막대가 화면 밖으로 넘친다 — 레일 안에서 스크롤한다 */}
+          <div className="h-full overflow-y-auto">{collapsed ? railCollapsed : rail}</div>
         </aside>
       )}
     </div>

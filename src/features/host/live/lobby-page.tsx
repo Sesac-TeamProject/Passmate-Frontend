@@ -121,6 +121,7 @@ export function LobbyPage({
     <ProjectorShell
       rail={<LobbyRail students={students} onKick={onKick} kickingId={kickingId} />}
       railCollapsed={<LobbyRailMini students={students} />}
+      railLabel="참여자"
       top={
         <>
           <div className="flex items-center gap-[18px]">
