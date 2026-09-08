@@ -18,8 +18,9 @@ export type TimingRow = {
   no: number;
   body: string;
   type: QuestionType;
+  /** 이 방에서 쓸 값 — 세트 기본값이 아니라 방이 덮어쓴 값이다 */
   timeLimitSec: number;
-  /** 표시 전용 — 서버에 이 설정이 없어 저장되지 않는다(DESIGN_GAPS D-15) */
+  /** 서버(방)에 저장된 값을 보여만 준다 — 토글 저장은 아직 연결하지 않았다(DESIGN_GAPS D-15) */
   autoAdvance: boolean;
 };
 
@@ -42,7 +43,7 @@ type Props = {
   onSave: () => void;
   saving?: boolean;
   errorMessage?: string | null;
-  /** 확정된 세트 — 서버가 문항 수정을 막는다. 편집 자체를 잠그고 이유를 보인다 */
+  /** 이미 시작한 방 — 서버가 409로 막는다. 편집 자체를 잠그고 이유를 보인다 */
   readOnly?: boolean;
 };
 
@@ -73,8 +74,7 @@ export function TimingPage({
       {readOnly && (
         <p className="mt-2 flex items-center gap-2.5 rounded-[20px] border border-dashed bg-card px-6 py-4 text-body-md text-muted-foreground">
           <Lock aria-hidden className="size-4 shrink-0" />
-          확정한 세트는 시간을 바꿀 수 없어요. 값만 확인할 수 있고, 바꾸려면 문제 세트에서 복제해 새
-          세트로 만들어야 해요
+          시작한 방은 시간을 바꿀 수 없어요. 값만 확인할 수 있어요
         </p>
       )}
 

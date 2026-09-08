@@ -2,9 +2,9 @@ import type { QuestionType } from "@/features/host/types";
 import { AppError } from "@/lib/types/app-error";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 import type {
-  QuestionRequest,
-  QuestionResponse,
   QuestionType as WireQuestionType,
+  RoomQuestionTimeView,
+  RoomQuestionTimesRequest,
 } from "@/lib/types/dto";
 import type { TimingRow } from "./timing-page";
 
@@ -14,53 +14,62 @@ const TYPE: Record<WireQuestionType, QuestionType> = {
   OX: "ox",
 };
 
-/** 세트 문항 + 편집분 → 화면 행. 편집분이 있으면 그쪽이 이긴다 */
-export function toTimingRows(
-  questions: QuestionResponse[],
-  edits: Record<number, number>,
-): TimingRow[] {
+/** 저장 전 편집분 — 문항 id → 바꾼 값. 없는 필드는 서버 값 그대로다 */
+export type TimingEdit = { timeLimitSec?: number };
+export type TimingEdits = Record<number, TimingEdit>;
+
+/** 문항 하나의 "지금 화면에 보이는 값" — 편집분이 있으면 그쪽, 없으면 서버가 준 방 값 */
+function effective(q: RoomQuestionTimeView, edits: TimingEdits) {
+  const edit = edits[q.questionId];
+  return {
+    timeLimitSec: edit?.timeLimitSec ?? q.timeLimitSec,
+    autoAdvance: q.autoAdvance,
+  };
+}
+
+/** 서버 문항 줄(방 값이 얹힌 것) + 편집분 → 화면 행 */
+export function toTimingRows(questions: RoomQuestionTimeView[], edits: TimingEdits): TimingRow[] {
   return questions.map((q) => ({
-    questionId: q.id,
+    questionId: q.questionId,
     no: q.orderNo,
     body: q.content,
     type: TYPE[q.type],
-    timeLimitSec: edits[q.id] ?? q.timeLimitSec,
-    // 서버에 `autoAdvance` 필드가 없다(DESIGN_GAPS D-15) — 저장되지 않는 표시값이라
-    // 화면도 스위치를 잠근다. 서술형만 꺼 보이는 것은 시안 기본값이다.
-    autoAdvance: q.type !== "ESSAY",
+    ...effective(q, edits),
   }));
 }
 
-/**
- * 바뀐 문항만 골라 `PUT …/questions/{id}` 본문으로 만든다.
- * 문항 수정은 **전체 교체**라 안 바꾼 필드도 원래 값을 같이 실어야 지워지지 않는다.
- */
-export function toChangedQuestionRequests(
-  questions: QuestionResponse[],
-  edits: Record<number, number>,
-): { questionId: number; body: QuestionRequest }[] {
-  return questions
-    .filter((q) => edits[q.id] !== undefined && edits[q.id] !== q.timeLimitSec)
-    .map((q) => ({
-      questionId: q.id,
-      body: {
-        type: q.type,
-        content: q.content,
-        ...(q.choices ? { choices: q.choices } : {}),
-        ...(q.answer ? { answer: q.answer } : {}),
-        ...(q.explanation ? { explanation: q.explanation } : {}),
-        ...(q.topic ? { topic: q.topic } : {}),
-        ...(q.difficulty ? { difficulty: q.difficulty } : {}),
-        timeLimitSec: edits[q.id],
-        points: q.points,
-      },
-    }));
+/** 편집분이 서버 값과 하나라도 다른가 — 같으면 저장할 이유가 없다 */
+export function hasTimingChanges(questions: RoomQuestionTimeView[], edits: TimingEdits): boolean {
+  return questions.some((q) => {
+    const now = effective(q, edits);
+    return now.timeLimitSec !== q.timeLimitSec || now.autoAdvance !== q.autoAdvance;
+  });
 }
 
-/** 저장 실패 문구 — 확정된 세트는 서버가 409로 막는다(확정 후 불변) */
+/**
+ * `PUT /rooms/{roomId}/question-times` 본문. **전체 교체**라 바뀐 문항만이 아니라 이 방이
+ * 덮어쓸 문항 전부를 싣는다 — 세트 기본값 그대로이고 자동 넘김도 꺼진 문항은 뺀다(본문에 없는
+ * 문항은 서버가 기본값으로 돌린다). 자동 넘김은 서버 값을 그대로 다시 싣는다 — 빼먹으면 켜 둔
+ * 문항이 꺼진다.
+ */
+export function toQuestionTimesRequest(
+  questions: RoomQuestionTimeView[],
+  edits: TimingEdits,
+): RoomQuestionTimesRequest {
+  return {
+    times: questions.flatMap((q) => {
+      const { timeLimitSec, autoAdvance } = effective(q, edits);
+      if (timeLimitSec === q.defaultTimeLimitSec && !autoAdvance) return [];
+      return [{ questionId: q.questionId, timeLimitSec, autoAdvance }];
+    }),
+  };
+}
+
+/** 저장 실패 문구 — 시작한 방은 서버가 409 `CONFLICT`로 막는다(대기 중에만 바꿀 수 있다) */
 export function toTimingErrorMessage(error: unknown): string {
   if (!AppError.isAppError(error)) return "저장하지 못했어요. 다시 시도해 주세요";
-  if (error.code === ERROR_CODES.QUESTION_SET_ALREADY_CONFIRMED)
-    return "확정한 세트는 시간을 바꿀 수 없어요. 새 세트를 만들어 주세요";
+  if (error.code === ERROR_CODES.CONFLICT) return "시작한 방은 시간을 바꿀 수 없어요";
+  if (error.code === ERROR_CODES.QUESTION_SET_REQUIRED)
+    return "이 방에 연결된 문제 세트를 찾지 못했어요";
   return error.message;
 }
