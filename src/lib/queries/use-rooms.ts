@@ -270,8 +270,19 @@ export function useJoinRoom(roomId: number | null) {
     },
     onSuccess: ({ roomId }) => {
       queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
+      invalidateRoomCounts(queryClient);
     },
   });
+}
+
+/**
+ * "N명 참여 중"을 들고 있는 캐시 전부 — 홈 인기 방·탐색 목록·PIN 미리보기.
+ * 입장 뒤에도 30초(staleTime) 동안 옛 인원이 남아 목록은 2명, 입장 화면은 0명으로 어긋나 보였다
+ * (시나리오 테스트 "세션 버그", 2026-09-08).
+ */
+function invalidateRoomCounts(queryClient: ReturnType<typeof useQueryClient>): void {
+  queryClient.invalidateQueries({ queryKey: ["rooms", "public"] });
+  queryClient.invalidateQueries({ queryKey: ["rooms", "pin"] });
 }
 
 /**
@@ -293,6 +304,7 @@ export function useJoinByPin() {
     onSuccess: (data) => {
       if (data.kind === "joined") {
         queryClient.invalidateQueries({ queryKey: qk.participants(data.room.id) });
+        invalidateRoomCounts(queryClient);
       }
     },
   });

@@ -347,6 +347,8 @@ export function mockJoinRoom(roomId: string, body: JoinRoomRequest): JoinRoomRes
     joinedAt: new Date().toISOString().slice(0, 19),
   };
   participants = [...participants, participant];
+  // 서버처럼 방의 인원도 올린다 — 목록은 2명인데 입장 화면은 0명이던 목 불일치(2026-09-08)
+  room.participantCount += 1;
 
   return participant.isGuest
     ? { participant, accessToken: "mock-guest-access-token", guestToken: "mock-guest-record-token" }
