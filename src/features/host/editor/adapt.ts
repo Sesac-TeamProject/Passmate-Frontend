@@ -38,11 +38,16 @@ export function toEditorQuestions(questions: QuestionResponse[]): EditorQuestion
 
 /** 편집 시작값 — 저장 폼에 기존 문항을 그대로 채운다 */
 export function toFormValues(question: EditorQuestion): QuestionFormValues {
+  // MCQ 보기는 최소 2줄을 보여 준다 — 빈 줄은 저장할 때 버린다
+  const choices = question.choices.length >= 2 ? question.choices : ["", ""];
+  // 서버는 정답을 원문으로만 준다. 보기 글자가 겹치면 첫 줄이 잡히는 건 계약의 한계다(PR 본문 참고).
+  const found = choices.findIndex((c) => c === question.answer);
+
   return {
     type: question.type,
     prompt: question.prompt,
-    // MCQ 보기는 최소 2줄을 보여 준다 — 빈 줄은 저장할 때 버린다
-    choices: question.choices.length >= 2 ? question.choices : ["", ""],
+    choices,
+    answerIndex: question.type === "multiple" && found >= 0 ? found : null,
     answer: question.answer,
     explanation: question.explanation,
     points: question.points,
@@ -57,7 +62,11 @@ export function toFormValues(question: EditorQuestion): QuestionFormValues {
 export function toQuestionRequest(values: QuestionFormValues): QuestionRequest {
   const type = WIRE_TYPE[values.type];
   const choices = values.choices.map((c) => c.trim()).filter((c) => c !== "");
-  const answer = values.answer.trim();
+  // MCQ 정답은 화면이 순번으로 들고 있다 — 거르기 전 배열에서 원문을 꺼내야 빈 줄에 밀리지 않는다
+  const answer =
+    values.type === "multiple"
+      ? (values.choices[values.answerIndex ?? -1]?.trim() ?? "")
+      : values.answer.trim();
   const explanation = values.explanation.trim();
 
   return {
@@ -83,8 +92,12 @@ export function validateQuestionForm(values: QuestionFormValues): string | null 
   if (values.type === "multiple") {
     const choices = values.choices.map((c) => c.trim()).filter((c) => c !== "");
     if (choices.length < 2) return "객관식 보기는 2개 이상 필요해요";
-    if (values.answer.trim() === "") return "정답을 보기 중에서 골라 주세요";
-    if (!choices.includes(values.answer.trim())) return "정답은 보기 중 하나여야 해요";
+    // 정답은 서버에 보기 **원문**으로 저장된다 — 보기끼리 글자가 같으면 어느 줄이 정답인지 되찾을 수 없다
+    if (new Set(choices).size !== choices.length)
+      return "보기끼리 내용이 같으면 정답을 가릴 수 없어요. 다르게 적어 주세요";
+    if (values.answerIndex === null) return "정답을 보기 중에서 골라 주세요";
+    if ((values.choices[values.answerIndex] ?? "").trim() === "")
+      return "정답으로 고른 보기가 비어 있어요";
   }
   if (values.type === "ox" && !["O", "X"].includes(values.answer.trim()))
     return "OX 정답은 O 또는 X여야 해요";
