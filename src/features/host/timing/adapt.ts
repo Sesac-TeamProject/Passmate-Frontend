@@ -48,9 +48,10 @@ export function hasTimingChanges(questions: RoomQuestionTimeView[], edits: Timin
 
 /**
  * `PUT /rooms/{roomId}/question-times` 본문. **전체 교체**라 바뀐 문항만이 아니라 이 방이
- * 덮어쓸 문항 전부를 싣는다 — 세트 기본값 그대로이고 자동 넘김도 꺼진 문항은 뺀다(본문에 없는
- * 문항은 서버가 기본값으로 돌린다). 손대지 않은 문항의 자동 넘김도 서버 값 그대로 다시 싣는다 —
- * 빼먹으면 켜 둔 문항이 꺼진다.
+ * 덮어쓸 문항 전부를 싣는다 — 세트 기본값 그대로이고 자동 넘김도 켜진(기본) 문항은 뺀다(본문에
+ * 없는 문항은 서버가 기본값으로 돌린다). 자동 넘김은 **기본이 켬**이라 끈 문항이 예외다 —
+ * 손대지 않은 문항도 꺼져 있으면 다시 실어야 한다. 빼먹으면 서버 기본값(켬)으로 돌아간다
+ * (2026-09-08 시나리오 테스트 반전).
  */
 export function toQuestionTimesRequest(
   questions: RoomQuestionTimeView[],
@@ -59,7 +60,7 @@ export function toQuestionTimesRequest(
   return {
     times: questions.flatMap((q) => {
       const { timeLimitSec, autoAdvance } = effective(q, edits);
-      if (timeLimitSec === q.defaultTimeLimitSec && !autoAdvance) return [];
+      if (timeLimitSec === q.defaultTimeLimitSec && autoAdvance) return [];
       return [{ questionId: q.questionId, timeLimitSec, autoAdvance }];
     }),
   };

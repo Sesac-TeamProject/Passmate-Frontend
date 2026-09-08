@@ -223,7 +223,8 @@ export function mockQuestionTimes(roomId: string): RoomQuestionTimesResponse {
       defaultTimeLimitSec: q.timeLimitSec,
       timeLimitSec: override?.timeLimitSec ?? q.timeLimitSec,
       overridden: override !== undefined,
-      autoAdvance: override?.autoAdvance ?? false,
+      // 서버 기본이 켬이다(2026-09-08) — 설정을 안 만진 문항도 자동으로 넘어간다
+      autoAdvance: override?.autoAdvance ?? true,
     };
   });
   return {
