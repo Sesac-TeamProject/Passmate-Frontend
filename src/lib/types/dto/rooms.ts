@@ -194,10 +194,16 @@ export type ActiveHostedRoom = {
   currentQuestionNo: number;
 };
 
-/** 끝난 방 — PIN은 없다(활성 방 사이에서만 유일하고 종료 후 재사용된다) */
+/**
+ * 끝난 방 — PIN은 없다(활성 방 사이에서만 유일하고 종료 후 재사용된다).
+ * 시작 전에 닫은 방(CANCELED)도 여기 담긴다 — 시안(W-09·M-13)의 방 상태가 진행 중·종료 둘뿐이라
+ * 종료 쪽에 붙이고 `status`로 취소 배지를 가른다(2026-09-07 결정).
+ */
 export type EndedHostedRoom = {
   roomId: number;
   title: string;
+  /** ENDED | CANCELED */
+  status: RoomStatus;
   endedAt?: string;
   studentCount: number;
   /** 0~100 */

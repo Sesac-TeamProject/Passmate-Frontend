@@ -198,10 +198,12 @@ describe("내가 만든 방 계약", () => {
     );
     expectContract(
       hosted.ended[0],
-      ["roomId", "title", "studentCount", "ratingCount"],
+      ["roomId", "title", "status", "studentCount", "ratingCount"],
       ["endedAt", "correctRate", "averageStars"],
     );
     expect(hosted.ended[0]).not.toHaveProperty("pin");
+    // 시작 전에 닫은 방도 종료 목록에 온다 — status 로 가른다(2026-09-07 결정)
+    expect(hosted.ended.map((r) => r.status)).toContain("CANCELED");
   });
 });
 

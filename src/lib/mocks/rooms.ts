@@ -33,7 +33,7 @@ let hostedRooms: HostedRoomsResponse = {
   active: [...HOSTED_ROOMS.active],
   ended: [...HOSTED_ROOMS.ended],
 };
-let nextHostedRoomId = 104;
+let nextHostedRoomId = 105;
 
 /** 만들어진 방 — 서버와 같은 `RoomResponse` 형태로 들고 있는다(PIN 조회·상세·수정이 같은 출처를 본다) */
 let rooms: RoomResponse[] = [{ ...DEMO_ROOM }];
@@ -395,6 +395,6 @@ export function __resetRoomsForTests(): void {
   };
   participants = [...PARTICIPANTS];
   questionTimes = new Map();
-  nextHostedRoomId = 104;
+  nextHostedRoomId = 105;
   nextParticipantId = 17;
 }

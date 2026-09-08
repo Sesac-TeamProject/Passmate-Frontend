@@ -107,6 +107,7 @@ export const HOSTED_ROOMS: HostedRoomsResponse = {
     {
       roomId: 101,
       title: "네트워크 한 번에 정리",
+      status: "ENDED",
       endedAt: "2026-08-19T11:00:00",
       studentCount: 9,
       correctRate: 77,
@@ -115,6 +116,7 @@ export const HOSTED_ROOMS: HostedRoomsResponse = {
     {
       roomId: 102,
       title: "CS 기술면접 라운드 2",
+      status: "ENDED",
       endedAt: "2026-08-15T12:00:00",
       studentCount: 21,
       correctRate: 68,
@@ -123,9 +125,19 @@ export const HOSTED_ROOMS: HostedRoomsResponse = {
     {
       roomId: 103,
       title: "JPA 복습 방",
+      status: "ENDED",
       endedAt: "2026-08-08T10:00:00",
       studentCount: 18,
       correctRate: 64,
+      ratingCount: 0,
+    },
+    // 시작 전에 닫은 방 — 학생·정답률이 없고 종료 목록에 취소 배지로 선다
+    {
+      roomId: 104,
+      title: "취소한 리허설 방",
+      status: "CANCELED",
+      endedAt: "2026-08-07T09:00:00",
+      studentCount: 0,
       ratingCount: 0,
     },
   ],
