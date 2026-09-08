@@ -3,10 +3,13 @@ import type { LevelCriterion } from "./next-level-card";
 
 /**
  * 승급 조건의 단위 — 계약에 단위 필드가 없어 조건 종류로 가른다.
- * 사람을 세는 것만 "명", 나머지는 "회" (시안 813:8873·8877).
+ * 사람을 세는 것은 "명", 별점은 "점", 나머지는 "회" (시안 813:8873·8877).
+ * 별점까지 "회"로 붙이면 "평균 별점 4.53회 → 4회"가 된다(2026-09-09 시나리오 테스트).
  */
-function unitOf(type: string): string {
-  return type === "TOTAL_STUDENTS" ? "명" : "회";
+export function unitOf(type: string): string {
+  if (type === "TOTAL_STUDENTS") return "명";
+  if (type === "AVG_RATING") return "점";
+  return "회";
 }
 
 /**
