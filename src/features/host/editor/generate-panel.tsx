@@ -135,9 +135,11 @@ export function GeneratePanel({
         </div>
         {/* 시안 W-03: 스테퍼 아래 합계 한 줄. 제한 시간·배점은 이 화면이 값을 실어 보낸다
             — "자동"이 아니므로 그렇게 적지 않는다(문항별 시간은 나중에 바꿀 수 있다) */}
-        <p className="flex items-center justify-between rounded-xl bg-surface-subtle px-3.5 py-2">
-          <span className="text-label-lg text-ink">문항 수 {total}문항</span>
-          <span className="text-label-md text-muted-foreground">
+        <p className="flex items-center justify-between gap-2 rounded-xl bg-surface-subtle px-3.5 py-2">
+          {/* 패널이 340px라 둘 다 줄어들면 "문항 수 4문 / 항"처럼 라벨이 글자 중간에서 끊긴다.
+              라벨을 고정하고 남는 폭은 오른쪽 안내가 가져가 거기서 줄바꿈한다 */}
+          <span className="shrink-0 text-label-lg text-ink">문항 수 {total}문항</span>
+          <span className="text-right text-label-md text-muted-foreground">
             유형별 합계 · 객관식·OX {DEFAULT_QUESTION_SECONDS}초 · 서술형 {DEFAULT_ESSAY_SECONDS}초
           </span>
         </p>

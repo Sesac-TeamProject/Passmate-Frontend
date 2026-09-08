@@ -28,6 +28,14 @@ export type QuestionFormValues = {
   prompt: string;
   /** MCQ에서만 쓴다. 빈 줄은 저장할 때 버린다 */
   choices: string[];
+  /**
+   * MCQ가 고른 정답의 **보기 순번**. 고른 것이 없으면 null.
+   * 원문 대신 순번으로 기억하는 이유: 보기 글자가 겹치면 원문으로는 어느 줄을 고른 건지 가릴 수 없고,
+   * 고른 보기의 글자를 고치는 순간 원문이 어긋나 선택이 풀린다.
+   * 서버로 나갈 때만 `choices[answerIndex]` 원문으로 바꾼다(계약은 보기 원문이다).
+   */
+  answerIndex: number | null;
+  /** OX는 "O"|"X" · 서술형은 모범답안. MCQ는 `answerIndex`를 쓰고 이 값을 보지 않는다 */
   answer: string;
   explanation: string;
   points: number;
@@ -44,6 +52,7 @@ export const EMPTY_QUESTION_FORM: QuestionFormValues = {
   type: "multiple",
   prompt: "",
   choices: ["", ""],
+  answerIndex: null,
   answer: "",
   explanation: "",
   points: DEFAULT_QUESTION_POINTS,
