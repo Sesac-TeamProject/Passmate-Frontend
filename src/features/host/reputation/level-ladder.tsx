@@ -33,8 +33,13 @@ export function LevelLadder({ currentLevel, progress, achievedLabel }: Props) {
         <span className="absolute top-[26px] right-0 left-0 h-1.5 rounded-full bg-line-soft">
           <span className="block h-full rounded-full bg-mint" style={{ width: `${filled}%` }} />
         </span>
+        {/*
+         * 엠블럼(72px)은 이 컨테이너 맨 위에서 시작하므로, 말풍선을 진행선 바로 위에 두면
+         * 진행률이 25% 배수 근처일 때 엠블럼 원에 그대로 올라탄다(Lv.N 0%·100%면 완전히 가려진다).
+         * 높이(22px)만큼 띄워 엠블럼 위쪽 바깥에 세운다 — x는 실제 진행률 그대로 둔다.
+         */}
         <span
-          className="absolute -top-2.5 flex h-5.5 w-[42px] -translate-x-1/2 items-center justify-center rounded-[7px] bg-mint text-label-md text-white"
+          className="absolute -top-7.5 flex h-5.5 w-[42px] -translate-x-1/2 items-center justify-center rounded-[7px] bg-mint text-label-md text-white"
           style={{ left: `${filled}%` }}
         >
           {progress}%
