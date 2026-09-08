@@ -52,6 +52,19 @@ function isUserCancel(code: string | undefined, message: string | undefined): bo
   return /CANCEL/i.test(code ?? "") || /취소/.test(message ?? "");
 }
 
+/** 결제창이 문구를 안 줬을 때의 대체 문구 */
+const FALLBACK_MESSAGE = "결제를 끝내지 못했어요. 잠시 후 다시 시도해 주세요";
+
+/**
+ * 결제창이 준 문구는 `[PAY_PROCESS_CANCELED] 사용자가 결제를 취소하였습니다` 처럼
+ * PG 오류 코드가 앞에 붙어 온다. 문장은 그대로 쓰되 대괄호 코드만 떼고, 원문은 콘솔에 남긴다.
+ */
+function failed(code: "CANCELLED" | "FAILED", raw: string | undefined): PaymentResult {
+  console.warn("[portone] 결제 미완료", code, raw);
+  const message = (raw ?? "").replace(/^\s*\[[A-Z0-9_]+\]\s*/, "").trim();
+  return { ok: false, code, message: message || FALLBACK_MESSAGE };
+}
+
 /**
  * 결제창을 열고 결과를 돌려준다.
  *
@@ -77,20 +90,18 @@ export async function requestPayment(charge: CoinChargeResponse): Promise<Paymen
     });
 
     // 리디렉션으로 빠지면 응답 없이 페이지가 떠난다 — 돌아온 뒤 다시 이어 붙인다
-    if (!response) return { ok: false, code: "FAILED", message: "결제 결과를 받지 못했어요" };
+    if (!response) return failed("FAILED", "결제창 응답 없음");
 
     if (response.code !== undefined) {
-      const message = response.message ?? "결제를 끝내지 못했어요";
-      return isUserCancel(response.code, response.message)
-        ? { ok: false, code: "CANCELLED", message }
-        : { ok: false, code: "FAILED", message };
+      return failed(
+        isUserCancel(response.code, response.message) ? "CANCELLED" : "FAILED",
+        response.message,
+      );
     }
 
     return { ok: true, paymentId: response.paymentId };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "결제를 끝내지 못했어요";
-    return isUserCancel(undefined, message)
-      ? { ok: false, code: "CANCELLED", message }
-      : { ok: false, code: "FAILED", message };
+    const raw = error instanceof Error ? error.message : String(error);
+    return failed(isUserCancel(undefined, raw) ? "CANCELLED" : "FAILED", raw);
   }
 }
