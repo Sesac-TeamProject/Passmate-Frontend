@@ -85,12 +85,18 @@ export default function Page() {
   const needsSet = detail.data.questionSetId === undefined;
   const handleLinkSet = () => {
     if (setIdToLink === "" || linkSet.isPending) return;
+    // PUT 은 전체 교체다 — 세트만 보내면 설명·주제·정원·예약이 지워진다
+    const { description, topic, maxParticipants, scheduledAt } = detail.data;
     linkSet.mutate({
       roomId: detail.data.id,
       body: {
         title: detail.data.title,
         questionSetId: Number(setIdToLink),
         isPublic: detail.data.isPublic,
+        ...(description !== undefined ? { description } : {}),
+        ...(topic !== undefined ? { topic } : {}),
+        ...(maxParticipants !== undefined ? { maxParticipants } : {}),
+        ...(scheduledAt !== undefined ? { scheduledAt } : {}),
       },
     });
   };

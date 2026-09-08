@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { isErrorCode } from "@/features/participant/pay/payment-errors";
+import { ERROR_CODES } from "@/lib/types/error-codes";
 import { toAvatarKey } from "@/components/common/student-avatar";
 import { ScreenError } from "@/components/common/screen-error";
 import { toPopularRooms } from "@/features/home/adapt";
@@ -71,6 +73,11 @@ export default function Page() {
           } else {
             setPaidGuestRoomId(data.room.id);
           }
+        },
+        // 이미 들어와 있는 방이면 다시 등록할 게 없다 — 풀이 화면으로 바로 보낸다
+        onError: (error) => {
+          if (isErrorCode(error, ERROR_CODES.ALREADY_JOINED))
+            router.push(`/play/${joinValues.pin}`);
         },
       },
     );

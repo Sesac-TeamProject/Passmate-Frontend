@@ -37,7 +37,9 @@ export default function Page() {
     logout.mutate(undefined, {
       onSettled: () => {
         setLogoutOpen(false);
-        router.replace("/login");
+        // 로그아웃 뒤에는 서비스 첫 화면으로 — 로그인 창만 뜨면 나간 건지 튕긴 건지 알 수 없다
+        // (시나리오 테스트 "로그아웃 시 리다이렉트", 2026-09-08)
+        router.replace("/");
       },
     });
   };

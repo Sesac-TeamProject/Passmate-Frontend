@@ -178,3 +178,20 @@ export function isStaleFrame(occurredAt: string, snapshotTs: number): boolean {
   if (Number.isNaN(frame)) return false;
   return frame < snapshotTs - STALE_TOLERANCE_MS;
 }
+
+/**
+ * 시각과 무관하게 세션을 **앞으로** 옮기는 프레임인가 — 지금 문항보다 뒤 문항의 시작, 세션 종료.
+ * 이런 프레임은 옛 프레임일 수 없으므로 시계 오차로 버리면 안 된다. 서버 시계가 로컬보다 5초 넘게
+ * 뒤에 있으면 QUESTION_STARTED 가 stale 로 버려져 학생이 이전 문항의 "제출 완료"에 갇혔다
+ * (시나리오 테스트 "시간이 남아 있는데 답을 낼 수 없음", 2026-09-08).
+ */
+export function advancesSession(event: ServerEvent, state: SessionState): boolean {
+  switch (event.type) {
+    case "QUESTION_STARTED":
+      return event.payload.orderNo > (state.currentQuestion?.orderNo ?? 0);
+    case "SESSION_ENDED":
+      return state.phase !== "FINISHED";
+    default:
+      return false;
+  }
+}

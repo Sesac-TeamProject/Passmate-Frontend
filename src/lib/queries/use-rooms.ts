@@ -17,6 +17,7 @@ import {
   getRoomByPin,
   getRoomQuestionTimes,
   joinRoom,
+  rejoinRoom,
   kickParticipant,
   leaveRoom,
   updateRoom,
@@ -270,6 +271,37 @@ export function useJoinRoom(roomId: number | null) {
     },
     onSuccess: ({ roomId }) => {
       queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
+      invalidateRoomCounts(queryClient);
+    },
+  });
+}
+
+/**
+ * "N명 참여 중"을 들고 있는 캐시 전부 — 홈 인기 방·탐색 목록·PIN 미리보기.
+ * 입장 뒤에도 30초(staleTime) 동안 옛 인원이 남아 목록은 2명, 입장 화면은 0명으로 어긋나 보였다
+ * (시나리오 테스트 "세션 버그", 2026-09-08).
+ */
+function invalidateRoomCounts(queryClient: ReturnType<typeof useQueryClient>): void {
+  queryClient.invalidateQueries({ queryKey: ["rooms", "public"] });
+  queryClient.invalidateQueries({ queryKey: ["rooms", "pin"] });
+}
+
+/**
+ * POST /rooms/{roomId}/participants/me/rejoin — 참여한 방 목록에서 PIN 없이 돌아간다.
+ * 응답은 입장과 같은 모양이라 토큰·내 참가자 정보도 같은 자리에 다시 넣는다.
+ */
+export function useRejoinRoom() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (roomId: number) => {
+      const res = await rejoinRoom(roomId);
+      storeJoinResult(roomId, res, res.participant.nickname);
+      return { res, roomId };
+    },
+    onSuccess: ({ roomId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
+      invalidateRoomCounts(queryClient);
     },
   });
 }
@@ -293,6 +325,7 @@ export function useJoinByPin() {
     onSuccess: (data) => {
       if (data.kind === "joined") {
         queryClient.invalidateQueries({ queryKey: qk.participants(data.room.id) });
+        invalidateRoomCounts(queryClient);
       }
     },
   });

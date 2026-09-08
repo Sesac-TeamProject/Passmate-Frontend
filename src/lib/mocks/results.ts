@@ -248,7 +248,7 @@ export function mockSessionResults(): SessionResultsResponse {
     summary: {
       participantCount: participants.length,
       questionCount: SET_QUESTIONS.length,
-      avgCorrectRate: 71,
+      avgCorrectRate: 71.4,
       avgScore: 932,
       aiAnalysisCount: 18,
     },
@@ -261,7 +261,8 @@ export function mockSessionResults(): SessionResultsResponse {
       points: q.points,
       submitCount: participants.length,
       correctCount: Math.round((participants.length * (CORRECT_RATE[q.orderNo] ?? 0)) / 100),
-      correctRate: CORRECT_RATE[q.orderNo] ?? 0,
+      // 서술형은 자동 채점이 없어 서버가 null 을 준다(2026-09-08)
+      correctRate: q.type === "ESSAY" ? null : (CORRECT_RATE[q.orderNo] ?? 0),
       aiAnalysisCount: AI_ANALYSIS_COUNT[q.orderNo] ?? 0,
     })),
     participants,

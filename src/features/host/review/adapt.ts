@@ -43,9 +43,9 @@ export function toSessionReport(dto: SessionResultsResponse): SessionReport {
     index: q.orderNo,
     title: q.content,
     type: QUESTION_TYPE_MAP[q.type],
-    // 서술형은 정답 개념이 없어 정답률 대신 AI 분석 건수를 보여준다.
+    // 서술형은 정답 개념이 없어 정답률 대신 AI 분석 건수를 보여준다(서버도 null 로 준다).
     // 서버는 소수로 준다(16.666…) — 시안은 정수라 반올림해서 담는다
-    accuracy: q.type === "ESSAY" ? undefined : Math.round(q.correctRate),
+    accuracy: q.correctRate === null ? undefined : Math.round(q.correctRate),
     aiCount: q.aiAnalysisCount,
     // 표 "오답" 열 — 낸 사람 중 못 맞힌 수. 계약이 둘 다 주므로 빼서 쓴다
     wrongCount: q.submitCount - q.correctCount,
@@ -58,7 +58,8 @@ export function toSessionReport(dto: SessionResultsResponse): SessionReport {
     title: dto.title,
     dateLabel: toDateLabel(dto.endedAt ?? dto.startedAt),
     stats: {
-      accuracy: Math.round(dto.summary.avgCorrectRate),
+      // 소수점 첫째 자리까지 — 정수로 접으면 33.3% 와 33.4% 가 같아 보인다
+      accuracy: Math.round(dto.summary.avgCorrectRate * 10) / 10,
       students: dto.summary.participantCount,
       questions: dto.summary.questionCount,
       aiAnalyses: dto.summary.aiAnalysisCount,

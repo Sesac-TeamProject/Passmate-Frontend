@@ -48,6 +48,7 @@ export const LIVE_QUESTION: LiveQuestion = {
   points: 100,
   seconds: 30,
   remaining: 23,
+  endsAt: null,
   submitted: 4,
 };
 

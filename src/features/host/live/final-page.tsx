@@ -41,10 +41,12 @@ export function FinalPage({
 }: Props) {
   return (
     <ProjectorShell
+      exitHref="/host/rooms"
       rail={
         <FinalRail summary={summary} accuracyByQuestion={accuracyByQuestion} hardest={hardest} />
       }
       railCollapsed={<FinalRailMini summary={summary} accuracyByQuestion={accuracyByQuestion} />}
+      railLabel="세션 요약"
       top={
         <>
           <QuestionRail current={questionTotal} total={questionTotal} completed />
@@ -59,14 +61,19 @@ export function FinalPage({
             학생 화면에는 자기 순위와 리포트가 열려요
           </p>
           <div className="flex items-center gap-5">
-            {/* TODO(API): 순위 내보내기는 계약이 없다 (DESIGN_GAPS D-8 내보내기) */}
+            {/*
+              순위 내보내기는 아직 계약이 없다(DESIGN_GAPS D-8). 눌러도 아무 일도 없던 버튼이라
+              준비 중임을 밝히고 잠근다 — 방 리포트 화면의 CSV 내보내기는 그대로 쓸 수 있다
+              (시나리오 테스트, 2026-09-08)
+            */}
             <button
               type="button"
               onClick={onExport}
-              disabled={exporting}
+              disabled
+              title="순위 내보내기는 준비 중이에요. 방 리포트에서 CSV로 받을 수 있어요"
               className="h-13 w-44 rounded-2xl border-[1.5px] text-heading-sm font-bold transition-colors hover:bg-muted disabled:opacity-60"
             >
-              {exporting ? <PendingLabel>내보내는 중…</PendingLabel> : "순위 내보내기"}
+              {exporting ? <PendingLabel>내보내는 중…</PendingLabel> : "순위 내보내기 (준비 중)"}
             </button>
             <button
               type="button"

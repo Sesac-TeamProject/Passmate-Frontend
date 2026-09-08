@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -17,6 +18,16 @@ type Props = {
   rail?: ReactNode;
   /** 오른쪽 레일 접힘(72px) 내용. `rail`이 있을 때만 쓴다 */
   railCollapsed?: ReactNode;
+  /** 접기 버튼이 읽어 주는 이름. 화면마다 레일 내용이 달라 부모가 정한다("참여자"·"세션 요약") */
+  railLabel?: string;
+  /**
+   * 헤더 왼쪽 "나가기" 링크의 목적지. 프로젝터 화면에는 나갈 길이 없어 브라우저 뒤로가기에 기대야 했는데,
+   * 뒤로가면 상태 리다이렉트가 다시 이 화면으로 되돌린다. 화면 안에 길을 두는 쪽이 확실하다
+   * (시나리오 테스트 "진행 중인 방·대기실에서 뒤로가기", 2026-09-08).
+   */
+  exitHref?: string;
+  /** 나가기 링크에 쓸 이름. 기본은 호스트 목록 */
+  exitLabel?: string;
 };
 
 /**
@@ -34,7 +45,16 @@ type Props = {
  *
  * 접힘 여부는 서버 상태가 아닌 순수 표시 상태라 껍데기가 직접 들고 있는다.
  */
-export function ProjectorShell({ top, children, bottom, rail, railCollapsed }: Props) {
+export function ProjectorShell({
+  top,
+  children,
+  bottom,
+  rail,
+  railCollapsed,
+  railLabel = "패널",
+  exitHref,
+  exitLabel = "내가 만든 방",
+}: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const hasRail = rail !== undefined;
 
@@ -43,7 +63,16 @@ export function ProjectorShell({ top, children, bottom, rail, railCollapsed }: P
       <div aria-hidden className="absolute inset-x-0 top-0 h-1 bg-mint" />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-20 shrink-0 items-center border-b px-20">
+        <header className="flex h-20 shrink-0 items-center gap-6 border-b px-20">
+          {exitHref && (
+            <Link
+              href={exitHref}
+              className="flex shrink-0 items-center gap-1.5 text-label-lg text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="size-4" />
+              {exitLabel}
+            </Link>
+          )}
           <div className="flex w-full max-w-[1080px] items-center justify-between">{top}</div>
         </header>
 
@@ -68,12 +97,13 @@ export function ProjectorShell({ top, children, bottom, rail, railCollapsed }: P
             type="button"
             onClick={() => setCollapsed((v) => !v)}
             aria-expanded={!collapsed}
-            aria-label={collapsed ? "참여자 레일 펼치기" : "참여자 레일 접기"}
+            aria-label={collapsed ? `${railLabel} 펼치기` : `${railLabel} 접기`}
             className="absolute top-1/2 left-0 z-10 flex h-[72px] w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[14px] border bg-card text-muted-foreground shadow-md transition-colors hover:text-foreground"
           >
             {collapsed ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
           </button>
-          {collapsed ? railCollapsed : rail}
+          {/* 문항이 많으면 막대가 화면 밖으로 넘친다 — 레일 안에서 스크롤한다 */}
+          <div className="h-full overflow-y-auto">{collapsed ? railCollapsed : rail}</div>
         </aside>
       )}
     </div>

@@ -5,7 +5,16 @@ import type {
   SubmissionStatusPayload,
 } from "@/lib/types/dto";
 import type { FinalRankRow } from "./final-page";
-import { pickSubmissionForQuestion, toPodium, toQuestionResult, toTimeLimitLabel } from "./adapt";
+import type { SessionResultsResponse } from "@/lib/types/dto";
+import {
+  pickSubmissionForQuestion,
+  toHardestQuestion,
+  toPodium,
+  toQuestionResult,
+  toReportAccuracy,
+  toSessionSummary,
+  toTimeLimitLabel,
+} from "./adapt";
 
 const OX_QUESTION: QuestionStartedPayload = {
   sessionQuestionId: 32,
@@ -175,5 +184,64 @@ describe("toTimeLimitLabel", () => {
 
   it("세트를 아직 연결하지 않은 방(값이 빠짐)은 칩을 그리지 않는다", () => {
     expect(toTimeLimitLabel({})).toBeNull();
+  });
+});
+
+/** 문항별 정답률만 다른 결과 응답 — 나머지 필드는 화면이 쓰지 않는다 */
+function results(rates: (number | null)[]): SessionResultsResponse {
+  return {
+    roomId: 1,
+    title: "테스트",
+    status: "ENDED",
+    summary: {
+      participantCount: 3,
+      questionCount: rates.length,
+      avgCorrectRate: 100 / 3,
+      avgScore: 0,
+      aiAnalysisCount: 0,
+    },
+    questions: rates.map((correctRate, i) => ({
+      sessionQuestionId: i + 1,
+      questionId: i + 1,
+      orderNo: i + 1,
+      type: correctRate === null ? "ESSAY" : "MCQ",
+      content: `${i + 1}번 문항`,
+      points: 100,
+      submitCount: 3,
+      correctCount: 1,
+      correctRate,
+      aiAnalysisCount: 0,
+    })),
+    participants: [],
+  };
+}
+
+describe("toSessionSummary", () => {
+  it("평균 정답률을 소수점 첫째 자리까지 접는다 — 서버는 33.333…으로 준다", () => {
+    expect(toSessionSummary(results([50]), 3, 1).avgAccuracy).toBe(33.3);
+  });
+
+  it("결과가 아직 없으면 null — 0%로 그리지 않는다", () => {
+    expect(toSessionSummary(undefined, 3, 5).avgAccuracy).toBeNull();
+  });
+});
+
+describe("toReportAccuracy", () => {
+  it("서술형은 막대가 비고(null) 나머지는 정수로 접는다", () => {
+    expect(toReportAccuracy(results([66.66, null, 40]), 3)).toEqual([67, null, 40]);
+  });
+});
+
+describe("toHardestQuestion", () => {
+  it("자동 채점이 없는 서술형은 후보에서 뺀다 — 0%로 취급하면 늘 최난도가 된다", () => {
+    expect(toHardestQuestion(results([80, null, 40]))?.no).toBe(3);
+  });
+
+  it("0%가 여럿이면 앞 문항을 고른다 — 열 때마다 답이 바뀌지 않게", () => {
+    expect(toHardestQuestion(results([50, 0, 0]))?.no).toBe(2);
+  });
+
+  it("채점된 문항이 하나도 없으면 null", () => {
+    expect(toHardestQuestion(results([null, null]))).toBeNull();
   });
 });
