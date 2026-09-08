@@ -43,11 +43,17 @@ export default function Page() {
   const connection = useSessionStore((s) => s.connection);
 
   /**
-   * 대기실 명단은 **폴링**으로 갱신한다 — 서버가 참가자 입·퇴장 이벤트를 발행하지 않는다
-   * (백엔드 질문 B-1). 시작하면 폴링을 끄고 문항 화면이 이벤트로 움직인다.
+   * 대기실 명단은 폴링 + 입·퇴장 이벤트로 갱신한다 — 폴링은 탭이 뒤에 있으면 멈추므로
+   * `PARTICIPANT_JOINED`·`PARTICIPANT_LEFT`로 스토어 명단이 바뀌면 서버 명단을 다시 읽는다.
+   * 시작하면 폴링을 끄고 문항 화면이 이벤트로 움직인다.
    */
   const participantList = useParticipants(roomId, { poll: phase === "WAITING" });
   const participants = participantList.data ?? [];
+  const liveParticipantCount = useSessionStore((s) => s.participants.length);
+  const refetchParticipants = participantList.refetch;
+  useEffect(() => {
+    if (roomId !== null && phase === "WAITING") void refetchParticipants();
+  }, [liveParticipantCount, roomId, phase, refetchParticipants]);
 
   const submitAnswer = useSubmitAnswer(roomId ?? 0);
   // sessionStorage는 서버 렌더에 없다. 렌더 중에 그냥 읽으면 하이드레이션이 어긋나므로
