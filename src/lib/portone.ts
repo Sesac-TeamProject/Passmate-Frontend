@@ -28,16 +28,21 @@ export const PAY_METHOD_LABEL: Record<PayMethod, string> = {
 };
 
 /**
- * 서버 결제 수단 → 포트원 `payMethod` 구분코드.
- * 간편결제 3종은 모두 `EASY_PAY`이고 **어느 간편결제인지는 서버가 준 `channelKey`가 정한다.**
+ * 확정 응답의 서버 수단(`PaymentMethod`) → 화면 표시용 `PayMethod`.
+ * 결제창 안에서 고른 **실제 수단**은 서버가 포트원 조회로 알아내 확정 응답에 실어 준다 —
+ * 완료 화면은 그 값을 이 맵으로 라벨링한다.
  */
-const PORTONE_PAY_METHOD: Record<PaymentMethod, "CARD" | "TRANSFER" | "EASY_PAY"> = {
-  KAKAOPAY: "EASY_PAY",
-  NAVERPAY: "EASY_PAY",
-  TOSSPAY: "EASY_PAY",
-  CARD: "CARD",
-  BANK_TRANSFER: "TRANSFER",
+const PAY_METHOD_BY_WIRE: Record<PaymentMethod, PayMethod> = {
+  KAKAOPAY: "kakaopay",
+  NAVERPAY: "naverpay",
+  TOSSPAY: "tosspay",
+  CARD: "card",
+  BANK_TRANSFER: "transfer",
 };
+
+export function payMethodFromWire(method: PaymentMethod | null | undefined): PayMethod | null {
+  return method ? (PAY_METHOD_BY_WIRE[method] ?? null) : null;
+}
 
 export type PaymentResult =
   { ok: true; paymentId: string } | { ok: false; code: "CANCELLED" | "FAILED"; message: string };
@@ -47,16 +52,26 @@ function isUserCancel(code: string | undefined, message: string | undefined): bo
   return /CANCEL/i.test(code ?? "") || /취소/.test(message ?? "");
 }
 
+/** 결제창이 문구를 안 줬을 때의 대체 문구 */
+const FALLBACK_MESSAGE = "결제를 끝내지 못했어요. 잠시 후 다시 시도해 주세요";
+
+/**
+ * 결제창이 준 문구는 `[PAY_PROCESS_CANCELED] 사용자가 결제를 취소하였습니다` 처럼
+ * PG 오류 코드가 앞에 붙어 온다. 문장은 그대로 쓰되 대괄호 코드만 떼고, 원문은 콘솔에 남긴다.
+ */
+function failed(code: "CANCELLED" | "FAILED", raw: string | undefined): PaymentResult {
+  console.warn("[portone] 결제 미완료", code, raw);
+  const message = (raw ?? "").replace(/^\s*\[[A-Z0-9_]+\]\s*/, "").trim();
+  return { ok: false, code, message: message || FALLBACK_MESSAGE };
+}
+
 /**
  * 결제창을 열고 결과를 돌려준다.
  *
  * @param charge `POST /coins/charges`의 응답 그대로
  * @param method 화면이 고른 결제 수단(서버 전송값). 서버가 채널을 이미 골랐으므로 구분코드만 맞춘다
  */
-export async function requestPayment(
-  charge: CoinChargeResponse,
-  method: PaymentMethod,
-): Promise<PaymentResult> {
+export async function requestPayment(charge: CoinChargeResponse): Promise<PaymentResult> {
   // 목 모드: 띄울 결제창이 없다. 서버가 준 paymentId를 그대로 돌려준다
   if (IS_MOCK) return { ok: true, paymentId: charge.paymentId };
 
@@ -68,24 +83,25 @@ export async function requestPayment(
       orderName: charge.orderName,
       totalAmount: charge.amount,
       currency: "CURRENCY_KRW",
-      payMethod: PORTONE_PAY_METHOD[method],
+      // 화면은 수단을 고르지 않는다 — 토스페이먼츠 일반결제창은 CARD 로 열어도
+      // 간편결제(카카오·네이버·토스)까지 함께 보여주고, 무엇을 골랐는지는
+      // 서버가 확정 때 포트원 조회로 기록한다(2026-09-07 실동작 확인).
+      payMethod: "CARD",
     });
 
     // 리디렉션으로 빠지면 응답 없이 페이지가 떠난다 — 돌아온 뒤 다시 이어 붙인다
-    if (!response) return { ok: false, code: "FAILED", message: "결제 결과를 받지 못했어요" };
+    if (!response) return failed("FAILED", "결제창 응답 없음");
 
     if (response.code !== undefined) {
-      const message = response.message ?? "결제를 끝내지 못했어요";
-      return isUserCancel(response.code, response.message)
-        ? { ok: false, code: "CANCELLED", message }
-        : { ok: false, code: "FAILED", message };
+      return failed(
+        isUserCancel(response.code, response.message) ? "CANCELLED" : "FAILED",
+        response.message,
+      );
     }
 
     return { ok: true, paymentId: response.paymentId };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "결제를 끝내지 못했어요";
-    return isUserCancel(undefined, message)
-      ? { ok: false, code: "CANCELLED", message }
-      : { ok: false, code: "FAILED", message };
+    const raw = error instanceof Error ? error.message : String(error);
+    return failed(isUserCancel(undefined, raw) ? "CANCELLED" : "FAILED", raw);
   }
 }

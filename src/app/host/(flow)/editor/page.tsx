@@ -31,6 +31,7 @@ import {
   useUpdateQuestion,
   useUpdateQuestionSet,
 } from "@/lib/queries/use-question-sets";
+import { useAiQuota } from "@/lib/queries/use-me";
 import type { AiGenerateRequest } from "@/lib/types/dto";
 
 /** 세트를 아직 안 만든 채로 문항부터 추가할 때 붙는 기본 제목 */
@@ -58,6 +59,8 @@ function EditorContainer() {
   }
 
   const questionSet = useQuestionSet(setId);
+  // 패널의 "AI 생성 n회 남음" — 생성·재생성이 성공하면 훅이 알아서 다시 읽는다
+  const aiQuota = useAiQuota();
   const create = useCreateQuestionSet();
   const generate = useGenerateQuestions();
   const confirm = useConfirmQuestionSet();
@@ -181,6 +184,7 @@ function EditorContainer() {
       questions={questions}
       readOnly={readOnly ?? false}
       onGenerate={handleGenerate}
+      aiQuota={aiQuota.data}
       generating={create.isPending || generate.isPending}
       generateError={
         generate.isError

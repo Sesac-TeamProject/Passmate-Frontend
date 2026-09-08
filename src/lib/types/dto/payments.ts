@@ -55,7 +55,7 @@ export type PaymentMethodResponse = { defaultPaymentMethod: PaymentMethod };
 export type CreateChargeRequest = {
   /** 충전할 코인. 1,000 ~ 1,000,000 C */
   amount: number;
-  /** 비우면 기본 결제 수단을 쓴다 */
+  /** (선택·참고값) 실제 기록은 확정 시 서버가 포트원 조회의 수단으로 덮어쓴다 — 화면은 보내지 않는다 */
   method?: PaymentMethod;
   /** 넣으면 confirm이 충전 + 참가비 차감을 한 번에 끝낸다 */
   roomId?: number;
@@ -89,6 +89,8 @@ export type CoinChargeConfirmResponse = {
   amount: number;
   /** 충전(및 참가비 차감)까지 반영된 잔액 */
   balanceAfter: number;
+  /** 실제 결제 수단 — 포트원 조회값. 결제창 안에서 고른 수단이다 */
+  method?: PaymentMethod;
   paidAt?: string;
   /** 요청에 roomId를 실었을 때만. 이어서 처리된 참가비 결제 */
   entryPayment?: EntryPaymentResponse;

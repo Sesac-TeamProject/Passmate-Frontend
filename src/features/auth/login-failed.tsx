@@ -24,7 +24,7 @@ export function LoginFailed({ reason, onRetry }: Props) {
   return (
     <main role="alert" className="flex flex-1 flex-col items-center justify-center gap-6 px-5">
       <div className="flex w-full max-w-[420px] flex-col items-center gap-4 rounded-[20px] border bg-card px-10 pt-9 pb-8">
-        <BrandLogo href="#" className="pointer-events-none" />
+        <BrandLogo />
 
         <span
           aria-hidden

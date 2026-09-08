@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { GradeResponse, MyProfileResponse } from "@/lib/types/dto";
-import { toProfile } from "./adapt";
+import { parseServerDateTime } from "@/lib/datetime";
+import type { CoinTransactionRow, GradeResponse, MyProfileResponse } from "@/lib/types/dto";
+import { toCoinHistory, toCoinSummary, toProfile } from "./adapt";
 
 const ME: MyProfileResponse = {
   id: 5,
@@ -93,5 +94,41 @@ describe("toProfile", () => {
 
     expect(toProfile(ME, top).nextLevel).toBeUndefined();
     expect(toProfile(ME, top).progress).toBeUndefined();
+  });
+});
+
+describe("코인 내역 (C-02-9)", () => {
+  // 서버는 LocalDateTime 을 그대로 준다 — 날짜만 자르는 포맷터에 넣으면 "9/NaN" 이 났다
+  const CHARGE: CoinTransactionRow = {
+    id: 1,
+    type: "CHARGE",
+    amount: 5000,
+    balanceAfter: 5000,
+    refType: "COIN_CHARGE",
+    refId: 15,
+    description: "카카오페이 충전",
+    createdAt: "2026-09-07T07:06:15.475263",
+  };
+
+  it("createdAt 을 로컬 날짜 M/D 로 만든다 — NaN 이 나오지 않는다", () => {
+    const [item] = toCoinHistory([CHARGE]);
+    const expected = parseServerDateTime(CHARGE.createdAt);
+
+    expect(item.dateLabel).toBe(`${expected.getMonth() + 1}/${expected.getDate()}`);
+    expect(item.dateLabel).not.toContain("NaN");
+    expect(item.title).toBe("카카오페이 충전");
+  });
+
+  it("마이페이지 최근 내역 카드도 같은 날짜 규칙을 쓴다", () => {
+    const summary = toCoinSummary({ balance: 5000, lastTransaction: CHARGE });
+
+    expect(summary.lastTransaction?.dateLabel).not.toContain("NaN");
+    expect(summary.lastTransaction?.title).toBe("카카오페이 충전");
+  });
+
+  it("description 이 없으면 종류 이름으로 대신한다", () => {
+    const [item] = toCoinHistory([{ ...CHARGE, type: "ENTRY", amount: -1000, description: undefined }]);
+
+    expect(item.title).toBe("참가비 결제");
   });
 });

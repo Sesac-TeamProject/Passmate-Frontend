@@ -15,6 +15,7 @@ function room(over: Partial<RoomResponse> = {}): RoomResponse {
     type: "PAID",
     fee: 3000,
     hostUserId: 2,
+    host: { userId: 2, nickname: "박선생" },
     participantCount: 4,
     maxParticipants: 30,
     isPublic: true,

@@ -15,10 +15,12 @@ import {
   getPublicRooms,
   getRoom,
   getRoomByPin,
+  getRoomQuestionTimes,
   joinRoom,
   kickParticipant,
   leaveRoom,
   updateRoom,
+  updateRoomQuestionTimes,
 } from "@/lib/api/rooms";
 import { clearGuestToken, writeGuestRecord, writeGuestToken } from "@/lib/guest-token-storage";
 import { readHostRoomId, writeHostRoomId } from "@/lib/host-room-cache";
@@ -29,6 +31,7 @@ import type {
   JoinRoomResponse,
   PublicRoomSearch,
   RoomCreateRequest,
+  RoomQuestionTimesRequest,
   RoomUpdateRequest,
 } from "@/lib/types/dto";
 import { qk } from "./keys";
@@ -96,6 +99,18 @@ export function useRoom(roomId: number | null) {
   return useQuery({
     queryKey: qk.room(roomId ?? 0),
     queryFn: () => getRoom(roomId as number),
+    enabled: roomId !== null,
+  });
+}
+
+/**
+ * GET /rooms/{roomId}/question-times — W-02b. 세트가 안 붙은 방은 서버가 409로 답하므로
+ * 호출부가 방 상세의 `questionSetId`를 보고 `null`을 넘겨 부르지 않는다.
+ */
+export function useRoomQuestionTimes(roomId: number | null) {
+  return useQuery({
+    queryKey: qk.questionTimes(roomId ?? 0),
+    queryFn: () => getRoomQuestionTimes(roomId as number),
     enabled: roomId !== null,
   });
 }
@@ -185,6 +200,26 @@ export function useUpdateRoom() {
     onSuccess: (_data, { roomId }) => {
       queryClient.invalidateQueries({ queryKey: qk.room(roomId) });
       queryClient.invalidateQueries({ queryKey: qk.hostedRooms });
+      // 세트를 바꾸면 서버가 문항별 시간 오버라이드를 비운다 — 낡은 문항 목록이 남지 않게
+      queryClient.invalidateQueries({ queryKey: qk.questionTimes(roomId) });
+    },
+  });
+}
+
+/**
+ * PUT /rooms/{roomId}/question-times — 전체 교체, WAITING일 때만.
+ * 응답이 조회와 같은 모양이라 다시 읽지 않고 캐시에 바로 넣는다 — 저장 직후 옛 값이 깜빡이지 않는다.
+ */
+export function useUpdateRoomQuestionTimes() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ roomId, body }: { roomId: number; body: RoomQuestionTimesRequest }) =>
+      updateRoomQuestionTimes(roomId, body),
+    onSuccess: (data, { roomId }) => {
+      queryClient.setQueryData(qk.questionTimes(roomId), data);
+      // 방 상세의 예상 소요 시간도 오버라이드를 반영한다
+      queryClient.invalidateQueries({ queryKey: qk.room(roomId) });
     },
   });
 }

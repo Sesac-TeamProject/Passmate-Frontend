@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useId, useState, type ChangeEvent, type FormEvent } from "react";
+import { writeNewRoomDraft } from "@/lib/new-room-draft";
 import type { RoomCreateRequest } from "@/lib/types/dto";
 import {
   DEFAULT_ENTRY_FEE,
@@ -14,6 +15,13 @@ import { ReputationRow } from "./reputation-row";
 import { RoomTypeTabs, type RoomType } from "./room-type-tabs";
 import { SettlementPreview } from "./settlement-preview";
 import { PendingLabel } from "@/components/common/pending-label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /** 다시 그릴 때 복원할 입력값. W-02e에서 "설정으로 돌아가기"로 돌아올 때 쓴다 */
 export type NewRoomInitialValues = {
@@ -35,6 +43,8 @@ type Props = {
   editorHref: string;
   /** 없으면 빈 폼으로 시작한다 */
   initialValues?: NewRoomInitialValues;
+  /** 에디터에서 방금 확정한 세트(`?set=`). 임시 보관값보다 이 값이 이긴다 */
+  preferredSetId?: string;
 };
 
 const FIELD = "h-[54px] w-[440px] rounded-2xl bg-muted px-[18px]";
@@ -49,11 +59,29 @@ export function NewRoomForm({
   errorMessage,
   editorHref,
   initialValues,
+  preferredSetId,
 }: Props) {
+  const setFieldId = useId();
   const [name, setName] = useState(initialValues?.title ?? "");
-  const [setId, setSetId] = useState(initialValues?.setId ?? sets[0]?.id ?? "");
+  const [setId, setSetId] = useState(initialValues?.setId ?? preferredSetId ?? sets[0]?.id ?? "");
   const [roomType, setRoomType] = useState<RoomType>(initialValues?.roomType ?? "free");
   const [fee, setFee] = useState(initialValues?.fee ?? DEFAULT_ENTRY_FEE);
+
+  /**
+   * 에디터를 다녀오면 이 화면은 새로 그려진다 — 적어 둔 값을 탭에 남겨 둔다.
+   * 되살리는 쪽은 컨테이너가 맡는다(`initialValues`) — 여기서는 쓰기만 한다.
+   * 빈 폼은 저장하지 않는다: 되살리기 전에 한 번 쓰면 남아 있던 값을 빈 값으로 덮는다.
+   */
+  useEffect(() => {
+    if (name.trim() === "") return;
+    writeNewRoomDraft({ title: name, setId, roomType, fee });
+  }, [name, setId, roomType, fee]);
+
+  // 확정 세트가 하나도 없으면 고를 것이 없다 — 셀렉트를 잠그고 제출도 막는다.
+  // 서버는 세트 없는 방을 만들어 주지만(대기실에서 연결 가능) 빈 셀렉트를 눌러 봐야
+  // 아무 것도 안 뜨는 화면이 되고, 만들어진 방은 대기실에서 다시 세트를 붙여야 한다.
+  const hasSets = sets.length > 0;
+  const setItems = sets.map((s) => ({ value: s.id, label: `${s.title} — ${s.questionCount}문항` }));
 
   // 서버가 등급을 못 준 경우(조회 실패)는 잠그지 않는다 — 없는 Lv.1을 지어내는 대신
   // 서버의 403 HOST_LEVEL_REQUIRED가 판정하게 둔다.
@@ -103,29 +131,43 @@ export function NewRoomForm({
         />
       </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="text-label-lg text-muted-foreground">문제 세트</span>
-        <span className="relative block w-[440px]">
-          <select
-            name="set"
-            value={setId}
-            onChange={(e) => setSetId(e.target.value)}
-            className={`${FIELD} ${FOCUS} w-full appearance-none pr-11 text-heading-sm text-ink`}
+      <div className="flex flex-col gap-2">
+        <label htmlFor={setFieldId} className="text-label-lg text-muted-foreground">
+          문제 세트
+        </label>
+        <Select
+          items={setItems}
+          // 고른 값이 없을 때는 null이어야 placeholder가 나온다(빈 문자열은 값으로 친다)
+          value={setId || null}
+          onValueChange={(value) => setSetId(value ?? "")}
+          disabled={!hasSets}
+        >
+          {/* 시안의 ▾를 그대로 쓰려고 컴포넌트가 그리는 아이콘은 감춘다 */}
+          <SelectTrigger
+            id={setFieldId}
+            className={`${FIELD} ${FOCUS} justify-between border-0 text-heading-sm text-ink disabled:cursor-not-allowed disabled:opacity-60 data-[size=default]:h-[54px] [&_svg]:hidden`}
           >
-            {sets.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.title} — {s.questionCount}문항
-              </option>
+            <SelectValue placeholder="확정한 세트가 없어요" />
+            <span
+              aria-hidden
+              className={`text-label-lg ${hasSets ? "text-mint-dark" : "text-muted-foreground"}`}
+            >
+              ▾
+            </span>
+          </SelectTrigger>
+          {/*
+            목록은 트리거 바로 아래에 순서대로 편다. 기본값(alignItemWithTrigger)은 고른 항목을
+            트리거 위에 겹쳐 띄우는 네이티브 셀렉트 동작이라 화면이 덜컹거려 보인다.
+          */}
+          <SelectContent side="bottom" align="start" alignItemWithTrigger={false}>
+            {setItems.map((item) => (
+              <SelectItem key={item.value} value={item.value} className="text-body-md">
+                {item.label}
+              </SelectItem>
             ))}
-          </select>
-          <span
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 right-[18px] -translate-y-1/2 text-label-lg text-mint-dark"
-          >
-            ▾
-          </span>
-        </span>
-      </label>
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="flex flex-col gap-2">
         <span className="text-label-lg text-muted-foreground">방 유형</span>
@@ -172,8 +214,8 @@ export function NewRoomForm({
 
       <button
         type="submit"
-        disabled={pending}
-        className="flex h-14 w-[440px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
+        disabled={pending || !setId}
+        className="flex h-14 w-[440px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? <PendingLabel>방 만드는 중…</PendingLabel> : "방 만들기 → PIN 발급"}
       </button>

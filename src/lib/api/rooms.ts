@@ -8,6 +8,8 @@ import type {
   PublicRoomResponse,
   PublicRoomSearch,
   RoomCreateRequest,
+  RoomQuestionTimesRequest,
+  RoomQuestionTimesResponse,
   RoomResponse,
   RoomSummaryResponse,
   RoomUpdateRequest,
@@ -35,6 +37,28 @@ export function getRoom(roomId: number): Promise<RoomResponse> {
 /** PUT /rooms/{roomId} — WAITING일 때만. 세트 연결·정원·공개 여부를 고친다 */
 export function updateRoom(roomId: number, body: RoomUpdateRequest): Promise<RoomResponse> {
   return request<RoomResponse>(`/rooms/${roomId}`, { method: "PUT", body });
+}
+
+/**
+ * GET /rooms/{roomId}/question-times — 세트 문항 + 이 방에서 덮어쓴 제한시간·자동 넘김. 호스트만.
+ * 세트를 아직 연결하지 않았으면 409 `QUESTION_SET_REQUIRED`.
+ */
+export function getRoomQuestionTimes(roomId: number): Promise<RoomQuestionTimesResponse> {
+  return request<RoomQuestionTimesResponse>(`/rooms/${roomId}/question-times`);
+}
+
+/**
+ * PUT /rooms/{roomId}/question-times — **전체 교체**, WAITING일 때만(409 `CONFLICT`).
+ * 확정 세트는 그대로 두고 이 방에서만 덮어쓴다 — 세트 문항 수정(409)이 아니라 이쪽을 부른다.
+ */
+export function updateRoomQuestionTimes(
+  roomId: number,
+  body: RoomQuestionTimesRequest,
+): Promise<RoomQuestionTimesResponse> {
+  return request<RoomQuestionTimesResponse>(`/rooms/${roomId}/question-times`, {
+    method: "PUT",
+    body,
+  });
 }
 
 /** POST /rooms/{roomId}/close — WAITING이면 CANCELED, RUNNING이면 ENDED */

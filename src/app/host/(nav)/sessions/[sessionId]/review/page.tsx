@@ -8,6 +8,7 @@ import {
   toQuestionInsights,
   toReportStudents,
   toReviewProgressLabel,
+  toRankRows,
   toReviewSaveMessage,
   toSessionReport,
 } from "@/features/host/review/adapt";
@@ -81,6 +82,7 @@ export default function Page() {
     <>
       <ReviewPage
         report={toSessionReport(report.data)}
+        rankRows={toRankRows(report.data.participants)}
         selectedQuestionId={selectedQuestionId}
         onSelectQuestion={setSelectedQuestionId}
         insight={toQuestionInsights().get(selectedQuestionId ?? "") ?? null}

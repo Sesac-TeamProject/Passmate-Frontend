@@ -6,6 +6,10 @@ export type MyRoom = {
   code: string;
   title: string;
   status: MyRoomStatus;
+  /** 진행 중 — 아직 시작 전(WAITING)이면 대기실로, 시작했으면(RUNNING) 진행 화면으로 연다 */
+  phase?: "WAITING" | "RUNNING";
+  /** 종료 — 시작 전에 닫은 방. 배지가 "취소"로 바뀌고 리포트가 없다 */
+  canceled?: boolean;
   /** 참여 학생 수 (진행 중: 현재, 종료: 총) */
   students: number;
   /** 계약에 방별 문항 수가 없다 — 값이 있을 때만 카드에 칩으로 보여준다 */

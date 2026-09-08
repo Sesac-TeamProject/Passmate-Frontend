@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ROOM_LIST_ID } from "./adapt";
 import { HubActions, type HubAction } from "./hub-actions";
 import { HubSummary, type HubStat } from "./hub-summary";
 import { ReputationCard } from "./reputation-card";
@@ -40,7 +41,8 @@ export function MyRoomsPage({ rooms, totalStudents, level, levelSubtitle, stats,
           <HubActions actions={actions} />
         </div>
 
-        <section className="flex flex-col gap-2">
+        {/* 행동 카드가 방을 하나로 고를 수 없을 때(2개 이상) 이 섹션으로 내려보낸다 — id 는 adapt 의 ROOM_LIST_ID */}
+        <section id={ROOM_LIST_ID} className="flex scroll-mt-6 flex-col gap-2">
           <div className="flex items-baseline gap-2.5">
             <h2 className="text-label-lg text-ink">내 방</h2>
             <span className="text-label-md text-ink-disabled">{rooms.length}</span>

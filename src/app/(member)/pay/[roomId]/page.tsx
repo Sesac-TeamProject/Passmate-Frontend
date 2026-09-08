@@ -5,12 +5,7 @@ import { useRouter } from "next/navigation";
 import { toAvatarKey } from "@/components/common/student-avatar";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
-import {
-  toPaidRoom,
-  toPayErrorMessage,
-  toPayGate,
-  wireMethodFromPayMethod,
-} from "@/features/participant/pay/adapt";
+import { toPaidRoom, toPayErrorMessage, toPayGate } from "@/features/participant/pay/adapt";
 import type { PaymentReceipt } from "@/features/participant/pay/payment-complete-card";
 import { PayFailed } from "@/features/participant/pay/pay-failed";
 import { PayPage, type PayFormValues, type PayStep } from "@/features/participant/pay/pay-page";
@@ -22,7 +17,7 @@ import {
   writePendingPayment,
   type PendingPayment,
 } from "@/lib/pending-payment";
-import { requestPayment } from "@/lib/portone";
+import { payMethodFromWire, requestPayment, type PayMethod } from "@/lib/portone";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 import {
   useCoinBalance,
@@ -37,7 +32,6 @@ const INITIAL_VALUES: PayFormValues = {
   nickname: "",
   avatar: "cat",
   chargeAmount: CHARGE_OPTIONS[0],
-  payMethod: "kakaopay",
   agreed: false,
 };
 
@@ -76,7 +70,8 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
     paymentNo: string;
     balance?: number;
     chargeAmount: number;
-    payMethod: PayFormValues["payMethod"];
+    /** 실제로 쓴 수단(확정 응답의 포트원 조회값). 충전 없이 차감만 했으면 null */
+    payMethod: PayMethod | null;
   } | null>(null);
   // 위 state는 새로고침하면 사라진다 — 단계별 진행 상태는 sessionStorage에도 남겨 재시도가 이미 낸 돈을 또 내지 않게 한다.
   const [pending, setPending] = useState<PendingPayment | null>(null);
@@ -166,6 +161,7 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
       paymentNo: string;
       chargeAmount: number;
       remaining: number;
+      payMethod: PayMethod | null;
     }) => {
       await joinRoom.mutateAsync({ nickname, avatarId });
       forgetPending(roomId);
@@ -174,7 +170,7 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
         roomCode: paidRoom.code,
         roomTitle: paidRoom.title,
         chargeAmount: receiptValues.chargeAmount,
-        payMethod: values.payMethod,
+        payMethod: receiptValues.payMethod,
         deducted: paidRoom.fee,
         remaining: receiptValues.remaining,
       });
@@ -188,6 +184,7 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
           paymentNo: paid?.paymentNo ?? "",
           chargeAmount: paid?.chargeAmount ?? 0,
           remaining: paid?.balance ?? balance,
+          payMethod: paid?.payMethod ?? null,
         });
         return;
       }
@@ -202,19 +199,20 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
             paymentNo: entryRes.paymentNo,
             balance: entryRes.balanceAfter,
             chargeAmount: 0,
-            payMethod: values.payMethod,
+            payMethod: null,
           });
           await finish({
             paymentNo: entryRes.paymentNo,
             chargeAmount: 0,
             remaining: entryRes.balanceAfter,
+            payMethod: null,
           });
           return;
         } catch (err) {
           // 같은 방에 살아 있는 결제가 이미 있다 — 결제를 건너뛰고 바로 입장한다.
           if (isErrorCode(err, ERROR_CODES.ALREADY_PAID)) {
             savePending({ roomId, entryPaid: true });
-            await finish({ paymentNo: "", chargeAmount: 0, remaining: balance });
+            await finish({ paymentNo: "", chargeAmount: 0, remaining: balance, payMethod: null });
             return;
           }
           // 잔액이 실제로는 모자랐다 — 서버가 알려준 부족분만큼 충전 화면으로 되돌린다.
@@ -236,7 +234,6 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
         // roomId를 실어 보내면 confirm 한 번이 충전 + 참가비 차감까지 끝낸다.
         const charge = await createCharge.mutateAsync({
           amount: values.chargeAmount,
-          method: wireMethodFromPayMethod(values.payMethod),
           roomId,
         });
 
@@ -244,12 +241,12 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
         chargeAmount = charge.amount;
         savePending({ roomId, chargeId, entryPaid: false });
 
-        const payResult = await requestPayment(charge, wireMethodFromPayMethod(values.payMethod));
+        const payResult = await requestPayment(charge);
 
         if (!payResult.ok) {
           // 취소는 되돌아온 것이지 실패가 아니다 — 화면을 갈아 끼우지 않고 폼 위에 한 줄만 남긴다.
           if (payResult.code === "CANCELLED") {
-            setError("결제가 취소됐어요 — 다시 시도해 주세요");
+            setError(payResult.message);
           } else {
             setFailure({ message: payResult.message, amount: chargeAmount });
           }
@@ -274,6 +271,9 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
         remaining = entryRes.balanceAfter;
       }
 
+      // 결제창 안에서 실제로 고른 수단 — 서버가 포트원 조회로 알아내 확정 응답에 실어 준다
+      const usedMethod = payMethodFromWire(confirmRes.method);
+
       // 참가비 차감이 끝났다 — joinRoom이 실패해도 재시도가 다시 차감하지 않도록 방 단위로 기억해 둔다.
       savePending({ roomId, chargeId, paymentId, entryPaid: true });
       setPaidReceipt({
@@ -281,10 +281,10 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
         paymentNo,
         balance: remaining,
         chargeAmount,
-        payMethod: values.payMethod,
+        payMethod: usedMethod,
       });
 
-      await finish({ paymentNo, chargeAmount, remaining });
+      await finish({ paymentNo, chargeAmount, remaining, payMethod: usedMethod });
     } catch (err) {
       setFailure({
         message: toPayErrorMessage(err),
@@ -299,7 +299,6 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
       <PayFailed
         message={failure.message}
         amount={failure.amount}
-        payMethod={values.payMethod}
         onRetry={handleSubmit}
         onChangeMethod={() => setFailure(null)}
         retrying={step === "paying"}
