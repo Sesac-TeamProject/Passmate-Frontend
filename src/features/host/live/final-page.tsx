@@ -41,6 +41,7 @@ export function FinalPage({
 }: Props) {
   return (
     <ProjectorShell
+      exitHref="/host/rooms"
       rail={
         <FinalRail summary={summary} accuracyByQuestion={accuracyByQuestion} hardest={hardest} />
       }

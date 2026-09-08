@@ -75,6 +75,7 @@ export function ResultPage({
 
   return (
     <ProjectorShell
+      exitHref="/host/rooms"
       rail={
         <ResultRail
           rows={rows}

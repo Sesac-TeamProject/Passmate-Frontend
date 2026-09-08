@@ -119,6 +119,7 @@ export function LobbyPage({
 
   return (
     <ProjectorShell
+      exitHref="/host/rooms"
       rail={<LobbyRail students={students} onKick={onKick} kickingId={kickingId} />}
       railCollapsed={<LobbyRailMini students={students} />}
       railLabel="참여자"
