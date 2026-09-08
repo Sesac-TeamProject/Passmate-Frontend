@@ -167,8 +167,10 @@ export function toSessionSummary(
   studentCount: number,
   questionCount: number,
 ): SessionSummary {
+  const avg = results?.summary.avgCorrectRate;
   return {
-    avgAccuracy: results?.summary.avgCorrectRate ?? null,
+    // 서버는 66.666…처럼 소수로 준다 — 화면은 소수점 첫째 자리까지만 보인다
+    avgAccuracy: avg === undefined ? null : Math.round(avg * 10) / 10,
     studentCount: results?.summary.participantCount ?? studentCount,
     minutes: null,
     questionCount: results?.summary.questionCount ?? questionCount,
@@ -180,19 +182,30 @@ export function toReportAccuracy(
   results: SessionResultsResponse | undefined,
   questionCount: number,
 ): (number | null)[] {
-  const byNo = new Map((results?.questions ?? []).map((q) => [q.orderNo, q.correctRate]));
+  const byNo = new Map(
+    (results?.questions ?? []).map((q) => [
+      q.orderNo,
+      q.correctRate === null ? null : Math.round(q.correctRate),
+    ]),
+  );
   return Array.from({ length: questionCount }, (_, i) => byNo.get(i + 1) ?? null);
 }
 
-/** 정답률이 가장 낮은 문항. 결과가 없으면 null */
+/**
+ * 정답률이 가장 낮은 문항. 자동 채점이 없는 서술형(correctRate = null)은 후보에서 빼고,
+ * 동률이면 **앞 문항**을 고른다 — 0%가 여럿일 때 어느 것이 뽑힐지 정해 두지 않으면
+ * 같은 세션을 다시 열 때마다 다른 문항이 나온다(시나리오 테스트, 2026-09-08).
+ */
 export function toHardestQuestion(
   results: SessionResultsResponse | undefined,
 ): HardestQuestion | null {
-  const questions = results?.questions ?? [];
-  if (questions.length === 0) return null;
+  const graded = (results?.questions ?? []).filter(
+    (q): q is typeof q & { correctRate: number } => q.correctRate !== null,
+  );
+  if (graded.length === 0) return null;
 
-  const worst = questions.reduce((a, b) => (b.correctRate < a.correctRate ? b : a));
-  return { no: worst.orderNo, accuracy: worst.correctRate, title: worst.content };
+  const worst = graded.reduce((a, b) => (b.correctRate < a.correctRate ? b : a));
+  return { no: worst.orderNo, accuracy: Math.round(worst.correctRate), title: worst.content };
 }
 
 /**

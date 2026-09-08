@@ -144,7 +144,8 @@ export type QuestionResultRow = {
   points: number;
   submitCount: number;
   correctCount: number;
-  correctRate: number;
+  /** 정답률(%). 분모는 참가자 전원. 서술형은 자동 채점이 없어 null */
+  correctRate: number | null;
   aiAnalysisCount: number;
 };
 
