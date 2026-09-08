@@ -15,7 +15,7 @@ const TYPE: Record<WireQuestionType, QuestionType> = {
 };
 
 /** 저장 전 편집분 — 문항 id → 바꾼 값. 없는 필드는 서버 값 그대로다 */
-export type TimingEdit = { timeLimitSec?: number };
+export type TimingEdit = { timeLimitSec?: number; autoAdvance?: boolean };
 export type TimingEdits = Record<number, TimingEdit>;
 
 /** 문항 하나의 "지금 화면에 보이는 값" — 편집분이 있으면 그쪽, 없으면 서버가 준 방 값 */
@@ -23,7 +23,7 @@ function effective(q: RoomQuestionTimeView, edits: TimingEdits) {
   const edit = edits[q.questionId];
   return {
     timeLimitSec: edit?.timeLimitSec ?? q.timeLimitSec,
-    autoAdvance: q.autoAdvance,
+    autoAdvance: edit?.autoAdvance ?? q.autoAdvance,
   };
 }
 
@@ -49,8 +49,8 @@ export function hasTimingChanges(questions: RoomQuestionTimeView[], edits: Timin
 /**
  * `PUT /rooms/{roomId}/question-times` 본문. **전체 교체**라 바뀐 문항만이 아니라 이 방이
  * 덮어쓸 문항 전부를 싣는다 — 세트 기본값 그대로이고 자동 넘김도 꺼진 문항은 뺀다(본문에 없는
- * 문항은 서버가 기본값으로 돌린다). 자동 넘김은 서버 값을 그대로 다시 싣는다 — 빼먹으면 켜 둔
- * 문항이 꺼진다.
+ * 문항은 서버가 기본값으로 돌린다). 손대지 않은 문항의 자동 넘김도 서버 값 그대로 다시 싣는다 —
+ * 빼먹으면 켜 둔 문항이 꺼진다.
  */
 export function toQuestionTimesRequest(
   questions: RoomQuestionTimeView[],

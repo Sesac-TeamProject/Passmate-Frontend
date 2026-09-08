@@ -105,6 +105,9 @@ export default function Page() {
       onChangeTime={(id, sec) =>
         setEdits((prev) => ({ ...prev, [id]: { ...prev[id], timeLimitSec: sec } }))
       }
+      onChangeAutoAdvance={(id, on) =>
+        setEdits((prev) => ({ ...prev, [id]: { ...prev[id], autoAdvance: on } }))
+      }
       onSave={save}
       saving={updateQuestionTimes.isPending}
       errorMessage={saveError}

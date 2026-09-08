@@ -68,6 +68,17 @@ describe("toQuestionTimesRequest", () => {
       autoAdvance: true,
     });
   });
+
+  it("자동 넘김만 켠 문항은 기본 시간 그대로 실리고, 끈 문항은 기본 시간이면 본문에서 빠진다", () => {
+    const { times } = toQuestionTimesRequest(QUESTIONS, {
+      1: { autoAdvance: true },
+      3: { autoAdvance: false },
+    });
+    expect(times).toEqual([
+      { questionId: 1, timeLimitSec: 30, autoAdvance: true },
+      { questionId: 2, timeLimitSec: 120, autoAdvance: false },
+    ]);
+  });
 });
 
 describe("hasTimingChanges", () => {
@@ -75,6 +86,8 @@ describe("hasTimingChanges", () => {
     expect(hasTimingChanges(QUESTIONS, {})).toBe(false);
     expect(hasTimingChanges(QUESTIONS, { 2: { timeLimitSec: 120 } })).toBe(false);
     expect(hasTimingChanges(QUESTIONS, { 2: { timeLimitSec: 90 } })).toBe(true);
+    expect(hasTimingChanges(QUESTIONS, { 3: { autoAdvance: true } })).toBe(false);
+    expect(hasTimingChanges(QUESTIONS, { 3: { autoAdvance: false } })).toBe(true);
   });
 });
 
