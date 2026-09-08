@@ -55,6 +55,7 @@ export const DEMO_ROOM: RoomResponse = {
   fee: 10000,
   questionSetId: 1,
   hostUserId: 42,
+  host: { userId: 42, nickname: "김선생" },
   maxParticipants: 40,
   participantCount: 24,
   isPublic: true,

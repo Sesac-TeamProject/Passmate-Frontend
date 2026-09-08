@@ -59,6 +59,28 @@ function findRoom(roomId: string): RoomResponse {
 }
 
 /**
+ * 서버처럼 세트 요약(문항 수·예상 소요·제한시간 범위)을 응답 시점에 계산해 얹는다 —
+ * 방이 덮어쓴 문항별 시간이 있으면 그쪽 값으로 센다. 세트가 없으면 네 필드가 빠진다.
+ */
+function withSetSummary(room: RoomResponse): RoomResponse {
+  if (room.questionSetId === undefined) return room;
+  const overrides = new Map(
+    (questionTimes.get(room.id) ?? []).map((t) => [t.questionId, t.timeLimitSec]),
+  );
+  const seconds = findSetQuestions(room.questionSetId).map(
+    (q) => overrides.get(q.id) ?? q.timeLimitSec,
+  );
+  if (seconds.length === 0) return room;
+  return {
+    ...room,
+    questionCount: seconds.length,
+    estimatedSeconds: seconds.reduce((sum, s) => sum + s, 0),
+    minTimeLimitSec: Math.min(...seconds),
+    maxTimeLimitSec: Math.max(...seconds),
+  };
+}
+
+/**
  * GET /rooms/pin/{pin} — 인증 불필요. **입장 전에는 많이 알려주지 않는다**:
  * PIN·호스트·문항 수는 응답에 없다. 없는 PIN·끝난 방 모두 404 `ROOM_NOT_FOUND`(410이 아니다).
  */
@@ -123,6 +145,7 @@ export function mockCreateRoom(body: RoomCreateRequest): RoomResponse {
     ...(isPaid && body.fee != null ? { fee: body.fee } : {}),
     ...(body.questionSetId ? { questionSetId: body.questionSetId } : {}),
     hostUserId: currentProfile().id,
+    host: { userId: currentProfile().id, nickname: currentProfile().nickname },
     ...(body.maxParticipants ? { maxParticipants: body.maxParticipants } : {}),
     participantCount: 0,
     isPublic: body.isPublic ?? false,
@@ -148,12 +171,12 @@ export function mockCreateRoom(body: RoomCreateRequest): RoomResponse {
     ],
   };
 
-  return room;
+  return withSetSummary(room);
 }
 
-/** GET /rooms/{roomId} — 호스트용 방 상세 */
+/** GET /rooms/{roomId} — 호스트용 방 상세. 세트 요약은 응답 시점에 계산한다 */
 export function mockRoom(roomId: string): RoomResponse {
-  return { ...findRoom(roomId) };
+  return withSetSummary(findRoom(roomId));
 }
 
 /** PUT /rooms/{roomId} — WAITING일 때만 */
@@ -177,7 +200,7 @@ export function mockUpdateRoom(roomId: string, body: RoomUpdateRequest): RoomRes
   if (body.questionSetId !== undefined && body.questionSetId !== room.questionSetId) {
     questionTimes.delete(room.id);
   }
-  return updated;
+  return withSetSummary(updated);
 }
 
 /**
@@ -239,7 +262,7 @@ export function mockCloseRoom(roomId: string): RoomResponse {
     endedAt: new Date().toISOString().slice(0, 19),
   };
   rooms = rooms.map((r) => (r.id === room.id ? closed : r));
-  return closed;
+  return withSetSummary(closed);
 }
 
 /** GET /users/me/rooms/hosted — 페이지 없이 명성 요약 + 진행 중·종료 방 */

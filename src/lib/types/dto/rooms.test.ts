@@ -7,6 +7,7 @@ import {
   mockParticipants,
   mockPublicRooms,
   mockQuestionTimes,
+  mockRoom,
   mockRoomByPin,
   mockUpdateQuestionTimes,
 } from "@/lib/mocks/rooms";
@@ -23,6 +24,7 @@ const ROOM_REQUIRED = [
   "status",
   "type",
   "hostUserId",
+  "host",
   "participantCount",
   "isPublic",
   "screenLocked",
@@ -33,6 +35,10 @@ const ROOM_OPTIONAL = [
   "topic",
   "fee",
   "questionSetId",
+  "questionCount",
+  "estimatedSeconds",
+  "minTimeLimitSec",
+  "maxTimeLimitSec",
   "maxParticipants",
   "scheduledAt",
   "startedAt",
@@ -48,6 +54,33 @@ describe("rooms 계약", () => {
     // 기본값: FREE·비공개. 서버 RoomCreateRequest의 default와 같다
     expect(room.type).toBe("FREE");
     expect(room.isPublic).toBe(false);
+  });
+
+  it("호스트용 방 상세에는 호스트 이름과 세트 요약(문항 수·소요 시간·제한시간 범위)이 있다 (B-21)", () => {
+    const room = mockRoom("1");
+
+    expectContract(room.host, ["userId", "nickname"]);
+    expect(room.questionCount).toBeGreaterThan(0);
+    expect(room.minTimeLimitSec).toBeLessThanOrEqual(room.maxTimeLimitSec as number);
+    // 세트가 없는 방은 네 필드가 통째로 빠진다 — 0으로 채우면 "0문항"이 된다
+    const noSet = mockCreateRoom({ title: "세트 없는 방" });
+    expect(noSet).not.toHaveProperty("questionCount");
+    expect(noSet).not.toHaveProperty("estimatedSeconds");
+  });
+
+  it("방이 덮어쓴 문항별 시간이 상세의 소요 시간·제한시간 범위에 반영된다", () => {
+    const before = mockRoom("1");
+    const [first] = mockQuestionTimes("1").questions;
+    mockUpdateQuestionTimes("1", {
+      times: [{ questionId: first.questionId, timeLimitSec: 600 }],
+    });
+
+    const after = mockRoom("1");
+    expect(after.maxTimeLimitSec).toBe(600);
+    expect(after.estimatedSeconds).toBe(
+      (before.estimatedSeconds as number) - first.defaultTimeLimitSec + 600,
+    );
+    mockUpdateQuestionTimes("1", { times: [] });
   });
 
   it("PIN은 6자리 숫자다", () => {

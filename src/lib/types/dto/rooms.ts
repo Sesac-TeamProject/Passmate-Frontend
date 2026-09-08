@@ -54,7 +54,17 @@ export type RoomResponse = {
   type: RoomType;
   fee?: number;
   questionSetId?: number;
+  /** 연결한 세트의 문항 수. 세트를 아직 연결하지 않았으면 빠진다 */
+  questionCount?: number;
+  /** 이 방 기준 예상 소요 시간(초, 문항 제한시간 합 — 방이 덮어쓴 시간 반영). 세트가 없으면 빠진다 */
+  estimatedSeconds?: number;
+  /** 문항 제한시간의 최소(초). 전부 같으면 max와 같다. 방이 덮어쓴 시간 반영 */
+  minTimeLimitSec?: number;
+  /** 문항 제한시간의 최대(초). 방이 덮어쓴 시간 반영 */
+  maxTimeLimitSec?: number;
   hostUserId: number;
+  /** 호스트 — 대기실 머리말의 선생님 이름. 공개 방 카드와 같은 모양(2026-09-07, B-21) */
+  host: PublicRoomHostResponse;
   maxParticipants?: number;
   participantCount: number;
   isPublic: boolean;
