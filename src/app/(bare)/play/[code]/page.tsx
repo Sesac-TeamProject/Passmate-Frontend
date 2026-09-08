@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ReconnectingBanner } from "@/components/common/reconnecting-banner";
 import { ScreenError } from "@/components/common/screen-error";
+import { AppError } from "@/lib/types/app-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
 import { toLiveQuestion } from "@/features/participant/play/adapt";
@@ -36,16 +37,23 @@ export default function Page() {
   const phase = useSessionStore((s) => s.phase);
   const currentQuestion = useSessionStore((s) => s.currentQuestion);
   const submitted = useSessionStore((s) => s.submitted);
+  const reveal = useSessionStore((s) => s.reveal);
   const hints = useSessionStore((s) => s.hints);
   const screenLocked = useSessionStore((s) => s.screenLocked);
   const connection = useSessionStore((s) => s.connection);
 
   /**
-   * 대기실 명단은 **폴링**으로 갱신한다 — 서버가 참가자 입·퇴장 이벤트를 발행하지 않는다
-   * (백엔드 질문 B-1). 시작하면 폴링을 끄고 문항 화면이 이벤트로 움직인다.
+   * 대기실 명단은 폴링 + 입·퇴장 이벤트로 갱신한다 — 폴링은 탭이 뒤에 있으면 멈추므로
+   * `PARTICIPANT_JOINED`·`PARTICIPANT_LEFT`로 스토어 명단이 바뀌면 서버 명단을 다시 읽는다.
+   * 시작하면 폴링을 끄고 문항 화면이 이벤트로 움직인다.
    */
   const participantList = useParticipants(roomId, { poll: phase === "WAITING" });
   const participants = participantList.data ?? [];
+  const liveParticipantCount = useSessionStore((s) => s.participants.length);
+  const refetchParticipants = participantList.refetch;
+  useEffect(() => {
+    if (roomId !== null && phase === "WAITING") void refetchParticipants();
+  }, [liveParticipantCount, roomId, phase, refetchParticipants]);
 
   const submitAnswer = useSubmitAnswer(roomId ?? 0);
   // sessionStorage는 서버 렌더에 없다. 렌더 중에 그냥 읽으면 하이드레이션이 어긋나므로
@@ -75,7 +83,19 @@ export default function Page() {
     if (phase === "FINISHED" && roomId !== null) router.replace(`/result/${roomId}`);
   }, [phase, roomId, router]);
 
+  // 끝난 방(410)·없는 방(404)은 입장 화면에 머물 이유가 없다 — 세션이 끝났으니 메인으로
+  // (시나리오 테스트 "세션 종료 후 뒤로가기 시 입장 완료 화면 유지", 2026-09-08)
+  const roomGone =
+    room.isError &&
+    AppError.isAppError(room.error) &&
+    (room.error.status === 410 || room.error.kind === "NotFound");
+  useEffect(() => {
+    if (roomGone) router.replace(isMember ? "/home" : "/");
+  }, [roomGone, isMember, router]);
+
   if (room.isPending) return <ScreenLoading />;
+  // 메인으로 보내는 중에는 오류 화면 대신 로딩만 — "없거나 끝난 방" 문구가 깜빡이지 않게
+  if (roomGone) return <ScreenLoading />;
   if (room.isError)
     return <ScreenError message={room.error.message} onRetry={() => room.refetch()} />;
 
@@ -101,6 +121,9 @@ export default function Page() {
     // 제출 수는 서버가 학생에게 알려주지 않는다(호스트 토픽 전용) — 내 순위는 랭킹에서 찾는다
     const question = toLiveQuestion(currentQuestion, 0);
     const latestHint = hints.length > 0 ? hints[hints.length - 1] : null;
+    // 마감 결과는 **지금 열려 있는 문항의 것**일 때만 — 늦게 온 이전 문항 마감은 리듀서가 버리지만 한 번 더 지킨다
+    const currentReveal =
+      reveal && reveal.sessionQuestionId === currentQuestion.sessionQuestionId ? reveal : null;
 
     /**
      * 화면이 주는 값이 곧 서버가 받는 값이다 — 고른 보기의 **원문**, 서술형은 본문.
@@ -124,6 +147,7 @@ export default function Page() {
         onSubmit={handleSubmit}
         submitting={submitAnswer.isPending}
         hasSubmitted={submitted || submittedQuestionId === currentQuestion.questionId}
+        reveal={currentReveal}
         isLocked={screenLocked}
         hint={latestHint}
         errorMessage={submitAnswer.isError ? toSubmitAnswerMessage(submitAnswer.error) : null}

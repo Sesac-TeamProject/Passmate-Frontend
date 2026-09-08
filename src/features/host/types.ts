@@ -68,6 +68,8 @@ export type LiveQuestion = {
   seconds: number;
   /** 남은 시간(초) — 서버 시각(endsAt − ts) 기준으로 렌더 시점에 계산한 값 */
   remaining: number;
+  /** 서버가 발급한 마감 시각. 타이머는 매 초 이 값에서 다시 계산한다(로컬 카운트다운은 드리프트한다) */
+  endsAt: string | null;
   submitted: number;
 };
 

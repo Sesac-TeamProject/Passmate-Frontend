@@ -12,4 +12,6 @@ export type ActiveSession = {
   hostName: string;
   /** 이미 시작한 방인가 — 문구를 "진행 중"·"대기 중"으로 가른다 */
   isRunning: boolean;
+  /** 살아 있는 방의 PIN — 있으면 카드에서 바로 다시 들어간다(재입장 API). 없으면 PIN 입력으로 보낸다 */
+  pin: string | null;
 };

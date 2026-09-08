@@ -25,7 +25,14 @@ export function RoomListCard({ rooms }: Props) {
                 live ? "bg-mint-bg text-mint-dark" : "bg-background text-ink-disabled",
               )}
             >
-              {live ? "진행 중" : room.canceled ? "취소" : "종료"}
+              {/* 대기 중인 방까지 "진행 중"으로 찍으면 옆의 "대기실 열기"와 어긋나 보인다(9/8 목업 화면) */}
+              {live
+                ? room.phase === "RUNNING"
+                  ? "진행 중"
+                  : "대기 중"
+                : room.canceled
+                  ? "취소"
+                  : "종료"}
             </span>
 
             <span className="flex min-w-0 flex-1 flex-col gap-1.5">

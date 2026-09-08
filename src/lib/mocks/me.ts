@@ -63,6 +63,7 @@ const JOINED_ROOMS: JoinedRoomsResponse["rooms"]["content"] = [
     title: "Spring 실전 모의고사 4주차",
     hostNickname: "김민지",
     status: "RUNNING",
+    pin: "482913",
     startedAt: "2026-09-02T02:00:00",
     questionCount: 8,
     fee: 10000,

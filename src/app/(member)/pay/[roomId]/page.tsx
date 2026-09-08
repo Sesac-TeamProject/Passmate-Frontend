@@ -62,7 +62,11 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
   const [step, setStep] = useState<PayStep>("idle");
   const [error, setError] = useState<string | null>(null);
   // W-11e 전체 화면으로 알릴 실패. 사용자가 스스로 취소한 건 여기 담지 않는다(폼 위 한 줄로 남긴다).
-  const [failure, setFailure] = useState<{ message: string; amount: number } | null>(null);
+  const [failure, setFailure] = useState<{
+    message: string;
+    amount: number;
+    kind: "payment" | "join";
+  } | null>(null);
   const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
   // 참가비 차감이 끝난 방을 기억한다 — joinRoom만 실패한 재시도가 참가비를 다시 차감하지 않도록.
   const [paidReceipt, setPaidReceipt] = useState<{
@@ -155,6 +159,8 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
     const avatarId = values.avatar;
     const saved = pending?.roomId === roomId ? pending : null;
     const paid = paidReceipt?.roomId === roomId ? paidReceipt : null;
+    // 참가비 차감이 끝난 뒤의 실패는 "결제 실패"가 아니다 — 실패 화면 문구를 가르는 표시
+    let entryPaidNow = Boolean(paid || saved?.entryPaid);
 
     /** 참가비까지 끝난 상태에서 입장만 마치고 영수증을 그린다 */
     const finish = async (receiptValues: {
@@ -194,6 +200,7 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
         try {
           const entryRes = await entryPayment.mutateAsync();
           savePending({ roomId, entryPaid: true });
+          entryPaidNow = true;
           setPaidReceipt({
             roomId,
             paymentNo: entryRes.paymentNo,
@@ -212,6 +219,7 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
           // 같은 방에 살아 있는 결제가 이미 있다 — 결제를 건너뛰고 바로 입장한다.
           if (isErrorCode(err, ERROR_CODES.ALREADY_PAID)) {
             savePending({ roomId, entryPaid: true });
+            entryPaidNow = true;
             await finish({ paymentNo: "", chargeAmount: 0, remaining: balance, payMethod: null });
             return;
           }
@@ -248,7 +256,7 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
           if (payResult.code === "CANCELLED") {
             setError(payResult.message);
           } else {
-            setFailure({ message: payResult.message, amount: chargeAmount });
+            setFailure({ message: payResult.message, amount: chargeAmount, kind: "payment" });
           }
           setStep("idle");
           return;
@@ -276,6 +284,7 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
 
       // 참가비 차감이 끝났다 — joinRoom이 실패해도 재시도가 다시 차감하지 않도록 방 단위로 기억해 둔다.
       savePending({ roomId, chargeId, paymentId, entryPaid: true });
+      entryPaidNow = true;
       setPaidReceipt({
         roomId,
         paymentNo,
@@ -288,7 +297,8 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
     } catch (err) {
       setFailure({
         message: toPayErrorMessage(err),
-        amount: shortfall > 0 ? values.chargeAmount : paidRoom.fee,
+        amount: entryPaidNow ? paidRoom.fee : shortfall > 0 ? values.chargeAmount : paidRoom.fee,
+        kind: entryPaidNow ? "join" : "payment",
       });
       setStep("idle");
     }
@@ -299,6 +309,7 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
       <PayFailed
         message={failure.message}
         amount={failure.amount}
+        kind={failure.kind}
         onRetry={handleSubmit}
         onChangeMethod={() => setFailure(null)}
         retrying={step === "paying"}

@@ -61,7 +61,7 @@ export function QuestionForm({
             <button
               key={type}
               type="button"
-              onClick={() => set({ type, answer: "" })}
+              onClick={() => set({ type, answer: "", answerIndex: null })}
               className={
                 type === values.type
                   ? "rounded-full bg-mint px-3 py-1 text-label-lg text-white"
@@ -91,10 +91,11 @@ export function QuestionForm({
               <div key={index} className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => set({ answer: choice })}
+                  aria-pressed={values.answerIndex === index}
+                  onClick={() => set({ answerIndex: index })}
                   disabled={choice.trim() === ""}
                   className={
-                    choice.trim() !== "" && choice === values.answer
+                    choice.trim() !== "" && values.answerIndex === index
                       ? "shrink-0 rounded-lg bg-mint px-2.5 py-1.5 text-label-md text-white"
                       : "shrink-0 rounded-lg bg-muted px-2.5 py-1.5 text-label-md text-muted-foreground disabled:opacity-50"
                   }

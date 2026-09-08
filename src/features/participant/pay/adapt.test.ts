@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RoomResponse } from "@/lib/types/dto";
-import { toPaidRoom, toPayGate } from "./adapt";
+import { toPaidRoom, toPayGate, toPayPlan } from "./adapt";
 
 /**
  * F-1 이후 결제 화면은 PIN이 아니라 **방 id**로 열린다(`/pay/[roomId]`).
@@ -87,5 +87,25 @@ describe("toPayGate", () => {
 
   it("끝난 무료 방은 대기실로 보내지 않고 닫힘으로 본다 — 상태를 먼저 본다", () => {
     expect(toPayGate(room({ status: "ENDED", type: "FREE" }))).toBe("closed");
+  });
+});
+
+describe("toPayPlan", () => {
+  it("잔액이 충분하면 충전 단계가 빠지고 참가비만 차감한다", () => {
+    expect(toPayPlan(2100, 500, 10000)).toEqual({
+      shortage: 0,
+      needsCharge: false,
+      portoneAmount: 0,
+      cta: "500 C 차감하고 입장",
+    });
+  });
+
+  it("모자란 만큼 충전이 필요하면 충전 금액과 포트원 결제 금액을 싣는다", () => {
+    expect(toPayPlan(100, 500, 10000)).toEqual({
+      shortage: 400,
+      needsCharge: true,
+      portoneAmount: 10000,
+      cta: "₩10,000 충전 → 500 C 차감하고 입장",
+    });
   });
 });

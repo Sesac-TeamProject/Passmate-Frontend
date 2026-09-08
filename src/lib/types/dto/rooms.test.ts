@@ -234,30 +234,33 @@ describe("방 문항별 시간 계약", () => {
     expect(res.estimatedSeconds).toBe(res.questions.reduce((s, q) => s + q.timeLimitSec, 0));
   });
 
-  it("PUT은 전체 교체 — 본문에 없는 문항은 세트 기본값으로 돌아가고 자동 넘김도 꺼진다", () => {
+  it("PUT은 전체 교체 — 본문에 없는 문항은 세트 기본값으로 돌아가고 자동 넘김은 기본(켬)이다", () => {
     const [first, second] = mockQuestionTimes(DEMO_ROOM_ID).questions;
+    // 설정을 안 만졌으면 전부 켬 (2026-09-08 시나리오 테스트 반전)
+    expect(first.autoAdvance).toBe(true);
 
     const saved = mockUpdateQuestionTimes(DEMO_ROOM_ID, {
       times: [
-        { questionId: first.questionId, timeLimitSec: 45, autoAdvance: true },
+        { questionId: first.questionId, timeLimitSec: 45, autoAdvance: false },
         { questionId: second.questionId, timeLimitSec: second.defaultTimeLimitSec },
       ],
     });
     expect(saved.questions[0]).toMatchObject({
       timeLimitSec: 45,
       overridden: true,
-      autoAdvance: true,
+      autoAdvance: false,
     });
-    // 기본값과 같은 값이라도 본문에 실었으면 덮어쓴 문항이다 — 자동 넘김은 생략하면 false
-    expect(saved.questions[1]).toMatchObject({ overridden: true, autoAdvance: false });
+    // 기본값과 같은 값이라도 본문에 실었으면 덮어쓴 문항이다 — 자동 넘김은 생략하면 기본(켬)
+    expect(saved.questions[1]).toMatchObject({ overridden: true, autoAdvance: true });
 
     const reset = mockUpdateQuestionTimes(DEMO_ROOM_ID, {
       times: [{ questionId: second.questionId, timeLimitSec: 60 }],
     });
+    // 본문에서 빠진 문항은 시간도 자동 넘김도 기본값으로 — 꺼 뒀던 1번이 다시 켜진다
     expect(reset.questions[0]).toMatchObject({
       timeLimitSec: first.defaultTimeLimitSec,
       overridden: false,
-      autoAdvance: false,
+      autoAdvance: true,
     });
     expect(reset.questions[1].timeLimitSec).toBe(60);
   });

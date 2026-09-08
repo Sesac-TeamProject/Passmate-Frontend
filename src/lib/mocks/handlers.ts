@@ -78,6 +78,7 @@ import {
   mockCreateRoom,
   mockHostedRooms,
   mockJoinRoom,
+  mockRejoinRoom,
   mockKickParticipant,
   mockLeaveRoom,
   mockParticipants,
@@ -152,6 +153,7 @@ const HANDLERS: Record<string, MockHandler> = {
   "GET /rooms/public": (ctx) => mockPublicRooms(ctx.url),
   "POST /rooms/:roomId/participants": (ctx) =>
     mockJoinRoom(ctx.params.roomId, asBody<JoinRoomRequest>(ctx)),
+  "POST /rooms/:roomId/participants/me/rejoin": (ctx) => mockRejoinRoom(ctx.params.roomId),
   "GET /rooms/:roomId/participants": () => mockParticipants(),
   "GET /rooms/:roomId/participants/nickname-check": (ctx) =>
     mockCheckNickname(ctx.params.roomId, ctx.url.searchParams.get("nickname") ?? ""),

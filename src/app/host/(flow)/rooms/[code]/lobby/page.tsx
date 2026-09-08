@@ -40,11 +40,18 @@ export default function Page() {
   const phase = useSessionStore((s) => s.phase);
 
   /**
-   * 대기실 명단은 **폴링**으로 갱신한다 — 서버가 `PARTICIPANT_JOINED`·`PARTICIPANT_LEFT`를
-   * 발행하지 않아 실시간으로 받을 방법이 없다(백엔드 질문 B-1). 시작하면 폴링을 끈다.
+   * 대기실 명단은 폴링 + 입·퇴장 이벤트로 갱신한다. 폴링은 창이 뒤에 있으면 멈추므로(React Query 기본)
+   * 프로젝터 창을 다른 창 뒤에 두면 학생이 들어와도 명단이 늘지 않았다(2026-09-09 시나리오 테스트).
+   * 서버가 `PARTICIPANT_JOINED`·`PARTICIPANT_LEFT`를 보내면 스토어 명단이 바뀌고, 그때 서버 명단을 다시 읽는다.
+   * 시작하면 폴링을 끈다.
    */
   const participantList = useParticipants(roomId, { poll: phase === "WAITING" });
   const participants = participantList.data ?? [];
+  const liveParticipantCount = useSessionStore((s) => s.participants.length);
+  const refetchParticipants = participantList.refetch;
+  useEffect(() => {
+    if (roomId !== null) void refetchParticipants();
+  }, [liveParticipantCount, roomId, refetchParticipants]);
   const kick = useKickParticipant();
 
   const start = useStartSession(roomId ?? 0);
@@ -85,12 +92,18 @@ export default function Page() {
   const needsSet = detail.data.questionSetId === undefined;
   const handleLinkSet = () => {
     if (setIdToLink === "" || linkSet.isPending) return;
+    // PUT 은 전체 교체다 — 세트만 보내면 설명·주제·정원·예약이 지워진다
+    const { description, topic, maxParticipants, scheduledAt } = detail.data;
     linkSet.mutate({
       roomId: detail.data.id,
       body: {
         title: detail.data.title,
         questionSetId: Number(setIdToLink),
         isPublic: detail.data.isPublic,
+        ...(description !== undefined ? { description } : {}),
+        ...(topic !== undefined ? { topic } : {}),
+        ...(maxParticipants !== undefined ? { maxParticipants } : {}),
+        ...(scheduledAt !== undefined ? { scheduledAt } : {}),
       },
     });
   };

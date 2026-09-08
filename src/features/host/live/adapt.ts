@@ -2,6 +2,7 @@ import { toAvatarKey } from "@/components/common/student-avatar";
 import { VIEW_TYPE } from "@/features/host/editor/adapt";
 import type { ChoiceKey, QuestionResult, QuestionType, Student } from "@/features/host/types";
 import { choicesOf } from "@/features/participant/play/adapt";
+import { parseServerDateTime } from "@/lib/datetime";
 import type {
   ParticipantResponse,
   QuestionEndedPayload,
@@ -161,16 +162,34 @@ export function toPodium(rows: FinalRankRow[]): { podium: PodiumEntry[]; rest: F
   };
 }
 
-/** W-12 레일의 세션 요약. 진행 시간은 계약에 없어 늘 null이다 (DESIGN_GAPS D-16) */
+/**
+ * 세션 진행 시간(분). 결과 응답의 시작·종료 시각으로 잰다 — 계약에 따로 "진행 시간" 필드는 없지만
+ * 두 시각이 실려 오므로 화면에서 계산한다(레일이 "—"로 비어 있던 자리, 2026-09-09 시나리오 테스트).
+ * 1분 미만은 1분으로 올린다 — "0분 진행"은 안 한 것처럼 읽힌다.
+ */
+export function toElapsedMinutes(
+  results: Pick<SessionResultsResponse, "startedAt" | "endedAt"> | undefined,
+): number | null {
+  if (!results?.startedAt || !results.endedAt) return null;
+  const ms =
+    parseServerDateTime(results.endedAt).getTime() -
+    parseServerDateTime(results.startedAt).getTime();
+  if (Number.isNaN(ms) || ms < 0) return null;
+  return Math.max(1, Math.round(ms / 60_000));
+}
+
+/** W-12 레일의 세션 요약. */
 export function toSessionSummary(
   results: SessionResultsResponse | undefined,
   studentCount: number,
   questionCount: number,
 ): SessionSummary {
+  const avg = results?.summary.avgCorrectRate;
   return {
-    avgAccuracy: results?.summary.avgCorrectRate ?? null,
+    // 서버는 66.666…처럼 소수로 준다 — 화면은 소수점 첫째 자리까지만 보인다
+    avgAccuracy: avg === undefined ? null : Math.round(avg * 10) / 10,
     studentCount: results?.summary.participantCount ?? studentCount,
-    minutes: null,
+    minutes: toElapsedMinutes(results),
     questionCount: results?.summary.questionCount ?? questionCount,
   };
 }
@@ -180,19 +199,30 @@ export function toReportAccuracy(
   results: SessionResultsResponse | undefined,
   questionCount: number,
 ): (number | null)[] {
-  const byNo = new Map((results?.questions ?? []).map((q) => [q.orderNo, q.correctRate]));
+  const byNo = new Map(
+    (results?.questions ?? []).map((q) => [
+      q.orderNo,
+      q.correctRate === null ? null : Math.round(q.correctRate),
+    ]),
+  );
   return Array.from({ length: questionCount }, (_, i) => byNo.get(i + 1) ?? null);
 }
 
-/** 정답률이 가장 낮은 문항. 결과가 없으면 null */
+/**
+ * 정답률이 가장 낮은 문항. 자동 채점이 없는 서술형(correctRate = null)은 후보에서 빼고,
+ * 동률이면 **앞 문항**을 고른다 — 0%가 여럿일 때 어느 것이 뽑힐지 정해 두지 않으면
+ * 같은 세션을 다시 열 때마다 다른 문항이 나온다(시나리오 테스트, 2026-09-08).
+ */
 export function toHardestQuestion(
   results: SessionResultsResponse | undefined,
 ): HardestQuestion | null {
-  const questions = results?.questions ?? [];
-  if (questions.length === 0) return null;
+  const graded = (results?.questions ?? []).filter(
+    (q): q is typeof q & { correctRate: number } => q.correctRate !== null,
+  );
+  if (graded.length === 0) return null;
 
-  const worst = questions.reduce((a, b) => (b.correctRate < a.correctRate ? b : a));
-  return { no: worst.orderNo, accuracy: worst.correctRate, title: worst.content };
+  const worst = graded.reduce((a, b) => (b.correctRate < a.correctRate ? b : a));
+  return { no: worst.orderNo, accuracy: Math.round(worst.correctRate), title: worst.content };
 }
 
 /**

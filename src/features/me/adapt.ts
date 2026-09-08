@@ -288,6 +288,7 @@ export function toActiveSession(rooms: JoinedRoom[]): ActiveSession | null {
     title: ongoing.title,
     hostName: ongoing.hostNickname,
     isRunning: ongoing.status === "RUNNING",
+    pin: ongoing.pin ?? null,
   };
 }
 

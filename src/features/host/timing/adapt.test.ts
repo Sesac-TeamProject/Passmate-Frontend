@@ -48,35 +48,36 @@ describe("toTimingRows", () => {
 });
 
 describe("toQuestionTimesRequest", () => {
-  it("전체 교체 — 기본값 그대로이고 자동 넘김도 꺼진 문항은 본문에서 뺀다", () => {
+  it("전체 교체 — 기본값 그대로이고 자동 넘김도 켜진(기본) 문항은 본문에서 뺀다", () => {
+    // 자동 넘김은 기본이 켬이라 **끈** 문항이 예외다(2026-09-08 반전) — 1번은 꺼져 있어 실린다
     expect(toQuestionTimesRequest(QUESTIONS, {}).times).toEqual([
+      { questionId: 1, timeLimitSec: 30, autoAdvance: false },
       { questionId: 2, timeLimitSec: 120, autoAdvance: false },
-      { questionId: 3, timeLimitSec: 30, autoAdvance: true },
     ]);
   });
 
-  it("기본값으로 되돌린 문항은 본문에서 빠져 서버가 기본값으로 돌린다", () => {
-    expect(toQuestionTimesRequest(QUESTIONS, { 2: { timeLimitSec: 90 } }).times).toEqual([
-      { questionId: 3, timeLimitSec: 30, autoAdvance: true },
-    ]);
+  it("기본값으로 되돌리고 자동 넘김도 켠 문항은 본문에서 빠져 서버가 기본값으로 돌린다", () => {
+    expect(
+      toQuestionTimesRequest(QUESTIONS, { 2: { timeLimitSec: 90, autoAdvance: true } }).times,
+    ).toEqual([{ questionId: 1, timeLimitSec: 30, autoAdvance: false }]);
   });
 
-  it("시간만 바꿔도 켜 둔 자동 넘김은 그대로 실린다 — 전체 교체라 빼면 꺼진다", () => {
-    expect(toQuestionTimesRequest(QUESTIONS, { 3: { timeLimitSec: 45 } }).times).toContainEqual({
-      questionId: 3,
+  it("시간만 바꿔도 꺼 둔 자동 넘김은 그대로 실린다 — 전체 교체라 빼면 켜진다", () => {
+    expect(toQuestionTimesRequest(QUESTIONS, { 2: { timeLimitSec: 45 } }).times).toContainEqual({
+      questionId: 2,
       timeLimitSec: 45,
-      autoAdvance: true,
+      autoAdvance: false,
     });
   });
 
-  it("자동 넘김만 켠 문항은 기본 시간 그대로 실리고, 끈 문항은 기본 시간이면 본문에서 빠진다", () => {
+  it("자동 넘김을 끈 문항은 기본 시간이어도 실리고, 켠 문항은 기본 시간이면 본문에서 빠진다", () => {
     const { times } = toQuestionTimesRequest(QUESTIONS, {
       1: { autoAdvance: true },
       3: { autoAdvance: false },
     });
     expect(times).toEqual([
-      { questionId: 1, timeLimitSec: 30, autoAdvance: true },
       { questionId: 2, timeLimitSec: 120, autoAdvance: false },
+      { questionId: 3, timeLimitSec: 30, autoAdvance: false },
     ]);
   });
 });

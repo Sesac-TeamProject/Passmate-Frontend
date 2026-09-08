@@ -74,6 +74,8 @@ function JoinContainer() {
         // 게이트는 서버에 있다 — 결제 화면을 건너뛰고 입장을 직접 불러도 402로 막힌다.
         onError: (error) => {
           if (isErrorCode(error, ERROR_CODES.ENTRY_FEE_REQUIRED)) router.push(`/pay/${roomId}`);
+          // 이미 들어와 있는 회원 — 다시 등록할 게 없으니 풀이 화면으로 바로 보낸다(스냅샷이 상태를 복구한다)
+          if (isErrorCode(error, ERROR_CODES.ALREADY_JOINED)) router.push(`/play/${values.pin}`);
         },
       },
     );

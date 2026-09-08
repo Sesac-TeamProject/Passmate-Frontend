@@ -8,6 +8,8 @@ export type JoinedRoom = {
   /** 방을 연 선생님 닉네임 */
   hostNickname: string;
   status: RoomStatus;
+  /** 진행 중인 방(WAITING·RUNNING)만 — 재입장 화면이 쓴다. 끝난 방은 빠진다 */
+  pin?: string;
   startedAt?: string;
   endedAt?: string;
   questionCount: number;

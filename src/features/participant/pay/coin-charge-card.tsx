@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PendingLabel } from "@/components/common/pending-label";
 import { cn } from "@/lib/utils";
+import { toPayPlan } from "./adapt";
 import { formatCoin, formatWon } from "./format";
 
 /** 선택형 알약/라디오 행 공통 — 선택 mint-bg + 1.5px mint 테두리, 비선택 흰 카드 + 1px 테두리 */
@@ -44,7 +45,8 @@ export function CoinChargeCard({
   onAgreedChange,
   onSubmit,
 }: Props) {
-  const shortage = Math.max(0, fee - balance);
+  const plan = toPayPlan(balance, fee, chargeAmount);
+  const { shortage, needsCharge } = plan;
 
   return (
     <section className="flex w-[440px] shrink-0 flex-col gap-4 rounded-2xl border bg-card px-[22px] py-5">
@@ -58,57 +60,68 @@ export function CoinChargeCard({
       )}
 
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-heading-sm text-ink">코인 충전 — 결제 수단</h2>
-        <StatusChip tone="topic">PortOne 안전결제</StatusChip>
+        <h2 className="text-heading-sm text-ink">
+          {needsCharge ? "코인 충전 — 결제 수단" : "참가비 — 코인 차감"}
+        </h2>
+        {needsCharge && <StatusChip tone="topic">PortOne 안전결제</StatusChip>}
       </div>
 
       <div className="flex flex-col gap-2 rounded-xl bg-muted px-3.5 py-3">
         <KeyValueRow label="보유 코인" value={formatCoin(balance)} />
-        <KeyValueRow label="충전 금액" value={formatCoin(chargeAmount)} />
+        {needsCharge && <KeyValueRow label="충전 금액" value={formatCoin(chargeAmount)} />}
         <KeyValueRow
           label="부족한 코인"
           value={
-            shortage > 0 ? (
+            needsCharge ? (
               <span className="text-negative">{formatCoin(shortage)} → 충전 필요</span>
             ) : (
-              "없음"
+              "없음 · 충전 없이 입장할 수 있어요"
             )
           }
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <span id="pay-charge-label" className="text-label-md text-muted-foreground">
-          충전 금액 (1 C = ₩1)
-        </span>
-        <div className="flex gap-2" role="group" aria-labelledby="pay-charge-label">
-          {chargeOptions.map((amount) => {
-            const selected = amount === chargeAmount;
-            return (
-              <button
-                key={amount}
-                type="button"
-                aria-pressed={selected}
-                disabled={paying}
-                onClick={() => onChargeAmountChange(amount)}
-                className={cn(
-                  "flex-1 rounded-[10px] py-2.5 text-center text-label-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-mint disabled:opacity-50",
-                  selected ? SELECTABLE_CLASS.on : SELECTABLE_CLASS.off,
-                )}
-              >
-                {formatCoin(amount)}
-              </button>
-            );
-          })}
+      {/* 잔액이 충분하면 충전 단계가 통째로 빠진다 — 요청도 참가비 차감만 나간다(2026-09-09 S-03) */}
+      {needsCharge && (
+        <div className="flex flex-col gap-2">
+          <span id="pay-charge-label" className="text-label-md text-muted-foreground">
+            충전 금액 (1 C = ₩1)
+          </span>
+          <div className="flex gap-2" role="group" aria-labelledby="pay-charge-label">
+            {chargeOptions.map((amount) => {
+              const selected = amount === chargeAmount;
+              return (
+                <button
+                  key={amount}
+                  type="button"
+                  aria-pressed={selected}
+                  disabled={paying}
+                  onClick={() => onChargeAmountChange(amount)}
+                  className={cn(
+                    "flex-1 rounded-[10px] py-2.5 text-center text-label-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-mint disabled:opacity-50",
+                    selected ? SELECTABLE_CLASS.on : SELECTABLE_CLASS.off,
+                  )}
+                >
+                  {formatCoin(amount)}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="h-px bg-border" />
 
       <div className="flex flex-col gap-2">
-        <KeyValueRow label="충전 금액" value={formatWon(chargeAmount)} />
-        <KeyValueRow label="충전 후 차감" value={`-${formatCoin(fee)}`} />
-        <KeyValueRow label="포트원 결제 금액" value={formatWon(chargeAmount)} emphasis />
+        {needsCharge && <KeyValueRow label="충전 금액" value={formatWon(chargeAmount)} />}
+        <KeyValueRow
+          label={needsCharge ? "충전 후 차감" : "차감할 코인"}
+          value={`-${formatCoin(fee)}`}
+          emphasis={!needsCharge}
+        />
+        {needsCharge && (
+          <KeyValueRow label="포트원 결제 금액" value={formatWon(plan.portoneAmount)} emphasis />
+        )}
       </div>
 
       <label className="flex items-center gap-2 text-label-md text-muted-foreground">
@@ -128,15 +141,16 @@ export function CoinChargeCard({
         onClick={onSubmit}
       >
         {paying ? (
-          <PendingLabel>결제창 여는 중…</PendingLabel>
+          <PendingLabel>{needsCharge ? "결제창 여는 중…" : "입장하는 중…"}</PendingLabel>
         ) : (
-          `${formatWon(chargeAmount)} 충전 → ${formatCoin(fee)} 차감하고 입장`
+          plan.cta
         )}
       </Button>
 
       <p className="text-label-md text-ink-disabled">
-        결제 수단은 포트원(PortOne) 결제창에서 골라요. 입장 시 코인이 차감되고, 남은 코인은 다음
-        유료 방에 쓸 수 있어요
+        {needsCharge
+          ? "결제 수단은 포트원(PortOne) 결제창에서 골라요. 입장 시 코인이 차감되고, 남은 코인은 다음 유료 방에 쓸 수 있어요"
+          : "보유 코인에서 참가비만 빠져요. 세션 시작 전에 취소하면 코인이 전액 돌아와요"}
       </p>
     </section>
   );

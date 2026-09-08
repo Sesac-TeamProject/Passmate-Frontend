@@ -75,6 +75,7 @@ export function ResultPage({
 
   return (
     <ProjectorShell
+      exitHref="/host/rooms"
       rail={
         <ResultRail
           rows={rows}
@@ -84,6 +85,7 @@ export function ResultPage({
         />
       }
       railCollapsed={<ResultRailMini rows={rows} />}
+      railLabel="순위"
       top={
         <>
           <QuestionRail current={questionIndex} total={questionTotal} />
