@@ -52,7 +52,9 @@ export function ReportQuestionTable({ rows, onOpenQuestion }: Props) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border bg-card">
+    // min-w-0 이 없으면 flex 자식의 기본 min-width:auto 때문에 상자가 표(1246px)만큼 벌어져
+    // 스크롤되지 않고 페이지가 통째로 가로로 넘친다.
+    <div className="min-w-0 overflow-x-auto rounded-xl border bg-card">
       <table className="w-full min-w-[1246px] table-fixed border-collapse">
         <colgroup>
           <col className="w-14" />
