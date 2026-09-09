@@ -60,7 +60,7 @@ export function FinalResultPage({
   onOpenQuestion,
 }: Props) {
   return (
-    <main className="min-h-screen bg-background px-20 pt-6 pb-10">
+    <main className="min-h-screen bg-background px-4 pt-6 pb-10 sm:px-8 lg:px-20">
       {/* 시안은 1440에서 본문 1280 — 폭을 묶고 남는 공간은 좌우로 나눈다 */}
       <div className="mx-auto flex max-w-[1280px] flex-col gap-4">
         <header className="flex flex-col gap-0.5">
@@ -68,7 +68,8 @@ export function FinalResultPage({
           <p className="truncate text-label-md text-muted-foreground">{subtitle}</p>
         </header>
 
-        <div className="flex gap-5">
+        {/* 시안은 좌우 2단(1280)이지만 순위표가 480px 고정이라 좁은 화면에서 넘친다 — lg 미만은 세로로 쌓는다 */}
+        <div className="flex flex-col gap-5 lg:flex-row">
           <div className="flex min-w-0 flex-1 flex-col gap-4">
             <PodiumCard entries={podium} />
 
@@ -83,11 +84,11 @@ export function FinalResultPage({
 
             <QuestionChips rows={questionRows} onOpenQuestion={onOpenQuestion} />
 
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <button
                 type="button"
                 onClick={onOpenReport}
-                className="h-12 w-[234px] rounded-xl bg-mint text-label-lg text-white transition-colors hover:bg-mint-dark"
+                className="h-12 w-full rounded-xl bg-mint text-label-lg text-white transition-colors hover:bg-mint-dark sm:w-[234px]"
               >
                 내 리포트 보기
               </button>
@@ -95,7 +96,7 @@ export function FinalResultPage({
                 <button
                   type="button"
                   onClick={onSignUp}
-                  className="h-12 w-[234px] rounded-xl border bg-card text-label-lg text-ink transition-colors hover:bg-muted"
+                  className="h-12 w-full rounded-xl border bg-card text-label-lg text-ink transition-colors hover:bg-muted sm:w-[234px]"
                 >
                   가입하고 이 기록 저장하기
                 </button>

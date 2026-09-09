@@ -53,9 +53,15 @@ export function ReportQuestionTable({ rows, onOpenQuestion }: Props) {
   }
 
   return (
-    // min-w-0 이 없으면 flex 자식의 기본 min-width:auto 때문에 상자가 표(1246px)만큼 벌어져
-    // 스크롤되지 않고 페이지가 통째로 가로로 넘친다.
-    <div className="min-w-0 overflow-x-auto rounded-xl border bg-card">
+    /*
+     * min-w-0: 없으면 flex 자식의 기본 min-width:auto 때문에 상자가 표(1246px)만큼 벌어져
+     *   스크롤되지 않고 페이지가 통째로 가로로 넘친다.
+     * contain:paint: 여기까지 해도 페이지가 표 폭만큼 가로로 밀렸다. 고정 레이아웃 표(table-fixed +
+     *   colgroup 고정폭)는 스크롤 상자 안에 있어도 뷰포트의 스크롤 영역을 넓힌다 — 바깥 어디에
+     *   overflow:hidden/clip 을 줘도 막히지 않고, 이 상자를 페인트 격리해야 멈춘다.
+     *   상자 안 가로 스크롤은 그대로 동작한다.
+     */
+    <div className="min-w-0 overflow-x-auto rounded-xl border bg-card [contain:paint]">
       <table className="w-full min-w-[1246px] table-fixed border-collapse">
         <colgroup>
           <col className="w-14" />

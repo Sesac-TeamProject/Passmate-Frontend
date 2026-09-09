@@ -19,7 +19,8 @@ type Props = {
 /** 최종 결과 오른쪽 전체 순위표 — 내 줄은 연민트 + 왼쪽 민트 막대 (시안 788:8959) */
 export function RankingTable({ rows, questionCount }: Props) {
   return (
-    <section className="flex w-120 shrink-0 flex-col overflow-hidden rounded-2xl border bg-card">
+    // 좌우 2단으로 서는 lg 이상에서만 480px 고정 — 그 아래에서는 한 단이라 폭을 다 쓴다
+    <section className="flex w-full flex-col overflow-hidden rounded-2xl border bg-card lg:w-120 lg:shrink-0">
       {rows.length === 0 ? (
         <p className="flex h-40 items-center justify-center text-label-md text-muted-foreground">
           순위는 채점이 끝나면 채워져요
