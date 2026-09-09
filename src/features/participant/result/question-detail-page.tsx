@@ -71,7 +71,7 @@ export function QuestionDetailPage({
 }: Props) {
   return (
     // 브랜드 상단바는 (participant) 레이아웃의 SiteHeader가 이미 그린다 — 여기서 또 그리면 두 번 나온다
-    <main className="flex flex-1 flex-col bg-background px-20">
+    <main className="flex flex-1 flex-col bg-background px-4 sm:px-8 lg:px-20">
       {/* 시안 620:8221은 1440에서 본문 1200 — 폭을 묶고 남는 공간은 좌우로 나눈다 */}
       <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between py-6">
         <Link
@@ -86,7 +86,7 @@ export function QuestionDetailPage({
         </span>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 rounded-[20px] border bg-card px-8 py-7">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 rounded-[20px] border bg-card px-5 py-6 sm:px-8 sm:py-7">
         <div className="flex items-center gap-3">
           <StatusChip tone={detail.isCorrect ? "free" : "paid"}>{detail.verdictLabel}</StatusChip>
           <span className="text-label-lg text-muted-foreground">
@@ -96,7 +96,8 @@ export function QuestionDetailPage({
 
         <h1 className="text-display-sm text-ink">{detail.title}</h1>
 
-        <div className="flex gap-4">
+        {/* 답 두 상자는 좁은 화면에서 나란히 두면 한 칸이 150px 남짓이 된다 — 세로로 쌓는다 */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
           <AnswerBox
             label="내가 고른 답"
             value={detail.myAnswer ?? "답하지 않았어요"}
