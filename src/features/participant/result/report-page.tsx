@@ -5,6 +5,7 @@ import {
   type ReportTrendPoint,
 } from "./report-insights";
 import { ReportQuestionTable, type ReportRow } from "./report-question-table";
+import { cn } from "@/lib/utils";
 import { ReportSummaryCard } from "./report-summary-card";
 
 type Props = {
@@ -138,11 +139,15 @@ function NextStep({
     <button
       type="button"
       onClick={onClick}
-      className={
+      className={cn(
+        // 폰에서는 위 카드들과 같은 폭으로 세로로 쌓이고, sm 부터 시안의 220px 로 나란히 선다 —
+        // 220px 고정이면 폰에서 카드 폭(324~358px)과 어긋나 왼쪽에 몰렸다(운영 확인, 2026-09-09).
+        // 라벨에 주제명이 들어가 길이가 변하므로 고정폭 대신 최소폭 — 길면 버튼이 늘어나고 줄이 늘면 높이도 따라간다
+        "min-h-11 w-full rounded-[10px] px-5 text-label-md font-bold transition-colors sm:w-auto sm:min-w-55",
         primary
-          ? "h-11 w-55 rounded-[10px] bg-mint text-label-md font-bold text-white transition-colors hover:bg-mint-dark"
-          : "h-11 w-55 rounded-[10px] border bg-card text-label-md font-bold text-ink transition-colors hover:bg-muted"
-      }
+          ? "bg-mint text-white hover:bg-mint-dark"
+          : "border bg-card text-ink hover:bg-muted",
+      )}
     >
       {children}
     </button>

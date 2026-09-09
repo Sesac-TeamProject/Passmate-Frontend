@@ -9,6 +9,7 @@ import {
   putHostReview,
   requestEssayAnalysis,
 } from "@/lib/api/results";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { AppError } from "@/lib/types/app-error";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 import type { HostReviewRequest } from "@/lib/types/dto";
@@ -17,21 +18,32 @@ import { qk } from "./keys";
 /** 분석이 끝났는지 다시 묻는 간격 — 완료를 알려주는 이벤트가 없어 폴링뿐이다 */
 const ANALYSIS_POLL_MS = 2000;
 
+/**
+ * 세션 복원이 끝났는지. 복원 전에 부르면 회원 토큰이 아직 없어 401 이 첫 응답으로 굳는다 —
+ * 리포트 주소로 새로 열거나 새로고침하면 "로그인이 필요해요"가 떴다(2026-09-09 로컬 재현).
+ * 게스트는 복원할 회원 세션이 없어 곧바로 unauthenticated 가 되고 sessionStorage 의 게스트 토큰으로 부른다.
+ */
+function useAuthSettled(): boolean {
+  return useAuthStore((s) => s.status === "authenticated" || s.status === "unauthenticated");
+}
+
 /** GET /rooms/{roomId}/results/me — 게스트도 부를 수 있다 */
 export function useMyResult(roomId: number | null) {
+  const authSettled = useAuthSettled();
   return useQuery({
     queryKey: qk.myResult(roomId ?? 0),
     queryFn: () => getMyResult(roomId as number),
-    enabled: roomId !== null,
+    enabled: roomId !== null && authSettled,
   });
 }
 
 /** GET /rooms/{roomId}/reports/me */
 export function useMyReport(roomId: number | null) {
+  const authSettled = useAuthSettled();
   return useQuery({
     queryKey: qk.myReport(roomId ?? 0),
     queryFn: () => getMyReport(roomId as number),
-    enabled: roomId !== null,
+    enabled: roomId !== null && authSettled,
   });
 }
 
