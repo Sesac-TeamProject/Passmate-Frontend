@@ -22,7 +22,8 @@ export function ReportInsights({ comparison, trend, concepts }: Props) {
   if (!hasAny) return null;
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    // 좁은 화면에서는 1열 → 2열 → 3열로 접는다 (시안은 1280 기준 3열)
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {comparison !== null && <ComparisonCard comparison={comparison} />}
       {trend.length > 0 && <TrendCard trend={trend} />}
       {concepts.length > 0 && <ConceptCard concepts={concepts} />}
@@ -133,7 +134,7 @@ function InsightCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex h-[190px] flex-col gap-2 rounded-xl border bg-card px-[17px] py-[15px]">
+    <section className="flex min-h-[190px] flex-col gap-2 rounded-xl border bg-card px-[17px] py-[15px]">
       <h2 className="text-label-lg text-ink">{title}</h2>
       <p
         className={cn(

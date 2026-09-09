@@ -67,7 +67,10 @@ export function ReportPage({
   onReport,
 }: Props) {
   return (
-    <main className="min-h-screen bg-background px-20 pt-[26px] pb-10">
+    // overflow-x-clip: 문항 표(min-w 1246px)가 제 스크롤 상자 안에서 스크롤되는데도
+    // 문서 자체가 가로로 밀려 카드가 화면 밖으로 나갔다. clip은 hidden과 달리
+    // 스크롤 컨테이너를 만들지 않아 세로 스크롤·sticky에 영향이 없다.
+    <main className="min-h-screen overflow-x-clip bg-background px-4 pt-[26px] pb-10 sm:px-8 lg:px-20">
       {/* 시안은 1440에서 본문 1280 — 폭을 묶고 남는 공간은 좌우로 나눈다 (W-09와 같은 규칙) */}
       <div className="mx-auto flex max-w-[1280px] flex-col gap-4">
         <button
