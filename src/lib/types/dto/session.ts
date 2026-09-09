@@ -38,6 +38,11 @@ export type QuestionEndedPayload = {
   correctCount: number;
   /** 0~100 */
   correctRate: number;
+  /**
+   * 직전에 마감된 문항의 정답률과의 차(%p). 1번 문항이거나 앞에 마감된 문항이 없으면
+   * **키 자체가 빠진다**(서버가 널 필드를 응답에서 뺀다) — 읽는 쪽이 `?? 0`으로 접는다
+   */
+  accuracyDelta?: number | null;
   /** 키는 **제출된 보기 원문**(MCQ) 또는 "O"/"X". 서술형은 빈 객체 */
   distribution: Record<string, number>;
 };
@@ -49,6 +54,11 @@ export type RankingEntry = {
   nickname: string;
   avatarId: string;
   totalScore: number;
+  /**
+   * 직전 문항 마감 시점 대비 순위 변동. 양수면 올라갔다. 문항 마감 맥락(`RANKING_UPDATED`·문항 결과 조회)
+   * 에서만 실리고, 1번 문항이거나 그때 점수가 없던 참가자는 **키 자체가 빠진다** — `?? 0`으로 접는다
+   */
+  rankChange?: number | null;
 };
 
 /** 호스트 화면의 제출 현황 — `SUBMISSION_UPDATED` 페이로드이자 `GET …/current/submissions` 응답 */

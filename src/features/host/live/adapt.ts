@@ -64,8 +64,8 @@ function toCorrectKey(
  * 문항 종료 페이로드 + 랭킹 → W-06 문항 결과 뷰 타입.
  *
  * 보기별 제출 수는 `distribution` **맵**으로 온다 — 키가 보기 **원문**이라 문항의 보기 순서대로
- * 꺼내야 A·B·C·D 자리가 맞는다. 정답률 변동은 지난 문항 정답률이 계약에 없어 0으로 두고
- * 화면이 문구를 감춘다.
+ * 꺼내야 A·B·C·D 자리가 맞는다. 순위·정답률 변동은 서버가 문항 마감 맥락에서만 실어 주고
+ * 없으면 키가 빠지므로 0(변동 없음)으로 접는다.
  */
 export function toQuestionResult(
   reveal: QuestionEndedPayload,
@@ -101,12 +101,14 @@ export function toQuestionResult(
     distribution,
     // 서버는 소수로 준다(16.666…) — 리포트 화면과 같은 기준으로 정수로 접는다
     accuracy: Math.round(reveal.correctRate),
-    accuracyDelta: 0,
+    // 변동값 둘은 서버가 주는데 화면이 0으로 박아 두고 있었다 — 순위 화살표가 늘 "—"였다(2026-09-09).
+    // 없을 때(1번 문항·직전 시점에 점수가 없던 참가자)는 키가 빠져 오므로 0으로 접는다 = "변동 없음"
+    accuracyDelta: Math.round(reveal.accuracyDelta ?? 0),
     ranking: ranking.map((r) => ({
       rank: r.rank,
       studentId: String(r.participantId),
       score: r.totalScore,
-      change: 0,
+      change: r.rankChange ?? 0,
     })),
   };
 }

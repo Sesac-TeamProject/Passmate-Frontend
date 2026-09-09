@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type {
   QuestionEndedPayload,
   QuestionStartedPayload,
+  RankingEntry,
   SubmissionStatusPayload,
 } from "@/lib/types/dto";
 import type { FinalRankRow } from "./final-page";
@@ -39,7 +40,37 @@ const OX_ENDED: QuestionEndedPayload = {
   distribution: { X: 2, O: 1 },
 };
 
+const RANKING_WITH_CHANGE: RankingEntry[] = [
+  { rank: 1, participantId: 1, nickname: "가", avatarId: "cat", totalScore: 300, rankChange: 2 },
+  { rank: 2, participantId: 2, nickname: "나", avatarId: "dog", totalScore: 200, rankChange: -1 },
+  { rank: 3, participantId: 3, nickname: "다", avatarId: "fox", totalScore: 100, rankChange: 0 },
+];
+
 describe("toQuestionResult", () => {
+  it("순위·정답률 변동을 서버 값 그대로 옮긴다", () => {
+    // 서버가 주는데 화면이 0으로 박아 둬 순위 화살표가 늘 "—"였다(2026-09-09)
+    const result = toQuestionResult(
+      { ...OX_ENDED, accuracyDelta: 12.4 },
+      RANKING_WITH_CHANGE,
+      null,
+    );
+
+    expect(result.accuracyDelta).toBe(12);
+    expect(result.ranking.map((row) => row.change)).toEqual([2, -1, 0]);
+  });
+
+  it("변동 키가 빠져 오면 0으로 접는다 — 1번 문항·직전에 점수가 없던 참가자", () => {
+    const noChange: RankingEntry[] = RANKING_WITH_CHANGE.map((row) => {
+      const copy = { ...row };
+      delete copy.rankChange;
+      return copy;
+    });
+    const result = toQuestionResult(OX_ENDED, noChange, null);
+
+    expect(result.accuracyDelta).toBe(0);
+    expect(result.ranking.every((row) => row.change === 0)).toBe(true);
+  });
+
   it("OX는 보기가 없어도 O·X 분포와 정답 키를 만든다", () => {
     const result = toQuestionResult(OX_ENDED, [], OX_QUESTION);
     expect(result.correct).toBe("B");
