@@ -67,7 +67,7 @@ export function ReportPage({
   onReport,
 }: Props) {
   return (
-    <main className="min-h-screen bg-background px-20 pt-[26px] pb-10">
+    <main className="min-h-screen bg-background px-4 pt-[26px] pb-10 sm:px-8 lg:px-20">
       {/* 시안은 1440에서 본문 1280 — 폭을 묶고 남는 공간은 좌우로 나눈다 (W-09와 같은 규칙) */}
       <div className="mx-auto flex max-w-[1280px] flex-col gap-4">
         <button

@@ -32,8 +32,8 @@ export function MyResultCard({
     .join(" · ");
 
   return (
-    <section className="flex gap-10 rounded-2xl bg-mint-bg px-5 py-4">
-      <div className="flex w-75 shrink-0 flex-col gap-1">
+    <section className="flex flex-col gap-4 rounded-2xl bg-mint-bg px-5 py-4 sm:flex-row sm:gap-10">
+      <div className="flex flex-col gap-1 sm:w-75 sm:shrink-0">
         <h2 className="text-label-md text-mint-dark">내 결과</h2>
         <p className="text-heading-lg text-ink">{headline}</p>
         <p className="text-label-md text-muted-foreground">{meta}</p>

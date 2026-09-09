@@ -1,4 +1,5 @@
 import { formatDuration, formatNumber } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { toRankText } from "./adapt";
 
 type Props = {
@@ -34,15 +35,19 @@ export function ReportSummaryCard({
   const elapsedText = elapsedSeconds === null ? "—" : formatDuration(elapsedSeconds);
 
   return (
-    <section className="flex items-center gap-[18px] rounded-xl border bg-card px-[21px] py-[17px]">
-      <CorrectRing correctCount={correctCount} questionCount={questionCount} />
+    // 시안은 한 줄(1280)이지만 KPI 4칸이 고정폭이라 좁은 화면에서 카드가 통째로 넘쳤다.
+    // lg 미만에서는 세로로 쌓고 KPI를 2칸씩 접는다.
+    <section className="flex flex-col gap-4 rounded-xl border bg-card px-[21px] py-[17px] lg:flex-row lg:items-center lg:gap-[18px]">
+      <div className="flex min-w-0 items-center gap-[18px] lg:flex-1">
+        <CorrectRing correctCount={correctCount} questionCount={questionCount} />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <h1 className="truncate text-heading-md text-ink">{roomTitle}</h1>
-        <p className="truncate text-label-md text-muted-foreground">{subtitle}</p>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <h1 className="truncate text-heading-md text-ink">{roomTitle}</h1>
+          <p className="truncate text-label-md text-muted-foreground">{subtitle}</p>
+        </div>
       </div>
 
-      <dl className="flex shrink-0 items-center">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 lg:flex lg:shrink-0 lg:items-center lg:gap-0">
         <Kpi label="순위" value={rankText} />
         <Kpi label="정답률" value={`${accuracyPercent}%`} divided />
         <Kpi label="소요 시간" value={elapsedText} divided />
@@ -52,7 +57,7 @@ export function ReportSummaryCard({
       <button
         type="button"
         onClick={onSavePdf}
-        className="h-11 w-25 shrink-0 rounded-lg border bg-card text-label-md text-ink transition-colors hover:bg-muted"
+        className="h-11 w-full shrink-0 rounded-lg border bg-card text-label-md text-ink transition-colors hover:bg-muted lg:w-25"
       >
         PDF 저장
       </button>
@@ -104,12 +109,12 @@ function CorrectRing({
 /** KPI 한 칸. divided면 왼쪽에 세로 구분선을 둔다 (시안 787:8853) */
 function Kpi({ label, value, divided }: { label: string; value: string; divided?: boolean }) {
   return (
+    // 고정폭·세로 구분선은 한 줄로 서는 lg 이상에서만 쓴다 — 접힌 격자에서는 칸이 폭을 나눠 갖는다
     <div
-      className={
-        divided
-          ? "flex w-[150px] flex-col gap-1 border-l border-line-soft pl-[18px]"
-          : "flex w-[132px] flex-col gap-1"
-      }
+      className={cn(
+        "flex min-w-0 flex-col gap-1",
+        divided ? "lg:w-[150px] lg:border-l lg:border-line-soft lg:pl-[18px]" : "lg:w-[132px]",
+      )}
     >
       <dt className="text-label-md text-muted-foreground">{label}</dt>
       <dd className="truncate text-heading-sm text-ink">{value}</dd>
