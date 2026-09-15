@@ -29,9 +29,10 @@ export function WaitingPage({ roomTitle, pin, myName, students, isMember }: Prop
     <main
       role="status"
       aria-live="polite"
-      className="flex min-h-screen flex-col items-center px-5 pt-16 pb-10"
+      // 폰 폭은 앱 M-02처럼 흰 바탕 — 제목 줄은 카드(좌우 20)보다 4 더 들여 24에 선다
+      className="flex min-h-screen flex-col items-center px-5 pt-16 pb-10 max-md:min-h-dvh max-md:bg-card"
     >
-      <div className="flex w-full max-w-sm flex-col gap-1.5">
+      <div className="flex w-full max-w-sm flex-col gap-1.5 max-md:max-w-none max-md:px-1">
         <h1 className="text-heading-md">{roomTitle}</h1>
         <p className="text-label-lg text-mint-dark">PIN {formatPin(pin)}</p>
       </div>

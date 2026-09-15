@@ -10,7 +10,7 @@ export type PinInputVariant = "home" | "guest";
 type Props = {
   value: string;
   onChange: (next: string) => void;
-  /** home: 52×64 r14 · 폭 360 space-between (W-01 v6) / guest: 46×56 r12 · gap 8 (C-03) */
+  /** home: 52×64 r14 · 폭 360 space-between (W-01 v6) / guest: 46×56 r12 · gap 8 (C-03 · 앱 M-01) */
   variant?: PinInputVariant;
   disabled?: boolean;
   className?: string;
@@ -19,6 +19,8 @@ type Props = {
 /**
  * 6자리 PIN 입력 — 숨은 input 하나가 값을 갖고 칸 6개는 표시만 한다.
  * 키보드 입력·붙여넣기·백스페이스는 네이티브 input 동작 그대로. 입력 중인 칸은 mint 테두리.
+ *
+ * guest는 폰 폭(768px 미만)에서 칸이 폭을 나눠 갖는다 — 46×6 + 8×5 = 316이라 390 폰 카드 안쪽(306)부터 넘친다.
  */
 export function PinInput({ value, onChange, variant = "home", disabled, className }: Props) {
   const id = useId();
@@ -41,7 +43,7 @@ export function PinInput({ value, onChange, variant = "home", disabled, classNam
     <div
       className={cn(
         "relative flex w-full",
-        variant === "home" ? "justify-between" : "gap-2",
+        variant === "home" ? "justify-between" : "gap-2 max-md:gap-1.5",
         className,
       )}
     >
@@ -54,7 +56,9 @@ export function PinInput({ value, onChange, variant = "home", disabled, classNam
             aria-hidden
             className={cn(
               "flex shrink-0 items-center justify-center text-heading-lg text-mint-dark",
-              variant === "home" ? "h-16 w-13 rounded-[14px]" : "h-14 w-[46px] rounded-xl",
+              variant === "home"
+                ? "h-16 w-13 rounded-[14px]"
+                : "h-14 w-[46px] rounded-xl max-md:w-auto max-md:min-w-0 max-md:flex-1 max-md:shrink",
               active ? "border-2 border-mint bg-card" : "bg-muted",
             )}
           >
