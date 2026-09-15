@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { QuestionStartedPayload } from "@/lib/types/dto";
-import { toLiveQuestion, toRevealView } from "./adapt";
+import type { AnswerResponse, QuestionStartedPayload } from "@/lib/types/dto";
+import { toLiveQuestion, toRevealView, toScoreView } from "./adapt";
 
 const BASE: QuestionStartedPayload = {
   sessionQuestionId: 30,
@@ -80,5 +80,65 @@ describe("toRevealView", () => {
       modelAnswer: "모범답안",
       explanation: null,
     });
+  });
+});
+
+describe("toScoreView", () => {
+  // 서버 AnswerResponse 전 필드 — 문항 30에 낸 정답, 기본 100 + 속도 보너스 47
+  const CORRECT: AnswerResponse = {
+    answerId: 7,
+    sessionQuestionId: 30,
+    isCorrect: true,
+    baseScore: 100,
+    speedBonus: 47,
+    score: 147,
+    submittedAt: "2099-01-01T00:00:00",
+  };
+
+  it("정답이면 서버가 준 총점과 기본·속도 보너스 내역을 그대로 싣는다", () => {
+    expect(toScoreView(CORRECT, 30)).toEqual({
+      verdict: "correct",
+      score: 147,
+      baseScore: 100,
+      speedBonus: 47,
+    });
+  });
+
+  it("오답이면 wrong — 0점도 서버가 확정한 사실이라 숫자를 싣는다", () => {
+    const wrong: AnswerResponse = {
+      answerId: 8,
+      sessionQuestionId: 30,
+      isCorrect: false,
+      baseScore: 0,
+      speedBonus: 0,
+      score: 0,
+      submittedAt: "2099-01-01T00:00:00",
+    };
+    expect(toScoreView(wrong, 30)).toEqual({
+      verdict: "wrong",
+      score: 0,
+      baseScore: 0,
+      speedBonus: 0,
+    });
+  });
+
+  it("서술형은 isCorrect가 빠져 온다 — 오답이 아니라 grading이고 채점 전 점수는 싣지 않는다", () => {
+    const essay: AnswerResponse = {
+      answerId: 9,
+      sessionQuestionId: 30,
+      baseScore: 0,
+      speedBonus: 0,
+      score: 0,
+      submittedAt: "2099-01-01T00:00:00",
+    };
+    expect(toScoreView(essay, 30)).toEqual({ verdict: "grading" });
+  });
+
+  it("다른 문항에 낸 응답이면 null — 이전 문항 점수가 새 문항에 남지 않는다", () => {
+    expect(toScoreView(CORRECT, 31)).toBeNull();
+  });
+
+  it("제출 응답이 없으면(아직 안 냈거나 새로고침 뒤) null", () => {
+    expect(toScoreView(undefined, 30)).toBeNull();
   });
 });
