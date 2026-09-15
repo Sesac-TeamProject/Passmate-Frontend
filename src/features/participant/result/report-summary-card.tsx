@@ -1,3 +1,4 @@
+import { Mascot } from "@/components/common/mascot";
 import { formatDuration, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toRankText } from "./adapt";
@@ -18,7 +19,12 @@ type Props = {
   onSavePdf: () => void;
 };
 
-/** 리포트 머리 카드 — 정답 링 · 방 제목 · KPI 4칸 · PDF 저장 (시안 P-Web 내 리포트 787:8843) */
+/**
+ * 리포트 머리 카드 — 정답 링 · 방 제목 · KPI 4칸 · PDF 저장 (시안 P-Web 내 리포트 787:8843).
+ *
+ * 폰 폭(768px 미만)은 앱 시안 M-06 머리 카드 — 굵은 정답 링 · "내 리포트" · "방 제목 · 순위 · 점수" · 마스코트.
+ * KPI 칸과 PDF 저장(브라우저 인쇄)은 PC에만 둔다 — 요약 줄에 순위·점수가 이미 있고 폰 인쇄는 쓸 일이 없다.
+ */
 export function ReportSummaryCard({
   roomTitle,
   subtitle,
@@ -33,35 +39,57 @@ export function ReportSummaryCard({
 }: Props) {
   const rankText = toRankText(rank, participantCount);
   const elapsedText = elapsedSeconds === null ? "—" : formatDuration(elapsedSeconds);
+  const mobileSubtitle = [roomTitle, rankText, `${formatNumber(score)}점`]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    // 시안은 한 줄(1280)이지만 KPI 4칸이 고정폭이라 좁은 화면에서 카드가 통째로 넘쳤다.
-    // lg 미만에서는 세로로 쌓고 KPI를 2칸씩 접는다.
-    <section className="flex flex-col gap-4 rounded-xl border bg-card px-[21px] py-[17px] lg:flex-row lg:items-center lg:gap-[18px]">
-      <div className="flex min-w-0 items-center gap-[18px] lg:flex-1">
-        <CorrectRing correctCount={correctCount} questionCount={questionCount} />
+    <>
+      {/*
+        시안은 한 줄(1280)이지만 KPI 4칸이 고정폭이라 좁은 화면에서 카드가 통째로 넘쳤다.
+        lg 미만에서는 세로로 쌓고 KPI를 2칸씩 접는다.
+      */}
+      <section className="flex flex-col gap-4 rounded-xl border bg-card px-[21px] py-[17px] max-md:hidden lg:flex-row lg:items-center lg:gap-[18px]">
+        <div className="flex min-w-0 items-center gap-[18px] lg:flex-1">
+          <CorrectRing correctCount={correctCount} questionCount={questionCount} />
 
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <h1 className="truncate text-heading-md text-ink">{roomTitle}</h1>
-          <p className="truncate text-label-md text-muted-foreground">{subtitle}</p>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <h1 className="truncate text-heading-md text-ink">{roomTitle}</h1>
+            <p className="truncate text-label-md text-muted-foreground">{subtitle}</p>
+          </div>
         </div>
-      </div>
 
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 lg:flex lg:shrink-0 lg:items-center lg:gap-0">
-        <Kpi label="순위" value={rankText} />
-        <Kpi label="정답률" value={`${accuracyPercent}%`} divided />
-        <Kpi label="소요 시간" value={elapsedText} divided />
-        <Kpi label="획득 점수" value={`${formatNumber(score)}점`} divided />
-      </dl>
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 lg:flex lg:shrink-0 lg:items-center lg:gap-0">
+          <Kpi label="순위" value={rankText} />
+          <Kpi label="정답률" value={`${accuracyPercent}%`} divided />
+          <Kpi label="소요 시간" value={elapsedText} divided />
+          <Kpi label="획득 점수" value={`${formatNumber(score)}점`} divided />
+        </dl>
 
-      <button
-        type="button"
-        onClick={onSavePdf}
-        className="h-11 w-full shrink-0 rounded-lg border bg-card text-label-md text-ink transition-colors hover:bg-muted lg:w-25"
-      >
-        PDF 저장
-      </button>
-    </section>
+        <button
+          type="button"
+          onClick={onSavePdf}
+          className="h-11 w-full shrink-0 rounded-lg border bg-card text-label-md text-ink transition-colors hover:bg-muted lg:w-25"
+        >
+          PDF 저장
+        </button>
+      </section>
+
+      {/* 폰 폭 — 앱 M-06 머리 카드 */}
+      <section className="relative flex items-center gap-4 rounded-3xl border bg-card p-5 md:hidden">
+        <span className="flex size-[76px] shrink-0 flex-col items-center justify-center rounded-full border-[6px] border-mint">
+          <span className="text-heading-md text-mint-dark">
+            {correctCount}/{questionCount}
+          </span>
+          <span className="text-label-md text-muted-foreground">정답</span>
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-[3px] pr-12">
+          <h1 className="text-heading-lg text-ink">내 리포트</h1>
+          <p className="truncate text-label-lg text-muted-foreground">{mobileSubtitle}</p>
+        </div>
+        <Mascot className="absolute top-[27px] right-4 h-[57px] w-[52px]" />
+      </section>
+    </>
   );
 }
 

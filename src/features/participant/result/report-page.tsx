@@ -1,3 +1,4 @@
+import { MobileTopBar } from "@/components/common/mobile-top-bar";
 import {
   ReportInsights,
   type ReportComparison,
@@ -42,6 +43,9 @@ type Props = {
  * P-Web 내 리포트 (시안 787:8834) — 렌더 전용.
  * 시안 크기는 10종 타이포 토큰에 스냅한다: 18/700 제목→heading-md, 16/700 KPI→heading-sm,
  * 14/700 카드 제목→label-lg, 12.5 이하 본문·표·칩→label-md.
+ *
+ * 폰 폭(768px 미만)은 앱 시안 M-06 — "← 리포트" 줄, 정답 링 요약 카드, 문항은 표 대신 줄 목록.
+ * 앱에 없는 다음 단계 제안·신고 링크는 웹 기능이라 남긴다.
  */
 export function ReportPage({
   roomTitle,
@@ -68,16 +72,17 @@ export function ReportPage({
   onReport,
 }: Props) {
   return (
-    <main className="min-h-screen bg-background px-4 pt-[26px] pb-10 sm:px-8 lg:px-20">
+    <main className="min-h-screen bg-background px-4 pt-[26px] pb-10 max-md:min-h-dvh max-md:bg-card max-md:px-5 max-md:pt-10 sm:px-8 lg:px-20">
       {/* 시안은 1440에서 본문 1280 — 폭을 묶고 남는 공간은 좌우로 나눈다 (W-09와 같은 규칙) */}
-      <div className="mx-auto flex max-w-[1280px] flex-col gap-4">
+      <div className="mx-auto flex max-w-[1280px] flex-col gap-4 max-md:gap-3.5">
         <button
           type="button"
           onClick={onBack}
-          className="self-start text-label-md text-muted-foreground transition-colors hover:text-foreground"
+          className="self-start text-label-md text-muted-foreground transition-colors hover:text-foreground max-md:hidden"
         >
           ‹ 참여한 방으로
         </button>
+        <MobileTopBar title="리포트" onBack={onBack} />
 
         <ReportSummaryCard
           roomTitle={roomTitle}
