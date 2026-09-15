@@ -142,7 +142,7 @@ export function FinalResultPage({
         <section className="relative flex flex-col items-center gap-3.5 bg-mint-bg px-5 pt-14 pb-[70px]">
           <h1 className="text-label-lg text-mint-ink">최종 결과</h1>
           <MobilePodium entries={podium} />
-          <Mascot className="absolute top-9 right-6 h-[66px] w-[60px]" />
+          <Mascot variant="pass" className="absolute top-9 right-6 h-[66px] w-[60px]" />
         </section>
 
         {/* 민트 띠(relative)가 먼저 그려져 겹친 카드 윗부분을 덮었다 — 카드를 한 층 위로 올린다 */}

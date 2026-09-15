@@ -14,6 +14,8 @@ const VARIANT = {
   phone: { src: "/mascot/passy-phone.svg", width: 68, height: 75 },
   /** 눈 뜬 + 리포트 카드 — 내 리포트(M-06) */
   report: { src: "/mascot/passy-report.svg", width: 59, height: 57 },
+  /** 눈 감은 + "PASS" 배지 — 최종 결과(M-05) */
+  pass: { src: "/mascot/passy-pass.svg", width: 68, height: 75 },
 } as const;
 
 export type MascotVariant = keyof typeof VARIANT;
