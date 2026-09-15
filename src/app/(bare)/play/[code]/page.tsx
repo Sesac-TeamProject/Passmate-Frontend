@@ -7,7 +7,7 @@ import { ScreenError } from "@/components/common/screen-error";
 import { AppError } from "@/lib/types/app-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
-import { toLiveQuestion } from "@/features/participant/play/adapt";
+import { toLiveQuestion, toScoreView } from "@/features/participant/play/adapt";
 import { WaitingPage } from "@/features/participant/play/waiting-page";
 import { PlayPage } from "@/features/participant/play/play-page";
 import { readMyParticipant } from "@/lib/my-participant";
@@ -124,6 +124,8 @@ export default function Page() {
     // 마감 결과는 **지금 열려 있는 문항의 것**일 때만 — 늦게 온 이전 문항 마감은 리듀서가 버리지만 한 번 더 지킨다
     const currentReveal =
       reveal && reveal.sessionQuestionId === currentQuestion.sessionQuestionId ? reveal : null;
+    // 제출 응답(서버 채점)을 그대로 점수 카드로 — 뮤테이션 결과가 원본이라 따로 보관하지 않는다
+    const score = toScoreView(submitAnswer.data, currentQuestion.sessionQuestionId);
 
     /**
      * 화면이 주는 값이 곧 서버가 받는 값이다 — 고른 보기의 **원문**, 서술형은 본문.
@@ -147,6 +149,7 @@ export default function Page() {
         onSubmit={handleSubmit}
         submitting={submitAnswer.isPending}
         hasSubmitted={submitted || submittedQuestionId === currentQuestion.questionId}
+        score={score}
         reveal={currentReveal}
         isLocked={screenLocked}
         hint={latestHint}

@@ -1,5 +1,6 @@
 import type { LiveQuestion } from "@/features/host/types";
 import type { QuestionEndedPayload, VoiceHintEntry } from "@/lib/types/dto";
+import type { ScoreView } from "./adapt";
 import { HintBanner } from "./hint-banner";
 import { PlayCard } from "./play-card";
 
@@ -8,6 +9,8 @@ type Props = {
   onSubmit: (content: string) => void;
   submitting?: boolean;
   hasSubmitted?: boolean;
+  /** 이 문항에 낸 답의 서버 채점 결과. 제출 응답이 없으면 null */
+  score?: ScoreView | null;
   /** 이 문항의 마감 결과(정답·해설). 다음 문항이 열리기 전까지 카드가 결과를 보인다 */
   reveal?: Pick<QuestionEndedPayload, "answer" | "explanation"> | null;
   /** 선생님이 화면을 잠갔을 때 카드 위에 덮는다 */
@@ -24,6 +27,7 @@ export function PlayPage({
   onSubmit,
   submitting = false,
   hasSubmitted = false,
+  score = null,
   reveal = null,
   isLocked = false,
   hint = null,
@@ -37,6 +41,7 @@ export function PlayPage({
           onSubmit={onSubmit}
           submitting={submitting}
           hasSubmitted={hasSubmitted}
+          score={score}
           reveal={reveal}
           banner={
             hint && (

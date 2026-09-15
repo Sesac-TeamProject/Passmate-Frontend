@@ -1,6 +1,7 @@
 import type { ChoiceKey, LiveQuestion, QuestionType } from "@/features/host/types";
 import { remainingMs } from "@/lib/datetime";
 import type {
+  AnswerResponse,
   QuestionEndedPayload,
   QuestionStartedPayload,
   QuestionType as WireQuestionType,
@@ -85,7 +86,12 @@ export function toRevealView(
 ): RevealView {
   const explanation = reveal.explanation?.trim() ? reveal.explanation : null;
   if (question.type === "essay") {
-    return { outcome: "essay", correctIndex: null, modelAnswer: reveal.answer ?? null, explanation };
+    return {
+      outcome: "essay",
+      correctIndex: null,
+      modelAnswer: reveal.answer ?? null,
+      explanation,
+    };
   }
 
   const found = question.choices.findIndex((c) => c.text === reveal.answer);
@@ -98,4 +104,33 @@ export function toRevealView(
         ? "correct"
         : "wrong";
   return { outcome, correctIndex, modelAnswer: null, explanation };
+}
+
+/**
+ * 답을 낸 직후 학생이 보는 점수 카드. 서버가 채점해 돌려준 값을 옮길 뿐 — 점수·정오를 계산하지 않는다(규칙 §13).
+ * 서술형은 서버가 정오를 비워 보낸다 — 채점 전 점수를 `+0점`으로 보이면 없는 사실을 만든다.
+ */
+export type ScoreView =
+  | { verdict: "correct" | "wrong"; score: number; baseScore: number; speedBonus: number }
+  | { verdict: "grading" };
+
+/**
+ * `POST …/answers` 응답 → 점수 카드. 앱(M-04)은 제출 즉시 `+147점`을 보이는데 웹은 버튼만 꺼져서
+ * 제출이 됐는지 알기 어려웠다(2026-09-16 사용자 확인).
+ *
+ * 응답이 **지금 문항의 것**일 때만 카드를 만든다 — 다음 문항이 열린 뒤 이전 점수가 남지 않게.
+ * 응답이 없으면(새로고침 뒤 스냅샷의 `submitted`만 남은 경우) null — 화면은 "제출 완료"로 접는다.
+ */
+export function toScoreView(
+  answer: AnswerResponse | undefined,
+  sessionQuestionId: number,
+): ScoreView | null {
+  if (!answer || answer.sessionQuestionId !== sessionQuestionId) return null;
+  if (answer.isCorrect === undefined) return { verdict: "grading" };
+  return {
+    verdict: answer.isCorrect ? "correct" : "wrong",
+    score: answer.score,
+    baseScore: answer.baseScore,
+    speedBonus: answer.speedBonus,
+  };
 }

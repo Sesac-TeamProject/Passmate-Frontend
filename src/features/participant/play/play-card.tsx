@@ -7,7 +7,7 @@ import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import { remainingMs } from "@/lib/datetime";
 import type { QuestionEndedPayload } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
-import { toRevealView, type RevealView } from "./adapt";
+import { toRevealView, type RevealView, type ScoreView } from "./adapt";
 
 type Props = {
   question: LiveQuestion;
@@ -16,6 +16,8 @@ type Props = {
   submitting?: boolean;
   /** 이 문항을 이미 제출했으면 재제출을 막고 완료 상태를 보인다 */
   hasSubmitted?: boolean;
+  /** 이 문항에 낸 답을 서버가 채점해 돌려준 점수. 응답이 없으면(새로고침 뒤 등) null — "제출 완료"로 접는다 */
+  score?: ScoreView | null;
   /** 이 문항이 마감됐을 때 서버가 준 정답·해설. 다음 문항이 열리면 null로 돌아간다 */
   reveal?: Pick<QuestionEndedPayload, "answer" | "explanation"> | null;
   banner?: ReactNode;
@@ -29,6 +31,13 @@ const OUTCOME_LABEL: Record<Exclude<RevealView["outcome"], "essay">, string> = {
   submitted: "제출 완료 · 결과는 리포트에서 볼 수 있어요",
 };
 
+/** 점수 카드 배지 — 서버 채점 결과 그대로 */
+const VERDICT_LABEL: Record<ScoreView["verdict"], string> = {
+  correct: "정답",
+  wrong: "오답",
+  grading: "채점 중",
+};
+
 const mmss = (s: number) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
@@ -38,6 +47,7 @@ export function PlayCard({
   onSubmit,
   submitting = false,
   hasSubmitted = false,
+  score = null,
   reveal = null,
   banner,
 }: Props) {
@@ -167,8 +177,15 @@ export function PlayCard({
           </ol>
         )}
 
+        {/* 점수 카드는 제출 직후부터 다음 문항이 열릴 때까지 — 마감되면 그 아래에 정답·해설이 붙는다 */}
+        {score && <ScoreCard score={score} />}
+
         {result ? (
-          <RevealBlock result={result} />
+          <RevealBlock result={result} showOutcome={score === null} />
+        ) : score ? (
+          <span className="text-center text-label-md text-muted-foreground">
+            정답과 해설은 문항이 마감되면 보여요
+          </span>
         ) : (
           <button
             type="button"
@@ -185,10 +202,63 @@ export function PlayCard({
 }
 
 /**
+ * 제출 직후 점수 카드(앱 M-04와 같은 구성) — 배지 · `+147점` · 점수 내역.
+ * 정답일 때만 민트를 쓴다 — 오답·채점 중까지 민트면 실패가 성공처럼 읽힌다(앱에서 실측된 문제).
+ */
+function ScoreCard({ score }: { score: ScoreView }) {
+  const isCorrect = score.verdict === "correct";
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "flex flex-col gap-2 rounded-2xl px-5 py-4",
+        isCorrect ? "bg-mint-bg" : "bg-muted",
+      )}
+    >
+      <span
+        className={cn(
+          "w-fit rounded-full px-3.5 py-1 text-label-lg",
+          isCorrect ? "bg-mint text-white" : "bg-card text-muted-foreground",
+        )}
+      >
+        {VERDICT_LABEL[score.verdict]}
+      </span>
+      {score.verdict === "grading" ? (
+        <p className="text-label-lg text-muted-foreground">
+          서술형은 AI 분석·선생님 첨삭 후 확정돼요
+        </p>
+      ) : (
+        <>
+          <p
+            className={cn(
+              "text-display-md tabular-nums",
+              isCorrect ? "text-mint-dark" : "text-ink",
+            )}
+          >
+            +{score.score}점
+          </p>
+          <p
+            className={cn("text-label-lg", isCorrect ? "text-mint-dark" : "text-muted-foreground")}
+          >
+            {isCorrect
+              ? `기본 +${score.baseScore} · 속도 보너스 +${score.speedBonus}`
+              : "아쉬워요, 다음 문항에서 만회해요"}
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
  * 마감 결과 — 정오 한 줄(서술형은 모범 답안) + 해설. 제출 버튼 자리에 들어간다.
  * 다음 문항은 서버 이벤트가 연다(자동 넘김 5초 또는 선생님의 "다음 문항") — 학생이 누를 것은 없다.
+ *
+ * `showOutcome`이 false면 위에 점수 카드가 이미 정오·채점 안내를 말했다 — 같은 말을 되풀이하지 않는다.
  */
-function RevealBlock({ result }: { result: RevealView }) {
+function RevealBlock({ result, showOutcome }: { result: RevealView; showOutcome: boolean }) {
   const tone =
     result.outcome === "correct"
       ? "bg-mint-bg text-mint-dark"
@@ -199,22 +269,24 @@ function RevealBlock({ result }: { result: RevealView }) {
   return (
     <div role="status" aria-live="polite" className="flex flex-col gap-3">
       {result.outcome === "essay" ? (
-        <div className="flex flex-col gap-1.5 rounded-xl bg-mint-bg px-4 py-3">
-          <span className="text-label-md text-mint-dark">모범 답안</span>
-          <p className="text-body-md break-keep whitespace-pre-wrap text-ink">
-            {result.modelAnswer ?? "선생님이 첨삭하면 점수가 반영돼요"}
-          </p>
-          {result.modelAnswer && (
-            <span className="text-label-md text-muted-foreground">
-              선생님이 첨삭하면 점수가 반영돼요
-            </span>
-          )}
-        </div>
-      ) : (
+        (showOutcome || result.modelAnswer) && (
+          <div className="flex flex-col gap-1.5 rounded-xl bg-mint-bg px-4 py-3">
+            <span className="text-label-md text-mint-dark">모범 답안</span>
+            <p className="text-body-md break-keep whitespace-pre-wrap text-ink">
+              {result.modelAnswer ?? "선생님이 첨삭하면 점수가 반영돼요"}
+            </p>
+            {result.modelAnswer && showOutcome && (
+              <span className="text-label-md text-muted-foreground">
+                선생님이 첨삭하면 점수가 반영돼요
+              </span>
+            )}
+          </div>
+        )
+      ) : showOutcome ? (
         <p className={cn("rounded-xl px-4 py-3 text-label-lg", tone)}>
           {OUTCOME_LABEL[result.outcome]}
         </p>
-      )}
+      ) : null}
 
       {result.explanation && (
         <div className="flex flex-col gap-1.5 rounded-xl bg-muted px-4 py-3">
