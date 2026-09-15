@@ -161,25 +161,27 @@ export function QuestionForm({
         />
       </Field>
 
+      {/*
+        number 입력은 React가 느슨한 비교로만 동기화해 앞자리 0("030")이 DOM에 남고,
+        비우는 즉시 Number("")=0이 박힌다 — 텍스트로 받아 숫자만 남기고, 빈 칸은 빈 칸으로 둔다.
+      */}
       <div className="flex gap-3">
         <Field label="배점 (1~1000)">
           <input
-            type="number"
-            min={1}
-            max={1000}
+            type="text"
+            inputMode="numeric"
             className={FIELD}
             value={values.points}
-            onChange={(e) => set({ points: Number(e.target.value) })}
+            onChange={(e) => set({ points: e.target.value.replace(/\D/g, "") })}
           />
         </Field>
         <Field label="제한 시간 (5~600초)">
           <input
-            type="number"
-            min={5}
-            max={600}
+            type="text"
+            inputMode="numeric"
             className={FIELD}
             value={values.seconds}
-            onChange={(e) => set({ seconds: Number(e.target.value) })}
+            onChange={(e) => set({ seconds: e.target.value.replace(/\D/g, "") })}
           />
         </Field>
       </div>
