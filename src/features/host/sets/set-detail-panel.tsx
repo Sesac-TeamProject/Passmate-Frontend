@@ -90,14 +90,24 @@ export function SetDetailPanel({ set, previewLoading = false, onClone, cloning }
         >
           이 세트로 방 만들기
         </Link>
-        <button
-          type="button"
-          onClick={onClone}
-          disabled={cloning}
-          className="flex h-[46px] items-center justify-center rounded-[14px] bg-muted text-label-lg text-mint-dark transition-colors hover:bg-mint-tint disabled:opacity-60"
-        >
-          {cloning ? <PendingLabel>복제하는 중…</PendingLabel> : "복제해서 수정하기"}
-        </button>
+        {/* DRAFT는 원본을 에디터에서 그대로 이어서 고친다 — 확정 세트만 복제가 유일한 수정 경로다 */}
+        {set.isConfirmed === false ? (
+          <Link
+            href={`/host/editor?set=${set.id}`}
+            className="flex h-[46px] items-center justify-center rounded-[14px] bg-muted text-label-lg text-mint-dark transition-colors hover:bg-mint-tint"
+          >
+            이어서 수정하기
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={onClone}
+            disabled={cloning}
+            className="flex h-[46px] items-center justify-center rounded-[14px] bg-muted text-label-lg text-mint-dark transition-colors hover:bg-mint-tint disabled:opacity-60"
+          >
+            {cloning ? <PendingLabel>복제하는 중…</PendingLabel> : "복제해서 수정하기"}
+          </button>
+        )}
       </div>
     </aside>
   );
