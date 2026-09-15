@@ -151,6 +151,29 @@ describe("세션 리듀서 — 서버 이벤트 7종", () => {
   it("페이로드가 배열이 아니어도 랭킹 자리를 깨뜨리지 않는다", () => {
     expect(reduce(initialSessionState, event("RANKING_UPDATED", undefined)).ranking).toEqual([]);
   });
+
+  it("변동값 없는 SESSION_ENDED 는 직전 랭킹의 변동을 이어받는다", () => {
+    // 종료 화면으로 넘어오는 순간 화살표가 전부 "—" 로 리셋되던 원인(시연 2026-09-15)
+    const withChange = RANKING.map((entry) => ({
+      ...entry,
+      rankChange: entry.rank === 1 ? 2 : -1,
+    }));
+    const mid = { ...initialSessionState, ranking: withChange };
+
+    const next = reduce(mid, event("SESSION_ENDED", RANKING));
+
+    expect(next.finalRanking.map((entry) => entry.rankChange)).toEqual([2, -1]);
+  });
+
+  it("서버가 변동을 실어 보낸 랭킹은 그대로 쓴다 — 이어받기는 없을 때만", () => {
+    const stale = RANKING.map((entry) => ({ ...entry, rankChange: 5 }));
+    const mid = { ...initialSessionState, ranking: stale };
+    const fresh = RANKING.map((entry) => ({ ...entry, rankChange: 0 }));
+
+    const next = reduce(mid, event("SESSION_ENDED", fresh));
+
+    expect(next.finalRanking.map((entry) => entry.rankChange)).toEqual([0, 0]);
+  });
 });
 
 /**
@@ -208,6 +231,18 @@ describe("applySnapshot", () => {
     expect(next.currentQuestion).toEqual(QUESTION);
     expect(next.submitted).toBe(true);
     expect(next.ranking).toEqual(RANKING);
+  });
+
+  it("스냅샷 랭킹에는 변동값이 없다 — 재접속해도 직전 화살표를 잃지 않는다", () => {
+    const withChange = RANKING.map((entry) => ({
+      ...entry,
+      rankChange: entry.rank === 1 ? 1 : -1,
+    }));
+    const mid = { ...initialSessionState, ranking: withChange };
+
+    const next = applySnapshot(mid, snapshot);
+
+    expect(next.ranking.map((entry) => entry.rankChange)).toEqual([1, -1]);
   });
 
   it("WAITING 스냅샷도 정상 응답이다 — 404가 아니다", () => {

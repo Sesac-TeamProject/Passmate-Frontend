@@ -10,12 +10,13 @@ export type RankingRow = { rank: number; student: Student; score: number; change
 export const RANKING_LIMIT = 5;
 
 /** 순위 변동. twMerge의 text-* 충돌을 피하려 clsx를 쓴다 */
-function RankChange({ change }: { change: number }) {
+function RankChange({ change, compact = false }: { change: number; compact?: boolean }) {
   const label = change > 0 ? `▲${change}` : change < 0 ? `▼${Math.abs(change)}` : "—";
   return (
     <span
       className={clsx(
-        "shrink-0 text-body-md font-bold",
+        "shrink-0 font-bold",
+        compact ? "text-label-md" : "text-body-md",
         change > 0 ? "text-mint-dark" : change < 0 ? "text-muted-foreground" : "text-ink-disabled",
       )}
     >
@@ -116,7 +117,12 @@ export function ResultRailMini({ rows }: { rows: RankingRow[] }) {
                 row.rank === 1 && "ring-2 ring-mint ring-offset-2 ring-offset-surface-subtle",
               )}
             />
-            <span className="text-label-md font-bold text-ink-disabled">{row.rank}</span>
+            <span className="flex items-center gap-1">
+              <span className="text-label-md font-bold text-ink-disabled">{row.rank}</span>
+              {/* 접힌 레일에도 변동은 보인다 — 여기만 접어 두면 시연 내내 화살표를 못 본다(2026-09-15).
+                  "—" 까지 늘어놓으면 72px 폭이 어수선해 움직임이 있을 때만 그린다 */}
+              {row.change !== 0 && <RankChange change={row.change} compact />}
+            </span>
           </li>
         ))}
       </ol>
