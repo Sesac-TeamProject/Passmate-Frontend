@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import {
@@ -32,6 +32,9 @@ const NO_SET_MESSAGE = "이 방에 연결된 문제 세트를 찾지 못했어�
 export default function Page() {
   const params = useParams<{ code: string }>();
   const pin = params.code;
+  const router = useRouter();
+  // router.back()이 아니라 대기실 고정이다 — 주소로 바로 들어오면 뒤가 이 앱이 아닐 수 있다
+  const lobbyHref = `/host/rooms/${pin}/lobby`;
 
   const room = useRoomByPin(pin);
   // PIN 조회에는 연결된 세트·상태가 없다(입장 전 정보) — 호스트용 방 상세에서 읽는다
@@ -82,7 +85,11 @@ export default function Page() {
   const save = async () => {
     if (updateQuestionTimes.isPending) return;
     setSaveError(null);
-    if (!hasTimingChanges(questions, edits)) return;
+    // 저장을 눌렀는데 화면이 그대로면 무반응으로 보인다 — 성공하면(변경이 없어도) 대기실로 돌아간다
+    if (!hasTimingChanges(questions, edits)) {
+      router.push(lobbyHref);
+      return;
+    }
 
     try {
       await updateQuestionTimes.mutateAsync({
@@ -90,6 +97,7 @@ export default function Page() {
         body: toQuestionTimesRequest(questions, edits),
       });
       setEdits({});
+      router.push(lobbyHref);
     } catch (error) {
       setSaveError(toTimingErrorMessage(error));
     }
@@ -98,6 +106,7 @@ export default function Page() {
   return (
     <TimingPage
       title={current.title}
+      backHref={lobbyHref}
       rows={rows}
       preset={preset}
       onPreset={setPreset}
