@@ -145,7 +145,8 @@ export function FinalResultPage({
           <Mascot className="absolute top-9 right-6 h-[66px] w-[60px]" />
         </section>
 
-        <div className="-mt-10 px-5">
+        {/* 민트 띠(relative)가 먼저 그려져 겹친 카드 윗부분을 덮었다 — 카드를 한 층 위로 올린다 */}
+        <div className="relative z-10 -mt-10 px-5">
           <section className="flex flex-col items-center gap-2.5 rounded-3xl border bg-card px-5 py-[22px]">
             <p className="text-heading-sm text-ink">{mobileSummary}</p>
             <MobileRankList rows={rankRows} />
