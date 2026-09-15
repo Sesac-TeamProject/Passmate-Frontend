@@ -83,11 +83,12 @@ export function ReportSummaryCard({
           </span>
           <span className="text-label-md text-muted-foreground">정답</span>
         </span>
-        <div className="flex min-w-0 flex-1 flex-col gap-[3px] pr-12">
+        {/* 마스코트가 오른쪽에 겹쳐 서므로 그 폭(59)+여백만큼 글자를 비켜 둔다 */}
+        <div className="flex min-w-0 flex-1 flex-col gap-[3px] pr-20">
           <h1 className="text-heading-lg text-ink">내 리포트</h1>
           <p className="truncate text-label-lg text-muted-foreground">{mobileSubtitle}</p>
         </div>
-        <Mascot className="absolute top-[27px] right-4 h-[57px] w-[52px]" />
+        <Mascot variant="report" className="absolute top-[27px] right-4 h-[57px] w-[59px]" />
       </section>
     </>
   );

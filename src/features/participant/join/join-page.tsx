@@ -85,7 +85,7 @@ export function JoinPage({
       <header className="relative flex flex-col gap-1.5 px-6 pt-16 pb-15 md:hidden">
         <p className="text-heading-lg text-mint-dark">패스메이트</p>
         <p className="text-label-lg text-muted-foreground">방 코드를 입력하고 시작하세요</p>
-        <Mascot className="absolute top-11 right-7 h-[75px] w-[68px]" />
+        <Mascot variant="phone" className="absolute top-11 right-7 h-[75px] w-[68px]" />
       </header>
 
       <section className="flex w-[380px] flex-col gap-5 rounded-3xl border bg-card px-[22px] py-[26px] max-md:mx-5 max-md:-mt-5 max-md:w-auto">

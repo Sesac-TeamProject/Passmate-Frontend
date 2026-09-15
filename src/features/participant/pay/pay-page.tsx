@@ -83,7 +83,7 @@ export function PayPage({
             유료 방이에요 — 결제 후 입장할 수 있어요
           </p>
         </div>
-        <Mascot className="absolute top-11 right-2 h-[75px] w-[68px]" />
+        <Mascot variant="phone" className="absolute top-11 right-2 h-[75px] w-[68px]" />
       </header>
 
       <div className="flex gap-5 max-md:flex-col max-md:gap-4">
