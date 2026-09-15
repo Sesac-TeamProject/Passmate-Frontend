@@ -5,6 +5,7 @@ import type {
   QuestionEndedPayload,
   QuestionStartedPayload,
   QuestionType as WireQuestionType,
+  RankingEntry,
 } from "@/lib/types/dto";
 
 const QUESTION_TYPE_MAP: Record<WireQuestionType, QuestionType> = {
@@ -133,4 +134,62 @@ export function toScoreView(
     baseScore: answer.baseScore,
     speedBonus: answer.speedBonus,
   };
+}
+
+/** 모바일 문항 결과(M-04) "응답 분포" 한 줄 */
+export type DistributionRow = {
+  key: ChoiceKey;
+  text: string;
+  /** 서버 분포의 인원 */
+  count: number;
+  /** 막대 너비(0~100). 이 문항에 답한 인원 합 기준 — 아무도 없으면 0 */
+  percent: number;
+  /** 서버가 공개한 정답 보기인가 */
+  isAnswer: boolean;
+};
+
+/**
+ * `QUESTION_ENDED`의 `distribution`(키 = 보기 원문, OX는 "O"/"X") → 보기 순서대로 인원·막대 비율.
+ * 인원과 정답은 서버 값 그대로이고, 여기서 만드는 것은 막대 너비뿐이다. 서술형은 보기가 없어 빈 배열.
+ */
+export function toDistributionRows(
+  reveal: Pick<QuestionEndedPayload, "answer" | "distribution">,
+  question: Pick<LiveQuestion, "choices">,
+): DistributionRow[] {
+  const counts = question.choices.map((choice) => reveal.distribution[choice.text] ?? 0);
+  const total = counts.reduce((sum, count) => sum + count, 0);
+
+  return question.choices.map((choice, i) => ({
+    key: choice.key,
+    text: choice.text,
+    count: counts[i],
+    percent: total === 0 ? 0 : Math.round((counts[i] / total) * 100),
+    isAnswer: choice.text === reveal.answer,
+  }));
+}
+
+/** 모바일 문항 결과(M-04) "현재 4위 ▲1" 칩 */
+export type RankChip = { rank: number; change: number };
+
+/**
+ * 실시간 순위표에서 내 줄을 찾는다. 참가 기록이 없어(다른 탭·새로고침) 내가 누구인지 모르거나
+ * 순위표에 아직 없으면 null — 칩을 감춘다. 변동값은 첫 문항 등에서 키가 빠지므로 0으로 접는다.
+ */
+export function toMyRankChip(
+  ranking: RankingEntry[],
+  myParticipantId: number | null,
+): RankChip | null {
+  if (myParticipantId === null) return null;
+  const mine = ranking.find((entry) => entry.participantId === myParticipantId);
+  if (!mine) return null;
+  return { rank: mine.rank, change: mine.rankChange ?? 0 };
+}
+
+/**
+ * 모바일 타이머 막대(M-03) 채움 비율 0~1. 남은 초는 서버 마감 시각에서 계산한 값을 받는다 —
+ * 막대를 그릴 뿐 만료를 판정하지 않는다. 제한시간이 없으면(0) 빈 막대.
+ */
+export function toTimerProgress(remainingSeconds: number, limitSeconds: number): number {
+  if (limitSeconds <= 0) return 0;
+  return Math.min(1, Math.max(0, remainingSeconds / limitSeconds));
 }
