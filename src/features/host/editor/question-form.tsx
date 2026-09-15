@@ -10,6 +10,11 @@ const FIELD =
   "h-[46px] w-full rounded-xl bg-muted px-3.5 text-label-lg text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const TYPES: QuestionType[] = ["multiple", "ox", "essay"];
 
+/** 숫자만, 앞자리 0 없이 — "030" 같은 표시를 입력 단계에서 막는다 */
+function toDigits(raw: string): string {
+  return raw.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+}
+
 type Props = {
   values: QuestionFormValues;
   onChange: (values: QuestionFormValues) => void;
@@ -164,6 +169,7 @@ export function QuestionForm({
       {/*
         number 입력은 React가 느슨한 비교로만 동기화해 앞자리 0("030")이 DOM에 남고,
         비우는 즉시 Number("")=0이 박힌다 — 텍스트로 받아 숫자만 남기고, 빈 칸은 빈 칸으로 둔다.
+        일부러 0을 먼저 쳐도 "030"이 되지 않게 앞자리 0도 걷어낸다.
       */}
       <div className="flex gap-3">
         <Field label="배점 (1~1000)">
@@ -172,7 +178,7 @@ export function QuestionForm({
             inputMode="numeric"
             className={FIELD}
             value={values.points}
-            onChange={(e) => set({ points: e.target.value.replace(/\D/g, "") })}
+            onChange={(e) => set({ points: toDigits(e.target.value) })}
           />
         </Field>
         <Field label="제한 시간 (5~600초)">
@@ -181,7 +187,7 @@ export function QuestionForm({
             inputMode="numeric"
             className={FIELD}
             value={values.seconds}
-            onChange={(e) => set({ seconds: e.target.value.replace(/\D/g, "") })}
+            onChange={(e) => set({ seconds: toDigits(e.target.value) })}
           />
         </Field>
       </div>
