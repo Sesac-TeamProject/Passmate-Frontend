@@ -1,6 +1,7 @@
 import { AppError } from "@/lib/types/app-error";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 import type {
+  MaterialExtractResponse,
   AiGenerateRequest,
   PageResponse,
   QuestionRequest,
@@ -333,4 +334,19 @@ export function __resetQuestionSetsForTests(): void {
   }));
   nextSetId = 1000;
   nextQuestionId = 1000;
+}
+
+/**
+ * POST /materials/extract — 파일 내용을 브라우저에서 읽을 수 없는 목 환경이라
+ * 파일 이름만 살리고 본문은 고정 문구로 돌려준다. 라우트 스윕의 `{}` 호출도 견딘다.
+ */
+export async function mockExtractMaterial(form: FormData): Promise<MaterialExtractResponse> {
+  const file = form instanceof FormData ? (form.get("file") as File | null) : null;
+  const text = "목 환경 강의자료 본문 — 실제 추출은 백엔드에서 한다.";
+  return {
+    fileName: file?.name ?? "강의자료.pdf",
+    text,
+    charCount: text.length,
+    truncated: false,
+  };
 }

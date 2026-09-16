@@ -4,6 +4,10 @@ import { BrandLogo } from "@/components/common/brand-logo";
 import { FitToViewport } from "@/components/common/fit-to-viewport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LEGAL_DOCUMENTS } from "@/features/legal/legal-documents";
+
+/** 동의 안내 문장 안의 문서 링크. 문장과 같은 크기로 두고 밑줄로만 링크임을 알린다 */
+const LEGAL_LINK = "underline underline-offset-2 hover:text-muted-foreground";
 
 /**
  * 개발용 로그인(`POST /auth/dev-login`) 패널. 로컬·dev 백엔드에만 있는 API라
@@ -71,12 +75,16 @@ export function LoginPage({ googleButton, devLogin }: Props) {
             >
               PIN으로 게스트 입장
             </Button>
-            {/*
-              약관·개인정보처리방침 문서가 아직 없다 — 페이지를 만들기 전에 링크를 걸면 404다.
-              문서가 생기면 이 문장의 두 이름에 링크를 건다.
-            */}
             <p className="text-center text-label-md text-ink-disabled">
-              계속하면 이용약관과 개인정보 처리방침에 동의한 것으로 봅니다
+              계속하면{" "}
+              <Link href={LEGAL_DOCUMENTS.terms.path} className={LEGAL_LINK}>
+                이용약관
+              </Link>
+              과{" "}
+              <Link href={LEGAL_DOCUMENTS.privacy.path} className={LEGAL_LINK}>
+                개인정보 처리방침
+              </Link>
+              에 동의한 것으로 봅니다
             </p>
           </div>
 

@@ -272,6 +272,8 @@ function Cta() {
   );
 }
 
+const FOOTER_LINK = "text-label-md text-muted-foreground hover:text-ink";
+
 function LandingFooter() {
   return (
     <footer className="bg-card py-10">
@@ -281,12 +283,18 @@ function LandingFooter() {
           <span className="text-label-md text-ink-disabled">© 2026 새싹수들 · PassMate</span>
         </div>
         <nav className="flex gap-5">
-          {FOOTER_LINKS.map((label) => (
-            // TODO: 약관·개인정보·문의·GitHub 링크 대상 미정
-            <a key={label} href="#" className="text-label-md text-muted-foreground hover:text-ink">
-              {label}
-            </a>
-          ))}
+          {FOOTER_LINKS.map(({ label, href }) =>
+            href ? (
+              <Link key={label} href={href} className={FOOTER_LINK}>
+                {label}
+              </Link>
+            ) : (
+              // TODO: 문의·GitHub 링크 대상 미정
+              <a key={label} href="#" className={FOOTER_LINK}>
+                {label}
+              </a>
+            ),
+          )}
         </nav>
       </div>
     </footer>

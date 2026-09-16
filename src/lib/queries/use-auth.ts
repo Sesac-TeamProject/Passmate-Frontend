@@ -4,9 +4,17 @@ import { clearGuestToken } from "@/lib/guest-token-storage";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { clearRefreshToken, writeRefreshToken } from "@/lib/token-storage";
 
+/** 로그아웃 뒤 도착지 — 서비스 첫 화면인 랜딩(L-01). 배포된 주소가 그대로 랜딩이라 경로만 쓴다 */
+const LANDING_PATH = "/";
+
 /**
  * POST /auth/logout — refresh 무효화. 실패해도 로컬 로그아웃은 진행한다.
- * 성공 여부와 무관하게 refresh·게스트 토큰을 지우고 auth-store를 비우고 모든 쿼리 캐시를 비운다.
+ * 성공 여부와 무관하게 refresh·게스트 토큰을 지우고 auth-store를 비우고 모든 쿼리 캐시를 비운 뒤 랜딩으로 나간다.
+ *
+ * 도착지를 화면이 아니라 여기서 정하는 이유 — 회원 화면은 `RequireAuth` 안에 있어서 세션이 비는 순간
+ * 가드가 "미로그인 방문자"로 보고 `/login`으로 보낸다. 화면이 `router.replace("/")`를 불러도
+ * 가드 쪽이 나중에 덮어써 로그인 창에 도착한다(재현 2026-09-16).
+ * 문서 이동은 가드가 끼어들 틈이 없고, 남은 소켓·타이머·캐시도 함께 정리된다.
  */
 export function useLogout() {
   const queryClient = useQueryClient();
@@ -18,6 +26,7 @@ export function useLogout() {
       clearGuestToken();
       useAuthStore.getState().clearSession();
       queryClient.clear();
+      if (typeof window !== "undefined") window.location.replace(LANDING_PATH);
     },
   });
 }

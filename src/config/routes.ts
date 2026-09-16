@@ -57,6 +57,21 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "public",
   },
   {
+    path: "/terms",
+    sample: "/terms",
+    title: "이용약관",
+    description: "서비스 이용 조건 — 코인·참가비 환급·금지 행위·이용 제한. 로그인 없이 열린다",
+    area: "public",
+  },
+  {
+    path: "/privacy",
+    sample: "/privacy",
+    title: "개인정보 처리방침",
+    description:
+      "수집 항목·보유 기간·위탁·국외 이전(OpenAI). Google OAuth 동의 화면에 거는 링크라 로그인 없이 열린다",
+    area: "public",
+  },
+  {
     path: "/hosts/[userId]",
     sample: "/hosts/42",
     title: "선생님 프로필",

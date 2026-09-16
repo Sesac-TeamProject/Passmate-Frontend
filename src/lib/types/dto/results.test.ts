@@ -151,6 +151,7 @@ describe("서술형 AI 분석 계약", () => {
         "finalScore",
         "submittedAt",
         "analysisStatus",
+        "freeAnalysisLimit",
         "analysisCoinCost",
       ],
       ["isCorrect", "answer", "explanation", "analysis", "teacherReview", "remainingFreeAnalysis"],
@@ -165,6 +166,7 @@ describe("서술형 AI 분석 계약", () => {
       "analysisStatus",
       "chargedCoins",
       "remainingFreeAnalysis",
+      "freeAnalysisLimit",
       "analysisCoinCost",
     ]);
     expect(accepted.analysisStatus).toBe("PENDING");

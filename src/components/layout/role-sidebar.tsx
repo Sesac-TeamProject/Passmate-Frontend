@@ -46,6 +46,8 @@ export function RoleSidebar({ nav, user, activePath: forcedActivePath, className
     <aside
       className={cn(
         "sticky top-0 flex h-screen w-60 shrink-0 flex-col gap-1 bg-sidebar px-3.5 pt-6 pb-5 shadow-[inset_-1px_0_0_0_var(--color-border)]",
+        // 인쇄(PDF 저장)에는 메뉴가 낄 이유가 없다 — 방 리포트 내보내기가 이 경로를 쓴다
+        "print:hidden",
         className,
       )}
     >

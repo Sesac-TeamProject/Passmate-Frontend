@@ -44,10 +44,15 @@ export type AnalysisRequestPanel = {
   pending: boolean;
   /** 이번 달 남은 무료 횟수. 모르면 null */
   remainingFree: number | null;
+  /** 월 무료 한도 — "무료 n/5 사용"의 분모. 모르면 null */
+  freeLimit: number | null;
   /** 무료 횟수를 넘겼을 때 1건당 코인 */
   coinCost: number;
   errorMessage: string | null;
 };
+
+/** 이보다 길면 제목 크기로 한 줄에 담기지 않는다 — 문단 서체로 바꾸고 상자를 세로로 쌓는다 */
+const LONG_ANSWER_CHARS = 40;
 
 type Props = {
   detail: QuestionDetail;
@@ -69,6 +74,11 @@ export function QuestionDetailPage({
   nextHref,
   analysisRequest = null,
 }: Props) {
+  // 한 줄 제목으로 읽히는 길이를 넘으면 문단이다 — 잘라 내지 않고 쌓아서 전문을 보인다
+  const longAnswer =
+    (detail.myAnswer?.length ?? 0) > LONG_ANSWER_CHARS ||
+    (detail.correctAnswer?.length ?? 0) > LONG_ANSWER_CHARS;
+
   return (
     // 브랜드 상단바는 (participant) 레이아웃의 SiteHeader가 이미 그린다 — 여기서 또 그리면 두 번 나온다.
     // 폰 폭은 그 상단바가 걷히고 아래 "← 문항 N / M" 줄이 머리를 맡는다
@@ -107,17 +117,26 @@ export function QuestionDetailPage({
 
         <h1 className="text-display-sm text-ink">{detail.title}</h1>
 
-        {/* 답 두 상자는 좁은 화면에서 나란히 두면 한 칸이 150px 남짓이 된다 — 세로로 쌓는다 */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+        {/*
+          답 두 상자는 좁은 화면에서 나란히 두면 한 칸이 150px 남짓이 된다 — 세로로 쌓는다.
+          서술형처럼 긴 답은 넓은 화면에서도 쌓는다 — 반 폭에 한 줄로 자르면 답안의 문답이 안 보인다(2026-09-16)
+        */}
+        <div className={cn("flex flex-col gap-3", !longAnswer && "sm:flex-row sm:gap-4")}>
           <AnswerBox
             label="내가 고른 답"
             value={detail.myAnswer ?? "답하지 않았어요"}
             // 맞힌 문항에서 내 답을 오답 색으로 칠하지 않는다
             tone={detail.isCorrect ? "correct" : "wrong"}
+            prose={longAnswer}
           />
           {/* 서술형은 정해진 정답이 없다 — 빈 상자를 세우면 "정답이 없다"가 아니라 "못 불러왔다"로 읽힌다 */}
           {detail.correctAnswer !== null ? (
-            <AnswerBox label="정답" value={detail.correctAnswer} tone="correct" />
+            <AnswerBox
+              label="정답"
+              value={detail.correctAnswer}
+              tone="correct"
+              prose={longAnswer}
+            />
           ) : null}
         </div>
 
@@ -137,14 +156,15 @@ export function QuestionDetailPage({
         ) : null}
 
         {/* 시안의 "다른 학생들은" — 문항 결과 API의 보기별 분포로 채운다(마감된 문항만) */}
+        {/* 해설 문단 바로 아래에 붙으면 한 덩어리로 읽힌다 — 선으로 끊고 여백을 준다(2026-09-16) */}
         {detail.distribution.length > 0 ? (
-          <section className="flex flex-col gap-2">
-            <h2 className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
-              다른 학생들은
-            </h2>
-            {detail.distribution.map((row) => (
-              <ChoiceRow key={row.text} choice={row} people={detail.distribution} />
-            ))}
+          <section className="flex flex-col gap-3 border-t border-line-soft pt-5">
+            <h2 className="text-label-lg font-bold text-ink">다른 학생들은</h2>
+            <div className="flex flex-col gap-2.5">
+              {detail.distribution.map((row) => (
+                <ChoiceRow key={row.text} choice={row} people={detail.distribution} />
+              ))}
+            </div>
           </section>
         ) : null}
       </div>
@@ -170,22 +190,23 @@ function ChoiceRow({
   const peak = Math.max(...people.map((c) => c.count), 1);
 
   return (
-    <p className="flex items-center gap-3">
+    <p className="flex items-center gap-4">
+      {/* 보기 글자를 본문 크기로 — 라벨 크기면 답 상자·해설 사이에서 가장 작아 읽기 어려웠다 */}
       <span
         className={cn(
-          "w-40 shrink-0 truncate text-label-md",
-          choice.isAnswer ? "text-mint-dark" : "text-muted-foreground",
+          "w-56 shrink-0 truncate text-body-md",
+          choice.isAnswer ? "font-bold text-mint-dark" : "text-ink",
         )}
       >
         {choice.text}
       </span>
-      <span className="h-2 flex-1 overflow-hidden rounded-full bg-line-soft">
+      <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-line-soft">
         <span
           className={cn("block h-full rounded-full", choice.isAnswer ? "bg-mint" : "bg-muted")}
           style={{ width: `${(choice.count / peak) * 100}%` }}
         />
       </span>
-      <span className="w-12 shrink-0 text-right text-label-md text-muted-foreground">
+      <span className="w-12 shrink-0 text-right text-body-md text-muted-foreground">
         {choice.count}명
       </span>
     </p>
@@ -196,30 +217,30 @@ function AnswerBox({
   label,
   value,
   tone,
+  prose = false,
 }: {
   label: string;
   value: string;
   tone: "wrong" | "correct";
+  /** 긴 답 — 제목 크기 한 줄 대신 문단으로 전문을 보인다. 줄바꿈도 그대로 살린다 */
+  prose?: boolean;
 }) {
+  const color = tone === "correct" ? "text-mint-dark" : "text-negative-soft-foreground";
+
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-1 flex-col gap-1 rounded-xl px-5 py-4",
+        "flex min-w-0 flex-1 flex-col gap-1.5 rounded-xl px-5 py-4",
         tone === "correct" ? "bg-mint-bg" : "bg-negative-bg",
       )}
     >
+      <span className={cn("text-label-md font-bold", color)}>{label}</span>
       <span
         className={cn(
-          "text-label-md font-bold tracking-[0.08em]",
-          tone === "correct" ? "text-mint-dark" : "text-negative-soft-foreground",
-        )}
-      >
-        {label}
-      </span>
-      <span
-        className={cn(
-          "truncate text-heading-md",
-          tone === "correct" ? "text-mint-dark" : "text-negative-soft-foreground",
+          color,
+          prose
+            ? "text-body-lg leading-relaxed break-words whitespace-pre-wrap"
+            : "truncate text-heading-md",
         )}
       >
         {value}
@@ -228,16 +249,15 @@ function AnswerBox({
   );
 }
 
+/** AI 분석 결과 한 줄 — 부모 dl 의 2열 그리드에 맞춰 라벨·본문을 한 셀씩 차지한다 */
 function FeedbackRow({ label, value }: { label: string; value: string | null }) {
   if (value === null) return null;
 
   return (
-    <p className="flex gap-3">
-      <span className="w-20 shrink-0 text-label-md font-bold tracking-[0.06em] text-mint-dark">
-        {label}
-      </span>
-      <span className="text-body-lg text-ink">{value}</span>
-    </p>
+    <>
+      <dt className="pt-0.5 text-label-md font-bold text-mint-dark">{label}</dt>
+      <dd className="text-body-md leading-relaxed text-ink">{value}</dd>
+    </>
   );
 }
 
@@ -271,8 +291,11 @@ function NavLink({
 }
 
 /**
- * 서술형 AI 분석 구역 — 상태 4종을 각각 다르게 말한다.
- * 실패해도 정오·점수는 그대로다(FR-029) — 분석은 참고 의견이라는 뜻이다.
+ * 서술형 AI 분석 구역 — 상태 4종을 **같은 패널 안에서** 문장만 바꿔 말한다.
+ *
+ * 위의 답 상자·아래 선생님 첨삭이 전부 색 패널이라 이 구역만 소제목 + 맨 버튼이면 홀로 떠 보였다
+ * (2026-09-16). 회색 패널로 두는 이유 — 선생님 첨삭(민트)이 점수를 바꾸는 판정이고 AI 는 참고 의견이라
+ * 색이 위계를 말해야 한다. 실패해도 정오·점수는 그대로다(FR-029).
  */
 function AnalysisSection({
   analysis,
@@ -283,42 +306,44 @@ function AnalysisSection({
 }) {
   const status: AnalysisStatus = analysis?.status ?? "NOT_REQUESTED";
 
+  // 받을 수도 없고 받은 것도 없으면 구역을 그리지 않는다 — 객관식 화면에 "받을 수 없어요"만 남던 자리
+  if (status === "NOT_REQUESTED" && !request) return null;
+
+  const done = status === "DONE" && analysis !== null;
+  // 진행 중에는 버튼을 숨긴다 — 서버가 같은 건을 되돌려 주긴 하지만 두 번 눌러 볼 이유를 주지 않는다
+  const canRequest = request !== null && (status === "NOT_REQUESTED" || status === "FAILED");
+
+  const description =
+    status === "PENDING"
+      ? "분석하고 있어요. 30초쯤 걸려요 — 끝나면 이 화면이 바뀝니다"
+      : status === "FAILED"
+        ? "분석하지 못했어요. 정오와 점수는 그대로예요"
+        : done
+          ? "모범답안과 견줘 본 참고 의견이에요. 점수는 선생님 첨삭으로만 바뀌어요"
+          : "모범답안과 견줘 잘한 점·놓친 점·다시 볼 것을 알려 줘요. 점수는 바뀌지 않아요";
+
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">AI 첨삭</h2>
-
-      {status === "DONE" && analysis ? (
-        <>
-          {analysis.summary ? <p className="text-body-lg text-ink">{analysis.summary}</p> : null}
-          <FeedbackRow label="잘한 점" value={joinOrNull(analysis.keyPoints)} />
-          <FeedbackRow label="놓친 점" value={joinOrNull(analysis.missingPoints)} />
-          <FeedbackRow label="다시 볼 것" value={joinOrNull(analysis.suggestions)} />
-        </>
-      ) : null}
-
-      {status === "PENDING" ? (
-        <p className="text-body-md text-muted-foreground">
-          분석하고 있어요. 30초쯤 걸려요 — 끝나면 이 화면이 바뀝니다
+    <section className="flex flex-col gap-4 rounded-xl bg-muted p-5">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-label-lg font-bold text-ink">AI 분석</h2>
+        <p
+          className={cn(
+            "text-body-md",
+            status === "FAILED" ? "text-negative" : "text-muted-foreground",
+          )}
+        >
+          {description}
         </p>
-      ) : null}
+      </div>
 
-      {status === "FAILED" ? (
-        <p className="text-body-md text-negative">
-          분석하지 못했어요. 정오와 점수는 그대로예요 — 다시 요청할 수 있어요
-        </p>
-      ) : null}
-
-      {status === "NOT_REQUESTED" && !request ? (
-        <p className="text-body-md text-muted-foreground">이 문항에는 AI 분석을 받을 수 없어요</p>
-      ) : null}
-
-      {request ? (
-        <div className="flex flex-col gap-1.5">
+      {/* 버튼은 제목 아래 한 열에 — 오른쪽에 띄우면 긴 설명과 작은 버튼이 저울처럼 어긋나 보였다(2026-09-16) */}
+      {canRequest && request ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <button
             type="button"
             onClick={request.onRequest}
             disabled={request.pending}
-            className="flex h-11 w-fit items-center rounded-xl bg-mint px-4 text-label-lg text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
+            className="flex h-11 w-full items-center justify-center rounded-xl bg-mint px-6 text-label-lg text-white transition-colors hover:bg-mint-dark disabled:opacity-60 sm:w-auto sm:min-w-40"
           >
             {request.pending ? (
               <PendingLabel>요청하는 중…</PendingLabel>
@@ -328,20 +353,49 @@ function AnalysisSection({
               "AI 분석 요청"
             )}
           </button>
-          <p className="text-label-md text-muted-foreground">
-            {request.remainingFree !== null && request.remainingFree > 0
-              ? `이번 달 무료 ${request.remainingFree}회 남았어요`
-              : `무료 횟수를 다 썼어요 · 1건당 ${request.coinCost} C`}
-          </p>
-          {request.errorMessage ? (
-            <p role="alert" className="text-label-md text-negative">
-              {request.errorMessage}
-            </p>
+          {/* 사용 횟수는 버튼 옆에 — 누르기 전에 봐야 하는 정보다 */}
+          <p className="text-label-md text-muted-foreground">{usageLabel(request)}</p>
+        </div>
+      ) : null}
+      {request?.errorMessage ? (
+        <p role="alert" className="text-label-md text-negative">
+          {request.errorMessage}
+        </p>
+      ) : null}
+
+      {done ? (
+        <div className="flex flex-col gap-4 border-t border-line-soft pt-4">
+          {analysis.summary ? (
+            <p className="text-body-md leading-relaxed text-ink">{analysis.summary}</p>
           ) : null}
+          {/* 라벨 열 폭을 고정한 그리드 — 세 줄의 본문이 같은 세로선에서 시작한다 */}
+          <dl className="grid grid-cols-[4.5rem_1fr] gap-x-4 gap-y-2.5">
+            <FeedbackRow label="잘한 점" value={joinOrNull(analysis.keyPoints)} />
+            <FeedbackRow label="놓친 점" value={joinOrNull(analysis.missingPoints)} />
+            <FeedbackRow label="다시 볼 것" value={joinOrNull(analysis.suggestions)} />
+          </dl>
         </div>
       ) : null}
     </section>
   );
+}
+
+/**
+ * "무료 0/5 사용" — 남은 수가 아니라 쓴 수를 보인다. 한도를 모르면 남은 수로 말하고,
+ * 다 썼으면 그때부터 코인이 나간다는 것을 같은 줄에서 알린다.
+ */
+function usageLabel(request: AnalysisRequestPanel): string {
+  const { remainingFree, freeLimit, coinCost } = request;
+  if (remainingFree === null) return `1건당 ${coinCost} C`;
+  if (freeLimit === null) {
+    return remainingFree > 0
+      ? `이번 달 무료 ${remainingFree}회 남았어요`
+      : `무료 횟수를 다 썼어요 · 1건당 ${coinCost} C`;
+  }
+  const used = Math.max(0, freeLimit - remainingFree);
+  return remainingFree > 0
+    ? `이번 달 무료 ${used}/${freeLimit} 사용`
+    : `무료 ${used}/${freeLimit} 사용 · 이제부터 1건당 ${coinCost} C`;
 }
 
 function joinOrNull(points: string[]): string | null {

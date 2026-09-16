@@ -44,11 +44,14 @@ export function toSessionReport(dto: SessionResultsResponse): SessionReport {
     title: q.content,
     type: QUESTION_TYPE_MAP[q.type],
     // 서술형은 정답 개념이 없어 정답률 대신 AI 분석 건수를 보여준다(서버도 null 로 준다).
-    // 서버는 소수로 준다(16.666…) — 시안은 정수라 반올림해서 담는다
-    accuracy: q.correctRate === null ? undefined : Math.round(q.correctRate),
+    // 실서버는 널 필드를 빼고 보내 키 자체가 없다 — `=== null` 로만 거르면 undefined 가
+    // Math.round 를 지나 NaN% 가 됐다(운영 확인, 2026-09-09). 서버는 소수로 주므로 정수로 접는다
+    accuracy: q.correctRate == null ? undefined : Math.round(q.correctRate),
     aiCount: q.aiAnalysisCount,
-    // 표 "오답" 열 — 낸 사람 중 못 맞힌 수. 계약이 둘 다 주므로 빼서 쓴다
-    wrongCount: q.submitCount - q.correctCount,
+    // 표 "오답" 열 — 객관식·OX 는 낸 사람 중 못 맞힌 수. 서술형은 자동 채점이 없어 같은 식이면
+    // 제출자 전원이 오답으로 찍혔다(9/9 잔여) — 첨삭에서 0점을 받은 수만 센다
+    wrongCount:
+      q.type === "ESSAY" ? q.essayGrading?.zero : Math.max(0, q.submitCount - q.correctCount),
   }));
 
   const questionCount = dto.summary?.questionCount ?? questions.length;
@@ -63,12 +66,14 @@ export function toSessionReport(dto: SessionResultsResponse): SessionReport {
       students: dto.summary.participantCount,
       questions: dto.summary.questionCount,
       aiAnalyses: dto.summary.aiAnalysisCount,
-      // @draft KPI 6칸 중 계약에 없는 값들 — 지어내지 않고 비우면 표가 "—"로 그린다
-      submittedCount: null,
-      completionPercent: null,
-      avgElapsedSeconds: null,
-      essayGradedCount: null,
-      essayTotalCount: null,
+      // 계약에 생긴 값(2026-09-15)을 꽂는다. 구버전 서버라 키가 없으면 표가 "—"로 그린다
+      submittedCount: dto.summary.submittedParticipantCount ?? null,
+      completionPercent:
+        dto.summary.completionRate == null ? null : Math.round(dto.summary.completionRate),
+      avgElapsedSeconds:
+        dto.summary.avgElapsedMs == null ? null : Math.round(dto.summary.avgElapsedMs / 1000),
+      essayGradedCount: dto.summary.essayReviewedCount ?? null,
+      essayTotalCount: dto.summary.essayAnswerCount ?? null,
     },
     questions,
     strugglers: toStrugglers(dto.participants, questionCount),
@@ -116,8 +121,62 @@ export function toRankRows(students: ParticipantResultRow[]): FinalRankRow[] {
  * @draft 문항별 채점 분포·AI 총평 — **계약에 없다.**
  * 빈 표를 넘기면 패널이 그 칸만 접는다. 서버가 주기 시작하면 여기만 채우면 된다.
  */
-export function toQuestionInsights(): Map<string, QuestionInsight> {
-  return new Map();
+/**
+ * GET /rooms/{roomId}/results → 우측 문항 상세 패널 (시안 784:8983).
+ *
+ * 서술형은 자동 채점이 없어 **첨삭 분포**(정답·부분점수·오답)와 **AI 판단 기준**(모범답안 + 분석 집계)을,
+ * 객관식·OX는 정답·오답·미제출 분포와 **문제 세트의 해설란**을 그대로 보인다.
+ * 첨삭 전 서술형은 오답이 아니라 미채점으로 따로 센다 — 섞으면 채점 안 끝난 문항이 전원 오답으로 보인다.
+ */
+export function toQuestionInsights(dto: SessionResultsResponse): Map<string, QuestionInsight> {
+  const participantCount = dto.summary.participantCount;
+
+  return new Map(
+    dto.questions.map((q) => {
+      const hostComment = q.teacherComment ?? null;
+
+      if (q.type === "ESSAY") {
+        const grading = q.essayGrading;
+        const insight: QuestionInsight = {
+          gradingBreakdown: [
+            { label: "정답", count: grading?.full ?? 0, tone: "good" },
+            { label: "부분점수", count: grading?.partial ?? 0, tone: "partial" },
+            { label: "오답", count: grading?.zero ?? 0, tone: "bad" },
+          ],
+          unreviewedCount: grading?.unreviewed ?? 0,
+          criteria: {
+            modelAnswer: q.answer ?? null,
+            analyzedCount: q.aiInsight?.analyzedCount ?? 0,
+            strengths: q.aiInsight?.commonKeyPoints ?? [],
+            misses: q.aiInsight?.commonMissingPoints ?? [],
+          },
+          explanation: null,
+          hostComment,
+        };
+        return [String(q.questionId), insight];
+      }
+
+      const insight: QuestionInsight = {
+        gradingBreakdown: [
+          { label: "정답", count: q.correctCount, tone: "good" },
+          { label: "오답", count: Math.max(0, q.submitCount - q.correctCount), tone: "bad" },
+          { label: "미제출", count: Math.max(0, participantCount - q.submitCount), tone: "none" },
+        ],
+        unreviewedCount: 0,
+        criteria: null,
+        explanation: { answer: q.answer ?? null, text: q.explanation ?? null },
+        hostComment,
+      };
+      return [String(q.questionId), insight];
+    }),
+  );
+}
+
+/** 문항 코멘트 저장 실패 문구 */
+export function toCommentSaveMessage(error: unknown): string {
+  if (!AppError.isAppError(error)) return "코멘트를 저장하지 못했어요. 다시 시도해 주세요";
+  if (error.kind === "NotFound") return "이 방에서 출제된 문항이 아니에요";
+  return error.message;
 }
 
 /** 세션 결과의 학생 목록 → 분석 패널 학생 조회용. 아바타가 응답에 있어 그대로 쓴다 */

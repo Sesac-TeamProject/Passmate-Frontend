@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import {
+  toCommentSaveMessage,
   toEssayAnswers,
   toQuestionInsights,
   toReportStudents,
@@ -16,13 +17,15 @@ import { ExportFailedDialog } from "@/features/host/review/export-failed-dialog"
 import { ReviewPage, type ExportFormat } from "@/features/host/review/review-page";
 import { ReviewSkeleton } from "@/features/host/review/review-skeleton";
 import { exportRoomReport } from "@/lib/api/results";
-import { AppError } from "@/lib/types/app-error";
-import { usePostHostReview, useReviewTargets, useSessionResults } from "@/lib/queries/use-results";
+import {
+  usePostHostReview,
+  usePutQuestionComment,
+  useReviewTargets,
+  useSessionResults,
+} from "@/lib/queries/use-results";
 
 /** 목 모드는 파일을 만들지 못한다(`downloadFile`이 목 계층을 타지 않는다) */
 const EXPORT_UNAVAILABLE_MESSAGE = "백엔드 연동 후 제공돼요";
-/** 서버는 CSV만 내보낸다 — PDF는 400으로 막힌다 */
-const PDF_UNSUPPORTED_MESSAGE = "지금은 CSV로만 내보낼 수 있어요";
 
 /**
  * W-07 방 리포트 컨테이너. [sessionId]는 roomId다(사전 판정).
@@ -52,6 +55,8 @@ export default function Page() {
     participantId === null ? {} : { participantId },
   );
   const saveReview = usePostHostReview(roomId, participantId ?? 0);
+  // 문항 단위 코멘트 — 학생 전체에게 남기는 첨삭. 답안별 첨삭(saveReview)과 별개다
+  const saveComment = usePutQuestionComment(roomId);
 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -60,15 +65,20 @@ export default function Page() {
   const [failedFormat, setFailedFormat] = useState<ExportFormat>("CSV");
 
   const handleExport = async (format: ExportFormat) => {
+    // PDF 는 서버가 만들지 않는다 — 학생 리포트와 같은 방식으로 브라우저 인쇄를 연다.
+    // 인쇄 대화상자에서 "PDF로 저장"을 고르면 화면 그대로(사이드바·버튼 제외) 담긴다
+    if (format === "PDF") {
+      window.print();
+      return;
+    }
+
     setExportError(null);
     setFailedFormat(format);
     setExporting(true);
     try {
       await exportRoomReport(roomId, format);
-    } catch (error) {
-      // 서버가 지원하지 않는 형식은 400으로 막는다 — 백엔드 연동 문제가 아니라 형식 문제다
-      const unsupported = AppError.isAppError(error) && error.kind === "ValidationFailed";
-      setExportError(unsupported ? PDF_UNSUPPORTED_MESSAGE : EXPORT_UNAVAILABLE_MESSAGE);
+    } catch {
+      setExportError(EXPORT_UNAVAILABLE_MESSAGE);
     } finally {
       setExporting(false);
     }
@@ -85,10 +95,14 @@ export default function Page() {
         rankRows={toRankRows(report.data.participants)}
         selectedQuestionId={selectedQuestionId}
         onSelectQuestion={setSelectedQuestionId}
-        insight={toQuestionInsights().get(selectedQuestionId ?? "") ?? null}
-        // @draft 문항 단위 코멘트 저장 계약이 없다(답안 단위 첨삭만 있다) — 계약이 오면 뮤테이션을 붙이고 true로 연다
-        canSaveComment={false}
-        onSaveComment={() => undefined}
+        insight={toQuestionInsights(report.data).get(selectedQuestionId ?? "") ?? null}
+        canSaveComment={selectedQuestionId !== null}
+        onSaveComment={(text) => {
+          if (selectedQuestionId === null) return;
+          saveComment.mutate({ questionId: Number(selectedQuestionId), comment: text });
+        }}
+        commentSaving={saveComment.isPending}
+        commentError={saveComment.isError ? toCommentSaveMessage(saveComment.error) : null}
         students={toReportStudents(report.data.participants)}
         selectedStudentId={selectedStudentId}
         onSelectStudent={setSelectedStudentId}
