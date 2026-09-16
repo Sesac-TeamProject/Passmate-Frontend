@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HeroBanner } from "@/components/common/hero-banner";
 import { InitialTile } from "@/components/common/initial-tile";
+import { MobileTopBar } from "@/components/common/mobile-top-bar";
 import { StatCards, type StatItem } from "@/components/common/stat-cards";
 import { SettlementTable } from "@/features/me/settlement/settlement-table";
 import type { SettlementRow } from "@/features/me/settlement/types";
@@ -26,7 +27,9 @@ export function SettlementPage({
   exportError = null,
 }: Props) {
   return (
-    <main className="flex flex-col gap-6 px-9 py-7">
+    <main className="flex flex-col gap-6 px-9 py-7 max-md:gap-4 max-md:px-5 max-md:pt-3 max-md:pb-8">
+      {/* 탭바가 없는 화면이라 이 줄이 폰에서 유일한 출구다 */}
+      <MobileTopBar title="정산" backHref="/me" className="-mx-5 px-5 pb-1" />
       <HeroBanner
         title="정산"
         description="유료 방 참가비 정산 내역 · 선생님 80% / 플랫폼 20% · 매월 5일 지급"
