@@ -98,6 +98,8 @@ export default function Page() {
         trend={[]}
         concepts={[]}
         onBack={() => router.push("/me/joined")}
+        // 폰 폭 ←는 앱 M-06처럼 결과 화면으로 돌아간다 — "참여한 방"은 회원 전용이라 게스트가 로그인으로 튕긴다
+        mobileBackHref={`/result/${params.sessionId}`}
         // 내보내기 계약이 없어 브라우저 인쇄로 대신한다 — PDF 저장은 인쇄 대화상자에서 고른다
         onSavePdf={() => window.print()}
         // @draft 오답 재풀이·복습 방 추천 계약이 없다 — 지금은 공개 방 목록으로 보낸다

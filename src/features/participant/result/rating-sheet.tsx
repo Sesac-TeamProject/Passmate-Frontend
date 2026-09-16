@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MOBILE_SHEET_BUTTON } from "@/components/common/mobile-action-bar";
 import { PendingLabel } from "@/components/common/pending-label";
 import { RATING_COMMENT_MAX } from "@/lib/types/dto";
 import type { RatingTag, SubmitRatingRequest } from "@/lib/types/dto";
@@ -174,7 +175,7 @@ export function RatingSheet({
         <div className="flex flex-col items-start gap-3.5 md:hidden">
           <Button
             size="xl"
-            className="h-[52px] w-full rounded-2xl text-heading-sm"
+            className={MOBILE_SHEET_BUTTON}
             disabled={stars === null || pending}
             onClick={handleSubmit}
           >

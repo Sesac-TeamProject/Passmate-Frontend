@@ -1,10 +1,14 @@
-import { MobileActionBar } from "@/components/common/mobile-action-bar";
+import {
+  MobileActionBar,
+  MOBILE_PRIMARY_BUTTON,
+  MOBILE_SECONDARY_BUTTON,
+} from "@/components/common/mobile-action-bar";
 import { Mascot } from "@/components/common/mascot";
 import { StudentAvatar } from "@/components/common/student-avatar";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { MyResultCard } from "./my-result-card";
-import { PodiumCard, type PodiumEntry, type PodiumPlace } from "./podium-card";
+import { PodiumCard, PODIUM_ORDER, type PodiumEntry, type PodiumPlace } from "./podium-card";
 import { QuestionChips } from "./question-chips";
 import { RankingTable, type RankRow } from "./ranking-table";
 import type { ReportComparison } from "./report-insights";
@@ -169,20 +173,12 @@ export function FinalResultPage({
               {ratingNotice}
             </p>
           )}
-          <button
-            type="button"
-            onClick={onOpenReport}
-            className="flex h-[54px] w-full items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark"
-          >
+          <button type="button" onClick={onOpenReport} className={MOBILE_PRIMARY_BUTTON}>
             내 리포트 보기
           </button>
           {isGuest && (
             <>
-              <button
-                type="button"
-                onClick={onSignUp}
-                className="flex h-[50px] w-full items-center justify-center rounded-2xl border bg-card text-label-lg text-mint-dark transition-colors hover:bg-muted"
-              >
+              <button type="button" onClick={onSignUp} className={MOBILE_SECONDARY_BUTTON}>
                 가입하고 이 기록 저장하기
               </button>
               <p className="text-center text-label-md text-ink-disabled">{guestNotice}</p>
@@ -194,15 +190,15 @@ export function FinalResultPage({
   );
 }
 
-/** 앱 M-05 시상대 스탠드 — 높이·색은 시안 그대로(1위 102 · 2위 74 · 3위 62) */
-const MOBILE_STAND: Record<PodiumPlace, string> = {
-  1: "h-[102px] bg-choice-c text-choice-c-foreground",
-  2: "h-[74px] bg-choice-b text-choice-b-foreground",
-  3: "h-[62px] bg-avatar-peach text-avatar-peach-foreground",
+/**
+ * 앱 M-05 등수별 색·스탠드 높이 — 시상대와 아래 목록의 번호 원이 같은 색을 쓴다.
+ * 색을 두 군데 적어 두면 한쪽만 바뀐다. 웹 시안(PC 시상대)은 2위가 회색이라 색은 공유하지 않는다.
+ */
+const MOBILE_PLACE: Record<PodiumPlace, { color: string; stand: string }> = {
+  1: { color: "bg-choice-c text-choice-c-foreground", stand: "h-[102px]" },
+  2: { color: "bg-choice-b text-choice-b-foreground", stand: "h-[74px]" },
+  3: { color: "bg-avatar-peach text-avatar-peach-foreground", stand: "h-[62px]" },
 };
-
-/** 시안이 세우는 순서 — 2등 · 1등 · 3등 (가운데가 1등) */
-const MOBILE_ORDER: PodiumPlace[] = [2, 1, 3];
 
 /** 앱 M-05 민트 띠 안의 시상대 — 스탠드 위에 아바타만 올리고 이름·점수는 아래 목록이 맡는다 */
 function MobilePodium({ entries }: { entries: PodiumEntry[] }) {
@@ -214,7 +210,7 @@ function MobilePodium({ entries }: { entries: PodiumEntry[] }) {
 
   return (
     <ol className="flex items-end gap-3.5">
-      {MOBILE_ORDER.map((place) => {
+      {PODIUM_ORDER.map((place) => {
         const entry = byRank.get(place);
         if (entry === undefined) return null;
 
@@ -223,7 +219,8 @@ function MobilePodium({ entries }: { entries: PodiumEntry[] }) {
             <span
               className={cn(
                 "flex w-20 justify-center rounded-xl pt-[18px] text-heading-sm",
-                MOBILE_STAND[place],
+                MOBILE_PLACE[place].stand,
+                MOBILE_PLACE[place].color,
               )}
             >
               {place}
@@ -239,13 +236,6 @@ function MobilePodium({ entries }: { entries: PodiumEntry[] }) {
     </ol>
   );
 }
-
-/** 순위 번호 원 색 — 시상대와 같은 색 */
-const MOBILE_MEDAL: Record<number, string> = {
-  1: "bg-choice-c text-choice-c-foreground",
-  2: "bg-choice-b text-choice-b-foreground",
-  3: "bg-avatar-peach text-avatar-peach-foreground",
-};
 
 /**
  * 앱 M-05 상위 목록 — 1~3위 줄, 내가 4위 아래면 내 줄을 하나 더 붙인다. 내 줄은 회색 바탕 · 민트 글자.
@@ -271,7 +261,7 @@ function MobileRankList({ rows }: { rows: RankRow[] }) {
           <span
             className={cn(
               "flex size-6 shrink-0 items-center justify-center rounded-full text-label-lg",
-              MOBILE_MEDAL[row.rank] ?? "bg-muted text-muted-foreground",
+              MOBILE_PLACE[row.rank as PodiumPlace]?.color ?? "bg-muted text-muted-foreground",
             )}
           >
             {row.rank}

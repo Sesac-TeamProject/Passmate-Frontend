@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FailureScreen } from "@/components/common/failure-screen";
+import { MOBILE_STATE_BUTTON } from "@/components/common/mobile-action-bar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -61,23 +62,31 @@ export function ScreenError({ message, onRetry, children, mobile }: Props) {
           mobileHeader={{ title: mobile.screenTitle, backHref: mobile.backHref }}
           title={mobile.title}
           description={mobile.description}
+          /*
+           * 서버가 준 말을 그대로 한 줄 더 보인다 — 없으면 일시 장애와 영영 안 되는 실패를
+           * 구분할 수 없어 사용자가 "다시 시도"만 반복한다.
+           */
+          note={{ tone: "plain", title: message }}
           footnote={mobile.footnote}
           actions={
             <>
               {onRetry ? (
-                <Button size="xl" className="h-[52px] rounded-[14px]" onClick={onRetry}>
+                <Button size="xl" className={MOBILE_STATE_BUTTON} onClick={onRetry}>
                   다시 시도
                 </Button>
               ) : null}
-              <Button
-                size="xl"
-                variant="outline"
-                className="h-[52px] rounded-[14px]"
-                nativeButton={false}
-                render={<Link href={mobile.homeHref} />}
-              >
-                홈으로
-              </Button>
+              {/* 호출한 쪽이 준 길이 있으면 그것을 쓴다 — 없을 때만 홈으로 */}
+              {children ?? (
+                <Button
+                  size="xl"
+                  variant="outline"
+                  className={MOBILE_STATE_BUTTON}
+                  nativeButton={false}
+                  render={<Link href={mobile.homeHref} />}
+                >
+                  홈으로
+                </Button>
+              )}
             </>
           }
         />

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { Clock } from "lucide-react";
+import { MOBILE_PRIMARY_BUTTON } from "@/components/common/mobile-action-bar";
 import type { LiveQuestion } from "@/features/host/types";
 import { CHOICE_CLASS } from "@/features/host/live/choice-letter";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
@@ -169,7 +170,7 @@ export function PlayCard({
             type="button"
             disabled={!canSubmit}
             onClick={handleSubmit}
-            className="flex h-[54px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark disabled:opacity-50 md:hidden"
+            className={cn(MOBILE_PRIMARY_BUTTON, "md:hidden")}
           >
             {submitLabel}
           </button>

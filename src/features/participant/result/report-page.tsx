@@ -29,6 +29,11 @@ type Props = {
   /** 가장 약한 개념. 없으면 "복습 방 찾기" 버튼을 감춘다 */
   weakestConcept: string | null;
   onBack: () => void;
+  /**
+   * 폰 폭 "←"가 갈 곳. PC의 "‹ 참여한 방으로"는 회원 전용 경로라 게스트가 누르면 로그인으로 튕긴다 —
+   * 앱 M-06처럼 결과 화면으로 돌려보낸다.
+   */
+  mobileBackHref: string;
   onSavePdf: () => void;
   onRetryWrong: () => void;
   onFindReviewRoom: () => void;
@@ -64,6 +69,7 @@ export function ReportPage({
   wrongCount,
   weakestConcept,
   onBack,
+  mobileBackHref,
   onSavePdf,
   onRetryWrong,
   onFindReviewRoom,
@@ -82,7 +88,7 @@ export function ReportPage({
         >
           ‹ 참여한 방으로
         </button>
-        <MobileTopBar title="리포트" onBack={onBack} />
+        <MobileTopBar title="리포트" backHref={mobileBackHref} />
 
         <ReportSummaryCard
           roomTitle={roomTitle}

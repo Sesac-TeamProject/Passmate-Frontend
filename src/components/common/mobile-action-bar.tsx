@@ -1,6 +1,21 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * 폰 폭 버튼 규격 — 앱 시안이 화면마다 같은 크기를 쓴다. 화면마다 따로 적으면 규격이 바뀔 때
+ * 네 파일을 고쳐야 하고, 손으로 적은 `<button>`은 공용 버튼의 포커스 표시를 잃는다.
+ */
+/** 주 버튼: 높이 54 · r16 · 민트 (M-01 입장하기 · M-03 제출하기 · M-05 내 리포트 보기) */
+export const MOBILE_PRIMARY_BUTTON =
+  "flex h-[54px] w-full items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors outline-none hover:bg-mint-dark focus-visible:ring-2 focus-visible:ring-mint-dark disabled:opacity-50";
+/** 보조 버튼: 높이 50 · r16 · 테두리 (M-05 가입하고 이 기록 저장하기) */
+export const MOBILE_SECONDARY_BUTTON =
+  "flex h-[50px] w-full items-center justify-center rounded-2xl border bg-card text-label-lg text-mint-dark transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-mint-dark";
+/** 바텀시트 버튼: 높이 52 · r16 (M-06a 평가 보내기) — 공용 Button에 덧입힌다 */
+export const MOBILE_SHEET_BUTTON = "h-[52px] w-full rounded-2xl text-heading-sm";
+/** 상태 화면 버튼: 높이 52 · r14 (M-05e · M-11e 다시 시도 · 홈으로) — 공용 Button에 덧입힌다 */
+export const MOBILE_STATE_BUTTON = "h-[52px] rounded-[14px]";
+
 type Props = {
   children: ReactNode;
   className?: string;
