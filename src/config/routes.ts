@@ -112,6 +112,8 @@ export const ROUTES: readonly RouteMeta[] = [
     title: "정산",
     description: "유료 방 참가비 정산 내역·지급 상태·정산 계좌 (Lv.3+ 유료 방 개설자)",
     area: "member",
+    // 앱 M-T4 — 폰은 하단 탭이 사이드바 자리를 대신한다
+    mobileBare: true,
   },
   {
     path: "/me/account",
@@ -229,6 +231,8 @@ export const ROUTES: readonly RouteMeta[] = [
     title: "내가 만든 방",
     description: "허브 — 헤드라인·명성 카드·운영 실적·행동 카드 3장·내 방 목록",
     area: "host",
+    // 앱 M-13 — 폰은 하단 탭이 사이드바 자리를 대신한다
+    mobileBare: true,
   },
   {
     path: "/host/reputation",
@@ -302,6 +306,8 @@ export const ROUTES: readonly RouteMeta[] = [
     description:
       "종료된 방의 통계·문항별 결과, 서술형 AI 분석 확인·코멘트 (내가 만든 방 › 상세 보기)",
     area: "host",
+    // 앱 M-14 — 폰은 하단 탭이 사이드바 자리를 대신한다
+    mobileBare: true,
   },
   // 관리자
   {
