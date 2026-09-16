@@ -94,7 +94,8 @@ export function MobileTabBarInset({
   return (
     <div
       className={cn(className, visible && "max-md:pb-[var(--mobile-tab-bar-h)]")}
-      style={{ "--mobile-tab-bar-h": MOBILE_TAB_BAR_H } as CSSProperties}
+      // 탭바가 없는 화면에서도 변수는 남긴다 — 선언이 사라지면 이 값을 쓰는 규칙이 통째로 무효가 되어 바닥에 붙지 않는다
+      style={{ "--mobile-tab-bar-h": visible ? MOBILE_TAB_BAR_H : "0px" } as CSSProperties}
     >
       {children}
     </div>
