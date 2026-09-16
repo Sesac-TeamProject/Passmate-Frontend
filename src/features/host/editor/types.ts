@@ -38,8 +38,12 @@ export type QuestionFormValues = {
   /** OX는 "O"|"X" · 서술형은 모범답안. MCQ는 `answerIndex`를 쓰고 이 값을 보지 않는다 */
   answer: string;
   explanation: string;
-  points: number;
-  seconds: number;
+  /**
+   * 숫자로 들면 입력 중의 "030"·빈 칸을 표현할 수 없다(React가 `"030" == 30`으로 보고
+   * DOM을 안 고친다) — 문자열로 들고 서버로 나갈 때만 숫자로 바꾼다.
+   */
+  points: string;
+  seconds: string;
 };
 
 /** 서버 기본값과 같게 둔다 (`QuestionRequest.DEFAULT_*`) */
@@ -55,6 +59,6 @@ export const EMPTY_QUESTION_FORM: QuestionFormValues = {
   answerIndex: null,
   answer: "",
   explanation: "",
-  points: DEFAULT_QUESTION_POINTS,
-  seconds: DEFAULT_QUESTION_SECONDS,
+  points: String(DEFAULT_QUESTION_POINTS),
+  seconds: String(DEFAULT_QUESTION_SECONDS),
 };

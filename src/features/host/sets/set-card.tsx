@@ -55,6 +55,16 @@ export function SetCard({
           {set.usage ? `${set.usage.count}회 사용 · ${set.usage.lastUsed}` : "미사용"}
         </span>
         <div className="flex gap-2.5 text-label-lg text-mint-dark">
+          {/* DRAFT는 에디터가 ?set= 으로 이어서 편집을 지원한다 — 복제로 사본을 만들 이유가 없다 */}
+          {set.isConfirmed === false && (
+            <Link
+              href={`/host/editor?set=${set.id}`}
+              className="hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              이어서 수정
+            </Link>
+          )}
           <button
             type="button"
             disabled={cloning}

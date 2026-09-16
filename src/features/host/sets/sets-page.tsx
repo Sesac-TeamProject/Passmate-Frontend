@@ -12,6 +12,8 @@ type Props = {
   onSelect: (setId: string) => void;
   /** 고른 세트의 문항 미리보기를 아직 읽는 중 */
   detailLoading?: boolean;
+  /** 우측 패널 "더 보기" — 전체 문항 팝업 */
+  onShowAll: () => void;
   onClone: (setId: string) => void;
   cloning?: boolean;
   /** 복제 실패 문구 — 서버에 복제 API가 아직 없다 */
@@ -28,6 +30,7 @@ export function SetsPage({
   selected,
   onSelect,
   detailLoading = false,
+  onShowAll,
   onClone,
   cloning,
   cloneError = null,
@@ -78,6 +81,7 @@ export function SetsPage({
         <SetDetailPanel
           set={selected}
           previewLoading={detailLoading}
+          onShowAll={onShowAll}
           onClone={() => onClone(selected.id)}
           cloning={cloning}
         />

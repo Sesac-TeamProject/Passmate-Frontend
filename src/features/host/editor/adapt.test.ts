@@ -39,6 +39,12 @@ describe("toFormValues", () => {
     expect(toFormValues(ox).answerIndex).toBeNull();
     expect(toFormValues(ox).answer).toBe("O");
   });
+
+  it("배점·제한 시간을 입력용 문자열로 바꾼다", () => {
+    const values = toFormValues(editorQuestion({ points: 100, seconds: 30 }));
+    expect(values.points).toBe("100");
+    expect(values.seconds).toBe("30");
+  });
 });
 
 describe("toQuestionRequest", () => {
@@ -60,6 +66,12 @@ describe("toQuestionRequest", () => {
 
   it("고른 것이 없으면 answer 키를 빼고 보낸다", () => {
     expect(toQuestionRequest(mcq({ answerIndex: null }))).not.toHaveProperty("answer");
+  });
+
+  it("배점·제한 시간 문자열을 숫자로 되돌려 보낸다 — 폼 왕복", () => {
+    const request = toQuestionRequest(toFormValues(editorQuestion({ points: 250, seconds: 45 })));
+    expect(request.points).toBe(250);
+    expect(request.timeLimitSec).toBe(45);
   });
 
   it("OX·서술형은 answer 문자열을 그대로 보낸다", () => {
@@ -99,5 +111,15 @@ describe("validateQuestionForm", () => {
 
   it("빈 보기 줄이 둘이어도 겹친 것으로 보지 않는다", () => {
     expect(validateQuestionForm(mcq({ choices: ["가", "나", "", ""], answerIndex: 0 }))).toBeNull();
+  });
+
+  it("배점·제한 시간을 비워 두면 범위 문구로 막는다", () => {
+    expect(validateQuestionForm(mcq({ seconds: "" }))).toBe("제한 시간은 5~600초 사이여야 해요");
+    expect(validateQuestionForm(mcq({ points: "" }))).toBe("배점은 1~1000점 사이여야 해요");
+  });
+
+  it("범위를 벗어난 값도 같은 문구로 막는다", () => {
+    expect(validateQuestionForm(mcq({ seconds: "601" }))).toBe("제한 시간은 5~600초 사이여야 해요");
+    expect(validateQuestionForm(mcq({ points: "0" }))).toBe("배점은 1~1000점 사이여야 해요");
   });
 });

@@ -1,4 +1,5 @@
-import { Clock, Lock } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Clock, Lock } from "lucide-react";
 import { Stepper } from "@/components/common/stepper";
 import { Switch } from "@/components/ui/switch";
 import { PendingLabel } from "@/components/common/pending-label";
@@ -34,6 +35,8 @@ function formatEstimate(totalSec: number): string {
 
 type Props = {
   title: string;
+  /** 대기실로 돌아가는 링크 — 읽기 전용(시작한 방)일 때는 이 링크가 유일한 출구다 */
+  backHref: string;
   rows: TimingRow[];
   /** 마지막으로 일괄 적용한 프리셋. 없으면 아무것도 선택돼 있지 않다 */
   preset: number | null;
@@ -51,6 +54,7 @@ type Props = {
 /** W-02b 문항별 시간 설정 — 일괄 적용 · 문항 목록 · 예상 진행 시간 세 카드 */
 export function TimingPage({
   title,
+  backHref,
   rows,
   preset,
   onPreset,
@@ -67,6 +71,13 @@ export function TimingPage({
   return (
     <main className="flex flex-col gap-4 px-9 py-10">
       <header className="flex flex-col gap-1">
+        <Link
+          href={backHref}
+          className="mb-1 flex items-center gap-2 self-start text-label-lg text-muted-foreground hover:text-ink"
+        >
+          <ArrowLeft size={18} aria-hidden />
+          대기실로 돌아가기
+        </Link>
         <h1 className="text-heading-lg">문항별 시간 설정</h1>
         <p className="text-body-md text-muted-foreground">
           {title} · {rows.length}문항

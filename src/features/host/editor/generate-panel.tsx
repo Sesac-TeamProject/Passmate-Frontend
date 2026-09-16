@@ -11,6 +11,7 @@ import type {
   Difficulty,
   QuestionType as WireQuestionType,
 } from "@/lib/types/dto";
+import { MaterialAttach } from "./material-attach";
 import { QUESTION_TYPE_LABEL } from "./question-type-chip";
 import { DEFAULT_ESSAY_SECONDS, DEFAULT_QUESTION_POINTS, DEFAULT_QUESTION_SECONDS } from "./types";
 
@@ -32,9 +33,6 @@ const WIRE_TYPE: Record<QuestionType, WireQuestionType> = {
 
 /** 서버가 한 번에 만들 수 있는 최대 문항 수 (`AiGenerateRequest.MAX_GENERATE_COUNT`) */
 const MAX_GENERATE_COUNT = 20;
-
-/** 강의자료 본문 최대 길이 (`AiGenerateRequest.MATERIAL_MAX_LENGTH`) */
-const MATERIAL_MAX_LENGTH = 5000;
 
 type Props = {
   onGenerate: (body: AiGenerateRequest) => void;
@@ -144,18 +142,12 @@ export function GeneratePanel({
           </span>
         </p>
       </Field>
-      <Field label="강의자료 붙여넣기 (선택)">
-        <textarea
-          value={material}
-          onChange={(e) => setMaterial(e.target.value.slice(0, MATERIAL_MAX_LENGTH))}
-          rows={3}
-          placeholder="수업 자료를 붙여 넣으면 이 범위 안에서 출제해요"
-          className="w-full resize-y rounded-xl bg-muted px-3.5 py-2.5 text-label-lg text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        />
-        <span className="self-end text-label-md text-muted-foreground">
-          {material.length} / {MATERIAL_MAX_LENGTH}자
-        </span>
-      </Field>
+      {/* 붙여넣기 대신 파일 첨부 — 선생님 자료는 대부분 PDF·PPT 다. 서버가 본문만 뽑아 준다.
+          label 로 감싸면 안의 제거(✕) 버튼 클릭까지 파일 선택을 다시 연다 — Field 를 안 쓴다 */}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-label-lg text-muted-foreground">강의자료 첨부 (선택)</span>
+        <MaterialAttach onMaterialChange={setMaterial} disabled={disabled} />
+      </div>
       {/* 시안 W-03은 셀렉트가 아니라 세그먼트다 — 선택지가 셋뿐이라 한눈에 보인다 */}
       <fieldset className="flex flex-col gap-1.5">
         <legend className="text-label-lg text-muted-foreground">난이도</legend>

@@ -116,11 +116,28 @@ export type Struggler = {
 };
 
 /** @draft 문항 하나의 채점 분포·AI 총평 — W-07 우측 상세 패널 (시안 784:8983) */
+/** 채점 현황 막대 색 — 시안은 위에서부터 민트 · 앰버 · 핑크, 미제출은 회색 */
+export type GradingTone = "good" | "partial" | "bad" | "none";
+
+/** W-07 우측 문항 상세 패널 재료 (시안 784:8983) */
 export type QuestionInsight = {
-  gradingBreakdown: { label: string; count: number }[];
-  strengths: string | null;
-  commonMisses: string | null;
-  nextRoomSuggestion: string | null;
+  /** 채점 현황 막대 — 서술형은 정답·부분점수·오답, 객관식·OX는 정답·오답·미제출 */
+  gradingBreakdown: { label: string; count: number; tone: GradingTone }[];
+  /** 서술형 — 제출했지만 아직 첨삭 전인 답안 수. 0이면 그리지 않는다 */
+  unreviewedCount: number;
+  /**
+   * 서술형 — AI 판단 기준. 모범답안이 채점 기준이고, 학생들이 요청한 AI 분석을 모아
+   * 공통으로 잘 짚은 점·공통 누락을 보인다. 서술형이 아니면 null
+   */
+  criteria: {
+    modelAnswer: string | null;
+    analyzedCount: number;
+    strengths: string[];
+    misses: string[];
+  } | null;
+  /** 객관식·OX — 정답과 문제 세트의 해설란 그대로. 서술형이면 null */
+  explanation: { answer: string | null; text: string | null } | null;
+  /** 저장된 문항 단위 선생님 코멘트 */
   hostComment: string | null;
 };
 

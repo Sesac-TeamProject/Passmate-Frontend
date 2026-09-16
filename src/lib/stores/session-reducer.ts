@@ -63,6 +63,20 @@ function asRanking(payload: unknown): RankingEntry[] {
 }
 
 /**
+ * 변동값 없는 랭킹(재접속 스냅샷·구버전 서버의 SESSION_ENDED)이 오면 직전 상태의 변동을 이어받는다 —
+ * 새로 오는 순간 화살표가 전부 "—" 로 리셋되던 원인(시연 2026-09-15).
+ * 서버가 변동을 하나라도 실어 보냈으면 그쪽이 권위라 그대로 쓴다.
+ */
+function withCarriedRankChange(prev: RankingEntry[], next: RankingEntry[]): RankingEntry[] {
+  if (next.some((entry) => entry.rankChange !== undefined)) return next;
+  const prevById = new Map(prev.map((entry) => [entry.participantId, entry.rankChange]));
+  return next.map((entry) => {
+    const carried = prevById.get(entry.participantId);
+    return carried === undefined ? entry : { ...entry, rankChange: carried };
+  });
+}
+
+/**
  * 이벤트 하나를 상태에 반영한다.
  *
  * 서버가 실제로 발행하는 것은 7종이다(`PARTICIPANT_*`는 발행 코드가 없다 — 백엔드 질문 B-1).
@@ -116,7 +130,7 @@ export function reduceSessionEvent(state: SessionState, event: ServerEvent): Ses
       return { ...state, screenLocked: event.payload.locked };
 
     case "SESSION_ENDED": {
-      const finalRanking = asRanking(event.payload);
+      const finalRanking = withCarriedRankChange(state.ranking, asRanking(event.payload));
       return { ...state, status: "ENDED", phase: "FINISHED", finalRanking, ranking: finalRanking };
     }
 
@@ -157,8 +171,12 @@ export function applySnapshot(
     currentQuestion: snapshot.currentQuestion ?? null,
     submitted: snapshot.submitted,
     screenLocked: snapshot.screenLocked,
-    ranking: snapshot.ranking,
-    finalRanking: phase === "FINISHED" ? snapshot.ranking : state.finalRanking,
+    // 스냅샷 랭킹에는 변동값이 없다 — 통째로 덮으면 재접속 순간 화살표가 사라진다
+    ranking: withCarriedRankChange(state.ranking, snapshot.ranking),
+    finalRanking:
+      phase === "FINISHED"
+        ? withCarriedRankChange(state.ranking, snapshot.ranking)
+        : state.finalRanking,
     reveal: null,
     submission: null,
   };

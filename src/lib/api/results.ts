@@ -1,4 +1,5 @@
 import type {
+  QuestionCommentResponse,
   EssayAnalysisRequestResponse,
   HostReviewRequest,
   TeacherReviewResponse,
@@ -93,5 +94,20 @@ export function putHostReview(
   return request<TeacherReviewResponse>(`/rooms/${roomId}/answers/${answerId}/review`, {
     method: "PUT",
     body,
+  });
+}
+
+/**
+ * PUT /rooms/{roomId}/questions/{questionId}/comment — 학생 전체에게 남기는 **문항 단위** 코멘트.
+ * 문항당 한 장이라 다시 저장하면 덮어쓴다(upsert). 답안별 첨삭(putHostReview)과 별개다.
+ */
+export function putQuestionComment(
+  roomId: number,
+  questionId: number,
+  comment: string,
+): Promise<QuestionCommentResponse> {
+  return request<QuestionCommentResponse>(`/rooms/${roomId}/questions/${questionId}/comment`, {
+    method: "PUT",
+    body: { comment },
   });
 }

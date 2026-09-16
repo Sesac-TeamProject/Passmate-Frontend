@@ -163,26 +163,36 @@ export function FinalResultPage({
           </div>
         ) : null}
 
+        {/*
+          안내 문구는 읽는 것이라 바 밖 본문에 둔다. 바에 같이 넣었더니 바가 232px —
+          뷰포트의 36% — 이 되어 화면 맨 위에서 문항 칩 마지막 줄이 통째로 가려졌다
+          (운영 확인, 2026-09-16). 바에는 누르는 것만 남긴다.
+        */}
+        {(ratingNotice !== null || isGuest) && (
+          <div className="flex flex-col gap-2 px-5 pt-4">
+            {/* 앱 "미제출 토스트(M-05 하단)" — 별점을 못 남기는 이유를 알린다 */}
+            {ratingNotice !== null && (
+              <p
+                role="status"
+                className="rounded-xl bg-ink/85 px-4 py-3 text-center text-label-md text-white"
+              >
+                {ratingNotice}
+              </p>
+            )}
+            {isGuest && (
+              <p className="text-center text-label-md text-ink-disabled">{guestNotice}</p>
+            )}
+          </div>
+        )}
+
         <MobileActionBar className="pt-4">
-          {/* 앱 "미제출 토스트(M-05 하단)" — 별점을 못 남기는 이유를 버튼 위에 알린다 */}
-          {ratingNotice !== null && (
-            <p
-              role="status"
-              className="rounded-xl bg-ink/85 px-4 py-3 text-center text-label-md text-white"
-            >
-              {ratingNotice}
-            </p>
-          )}
           <button type="button" onClick={onOpenReport} className={MOBILE_PRIMARY_BUTTON}>
             내 리포트 보기
           </button>
           {isGuest && (
-            <>
-              <button type="button" onClick={onSignUp} className={MOBILE_SECONDARY_BUTTON}>
-                가입하고 이 기록 저장하기
-              </button>
-              <p className="text-center text-label-md text-ink-disabled">{guestNotice}</p>
-            </>
+            <button type="button" onClick={onSignUp} className={MOBILE_SECONDARY_BUTTON}>
+              가입하고 이 기록 저장하기
+            </button>
           )}
         </MobileActionBar>
       </main>

@@ -58,6 +58,7 @@ import {
   mockSettlementAccount,
 } from "./payments";
 import {
+  mockExtractMaterial,
   mockAddQuestion,
   mockConfirmQuestionSet,
   mockCreateQuestionSet,
@@ -90,6 +91,7 @@ import {
   mockUpdateRoom,
 } from "./rooms";
 import {
+  mockPutQuestionComment,
   mockMyAnswer,
   mockMyReport,
   mockMyResult,
@@ -197,6 +199,7 @@ const HANDLERS: Record<string, MockHandler> = {
     mockGenerate(ctx.params.setId, asBody<AiGenerateRequest>(ctx)),
   "POST /question-sets/:setId/questions/generate-from-file": (ctx) =>
     mockGenerateFromFile(ctx.params.setId, asBody<FormData>(ctx)),
+  "POST /materials/extract": (ctx) => mockExtractMaterial(asBody<FormData>(ctx)),
 
   /* ── 결과 · 리포트 · 평가 ─────────────────────────── */
   "GET /rooms/:roomId/results/me": () => mockMyResult(),
@@ -209,6 +212,12 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /rooms/:roomId/session/questions/:questionId/answers/me/analysis": () =>
     mockRequestAnalysis(),
   "GET /rooms/:roomId/answers": (ctx) => mockReviewTargets(ctx.url),
+  "PUT /rooms/:roomId/questions/:questionId/comment": (ctx) =>
+    mockPutQuestionComment(
+      ctx.params.roomId,
+      ctx.params.questionId,
+      asBody<{ comment?: string }>(ctx),
+    ),
   "PUT /rooms/:roomId/answers/:answerId/review": (ctx) =>
     mockPostReview(Number(ctx.params.answerId), asBody<HostReviewRequest>(ctx)),
   "POST /rooms/:roomId/ratings": (ctx) => mockSubmitRating(asBody<SubmitRatingRequest>(ctx)),
