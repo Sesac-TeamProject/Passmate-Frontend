@@ -87,7 +87,8 @@ export function ReviewPage({
           <p className="text-label-md text-muted-foreground">{meta}</p>
         </div>
 
-        <div className="flex items-center justify-between">
+        {/* 탭·내보내기 버튼은 조작 도구다 — 인쇄물(PDF)에는 내용만 남긴다 */}
+        <div className="flex items-center justify-between print:hidden">
           <div role="tablist" className="flex gap-2">
             {TABS.map((name) => (
               <button

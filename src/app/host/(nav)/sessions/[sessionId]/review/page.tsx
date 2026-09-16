@@ -16,13 +16,10 @@ import { ExportFailedDialog } from "@/features/host/review/export-failed-dialog"
 import { ReviewPage, type ExportFormat } from "@/features/host/review/review-page";
 import { ReviewSkeleton } from "@/features/host/review/review-skeleton";
 import { exportRoomReport } from "@/lib/api/results";
-import { AppError } from "@/lib/types/app-error";
 import { usePostHostReview, useReviewTargets, useSessionResults } from "@/lib/queries/use-results";
 
 /** 목 모드는 파일을 만들지 못한다(`downloadFile`이 목 계층을 타지 않는다) */
 const EXPORT_UNAVAILABLE_MESSAGE = "백엔드 연동 후 제공돼요";
-/** 서버는 CSV만 내보낸다 — PDF는 400으로 막힌다 */
-const PDF_UNSUPPORTED_MESSAGE = "지금은 CSV로만 내보낼 수 있어요";
 
 /**
  * W-07 방 리포트 컨테이너. [sessionId]는 roomId다(사전 판정).
@@ -60,15 +57,20 @@ export default function Page() {
   const [failedFormat, setFailedFormat] = useState<ExportFormat>("CSV");
 
   const handleExport = async (format: ExportFormat) => {
+    // PDF 는 서버가 만들지 않는다 — 학생 리포트와 같은 방식으로 브라우저 인쇄를 연다.
+    // 인쇄 대화상자에서 "PDF로 저장"을 고르면 화면 그대로(사이드바·버튼 제외) 담긴다
+    if (format === "PDF") {
+      window.print();
+      return;
+    }
+
     setExportError(null);
     setFailedFormat(format);
     setExporting(true);
     try {
       await exportRoomReport(roomId, format);
-    } catch (error) {
-      // 서버가 지원하지 않는 형식은 400으로 막는다 — 백엔드 연동 문제가 아니라 형식 문제다
-      const unsupported = AppError.isAppError(error) && error.kind === "ValidationFailed";
-      setExportError(unsupported ? PDF_UNSUPPORTED_MESSAGE : EXPORT_UNAVAILABLE_MESSAGE);
+    } catch {
+      setExportError(EXPORT_UNAVAILABLE_MESSAGE);
     } finally {
       setExporting(false);
     }

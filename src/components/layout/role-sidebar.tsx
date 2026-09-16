@@ -41,7 +41,7 @@ export function RoleSidebar({ nav, user, activePath: forcedActivePath }: Props) 
 
   return (
     // 구분선은 border-r 대신 안쪽 그림자 — border는 240 폭을 먹어 내용 폭이 시안 212에서 211로 줄어든다
-    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col gap-1 bg-sidebar px-3.5 pt-6 pb-5 shadow-[inset_-1px_0_0_0_var(--color-border)]">
+    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col gap-1 bg-sidebar px-3.5 pt-6 pb-5 shadow-[inset_-1px_0_0_0_var(--color-border)] print:hidden">
       <BrandLogo className="mb-5 pl-2.5" />
       <nav className="flex flex-col gap-1">
         {SIDEBAR_NAV[nav].map((item) => {
