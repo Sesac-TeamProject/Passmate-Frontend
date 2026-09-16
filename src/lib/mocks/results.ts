@@ -2,6 +2,7 @@ import { AppError } from "@/lib/types/app-error";
 import { RATING_COMMENT_MAX, RATING_TAG_MAX } from "@/lib/types/dto";
 import { ERROR_CODES } from "@/lib/types/error-codes";
 import type {
+  QuestionCommentResponse,
   AnswerResultView,
   EssayAnalysisRequestResponse,
   EssayAnalysisView,
@@ -264,6 +265,20 @@ export function mockSessionResults(): SessionResultsResponse {
       // 서술형은 자동 채점이 없어 서버가 null 을 준다(2026-09-08)
       correctRate: q.type === "ESSAY" ? null : (CORRECT_RATE[q.orderNo] ?? 0),
       aiAnalysisCount: AI_ANALYSIS_COUNT[q.orderNo] ?? 0,
+      // 우측 패널 재료 — 정답·해설은 세트 문항 그대로, 서술형은 채점 분포와 AI 집계(시안 784:8983)
+      answer: q.answer,
+      explanation: q.explanation,
+      teacherComment: questionComments.get(q.id) ?? null,
+      ...(q.type === "ESSAY"
+        ? {
+            essayGrading: essayGradingOf(participants.length),
+            aiInsight: {
+              analyzedCount: AI_ANALYSIS_COUNT[q.orderNo] ?? 0,
+              commonKeyPoints: ["1차 캐시와 동일성 보장을 짚었다"],
+              commonMissingPoints: ["쓰기 지연 · 변경 감지를 언급하지 않았다"],
+            },
+          }
+        : {}),
     })),
     participants,
   };
@@ -396,4 +411,32 @@ export function __resetResultsForTests(): void {
   myAnalysisStatus = "NOT_REQUESTED";
   analysisRequestedAt = 0;
   remainingFreeAnalysis = 5;
+}
+
+/** 문항 코멘트 목 저장소 — 저장하면 다음 세션 결과 조회부터 teacherComment 로 실린다 */
+const questionComments = new Map<number, string>();
+
+/** 서술형 채점 분포 목 — 시안 비율(만점 9 · 부분 6 · 0점 8)을 참가자 수에 맞춰 줄인다 */
+function essayGradingOf(participantCount: number) {
+  const full = Math.round(participantCount * 0.4);
+  const partial = Math.round(participantCount * 0.25);
+  const zero = Math.max(0, participantCount - full - partial);
+  return { full, partial, zero, unreviewed: 0 };
+}
+
+/** PUT /rooms/{roomId}/questions/{questionId}/comment — 문항당 한 장, 덮어쓴다 */
+export async function mockPutQuestionComment(
+  roomId: string,
+  questionId: string,
+  body: { comment?: string },
+): Promise<QuestionCommentResponse> {
+  const comment = body.comment?.trim() ?? "";
+  if (comment === "") throw new AppError("ValidationFailed", { code: ERROR_CODES.INVALID_INPUT });
+  questionComments.set(Number(questionId), comment);
+  return {
+    roomId: Number(roomId),
+    questionId: Number(questionId),
+    comment,
+    updatedAt: "2026-09-16T05:00:00",
+  };
 }

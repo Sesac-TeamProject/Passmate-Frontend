@@ -163,6 +163,31 @@ export type QuestionResultRow = {
    */
   correctRate?: number | null;
   aiAnalysisCount: number;
+  /** 문항 단위 선생님 코멘트. 없으면 키가 빠진다 */
+  teacherComment?: string | null;
+  /** 정답(객관식·OX) 또는 모범답안(서술형). 끝난 방을 호스트만 보는 화면이라 그대로 온다 */
+  answer?: string | null;
+  /** 해설. 세트에 적지 않았으면 키가 빠진다 */
+  explanation?: string | null;
+  /** 서술형 채점 분포. 서술형이 아니면 키가 빠진다 */
+  essayGrading?: EssayGradingCounts | null;
+  /** 서술형 AI 분석 집계. 분석된 답안이 없으면 키가 빠진다 */
+  aiInsight?: EssayAiInsight | null;
+};
+
+/** 서술형 채점 분포 — 첨삭 점수로 가른다. 첨삭 전은 오답이 아니라 미채점 */
+export type EssayGradingCounts = {
+  full: number;
+  partial: number;
+  zero: number;
+  unreviewed: number;
+};
+
+/** 서술형 AI 분석을 문항 단위로 모은 것 — 빈도순 상위 3 */
+export type EssayAiInsight = {
+  analyzedCount: number;
+  commonKeyPoints: string[];
+  commonMissingPoints: string[];
 };
 
 export type ParticipantResultRow = {
@@ -245,6 +270,14 @@ export type TeacherReviewResponse = {
   /** 보정이 반영된 최종 점수. 보정을 지우면 채점기가 낸 잠정 점수로 돌아간다 */
   finalScore: number;
   review: TeacherReviewView;
+};
+
+/** PUT /rooms/{roomId}/questions/{questionId}/comment 응답 */
+export type QuestionCommentResponse = {
+  roomId: number;
+  questionId: number;
+  comment: string;
+  updatedAt?: string;
 };
 
 export type HostReviewRequest = {

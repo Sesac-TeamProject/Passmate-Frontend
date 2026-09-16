@@ -91,6 +91,7 @@ import {
   mockUpdateRoom,
 } from "./rooms";
 import {
+  mockPutQuestionComment,
   mockMyAnswer,
   mockMyReport,
   mockMyResult,
@@ -211,6 +212,12 @@ const HANDLERS: Record<string, MockHandler> = {
   "POST /rooms/:roomId/session/questions/:questionId/answers/me/analysis": () =>
     mockRequestAnalysis(),
   "GET /rooms/:roomId/answers": (ctx) => mockReviewTargets(ctx.url),
+  "PUT /rooms/:roomId/questions/:questionId/comment": (ctx) =>
+    mockPutQuestionComment(
+      ctx.params.roomId,
+      ctx.params.questionId,
+      asBody<{ comment?: string }>(ctx),
+    ),
   "PUT /rooms/:roomId/answers/:answerId/review": (ctx) =>
     mockPostReview(Number(ctx.params.answerId), asBody<HostReviewRequest>(ctx)),
   "POST /rooms/:roomId/ratings": (ctx) => mockSubmitRating(asBody<SubmitRatingRequest>(ctx)),

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  putQuestionComment,
   getMyAnswer,
   getMyReport,
   getMyResult,
@@ -136,6 +137,22 @@ export function usePostHostReview(roomId: number, participantId: number) {
       putHostReview(roomId, answerId, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.reviewTargets(roomId, { participantId }) });
+      queryClient.invalidateQueries({ queryKey: qk.sessionResults(roomId) });
+    },
+  });
+}
+
+/**
+ * PUT /rooms/{roomId}/questions/{questionId}/comment — 문항 코멘트 저장(upsert).
+ * 저장값이 리포트 문항 줄(teacherComment)에 실리므로 방 리포트를 무효화한다.
+ */
+export function usePutQuestionComment(roomId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ questionId, comment }: { questionId: number; comment: string }) =>
+      putQuestionComment(roomId, questionId, comment),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.sessionResults(roomId) });
     },
   });
