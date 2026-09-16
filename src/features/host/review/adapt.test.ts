@@ -132,6 +132,30 @@ describe("toSessionReport", () => {
     expect(report.questions[0].accuracy).toBe(33);
     expect(report.questions[1].accuracy).toBeUndefined();
   });
+
+  it("서술형의 오답 열은 제출자 전원이 아니라 첨삭 0점 수다", () => {
+    const report = toSessionReport(
+      results({
+        questions: [
+          {
+            sessionQuestionId: 2,
+            questionId: 12,
+            orderNo: 2,
+            type: "ESSAY",
+            content: "서술형",
+            points: 200,
+            submitCount: 9,
+            correctCount: 0,
+            aiAnalysisCount: 0,
+            essayGrading: { full: 1, partial: 1, zero: 2, unreviewed: 5 },
+          },
+        ],
+      }),
+    );
+
+    // 예전 식(submitCount - correctCount)이면 9명 — 채점이 안 끝난 문항이 전원 오답으로 보였다
+    expect(report.questions[0].wrongCount).toBe(2);
+  });
 });
 
 describe("toQuestionInsights", () => {

@@ -48,8 +48,10 @@ export function toSessionReport(dto: SessionResultsResponse): SessionReport {
     // Math.round 를 지나 NaN% 가 됐다(운영 확인, 2026-09-09). 서버는 소수로 주므로 정수로 접는다
     accuracy: q.correctRate == null ? undefined : Math.round(q.correctRate),
     aiCount: q.aiAnalysisCount,
-    // 표 "오답" 열 — 낸 사람 중 못 맞힌 수. 계약이 둘 다 주므로 빼서 쓴다
-    wrongCount: q.submitCount - q.correctCount,
+    // 표 "오답" 열 — 객관식·OX 는 낸 사람 중 못 맞힌 수. 서술형은 자동 채점이 없어 같은 식이면
+    // 제출자 전원이 오답으로 찍혔다(9/9 잔여) — 첨삭에서 0점을 받은 수만 센다
+    wrongCount:
+      q.type === "ESSAY" ? q.essayGrading?.zero : Math.max(0, q.submitCount - q.correctCount),
   }));
 
   const questionCount = dto.summary?.questionCount ?? questions.length;
