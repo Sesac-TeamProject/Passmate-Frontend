@@ -49,6 +49,9 @@ export type AnalysisRequestPanel = {
   errorMessage: string | null;
 };
 
+/** 이보다 길면 제목 크기로 한 줄에 담기지 않는다 — 문단 서체로 바꾸고 상자를 세로로 쌓는다 */
+const LONG_ANSWER_CHARS = 40;
+
 type Props = {
   detail: QuestionDetail;
   backHref: string;
@@ -69,6 +72,11 @@ export function QuestionDetailPage({
   nextHref,
   analysisRequest = null,
 }: Props) {
+  // 한 줄 제목으로 읽히는 길이를 넘으면 문단이다 — 잘라 내지 않고 쌓아서 전문을 보인다
+  const longAnswer =
+    (detail.myAnswer?.length ?? 0) > LONG_ANSWER_CHARS ||
+    (detail.correctAnswer?.length ?? 0) > LONG_ANSWER_CHARS;
+
   return (
     // 브랜드 상단바는 (participant) 레이아웃의 SiteHeader가 이미 그린다 — 여기서 또 그리면 두 번 나온다
     <main className="flex flex-1 flex-col bg-background px-4 sm:px-8 lg:px-20">
@@ -96,17 +104,26 @@ export function QuestionDetailPage({
 
         <h1 className="text-display-sm text-ink">{detail.title}</h1>
 
-        {/* 답 두 상자는 좁은 화면에서 나란히 두면 한 칸이 150px 남짓이 된다 — 세로로 쌓는다 */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+        {/*
+          답 두 상자는 좁은 화면에서 나란히 두면 한 칸이 150px 남짓이 된다 — 세로로 쌓는다.
+          서술형처럼 긴 답은 넓은 화면에서도 쌓는다 — 반 폭에 한 줄로 자르면 답안의 문답이 안 보인다(2026-09-16)
+        */}
+        <div className={cn("flex flex-col gap-3", !longAnswer && "sm:flex-row sm:gap-4")}>
           <AnswerBox
             label="내가 고른 답"
             value={detail.myAnswer ?? "답하지 않았어요"}
             // 맞힌 문항에서 내 답을 오답 색으로 칠하지 않는다
             tone={detail.isCorrect ? "correct" : "wrong"}
+            prose={longAnswer}
           />
           {/* 서술형은 정해진 정답이 없다 — 빈 상자를 세우면 "정답이 없다"가 아니라 "못 불러왔다"로 읽힌다 */}
           {detail.correctAnswer !== null ? (
-            <AnswerBox label="정답" value={detail.correctAnswer} tone="correct" />
+            <AnswerBox
+              label="정답"
+              value={detail.correctAnswer}
+              tone="correct"
+              prose={longAnswer}
+            />
           ) : null}
         </div>
 
@@ -185,30 +202,30 @@ function AnswerBox({
   label,
   value,
   tone,
+  prose = false,
 }: {
   label: string;
   value: string;
   tone: "wrong" | "correct";
+  /** 긴 답 — 제목 크기 한 줄 대신 문단으로 전문을 보인다. 줄바꿈도 그대로 살린다 */
+  prose?: boolean;
 }) {
+  const color = tone === "correct" ? "text-mint-dark" : "text-negative-soft-foreground";
+
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-1 flex-col gap-1 rounded-xl px-5 py-4",
+        "flex min-w-0 flex-1 flex-col gap-1.5 rounded-xl px-5 py-4",
         tone === "correct" ? "bg-mint-bg" : "bg-negative-bg",
       )}
     >
+      <span className={cn("text-label-md font-bold", color)}>{label}</span>
       <span
         className={cn(
-          "text-label-md font-bold tracking-[0.08em]",
-          tone === "correct" ? "text-mint-dark" : "text-negative-soft-foreground",
-        )}
-      >
-        {label}
-      </span>
-      <span
-        className={cn(
-          "truncate text-heading-md",
-          tone === "correct" ? "text-mint-dark" : "text-negative-soft-foreground",
+          color,
+          prose
+            ? "text-body-lg leading-relaxed break-words whitespace-pre-wrap"
+            : "truncate text-heading-md",
         )}
       >
         {value}
@@ -217,16 +234,15 @@ function AnswerBox({
   );
 }
 
+/** AI 분석 결과 한 줄 — 부모 dl 의 2열 그리드에 맞춰 라벨·본문을 한 셀씩 차지한다 */
 function FeedbackRow({ label, value }: { label: string; value: string | null }) {
   if (value === null) return null;
 
   return (
-    <p className="flex gap-3">
-      <span className="w-20 shrink-0 text-label-md font-bold tracking-[0.06em] text-mint-dark">
-        {label}
-      </span>
-      <span className="text-body-lg text-ink">{value}</span>
-    </p>
+    <>
+      <dt className="pt-0.5 text-label-md font-bold text-mint-dark">{label}</dt>
+      <dd className="text-body-md leading-relaxed text-ink">{value}</dd>
+    </>
   );
 }
 
@@ -292,7 +308,7 @@ function AnalysisSection({
           : "모범답안과 견줘 잘한 점·놓친 점·다시 볼 것을 알려 줘요. 점수는 바뀌지 않아요";
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl bg-muted px-5 py-4">
+    <section className="flex flex-col gap-4 rounded-xl bg-muted p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div className="flex min-w-0 flex-col gap-1">
           <h2 className="text-label-lg font-bold text-ink">AI 분석</h2>
@@ -338,13 +354,16 @@ function AnalysisSection({
       </div>
 
       {done ? (
-        <div className="flex flex-col gap-2.5 border-t border-line-soft pt-4">
+        <div className="flex flex-col gap-4 border-t border-line-soft pt-4">
           {analysis.summary ? (
-            <p className="text-body-lg leading-relaxed text-ink">{analysis.summary}</p>
+            <p className="text-body-md leading-relaxed text-ink">{analysis.summary}</p>
           ) : null}
-          <FeedbackRow label="잘한 점" value={joinOrNull(analysis.keyPoints)} />
-          <FeedbackRow label="놓친 점" value={joinOrNull(analysis.missingPoints)} />
-          <FeedbackRow label="다시 볼 것" value={joinOrNull(analysis.suggestions)} />
+          {/* 라벨 열 폭을 고정한 그리드 — 세 줄의 본문이 같은 세로선에서 시작한다 */}
+          <dl className="grid grid-cols-[4.5rem_1fr] gap-x-4 gap-y-2.5">
+            <FeedbackRow label="잘한 점" value={joinOrNull(analysis.keyPoints)} />
+            <FeedbackRow label="놓친 점" value={joinOrNull(analysis.missingPoints)} />
+            <FeedbackRow label="다시 볼 것" value={joinOrNull(analysis.suggestions)} />
+          </dl>
         </div>
       ) : null}
     </section>
