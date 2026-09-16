@@ -42,8 +42,10 @@ export function RoomsPage({
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
-        <label className="flex h-12 w-[520px] max-w-full items-center gap-2 rounded-xl border bg-card px-4">
+      {/* 필터 4칸이 84px 고정이라 한 줄에 두면 폰에서 360px가 필요해 페이지가 가로로 밀렸다 —
+          sm 미만에서는 검색을 제 줄에 두고 필터는 남는 폭을 4등분한다 */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <label className="flex h-12 w-full items-center gap-2 rounded-xl border bg-card px-4 sm:w-[520px]">
           <Search size={18} className="shrink-0 text-muted-foreground" aria-hidden />
           <input
             type="search"
@@ -54,22 +56,24 @@ export function RoomsPage({
           />
         </label>
 
-        {ROOM_FILTERS.map(({ value, label }) => (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={filter === value}
-            onClick={() => onFilterChange(value)}
-            className={cn(
-              "h-12 w-[84px] shrink-0 rounded-xl text-label-lg transition-colors",
-              filter === value
-                ? "bg-mint text-white"
-                : "border bg-card text-muted-foreground hover:bg-muted",
-            )}
-          >
-            {label}
-          </button>
-        ))}
+        <div className="flex items-center gap-2">
+          {ROOM_FILTERS.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={filter === value}
+              onClick={() => onFilterChange(value)}
+              className={cn(
+                "h-12 flex-1 rounded-xl text-label-lg transition-colors sm:w-[84px] sm:flex-none",
+                filter === value
+                  ? "bg-mint text-white"
+                  : "border bg-card text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {rooms.length === 0 ? (
@@ -85,7 +89,7 @@ export function RoomsPage({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {rooms.map((room) => (
             <RoomListItem key={room.roomId} room={room} href={roomHref(room)} />
           ))}

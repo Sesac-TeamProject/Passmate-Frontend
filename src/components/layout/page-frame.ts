@@ -6,4 +6,4 @@
  * (리포트·결과 화면처럼 자기 시안 폭이 따로 있는 화면은 그 폭을 쓰고, 이 규격은 헤더와
  * 가장자리를 공유하는 화면만 쓴다.)
  */
-export const PAGE_FRAME = "mx-auto w-full max-w-[1440px] px-10";
+export const PAGE_FRAME = "mx-auto w-full max-w-[1440px] px-5 sm:px-10";
