@@ -260,8 +260,11 @@ function NavLink({
 }
 
 /**
- * 서술형 AI 분석 구역 — 상태 4종을 각각 다르게 말한다.
- * 실패해도 정오·점수는 그대로다(FR-029) — 분석은 참고 의견이라는 뜻이다.
+ * 서술형 AI 분석 구역 — 상태 4종을 **같은 패널 안에서** 문장만 바꿔 말한다.
+ *
+ * 위의 답 상자·아래 선생님 첨삭이 전부 색 패널이라 이 구역만 소제목 + 맨 버튼이면 홀로 떠 보였다
+ * (2026-09-16). 회색 패널로 두는 이유 — 선생님 첨삭(민트)이 점수를 바꾸는 판정이고 AI 는 참고 의견이라
+ * 색이 위계를 말해야 한다. 실패해도 정오·점수는 그대로다(FR-029).
  */
 function AnalysisSection({
   analysis,
@@ -272,61 +275,76 @@ function AnalysisSection({
 }) {
   const status: AnalysisStatus = analysis?.status ?? "NOT_REQUESTED";
 
-  return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">AI 첨삭</h2>
+  // 받을 수도 없고 받은 것도 없으면 구역을 그리지 않는다 — 객관식 화면에 "받을 수 없어요"만 남던 자리
+  if (status === "NOT_REQUESTED" && !request) return null;
 
-      {status === "DONE" && analysis ? (
-        <>
-          {analysis.summary ? <p className="text-body-lg text-ink">{analysis.summary}</p> : null}
+  const done = status === "DONE" && analysis !== null;
+  // 진행 중에는 버튼을 숨긴다 — 서버가 같은 건을 되돌려 주긴 하지만 두 번 눌러 볼 이유를 주지 않는다
+  const canRequest = request !== null && (status === "NOT_REQUESTED" || status === "FAILED");
+
+  const description =
+    status === "PENDING"
+      ? "분석하고 있어요. 30초쯤 걸려요 — 끝나면 이 화면이 바뀝니다"
+      : status === "FAILED"
+        ? "분석하지 못했어요. 정오와 점수는 그대로예요"
+        : done
+          ? "모범답안과 견줘 본 참고 의견이에요. 점수는 선생님 첨삭으로만 바뀌어요"
+          : "모범답안과 견줘 잘한 점·놓친 점·다시 볼 것을 알려 줘요. 점수는 바뀌지 않아요";
+
+  return (
+    <section className="flex flex-col gap-4 rounded-xl bg-muted px-5 py-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h2 className="text-label-lg font-bold text-ink">AI 분석</h2>
+          <p
+            className={cn(
+              "text-body-md",
+              status === "FAILED" ? "text-negative" : "text-muted-foreground",
+            )}
+          >
+            {description}
+          </p>
+        </div>
+
+        {canRequest && request ? (
+          <div className="flex shrink-0 flex-col gap-1.5 sm:items-end">
+            <button
+              type="button"
+              onClick={request.onRequest}
+              disabled={request.pending}
+              className="flex h-11 w-full items-center justify-center rounded-xl bg-mint px-5 text-label-lg text-white transition-colors hover:bg-mint-dark disabled:opacity-60 sm:w-auto"
+            >
+              {request.pending ? (
+                <PendingLabel>요청하는 중…</PendingLabel>
+              ) : status === "FAILED" ? (
+                "다시 분석 요청"
+              ) : (
+                "AI 분석 요청"
+              )}
+            </button>
+            {/* 비용은 버튼 바로 아래 한 덩어리로 — 누르기 전에 봐야 하는 정보다 */}
+            <p className="text-label-md text-muted-foreground">
+              {request.remainingFree !== null && request.remainingFree > 0
+                ? `이번 달 무료 ${request.remainingFree}회 남았어요`
+                : `무료 횟수를 다 썼어요 · 1건당 ${request.coinCost} C`}
+            </p>
+            {request.errorMessage ? (
+              <p role="alert" className="text-label-md text-negative">
+                {request.errorMessage}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      {done ? (
+        <div className="flex flex-col gap-2.5 border-t border-line-soft pt-4">
+          {analysis.summary ? (
+            <p className="text-body-lg leading-relaxed text-ink">{analysis.summary}</p>
+          ) : null}
           <FeedbackRow label="잘한 점" value={joinOrNull(analysis.keyPoints)} />
           <FeedbackRow label="놓친 점" value={joinOrNull(analysis.missingPoints)} />
           <FeedbackRow label="다시 볼 것" value={joinOrNull(analysis.suggestions)} />
-        </>
-      ) : null}
-
-      {status === "PENDING" ? (
-        <p className="text-body-md text-muted-foreground">
-          분석하고 있어요. 30초쯤 걸려요 — 끝나면 이 화면이 바뀝니다
-        </p>
-      ) : null}
-
-      {status === "FAILED" ? (
-        <p className="text-body-md text-negative">
-          분석하지 못했어요. 정오와 점수는 그대로예요 — 다시 요청할 수 있어요
-        </p>
-      ) : null}
-
-      {status === "NOT_REQUESTED" && !request ? (
-        <p className="text-body-md text-muted-foreground">이 문항에는 AI 분석을 받을 수 없어요</p>
-      ) : null}
-
-      {request ? (
-        <div className="flex flex-col gap-1.5">
-          <button
-            type="button"
-            onClick={request.onRequest}
-            disabled={request.pending}
-            className="flex h-11 w-fit items-center rounded-xl bg-mint px-4 text-label-lg text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
-          >
-            {request.pending ? (
-              <PendingLabel>요청하는 중…</PendingLabel>
-            ) : status === "FAILED" ? (
-              "다시 분석 요청"
-            ) : (
-              "AI 분석 요청"
-            )}
-          </button>
-          <p className="text-label-md text-muted-foreground">
-            {request.remainingFree !== null && request.remainingFree > 0
-              ? `이번 달 무료 ${request.remainingFree}회 남았어요`
-              : `무료 횟수를 다 썼어요 · 1건당 ${request.coinCost} C`}
-          </p>
-          {request.errorMessage ? (
-            <p role="alert" className="text-label-md text-negative">
-              {request.errorMessage}
-            </p>
-          ) : null}
         </div>
       ) : null}
     </section>
