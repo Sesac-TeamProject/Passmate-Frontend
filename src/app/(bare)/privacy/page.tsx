@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <>
-      <SiteHeader className="max-md:hidden" />
+      <SiteHeader className="max-md:hidden" logoLink />
       <LegalDocumentView
         document={doc}
         tabs={LEGAL_TABS}
