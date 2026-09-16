@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findActivePath } from "./active-path";
+import { findActivePath, pickFallbackPath } from "./active-path";
 
 describe("findActivePath", () => {
   const patterns = ["/home", "/host/rooms", "/me/joined", "/me"] as const;
@@ -23,5 +23,22 @@ describe("findActivePath", () => {
 
   it("해당하는 항목이 없으면 undefined", () => {
     expect(findActivePath("/login", patterns)).toBeUndefined();
+  });
+});
+
+describe("pickFallbackPath", () => {
+  const tabPaths = ["/home", "/host/rooms", "/me/joined", "/me"] as const;
+
+  it("대체 경로가 허용 목록에 있으면 그대로 쓴다", () => {
+    expect(pickFallbackPath("/host/rooms", tabPaths)).toBe("/host/rooms");
+  });
+
+  it("대체 경로가 허용 목록에 없으면 버린다", () => {
+    // 사이드바 내비에는 있어도(/host/sets) 탭바 4개에는 없는 경우
+    expect(pickFallbackPath("/host/sets", tabPaths)).toBeUndefined();
+  });
+
+  it("대체 경로가 없으면 undefined", () => {
+    expect(pickFallbackPath(undefined, tabPaths)).toBeUndefined();
   });
 });

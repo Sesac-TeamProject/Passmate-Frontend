@@ -4,7 +4,7 @@ import { Fragment, type ReactNode, type CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DoorOpen, Home, SquarePlus, User, type LucideIcon } from "lucide-react";
-import { findActivePath } from "@/components/layout/active-path";
+import { findActivePath, pickFallbackPath } from "@/components/layout/active-path";
 import { getRoute, matchRoute, MOBILE_TABS } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  * 숫자를 화면마다 적지 않고 여기 한 곳에 둔다.
  * 구분선 1 + 위 10 + 아이콘 24 + 간격 4 + 라벨 줄 17 + 항목 위아래 4·2 = 64
  */
-export const MOBILE_TAB_BAR_H = "64px";
+const MOBILE_TAB_BAR_H = "64px";
 
 /** 시안 v6 nav/4탭 아이콘 — 앱 `PassmateIcons`의 Home·PlusSquare·DoorOpen·User와 1:1 */
 const ICONS: Record<(typeof MOBILE_TABS)[number]["icon"], LucideIcon> = {
@@ -43,10 +43,11 @@ export function MobileTabBar() {
   const visible = useTabBarVisible();
   if (!visible) return null;
 
-  const activePath = findActivePath(
-    pathname,
-    MOBILE_TABS.map((tab) => tab.path),
-  );
+  const tabPaths = MOBILE_TABS.map((tab) => tab.path);
+  // 내비에 없는 화면(예: /host/reputation)은 사이드바와 같은 규칙으로 routes.ts의 nav 지정을 따른다 —
+  // 단 탭 4개 중 하나가 아니면 억지로 켜지 않는다(엉뚱한 탭이 활성으로 보이는 게 더 나쁘다)
+  const activePath =
+    findActivePath(pathname, tabPaths) ?? pickFallbackPath(matchRoute(pathname)?.nav, tabPaths);
 
   return (
     <nav
@@ -95,7 +96,13 @@ export function MobileTabBarInset({
     <div
       className={cn(className, visible && "max-md:pb-[var(--mobile-tab-bar-h)]")}
       // 탭바가 없는 화면에서도 변수는 남긴다 — 선언이 사라지면 이 값을 쓰는 규칙이 통째로 무효가 되어 바닥에 붙지 않는다
-      style={{ "--mobile-tab-bar-h": visible ? MOBILE_TAB_BAR_H : "0px" } as CSSProperties}
+      style={
+        {
+          "--mobile-tab-bar-h": visible
+            ? `calc(${MOBILE_TAB_BAR_H} + env(safe-area-inset-bottom))`
+            : "0px",
+        } as CSSProperties
+      }
     >
       {children}
     </div>

@@ -16,3 +16,15 @@ export function findActivePath(
     .filter((p) => toRegExp(p, "/").test(pathname))
     .sort((a, b) => b.length - a.length)[0];
 }
+
+/**
+ * findActivePath가 못 찾았을 때 쓸 대체 경로(RouteMeta.nav 등)를 고른다. 후보 목록(allowed)에
+ * 없으면 버린다 — 하단 탭바처럼 활성 표시가 정해진 몇 개뿐인 곳에서 엉뚱한 경로가 활성으로
+ * 잡히지 않게 한다(예: 사이드바엔 있어도 탭바 4개에는 없는 nav).
+ */
+export function pickFallbackPath(
+  fallback: string | undefined,
+  allowed: readonly string[],
+): string | undefined {
+  return fallback !== undefined && allowed.includes(fallback) ? fallback : undefined;
+}
