@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { MOBILE_PRIMARY_BUTTON, MobileActionBar } from "@/components/common/mobile-action-bar";
 import { PendingLabel } from "@/components/common/pending-label";
 import { CoinBalanceCard } from "@/features/me/coins/coin-balance-card";
 import { CHARGE_PRESETS } from "@/features/me/coins/types";
@@ -24,8 +25,30 @@ type Props = {
  * 보여줘 선택이 중복이었고, 실제로 쓴 수단은 서버가 포트원 조회로 기록한다.
  */
 export function ChargePage({ balance, amount, onAmountChange, pending, error, onSubmit }: Props) {
+  const submitLabel = pending ? (
+    <PendingLabel>결제창 여는 중…</PendingLabel>
+  ) : (
+    `${formatKrwInline(amount)} 충전하기`
+  );
+
   return (
-    <MeFormPage title="코인 충전">
+    <MeFormPage
+      title="코인 충전"
+      // 코인 내역에서 들어오는 화면이라 뒤로가기는 마이가 아니라 코인 내역으로 돌아간다
+      backHref="/me/coins"
+      mobileAction={
+        <MobileActionBar aboveTabBar className="-mx-5">
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={pending}
+            className={MOBILE_PRIMARY_BUTTON}
+          >
+            {submitLabel}
+          </button>
+        </MobileActionBar>
+      }
+    >
       {error && (
         <p
           role="alert"
@@ -38,7 +61,8 @@ export function ChargePage({ balance, amount, onAmountChange, pending, error, on
       <CoinBalanceCard balance={balance} />
 
       <span className="text-label-lg text-foreground">충전 금액</span>
-      <div className="flex gap-2.5" role="group" aria-label="충전 금액">
+      {/* PC: 4개 한 줄 · 폰(앱 M-12-4): 2×2 그리드 */}
+      <div className="grid grid-cols-4 gap-2.5 max-md:grid-cols-2" role="group" aria-label="충전 금액">
         {CHARGE_PRESETS.map((preset) => {
           const selected = preset === amount;
           return (
@@ -48,7 +72,7 @@ export function ChargePage({ balance, amount, onAmountChange, pending, error, on
               aria-pressed={selected}
               onClick={() => onAmountChange(preset)}
               className={cn(
-                "flex-1 rounded-xl border py-3 text-center text-label-lg transition-colors",
+                "rounded-xl border py-3 text-center text-label-lg transition-colors",
                 selected
                   ? "border-mint bg-mint-bg text-mint-dark"
                   : "border-border bg-card text-foreground",
@@ -65,12 +89,8 @@ export function ChargePage({ balance, amount, onAmountChange, pending, error, on
         시 환불 가능
       </p>
 
-      <Button size="xl" className="w-full" onClick={onSubmit} disabled={pending}>
-        {pending ? (
-          <PendingLabel>결제창 여는 중…</PendingLabel>
-        ) : (
-          `${formatKrwInline(amount)} 충전하기`
-        )}
+      <Button size="xl" className="w-full max-md:hidden" onClick={onSubmit} disabled={pending}>
+        {submitLabel}
       </Button>
     </MeFormPage>
   );

@@ -1,5 +1,6 @@
 import { Coins } from "lucide-react";
 import Link from "next/link";
+import { MobileTopBar } from "@/components/common/mobile-top-bar";
 import { AVATAR_LABEL } from "@/components/common/student-avatar";
 import type { CoinSummary, Profile, SettlementSummary } from "@/features/me/types";
 import { NOTIFICATION_SUMMARY } from "@/features/me/types";
@@ -42,8 +43,10 @@ export function MyPage({
     : "";
 
   return (
-    <main className="flex flex-col gap-5 px-9 py-7">
-      <div className="flex items-center justify-between">
+    <main className="flex flex-col gap-5 px-9 py-7 max-md:gap-3.5 max-md:px-5 max-md:pt-3 max-md:pb-6">
+      {/* 앱 M-12는 탭 루트라 뒤로 화살표가 없다 — 제목만 둔다 */}
+      <MobileTopBar title="마이" />
+      <div className="flex items-center justify-between max-md:hidden">
         <h1 className="text-heading-lg text-ink">내 정보 관리</h1>
         <p className="text-label-md text-muted-foreground">
           계정 · 코인 · 정산 계좌를 관리해요. 방과 기록은 왼쪽 메뉴의 내가 만든 방 · 참여한 방에서
@@ -52,9 +55,9 @@ export function MyPage({
 
       <ProfileCard profile={profile} joinedRooms={joinedRooms} hostedRooms={hostedRooms} />
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-2 gap-5 max-md:grid-cols-1 max-md:gap-3.5">
         {/* 좌열 */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 max-md:gap-3.5">
           <SettingsCard title="계정">
             <SettingsRow
               className={ROW_CLASS}
@@ -136,7 +139,7 @@ export function MyPage({
         </div>
 
         {/* 우열 */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 max-md:gap-3.5">
           <SettingsCard
             title="정산 (내가 만든 방 수익)"
             aside={

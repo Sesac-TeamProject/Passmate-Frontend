@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { MOBILE_PRIMARY_BUTTON, MobileActionBar } from "@/components/common/mobile-action-bar";
 import { Button } from "@/components/ui/button";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
 import { formatKrwInline, formatNumber } from "@/lib/format";
@@ -17,7 +18,19 @@ type Props = {
 /** C-02-6 코인 충전 완료 — 민트 체크 원 72 · 충전량 · 잔액/수단 · 안내 · 확인 */
 export function ChargeCompletePage({ amount, payMethod, balanceAfter, onConfirm }: Props) {
   return (
-    <MeFormPage title="코인 충전" cardClassName="items-center gap-3 px-7 py-12">
+    <MeFormPage
+      title="코인 충전"
+      cardClassName="items-center gap-3 px-7 py-12"
+      // 코인 내역에서 들어오는 화면이라 뒤로가기는 마이가 아니라 코인 내역으로 돌아간다
+      backHref="/me/coins"
+      mobileAction={
+        <MobileActionBar aboveTabBar className="-mx-5">
+          <button type="button" onClick={onConfirm} className={MOBILE_PRIMARY_BUTTON}>
+            확인
+          </button>
+        </MobileActionBar>
+      }
+    >
       <div className="flex size-[72px] items-center justify-center rounded-full bg-mint">
         <Check className="size-8 text-white" strokeWidth={2} aria-hidden />
       </div>
@@ -29,7 +42,7 @@ export function ChargeCompletePage({ amount, payMethod, balanceAfter, onConfirm 
       <p className="text-label-md text-ink-disabled">
         결제 내역은 마이페이지 › 코인 · 결제에서 볼 수 있어요
       </p>
-      <Button size="xl" className="mt-2" onClick={onConfirm}>
+      <Button size="xl" className="mt-2 max-md:hidden" onClick={onConfirm}>
         확인
       </Button>
     </MeFormPage>

@@ -19,7 +19,8 @@ export function SettingsCard({ title, aside, children, className }: Props) {
     <section
       className={cn("flex flex-col divide-y rounded-2xl border bg-card px-5 py-2", className)}
     >
-      <header className="flex items-center justify-between pt-3 pb-1">
+      {/* aside(예: "Lv.3부터 유료 방 개설 가능")가 제목과 한 줄에서 좁아지면 둘째 줄로 내린다 */}
+      <header className="flex items-center justify-between gap-2 pt-3 pb-1 max-md:flex-wrap max-md:gap-y-1">
         <h2 className="flex items-center gap-2 text-heading-sm text-ink">{title}</h2>
         {aside}
       </header>

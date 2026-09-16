@@ -61,12 +61,18 @@ export function CoinsPage({ balance, filter, onFilterChange, items }: Props) {
 function CoinHistoryRow({ item }: { item: CoinHistoryItem }) {
   const positive = item.amount > 0;
   return (
-    <div className="flex items-center gap-4 px-5 py-4">
-      {/* 날짜 칸 너비를 고정한다 — "9/4"와 "12/31"의 폭이 달라 제목 시작점이 줄마다 어긋났다 */}
-      <span className="w-10 shrink-0 text-label-md text-muted-foreground tabular-nums">
+    <div className="flex items-center gap-4 px-5 py-4 max-md:gap-3 max-md:px-4 max-md:py-3.5">
+      {/* PC: 날짜 칸 너비를 고정한다 — "9/4"와 "12/31"의 폭이 달라 제목 시작점이 줄마다 어긋났다.
+          폰(앱 M-12-9): 날짜가 제목 아래 둘째 줄로 내려간다 — 가로 폭이 좁아 한 줄에 다 안 들어간다 */}
+      <span className="w-10 shrink-0 text-label-md text-muted-foreground tabular-nums max-md:hidden">
         {item.dateLabel}
       </span>
-      <span className="min-w-0 flex-1 truncate text-label-lg text-foreground">{item.title}</span>
+      <div className="flex min-w-0 flex-1 flex-col max-md:gap-0.5">
+        <span className="truncate text-label-lg text-foreground">{item.title}</span>
+        <span className="hidden text-label-md text-muted-foreground max-md:block">
+          {item.dateLabel}
+        </span>
+      </div>
       <span className={cn("text-label-lg", positive ? "text-mint-dark" : "text-foreground")}>
         {positive ? "+" : "-"}
         {formatNumber(Math.abs(item.amount))} C
