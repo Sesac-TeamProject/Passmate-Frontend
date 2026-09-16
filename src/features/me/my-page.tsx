@@ -45,7 +45,7 @@ export function MyPage({
   return (
     <main className="flex flex-col gap-5 px-9 py-7 max-md:gap-3.5 max-md:px-5 max-md:pt-3 max-md:pb-6">
       {/* 앱 M-12는 탭 루트라 뒤로 화살표가 없다 — 제목만 둔다 */}
-      <MobileTopBar title="마이" />
+      <MobileTopBar title="마이" className="-mx-5 px-5 pb-1" />
       <div className="flex items-center justify-between max-md:hidden">
         <h1 className="text-heading-lg text-ink">내 정보 관리</h1>
         <p className="text-label-md text-muted-foreground">

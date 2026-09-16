@@ -34,7 +34,7 @@ export function HomeSkeleton() {
           <Skeleton className="h-4 w-24" />
           <div className="flex gap-4 max-md:overflow-x-auto max-md:pb-1">
             {Array.from({ length: 3 }, (_, i) => (
-              <SkeletonCard key={i} className="flex-1 max-md:w-[220px] max-md:flex-none">
+              <SkeletonCard key={i} className="flex-1 max-md:w-[280px] max-md:flex-none">
                 <Skeleton soft className="h-5 w-12 rounded-full" />
                 <Skeleton className="h-4 w-[72%]" />
                 <SkeletonText lines={2} soft />

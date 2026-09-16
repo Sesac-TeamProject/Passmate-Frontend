@@ -31,7 +31,7 @@ export function ActiveSessionCard({ session }: Props) {
   };
 
   return (
-    <section className="flex items-center gap-4 rounded-2xl border border-mint bg-mint-bg px-6 py-5 max-md:flex-col max-md:items-stretch max-md:gap-3">
+    <section className="flex items-center gap-4 rounded-2xl border border-mint bg-mint-bg px-6 py-5 max-md:flex-col max-md:items-stretch max-md:gap-3 max-md:px-4 max-md:py-4">
       <div className="flex min-w-0 flex-1 items-center gap-4 md:contents">
         <StatusChip tone="live" className="px-2.5 py-1">
           {session.isRunning ? "진행 중" : "대기 중"}
@@ -48,7 +48,7 @@ export function ActiveSessionCard({ session }: Props) {
       {session.pin === null ? (
         <Button
           size="xl"
-          className="h-11 px-5 max-md:h-12 max-md:w-full"
+          className="h-11 px-5 max-md:w-full"
           nativeButton={false}
           render={<Link href="/join" />}
         >
@@ -57,7 +57,7 @@ export function ActiveSessionCard({ session }: Props) {
       ) : (
         <Button
           size="xl"
-          className="h-11 px-5 max-md:h-12 max-md:w-full"
+          className="h-11 px-5 max-md:w-full"
           onClick={handleRejoin}
           disabled={rejoin.isPending}
         >

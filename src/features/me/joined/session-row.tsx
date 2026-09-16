@@ -27,7 +27,7 @@ type Props = { session: AttendedSession };
  */
 export function SessionRow({ session }: Props) {
   return (
-    <li className="flex items-center gap-4 rounded-[18px] border bg-card px-5 py-4 max-md:flex-col max-md:items-start max-md:gap-2.5">
+    <li className="flex items-center gap-4 rounded-[18px] border bg-card px-5 py-4 max-md:flex-col max-md:items-start max-md:gap-2.5 max-md:rounded-2xl max-md:px-4 max-md:py-3.5">
       <div className="flex w-full items-center gap-4 md:contents">
         {/* 아직 안 끝난 방은 등수가 없다 — 0위로 채우지 않고 자리만 비운다 */}
         <span

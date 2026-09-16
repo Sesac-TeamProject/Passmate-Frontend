@@ -19,7 +19,7 @@ export function ProfileCard({ profile, joinedRooms, hostedRooms }: Props) {
   ) : null;
 
   return (
-    <section className="flex items-center gap-5 rounded-2xl border bg-card p-5 max-md:px-[18px] max-md:py-4">
+    <section className="flex items-center gap-5 rounded-2xl border bg-card p-5 max-md:rounded-[20px] max-md:px-[18px] max-md:py-4">
       <div className="contents max-md:hidden">
         <StudentAvatar avatar={profile.avatar} size={64} />
         <div className="flex flex-col gap-1.5">
