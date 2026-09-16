@@ -47,7 +47,8 @@ type Props = {
   preferredSetId?: string;
 };
 
-const FIELD = "h-[54px] w-[440px] rounded-2xl bg-muted px-[18px]";
+// 폰(M-13a 시트)에서는 시트 폭을 다 쓴다 — 고정폭은 PC 카드(520)에만
+const FIELD = "h-[54px] w-full rounded-2xl bg-muted px-[18px] md:w-[440px]";
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /** W-02 v2 방 설정 카드 — 방 이름·문제 세트·방 유형(무료/유료)·참가비 */
@@ -112,9 +113,11 @@ export function NewRoomForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex w-[520px] flex-col gap-4 rounded-3xl border bg-card px-10 py-7"
+      // 폰에서는 바깥 시트가 카드 역할을 하므로 테두리·안쪽 여백을 겹쳐 두지 않는다
+      className="flex w-full flex-col gap-4 md:w-[520px] md:rounded-3xl md:border md:bg-card md:px-10 md:py-7"
     >
-      <div className="flex flex-col gap-1.5">
+      {/* 폰 시트는 머리글("새 방 만들기")을 따로 가진다 */}
+      <div className="flex flex-col gap-1.5 max-md:hidden">
         <h2 className="text-heading-lg text-ink">어떤 방을 만들까요?</h2>
         <p className="text-body-md text-muted-foreground">
           방 이름과 문제 세트만 정하면 바로 시작할 수 있어요
@@ -218,7 +221,7 @@ export function NewRoomForm({
       <button
         type="submit"
         disabled={pending || !setId}
-        className="flex h-14 w-[440px] items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex h-14 w-full items-center justify-center rounded-2xl bg-mint text-heading-sm text-white transition-colors hover:bg-mint-dark disabled:cursor-not-allowed disabled:opacity-60 md:w-[440px]"
       >
         {pending ? <PendingLabel>방 만드는 중…</PendingLabel> : "방 만들기 → PIN 발급"}
       </button>
