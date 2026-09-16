@@ -83,7 +83,9 @@ let rated = false;
 /** 내 서술형 분석 상태 — 요청하면 PENDING, 3초 뒤 DONE으로 바뀐다 */
 let myAnalysisStatus: MyAnswerResponse["analysisStatus"] = "NOT_REQUESTED";
 let analysisRequestedAt = 0;
-let remainingFreeAnalysis = 5;
+/** 월 무료 한도 — 서버 정책(essay-analysis-free-limit)과 같은 값 */
+const FREE_ANALYSIS_LIMIT = 5;
+let remainingFreeAnalysis = FREE_ANALYSIS_LIMIT;
 
 const ANALYSIS_DELAY_MS = 3000;
 const ANALYSIS_COIN_COST = 100;
@@ -177,6 +179,7 @@ export function mockMyAnswer(questionId: string): MyAnswerResponse {
     analysisStatus: view.analysisStatus,
     ...(view.analysis ? { analysis: view.analysis } : {}),
     remainingFreeAnalysis,
+    freeAnalysisLimit: FREE_ANALYSIS_LIMIT,
     analysisCoinCost: ANALYSIS_COIN_COST,
   };
 }
@@ -197,6 +200,7 @@ export function mockRequestAnalysis(): EssayAnalysisRequestResponse {
     analysisStatus: "PENDING",
     chargedCoins: 0,
     remainingFreeAnalysis,
+    freeAnalysisLimit: FREE_ANALYSIS_LIMIT,
     analysisCoinCost: ANALYSIS_COIN_COST,
   };
 }

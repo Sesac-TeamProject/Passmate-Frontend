@@ -54,6 +54,8 @@ export type MyAnswerResponse = {
   teacherReview?: TeacherReviewView;
   /** 이번 달 남은 무료 분석 횟수 */
   remainingFreeAnalysis?: number;
+  /** 월 무료 한도 — "무료 n/5 사용" 표시용 */
+  freeAnalysisLimit: number;
   /** 무료 횟수를 넘겼을 때 1건당 코인 */
   analysisCoinCost: number;
 };
@@ -68,6 +70,7 @@ export type EssayAnalysisRequestResponse = {
   /** 이번에 차감된 코인(무료 횟수 안이면 0) */
   chargedCoins: number;
   remainingFreeAnalysis: number;
+  freeAnalysisLimit: number;
   analysisCoinCost: number;
 };
 

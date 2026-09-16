@@ -76,6 +76,7 @@ export default function Page() {
               onRequest: () => requestAnalysis.mutate(),
               pending: requestAnalysis.isPending,
               remainingFree: answer.data.remainingFreeAnalysis ?? null,
+              freeLimit: answer.data.freeAnalysisLimit,
               coinCost: answer.data.analysisCoinCost,
               errorMessage: requestAnalysis.isError
                 ? toAnalysisErrorMessage(requestAnalysis.error)
