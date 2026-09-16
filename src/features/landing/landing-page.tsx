@@ -83,7 +83,7 @@ function Hero() {
               ))}
             </div>
             <p className="text-body-md text-muted-foreground">
-              새싹 부트캠프 4기 스터디가 먼저 쓰고 있어요
+              새싹 부트캠프 스터디가 먼저 쓰고 있어요
             </p>
           </div>
         </div>
