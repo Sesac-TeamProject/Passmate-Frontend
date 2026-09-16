@@ -16,6 +16,11 @@ export type RouteMeta = {
   area: Area;
   /** 사이드바에서 활성으로 표시할 내비 항목의 path. 자기 경로가 내비에 없는 화면만 지정 (예: /pay/[roomId] → /home) */
   nav?: string;
+  /**
+   * 폰 폭(768px 미만)에서 회원 사이드바를 감추는 화면. 앱 시안이 사이드바 없는 한 화면으로 그린 곳만 켠다
+   * (예: /pay/[roomId] = 앱 M-11). PC는 그대로 사이드바가 선다.
+   */
+  mobileBare?: boolean;
 };
 
 export const AREA_LABEL: Record<Area, string> = {
@@ -200,6 +205,7 @@ export const ROUTES: readonly RouteMeta[] = [
       "방 정보·참가자 정보 확인, 코인 잔액 확인 → 부족분 포트원 충전 → 코인 차감, 결제 완료 후 대기실 입장 (회원 전용)",
     area: "participant",
     nav: "/home",
+    mobileBare: true,
   },
   // 방 개설·운영
   {

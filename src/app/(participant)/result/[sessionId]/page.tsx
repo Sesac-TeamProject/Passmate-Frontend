@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { BottomSheet } from "@/components/common/bottom-sheet";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toAvatarKey } from "@/components/common/student-avatar";
@@ -28,6 +29,9 @@ const NO_SUBSCRIBE = () => () => {};
 const readMyId = () => readMyParticipant()?.participantId ?? null;
 const readMyIdOnServer = () => null;
 const readGuestRecordOnServer = () => null;
+
+/** 별점 시트 제목 id — 바텀시트가 대화상자 이름으로 읽는다 */
+const RATING_TITLE_ID = "rating-sheet-title";
 
 /**
  * P-Web 최종 결과 컨테이너 (시안 788:8834).
@@ -83,25 +87,24 @@ export default function Page() {
 
   if (result.isPending) return <ScreenLoading />;
   if (result.isError)
-    return <ScreenError message={result.error.message} onRetry={() => result.refetch()} />;
+    return (
+      <ScreenError
+        message={result.error.message}
+        onRetry={() => result.refetch()}
+        // 폰 폭은 앱 M-05e — "참여한 방에서 다시 보기"는 회원에게만 있는 길이라 게스트에게는 약속하지 않는다
+        mobile={{
+          screenTitle: "최종 결과",
+          title: "결과를 불러오지 못했어요",
+          description: "잠시 후 다시 시도해 주세요. 제출한 답안은 이미 저장돼 사라지지 않아요.",
+          footnote: isMember ? "결과는 마이 › 참여한 방에서도 나중에 다시 볼 수 있어요" : undefined,
+          homeHref: isMember ? "/home" : "/",
+        }}
+      />
+    );
 
   // P-Web 별점 시트 — 시안에 [건너뛰기]가 있다는 건 부르지 않아도 스스로 뜬다는 뜻이다.
   // 서버가 주는 `rating.available`이 문을 지킨다(안 냈거나·24시간이 지났거나·이미 냈으면 false).
-  if (result.data.rating.available && !rateSkipped)
-    return (
-      <RatingSheet
-        // TODO(계약): 결과 응답에 호스트 이름이 없다 (DESIGN_GAPS G-8)
-        hostName={null}
-        subtitle={[result.data.roomTitle, `${result.data.questionCount}문항`]
-          .filter(Boolean)
-          .join(" · ")}
-        deadlineLabel={toRatingDeadlineLabel(result.data.rating)}
-        onSubmit={(body) => rate.mutate(body, { onSuccess: () => setRateSkipped(true) })}
-        onSkip={() => setRateSkipped(true)}
-        pending={rate.isPending}
-        errorMessage={rate.isError ? toRatingSubmitMessage(rate.error) : null}
-      />
-    );
+  const ratingOpen = result.data.rating.available && !rateSkipped;
 
   const source = finalRanking.length > 0 ? finalRanking : ranking;
   const questionCount = result.data.questionCount ?? 0;
@@ -138,31 +141,57 @@ export default function Page() {
     .join(" · ");
 
   return (
-    <FinalResultPage
-      roomTitle={result.data.roomTitle ?? ""}
-      subtitle={subtitle}
-      myRank={myRank}
-      myScore={result.data.totalScore}
-      myCorrectCount={result.data.correctCount}
-      questionCount={questionCount}
-      podium={podium}
-      rankRows={rankRows}
-      questionRows={toReportRows(result.data.questions)}
-      isGuest={result.data.guest}
-      // @draft 소요 시간·반 평균 비교는 학습 리포트 계약에 없다 — 그 칸을 감춘다
-      elapsedSeconds={null}
-      comparison={null}
-      // 별점을 못 남기는 이유를 한 줄로 알린다
-      ratingNotice={toRatingNotice(result.data.rating)}
-      // 7일 보관 사실은 표가 있을 때만 약속한다(만료·다른 기기면 표가 없다)
-      guestRecordNotice={
-        result.data.guest && guestRecord !== null
-          ? "7일 안에 가입하면 이 기록을 계정으로 옮길 수 있어요"
-          : null
-      }
-      onOpenReport={() => router.push(`/result/${roomId}/report`)}
-      onSignUp={() => router.push(`/login?next=${encodeURIComponent(`/result/${roomId}`)}`)}
-      onOpenQuestion={(no) => router.push(`/result/${roomId}/report/${no}`)}
-    />
+    <>
+      {/*
+        별점 시트가 떠 있는 동안 PC는 이전처럼 시트만 보인다(결과 화면을 감춘다).
+        폰 폭은 앱 M-06a처럼 결과 화면을 깔고 그 위에 바텀시트로 올린다.
+      */}
+      <div className={ratingOpen ? "md:hidden" : undefined}>
+        <FinalResultPage
+          roomTitle={result.data.roomTitle ?? ""}
+          subtitle={subtitle}
+          myRank={myRank}
+          myScore={result.data.totalScore}
+          myCorrectCount={result.data.correctCount}
+          questionCount={questionCount}
+          podium={podium}
+          rankRows={rankRows}
+          questionRows={toReportRows(result.data.questions)}
+          isGuest={result.data.guest}
+          // @draft 소요 시간·반 평균 비교는 학습 리포트 계약에 없다 — 그 칸을 감춘다
+          elapsedSeconds={null}
+          comparison={null}
+          // 별점을 못 남기는 이유를 한 줄로 알린다
+          ratingNotice={toRatingNotice(result.data.rating)}
+          // 7일 보관 사실은 표가 있을 때만 약속한다(만료·다른 기기면 표가 없다)
+          guestRecordNotice={
+            result.data.guest && guestRecord !== null
+              ? "7일 안에 가입하면 이 기록을 계정으로 옮길 수 있어요"
+              : null
+          }
+          onOpenReport={() => router.push(`/result/${roomId}/report`)}
+          onSignUp={() => router.push(`/login?next=${encodeURIComponent(`/result/${roomId}`)}`)}
+          onOpenQuestion={(no) => router.push(`/result/${roomId}/report/${no}`)}
+        />
+      </div>
+
+      {ratingOpen ? (
+        <BottomSheet labelledBy={RATING_TITLE_ID}>
+          <RatingSheet
+            titleId={RATING_TITLE_ID}
+            // TODO(계약): 결과 응답에 호스트 이름이 없다 (DESIGN_GAPS G-8)
+            hostName={null}
+            subtitle={[result.data.roomTitle, `${result.data.questionCount}문항`]
+              .filter(Boolean)
+              .join(" · ")}
+            deadlineLabel={toRatingDeadlineLabel(result.data.rating)}
+            onSubmit={(body) => rate.mutate(body, { onSuccess: () => setRateSkipped(true) })}
+            onSkip={() => setRateSkipped(true)}
+            pending={rate.isPending}
+            errorMessage={rate.isError ? toRatingSubmitMessage(rate.error) : null}
+          />
+        </BottomSheet>
+      ) : null}
+    </>
   );
 }

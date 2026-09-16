@@ -39,15 +39,41 @@ export default function Page() {
   const requestAnalysis = useRequestEssayAnalysis(roomId, target?.questionId ?? 0);
 
   const backHref = `/result/${params.sessionId}/report`;
+  /**
+   * 폰 폭은 공용 상단바가 걷혀 있다(레이아웃) — 상태 화면이 스스로 "← 리포트"와 버튼을 그리지 않으면
+   * 브라우저 뒤로가기 말고는 나갈 길이 없다.
+   */
+  const mobileFailure = {
+    screenTitle: "리포트",
+    backHref,
+    homeHref: isMember ? "/home" : "/",
+  };
 
   if (result.isPending) return <ScreenLoading />;
   if (result.isError)
-    return <ScreenError message={result.error.message} onRetry={() => result.refetch()} />;
+    return (
+      <ScreenError
+        message={result.error.message}
+        onRetry={() => result.refetch()}
+        mobile={{
+          ...mobileFailure,
+          title: "문항을 불러오지 못했어요",
+          description: "잠시 후 다시 시도해 주세요.",
+        }}
+      />
+    );
 
   // 없는 문항 번호로 들어온 경우 — 04 보드 문구 규칙대로 돌아갈 길을 함께 준다
   if (target === null)
     return (
-      <ScreenError message="그런 문항이 없어요. 리포트에서 다시 골라 주세요">
+      <ScreenError
+        message="그런 문항이 없어요. 리포트에서 다시 골라 주세요"
+        mobile={{
+          ...mobileFailure,
+          title: "그런 문항이 없어요",
+          description: "리포트에서 문항을 다시 골라 주세요.",
+        }}
+      >
         <Button variant="outline" nativeButton={false} render={<Link href={backHref} />}>
           리포트로 돌아가기
         </Button>
@@ -56,7 +82,17 @@ export default function Page() {
 
   if (answer.isPending) return <ScreenLoading />;
   if (answer.isError)
-    return <ScreenError message={answer.error.message} onRetry={() => answer.refetch()} />;
+    return (
+      <ScreenError
+        message={answer.error.message}
+        onRetry={() => answer.refetch()}
+        mobile={{
+          ...mobileFailure,
+          title: "답안을 불러오지 못했어요",
+          description: "잠시 후 다시 시도해 주세요. 제출한 답안은 이미 저장돼 사라지지 않아요.",
+        }}
+      />
+    );
 
   const detail = toQuestionDetail(answer.data, questions.length, questionResult.data);
   const hasPrev = questions.some((q) => q.orderNo === no - 1);

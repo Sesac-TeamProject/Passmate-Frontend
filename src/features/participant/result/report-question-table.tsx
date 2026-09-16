@@ -11,6 +11,16 @@ const VERDICT = {
   MISSED: { label: "미제출", cls: "bg-muted text-muted-foreground" },
 } as const;
 
+/** 폰 폭 줄 목록의 판정 알약 색 — 앱 M-06(정답 초록 · 오답 분홍 · AI 분석 노랑) */
+const MOBILE_VERDICT_CLASS: Record<keyof typeof VERDICT, string> = {
+  CORRECT: "bg-choice-d text-choice-d-foreground",
+  WRONG: "bg-choice-a text-choice-a-foreground",
+  PARTIAL: "bg-choice-c text-choice-c-foreground",
+  PENDING: "bg-choice-c text-choice-c-foreground",
+  UNKNOWN: "bg-muted text-muted-foreground",
+  MISSED: "bg-muted text-muted-foreground",
+};
+
 /** 표 "유형" 칩 — 시안은 객관식 회색 · 서술형 파랑 · OX 주황 */
 const KIND = {
   MULTIPLE: { label: "객관식", cls: "bg-muted text-muted-foreground" },
@@ -42,7 +52,10 @@ type Props = {
   onOpenQuestion?: (no: number) => void;
 };
 
-/** 리포트 문항 표 (시안 P-Web 내 리포트 787:8905) */
+/**
+ * 리포트 문항 표 (시안 P-Web 내 리포트 787:8905).
+ * 폰 폭(768px 미만)은 표 대신 앱 M-06의 줄 목록 — "Q1 · 문제 · 판정 알약 · ›" 한 줄씩, 줄을 누르면 문항 상세.
+ */
 export function ReportQuestionTable({ rows, onOpenQuestion }: Props) {
   if (rows.length === 0) {
     return (
@@ -53,77 +66,111 @@ export function ReportQuestionTable({ rows, onOpenQuestion }: Props) {
   }
 
   return (
-    /*
-     * min-w-0: 없으면 flex 자식의 기본 min-width:auto 때문에 상자가 표(1246px)만큼 벌어져
-     *   스크롤되지 않고 페이지가 통째로 가로로 넘친다.
-     * contain:paint: 여기까지 해도 페이지가 표 폭만큼 가로로 밀렸다. 고정 레이아웃 표(table-fixed +
-     *   colgroup 고정폭)는 스크롤 상자 안에 있어도 뷰포트의 스크롤 영역을 넓힌다 — 바깥 어디에
-     *   overflow:hidden/clip 을 줘도 막히지 않고, 이 상자를 페인트 격리해야 멈춘다.
-     *   상자 안 가로 스크롤은 그대로 동작한다.
-     */
-    <div className="min-w-0 overflow-x-auto rounded-xl border bg-card [contain:paint]">
-      <table className="w-full min-w-[1246px] table-fixed border-collapse">
-        <colgroup>
-          <col className="w-14" />
-          <col className="w-[66px]" />
-          <col className="w-[118px]" />
-          <col className="w-[412px]" />
-          <col className="w-[162px]" />
-          <col className="w-[70px]" />
-          <col className="w-46" />
-          <col className="w-[90px]" />
-          <col className="w-22" />
-        </colgroup>
-        <thead>
-          <tr className="border-b bg-surface-subtle text-label-md text-muted-foreground">
-            <Th className="pl-[17px]">문항</Th>
-            <Th>유형</Th>
-            <Th>개념</Th>
-            <Th>문제</Th>
-            <Th>내 답</Th>
-            <Th>결과</Th>
-            <Th align="right">반 정답률</Th>
-            <Th align="right">소요</Th>
-            <Th align="right" className="pr-[17px]">
-              <span className="sr-only">해설 열기</span>
-            </Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.questionId} className="border-b border-line-soft last:border-b-0">
-              <Td className="pl-[17px] text-label-md text-ink">Q{row.no}</Td>
-              <Td>
-                <Chip className={KIND[row.kind].cls}>{KIND[row.kind].label}</Chip>
-              </Td>
-              <Td className="truncate text-label-md text-muted-foreground">{row.concept}</Td>
-              <Td className="truncate text-label-md text-ink">{row.title}</Td>
-              <Td className="truncate text-label-md text-muted-foreground">{row.myAnswer}</Td>
-              <Td>
-                <Chip className={VERDICT[row.verdict].cls}>{VERDICT[row.verdict].label}</Chip>
-              </Td>
-              <Td>
-                <ClassAccuracy percent={row.classAccuracyPercent} />
-              </Td>
-              <Td align="right" className="text-label-md text-muted-foreground">
-                {row.elapsedSeconds === null ? "—" : formatDuration(row.elapsedSeconds)}
-              </Td>
-              <Td align="right" className="pr-[17px]">
-                {onOpenQuestion !== undefined && (
-                  <button
-                    type="button"
-                    onClick={() => onOpenQuestion(row.no)}
-                    className="text-label-md text-mint-dark transition-colors hover:text-mint"
-                  >
-                    {row.kind === "ESSAY" ? "AI 첨삭" : "해설"} ›
-                  </button>
-                )}
-              </Td>
+    <>
+      {/*
+        min-w-0: 없으면 flex 자식의 기본 min-width:auto 때문에 상자가 표(1246px)만큼 벌어져
+          스크롤되지 않고 페이지가 통째로 가로로 넘친다.
+        contain:paint: 여기까지 해도 페이지가 표 폭만큼 가로로 밀렸다. 고정 레이아웃 표(table-fixed +
+          colgroup 고정폭)는 스크롤 상자 안에 있어도 뷰포트의 스크롤 영역을 넓힌다 — 바깥 어디에
+          overflow:hidden/clip 을 줘도 막히지 않고, 이 상자를 페인트 격리해야 멈춘다.
+          상자 안 가로 스크롤은 그대로 동작한다.
+      */}
+      <div className="min-w-0 overflow-x-auto rounded-xl border bg-card [contain:paint] max-md:hidden">
+        <table className="w-full min-w-[1246px] table-fixed border-collapse">
+          <colgroup>
+            <col className="w-14" />
+            <col className="w-[66px]" />
+            <col className="w-[118px]" />
+            <col className="w-[412px]" />
+            <col className="w-[162px]" />
+            <col className="w-[70px]" />
+            <col className="w-46" />
+            <col className="w-[90px]" />
+            <col className="w-22" />
+          </colgroup>
+          <thead>
+            <tr className="border-b bg-surface-subtle text-label-md text-muted-foreground">
+              <Th className="pl-[17px]">문항</Th>
+              <Th>유형</Th>
+              <Th>개념</Th>
+              <Th>문제</Th>
+              <Th>내 답</Th>
+              <Th>결과</Th>
+              <Th align="right">반 정답률</Th>
+              <Th align="right">소요</Th>
+              <Th align="right" className="pr-[17px]">
+                <span className="sr-only">해설 열기</span>
+              </Th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.questionId} className="border-b border-line-soft last:border-b-0">
+                <Td className="pl-[17px] text-label-md text-ink">Q{row.no}</Td>
+                <Td>
+                  <Chip className={KIND[row.kind].cls}>{KIND[row.kind].label}</Chip>
+                </Td>
+                <Td className="truncate text-label-md text-muted-foreground">{row.concept}</Td>
+                <Td className="truncate text-label-md text-ink">{row.title}</Td>
+                <Td className="truncate text-label-md text-muted-foreground">{row.myAnswer}</Td>
+                <Td>
+                  <Chip className={VERDICT[row.verdict].cls}>{VERDICT[row.verdict].label}</Chip>
+                </Td>
+                <Td>
+                  <ClassAccuracy percent={row.classAccuracyPercent} />
+                </Td>
+                <Td align="right" className="text-label-md text-muted-foreground">
+                  {row.elapsedSeconds === null ? "—" : formatDuration(row.elapsedSeconds)}
+                </Td>
+                <Td align="right" className="pr-[17px]">
+                  {onOpenQuestion !== undefined && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenQuestion(row.no)}
+                      className="text-label-md text-mint-dark transition-colors hover:text-mint"
+                    >
+                      {row.kind === "ESSAY" ? "AI 첨삭" : "해설"} ›
+                    </button>
+                  )}
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* 폰 폭 — 앱 M-06 문항 줄 목록 */}
+      <ul className="flex flex-col gap-2 md:hidden">
+        {rows.map((row) => (
+          <li key={row.questionId}>
+            <button
+              type="button"
+              disabled={onOpenQuestion === undefined}
+              onClick={() => onOpenQuestion?.(row.no)}
+              className="flex w-full items-center gap-2.5 rounded-2xl border bg-card px-4 py-3.5 text-left transition-colors enabled:hover:bg-muted"
+            >
+              <span className="flex h-6 w-[30px] shrink-0 items-center justify-center rounded-lg bg-muted text-label-lg text-mint-dark">
+                Q{row.no}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-label-lg text-ink">{row.title}</span>
+              <span
+                className={cn(
+                  "shrink-0 rounded-full px-2 py-[3px] text-label-lg",
+                  MOBILE_VERDICT_CLASS[row.verdict],
+                )}
+              >
+                {VERDICT[row.verdict].label}
+              </span>
+              {onOpenQuestion !== undefined && (
+                <span aria-hidden className="shrink-0 text-label-lg text-muted-foreground">
+                  ›
+                </span>
+              )}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 
