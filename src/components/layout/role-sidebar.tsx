@@ -26,10 +26,11 @@ type Props = {
   user: SidebarUser;
   /** 현재 URL 대신 강제로 활성 표시할 내비 path — 랜딩 목업처럼 라우트 밖에서 그릴 때 */
   activePath?: string;
+  className?: string;
 };
 
 /** 회원 레이아웃 좌측 내비게이션(디자인 웹 v6 사이드바 — 홈/내가 만든 방/참여한 방/문제 세트/마이페이지). routes.ts의 SIDEBAR_NAV를 읽어 그린다. */
-export function RoleSidebar({ nav, user, activePath: forcedActivePath }: Props) {
+export function RoleSidebar({ nav, user, activePath: forcedActivePath, className }: Props) {
   const pathname = usePathname();
   // 내비에 없는 화면(유료 방 결제 등)은 routes.ts의 nav 지정을 따른다
   const activePath =
@@ -39,15 +40,13 @@ export function RoleSidebar({ nav, user, activePath: forcedActivePath }: Props) 
       SIDEBAR_NAV[nav].map((item) => item.path),
     ) ??
     matchRoute(pathname)?.nav;
-  // 앱 시안이 사이드바 없이 그린 화면(결제 등)은 폰 폭에서 사이드바를 걷는다 — 240px가 본문을 밀어낸다
-  const bareOnMobile = matchRoute(pathname)?.mobileBare === true;
 
   return (
     // 구분선은 border-r 대신 안쪽 그림자 — border는 240 폭을 먹어 내용 폭이 시안 212에서 211로 줄어든다
     <aside
       className={cn(
         "sticky top-0 flex h-screen w-60 shrink-0 flex-col gap-1 bg-sidebar px-3.5 pt-6 pb-5 shadow-[inset_-1px_0_0_0_var(--color-border)]",
-        bareOnMobile && "max-md:hidden",
+        className,
       )}
     >
       <BrandLogo className="mb-5 pl-2.5" />

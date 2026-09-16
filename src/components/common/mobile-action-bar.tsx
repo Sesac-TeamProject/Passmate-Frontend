@@ -18,6 +18,11 @@ export const MOBILE_STATE_BUTTON = "h-[52px] rounded-[14px]";
 
 type Props = {
   children: ReactNode;
+  /**
+   * 하단 탭바가 서는 화면(회원 셸 안)에서 true. 탭바 높이만큼 위로 올려 버튼이 탭 뒤로 들어가지 않게 한다.
+   * 탭바가 없는 화면(학생 흐름·mobileBare)은 기본값 그대로 바닥에 붙는다.
+   */
+  aboveTabBar?: boolean;
   className?: string;
 };
 
@@ -30,11 +35,12 @@ type Props = {
  *
  * PC는 버튼이 본문 안 제자리에 있으므로 **md 이상에서는 그리지 않는다.**
  */
-export function MobileActionBar({ children, className }: Props) {
+export function MobileActionBar({ children, aboveTabBar = false, className }: Props) {
   return (
     <div
       className={cn(
-        "sticky bottom-0 z-30 mt-auto flex flex-col gap-2.5 bg-card px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:hidden",
+        "sticky z-30 mt-auto flex flex-col gap-2.5 bg-card px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:hidden",
+        aboveTabBar ? "bottom-[var(--mobile-tab-bar-h)] pb-3" : "bottom-0",
         className,
       )}
     >

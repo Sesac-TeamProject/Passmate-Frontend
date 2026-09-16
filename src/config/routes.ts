@@ -17,8 +17,9 @@ export type RouteMeta = {
   /** 사이드바에서 활성으로 표시할 내비 항목의 path. 자기 경로가 내비에 없는 화면만 지정 (예: /pay/[roomId] → /home) */
   nav?: string;
   /**
-   * 폰 폭(768px 미만)에서 회원 사이드바를 감추는 화면. 앱 시안이 사이드바 없는 한 화면으로 그린 곳만 켠다
-   * (예: /pay/[roomId] = 앱 M-11). PC는 그대로 사이드바가 선다.
+   * 폰 폭(768px 미만)에서 회원 셸(하단 탭바)을 그리지 않는 화면. 앱 시안이 탭바 없이 한 화면으로
+   * 그린 곳만 켠다 (예: /pay/[roomId] = 앱 M-11, /me/settlement = 앱 M-T4). PC는 그대로 사이드바가 선다.
+   * 켜는 화면은 반드시 자체 뒤로가기 줄(MobileTopBar)을 둔다 — 아니면 폰에서 빠져나갈 길이 없다.
    */
   mobileBare?: boolean;
 };
@@ -97,6 +98,7 @@ export const ROUTES: readonly RouteMeta[] = [
     title: "정산",
     description: "유료 방 참가비 정산 내역·지급 상태·정산 계좌 (Lv.3+ 유료 방 개설자)",
     area: "member",
+    mobileBare: true,
   },
   {
     path: "/me/account",
