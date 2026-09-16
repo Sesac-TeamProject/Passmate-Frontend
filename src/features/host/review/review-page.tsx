@@ -8,6 +8,7 @@ import type { FinalRankRow } from "@/features/host/live/rank-columns";
 import { StudentReviewPanel, type ReviewDraft } from "./student-review-panel";
 import { ReportBody } from "./report-body";
 import { ReportOverview } from "./report-overview";
+import { ReportPrintDoc } from "./report-print-doc";
 import { ReportStats } from "./report-stats";
 
 const TABS = ["개요", "문항별", "학생별"] as const;
@@ -131,34 +132,40 @@ export function ReviewPage({
           }
         />
 
-        {tab === "문항별" ? (
-          <ReportBody
-            report={report}
-            selectedQuestionId={selectedQuestionId}
-            onSelectQuestion={onSelectQuestion}
-            insight={insight}
-            canSaveComment={canSaveComment}
-            onSaveComment={onSaveComment}
-          />
-        ) : tab === "학생별" ? (
-          <StudentReviewPanel
-            students={students}
-            selectedStudentId={selectedStudentId}
-            onSelectStudent={onSelectStudent}
-            answers={studentAnswers}
-            loading={answersLoading}
-            progressLabel={reviewProgressLabel}
-            onSave={onSaveReview}
-            savingAnswerId={savingAnswerId}
-            saveError={reviewError}
-          />
-        ) : (
-          <ReportOverview
-            title={report.title}
-            questionTotal={report.stats.questions}
-            rows={rankRows}
-          />
-        )}
+        {/* 화면은 탭이라 한 번에 하나만 보인다 — 인쇄에서는 이 조작 뷰를 감추고 아래 문서를 쓴다 */}
+        <div className="flex flex-1 flex-col print:hidden">
+          {tab === "문항별" ? (
+            <ReportBody
+              report={report}
+              selectedQuestionId={selectedQuestionId}
+              onSelectQuestion={onSelectQuestion}
+              insight={insight}
+              canSaveComment={canSaveComment}
+              onSaveComment={onSaveComment}
+            />
+          ) : tab === "학생별" ? (
+            <StudentReviewPanel
+              students={students}
+              selectedStudentId={selectedStudentId}
+              onSelectStudent={onSelectStudent}
+              answers={studentAnswers}
+              loading={answersLoading}
+              progressLabel={reviewProgressLabel}
+              onSave={onSaveReview}
+              savingAnswerId={savingAnswerId}
+              saveError={reviewError}
+            />
+          ) : (
+            <ReportOverview
+              title={report.title}
+              questionTotal={report.stats.questions}
+              rows={rankRows}
+            />
+          )}
+        </div>
+
+        {/* PDF 저장 전용 — 지금 보던 탭과 무관하게 개요 + 문항별을 한 장에 담는다 */}
+        <ReportPrintDoc report={report} rankRows={rankRows} />
       </div>
     </main>
   );
