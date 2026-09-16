@@ -39,6 +39,11 @@ type Props = {
   /** 폰 리모컨(M-T2) 머리글에만 쓴다 — PC 는 프로젝터 화면이라 방 정보를 따로 띄우지 않는다 */
   pin?: string;
   roomTitle?: string;
+  /**
+   * 폭과 상관없이 PC(프로젝터) 화면만 그린다 — 랜딩 목업용. 목업은 1440 캔버스를 `zoom`으로 줄여 담는데
+   * 반응형 기준은 실제 화면 폭이라, 폰에서 랜딩을 열면 목업 안에 폰 리모컨이 끼어든다.
+   */
+  desktopOnly?: boolean;
 };
 
 const CONTROL = "flex h-13 items-center rounded-2xl text-heading-sm font-bold transition-colors";
@@ -66,6 +71,7 @@ export function LivePage({
   frozen = false,
   pin,
   roomTitle,
+  desktopOnly = false,
 }: Props) {
   const maxCount = Math.max(...counts, 0);
   // 정답을 공개하기 전이라 "정답"이 아니라 "지금 가장 많이 고른 보기"를 강조한다
@@ -76,32 +82,34 @@ export function LivePage({
       {/* 07 보드 "실시간 재연결" — 진행 중인 문항을 가리지 않도록 화면 맨 위 얇은 띠로만 알린다 */}
       {/* 폰 리모컨은 머리글 알약이 연결 상태를 말하므로 띠는 PC 에만 둔다 */}
       {reconnecting && (
-        <div className="fixed inset-x-0 top-0 z-50 max-md:hidden">
+        <div className={cn("fixed inset-x-0 top-0 z-50", !desktopOnly && "max-md:hidden")}>
           <ReconnectingBanner />
         </div>
       )}
       {/* 폰 폭 — 앱 M-T2 진행 리모컨. "프로젝터는 벽, 폰은 조작" */}
-      <LiveRemote
-        question={q}
-        counts={counts}
-        students={students}
-        isLocked={isLocked}
-        isLastQuestion={isLastQuestion}
-        onNext={onNext}
-        onEndCurrent={onEndCurrent}
-        onEndSession={onEndSession}
-        onToggleLock={onToggleLock}
-        onHint={onHint}
-        onHintError={onHintError}
-        hintUploading={hintUploading}
-        pending={pending}
-        reconnecting={reconnecting}
-        errorMessage={errorMessage}
-        pin={pin}
-        roomTitle={roomTitle}
-      />
+      {!desktopOnly && (
+        <LiveRemote
+          question={q}
+          counts={counts}
+          students={students}
+          isLocked={isLocked}
+          isLastQuestion={isLastQuestion}
+          onNext={onNext}
+          onEndCurrent={onEndCurrent}
+          onEndSession={onEndSession}
+          onToggleLock={onToggleLock}
+          onHint={onHint}
+          onHintError={onHintError}
+          hintUploading={hintUploading}
+          pending={pending}
+          reconnecting={reconnecting}
+          errorMessage={errorMessage}
+          pin={pin}
+          roomTitle={roomTitle}
+        />
+      )}
       <ProjectorShell
-        className="max-md:hidden"
+        className={desktopOnly ? undefined : "max-md:hidden"}
         exitHref="/host/rooms"
         rail={<LiveRail students={students} submittedCount={q.submitted} />}
         railCollapsed={<LiveRailMini students={students} submittedCount={q.submitted} />}

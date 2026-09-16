@@ -52,7 +52,7 @@ export function QuestionInsightPanel({
   const peak = Math.max(...(insight?.gradingBreakdown ?? []).map((row) => row.count), 1);
 
   return (
-    <section className="flex w-[424px] shrink-0 flex-col overflow-hidden rounded-lg border bg-card">
+    <section className="flex w-full shrink-0 flex-col overflow-hidden rounded-lg border bg-card md:w-[424px]">
       <h2 className="flex h-[46px] items-center bg-ink px-[17px] text-label-lg text-white">
         Q{question.index} · {QUESTION_TYPE_LABEL[question.type]} · {headerStat}
       </h2>
