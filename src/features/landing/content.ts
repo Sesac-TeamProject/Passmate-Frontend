@@ -1,5 +1,6 @@
 // L-01 랜딩 문구 (design.pen "L-01 랜딩 (웹)" · v6). 마케팅 카피라 목이 아니라 화면의 일부 — 바꿀 때는 디자이너와 맞춘다.
 import type { AvatarKey } from "@/components/common/student-avatar";
+import { LEGAL_DOCUMENTS } from "@/features/legal/legal-documents";
 
 export const NAV_LINKS = [
   { href: "#how", label: "어떻게 쓰나요" },
@@ -147,4 +148,10 @@ export const FAQS = [
   },
 ] as const;
 
-export const FOOTER_LINKS = ["이용 약관", "개인정보 처리방침", "문의", "GitHub"] as const;
+/** 주소가 없는 항목은 아직 갈 곳이 정해지지 않았다(문의 창구·공개 저장소) */
+export const FOOTER_LINKS: readonly { label: string; href?: string }[] = [
+  { label: "이용 약관", href: LEGAL_DOCUMENTS.terms.path },
+  { label: "개인정보 처리방침", href: LEGAL_DOCUMENTS.privacy.path },
+  { label: "문의" },
+  { label: "GitHub" },
+];
