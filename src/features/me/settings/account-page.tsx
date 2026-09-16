@@ -35,7 +35,21 @@ export function AccountPage({
   };
 
   return (
-    <MeFormPage title="계정 정보 변경">
+    <MeFormPage
+      title="계정 정보 변경"
+      mobileAction={
+        <MobileActionBar aboveTabBar className="-mx-5">
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={pending}
+            className={MOBILE_PRIMARY_BUTTON}
+          >
+            저장하기
+          </button>
+        </MobileActionBar>
+      }
+    >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {errorMessage && (
           <p
@@ -87,17 +101,6 @@ export function AccountPage({
           </Button>
         </div>
       </form>
-
-      <MobileActionBar aboveTabBar>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={pending}
-          className={MOBILE_PRIMARY_BUTTON}
-        >
-          저장하기
-        </button>
-      </MobileActionBar>
     </MeFormPage>
   );
 }

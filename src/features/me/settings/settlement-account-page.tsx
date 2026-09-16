@@ -47,7 +47,21 @@ export function SettlementAccountPage({
   };
 
   return (
-    <MeFormPage title="정산 계좌 등록">
+    <MeFormPage
+      title="정산 계좌 등록"
+      mobileAction={
+        <MobileActionBar aboveTabBar className="-mx-5">
+          <button
+            type="button"
+            onClick={() => canSubmit && onSubmit()}
+            disabled={pending || !canSubmit}
+            className={MOBILE_PRIMARY_BUTTON}
+          >
+            등록하기
+          </button>
+        </MobileActionBar>
+      }
+    >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {errorMessage && (
           <p
@@ -120,17 +134,6 @@ export function SettlementAccountPage({
           </Button>
         </div>
       </form>
-
-      <MobileActionBar aboveTabBar>
-        <button
-          type="button"
-          onClick={() => canSubmit && onSubmit()}
-          disabled={pending || !canSubmit}
-          className={MOBILE_PRIMARY_BUTTON}
-        >
-          등록하기
-        </button>
-      </MobileActionBar>
     </MeFormPage>
   );
 }

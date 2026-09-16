@@ -40,7 +40,21 @@ export function CharacterPage({
   };
 
   return (
-    <MeFormPage title="내 캐릭터 변경">
+    <MeFormPage
+      title="내 캐릭터 변경"
+      mobileAction={
+        <MobileActionBar aboveTabBar className="-mx-5">
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={pending}
+            className={MOBILE_PRIMARY_BUTTON}
+          >
+            저장하기
+          </button>
+        </MobileActionBar>
+      }
+    >
       {errorMessage && (
         <p
           role="alert"
@@ -85,21 +99,16 @@ export function CharacterPage({
 
       <div className="flex items-center justify-between">
         <span className="text-label-md text-mint-dark">선택: {AVATAR_LABEL[selected]}</span>
-        <Button type="button" size="xl" onClick={onSubmit} disabled={pending} className="max-md:hidden">
+        <Button
+          type="button"
+          size="xl"
+          onClick={onSubmit}
+          disabled={pending}
+          className="max-md:hidden"
+        >
           저장하기
         </Button>
       </div>
-
-      <MobileActionBar aboveTabBar>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={pending}
-          className={MOBILE_PRIMARY_BUTTON}
-        >
-          저장하기
-        </button>
-      </MobileActionBar>
     </MeFormPage>
   );
 }

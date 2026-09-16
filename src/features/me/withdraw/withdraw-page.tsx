@@ -38,7 +38,27 @@ export function WithdrawPage({
   ];
 
   return (
-    <MeFormPage title="회원 탈퇴">
+    <MeFormPage
+      title="회원 탈퇴"
+      mobileAction={
+        <MobileActionBar aboveTabBar className="-mx-5">
+          <button
+            type="button"
+            onClick={onWithdraw}
+            disabled={!confirmed || pending}
+            className={cn(
+              MOBILE_PRIMARY_BUTTON,
+              "bg-foreground text-background hover:bg-foreground/90 focus-visible:ring-foreground",
+            )}
+          >
+            탈퇴하기
+          </button>
+          <Link href="/me" className={MOBILE_SECONDARY_BUTTON}>
+            취소
+          </Link>
+        </MobileActionBar>
+      }
+    >
       {errorMessage && (
         <p
           role="alert"
@@ -94,23 +114,6 @@ export function WithdrawPage({
           탈퇴하기
         </Button>
       </div>
-
-      <MobileActionBar aboveTabBar>
-        <button
-          type="button"
-          onClick={onWithdraw}
-          disabled={!confirmed || pending}
-          className={cn(
-            MOBILE_PRIMARY_BUTTON,
-            "bg-foreground text-background hover:bg-foreground/90 focus-visible:ring-foreground",
-          )}
-        >
-          탈퇴하기
-        </button>
-        <Link href="/me" className={MOBILE_SECONDARY_BUTTON}>
-          취소
-        </Link>
-      </MobileActionBar>
     </MeFormPage>
   );
 }

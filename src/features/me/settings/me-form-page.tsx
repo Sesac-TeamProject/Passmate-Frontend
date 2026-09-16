@@ -10,6 +10,12 @@ type Props = {
   cardClassName?: string;
   /** 폰 폭 "←"가 갈 곳. 앱은 마이 하위 화면에서 마이로 돌아간다 */
   backHref?: string;
+  /**
+   * 폰 폭 하단 버튼 줄(`MobileActionBar`) — 카드 **밖**, `<main>`의 직계 자식으로 그린다.
+   * `MobileActionBar`의 `mt-auto`가 바닥에 붙으려면 부모가 `min-h` 있는 flex 컬럼이어야 하는데
+   * 그 조건은 `<main>`만 만족한다(카드는 내용만큼만 높이를 가진다) — 그래서 `children`과 분리한 슬롯이다.
+   */
+  mobileAction?: ReactNode;
 };
 
 /**
@@ -19,9 +25,15 @@ type Props = {
  * 폰 폭(768px 미만)은 앱 시안 M-12-x — 좌우 20, "← 화면명" 줄(PC의 "마이페이지 › " 접두사는 빼고
  * 화면명만), 카드는 폭을 꽉 채우고 안쪽 여백을 18/16으로 줄인다.
  */
-export function MeFormPage({ title, children, cardClassName, backHref = "/me" }: Props) {
+export function MeFormPage({
+  title,
+  children,
+  cardClassName,
+  backHref = "/me",
+  mobileAction,
+}: Props) {
   return (
-    // 폰에서 화면 높이를 채워야 아래 버튼 줄(MobileActionBar)이 바닥에 붙는다 — 탭바 높이를 뺀 만큼이 본문 몫이다
+    // 폰에서 화면 높이를 채워야 아래 버튼 줄(mobileAction)이 바닥에 붙는다 — 탭바 높이를 뺀 만큼이 본문 몫이다
     <main className="flex flex-col gap-5 px-9 py-7 max-md:min-h-[calc(100dvh-var(--mobile-tab-bar-h))] max-md:gap-3.5 max-md:px-5 max-md:pt-3 max-md:pb-6">
       <MobileTopBar title={title} backHref={backHref} className="-mx-5 px-5 pb-1" />
       <h1 className="text-heading-lg text-foreground max-md:hidden">마이페이지 › {title}</h1>
@@ -33,6 +45,7 @@ export function MeFormPage({ title, children, cardClassName, backHref = "/me" }:
       >
         {children}
       </section>
+      {mobileAction}
     </main>
   );
 }
