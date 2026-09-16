@@ -44,6 +44,8 @@ export type AnalysisRequestPanel = {
   pending: boolean;
   /** 이번 달 남은 무료 횟수. 모르면 null */
   remainingFree: number | null;
+  /** 월 무료 한도 — "무료 n/5 사용"의 분모. 모르면 null */
+  freeLimit: number | null;
   /** 무료 횟수를 넘겼을 때 1건당 코인 */
   coinCost: number;
   errorMessage: string | null;
@@ -143,14 +145,15 @@ export function QuestionDetailPage({
         ) : null}
 
         {/* 시안의 "다른 학생들은" — 문항 결과 API의 보기별 분포로 채운다(마감된 문항만) */}
+        {/* 해설 문단 바로 아래에 붙으면 한 덩어리로 읽힌다 — 선으로 끊고 여백을 준다(2026-09-16) */}
         {detail.distribution.length > 0 ? (
-          <section className="flex flex-col gap-2">
-            <h2 className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
-              다른 학생들은
-            </h2>
-            {detail.distribution.map((row) => (
-              <ChoiceRow key={row.text} choice={row} people={detail.distribution} />
-            ))}
+          <section className="flex flex-col gap-3 border-t border-line-soft pt-5">
+            <h2 className="text-label-lg font-bold text-ink">다른 학생들은</h2>
+            <div className="flex flex-col gap-2.5">
+              {detail.distribution.map((row) => (
+                <ChoiceRow key={row.text} choice={row} people={detail.distribution} />
+              ))}
+            </div>
           </section>
         ) : null}
       </div>
@@ -176,22 +179,23 @@ function ChoiceRow({
   const peak = Math.max(...people.map((c) => c.count), 1);
 
   return (
-    <p className="flex items-center gap-3">
+    <p className="flex items-center gap-4">
+      {/* 보기 글자를 본문 크기로 — 라벨 크기면 답 상자·해설 사이에서 가장 작아 읽기 어려웠다 */}
       <span
         className={cn(
-          "w-40 shrink-0 truncate text-label-md",
-          choice.isAnswer ? "text-mint-dark" : "text-muted-foreground",
+          "w-56 shrink-0 truncate text-body-md",
+          choice.isAnswer ? "font-bold text-mint-dark" : "text-ink",
         )}
       >
         {choice.text}
       </span>
-      <span className="h-2 flex-1 overflow-hidden rounded-full bg-line-soft">
+      <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-line-soft">
         <span
           className={cn("block h-full rounded-full", choice.isAnswer ? "bg-mint" : "bg-muted")}
           style={{ width: `${(choice.count / peak) * 100}%` }}
         />
       </span>
-      <span className="w-12 shrink-0 text-right text-label-md text-muted-foreground">
+      <span className="w-12 shrink-0 text-right text-body-md text-muted-foreground">
         {choice.count}명
       </span>
     </p>
@@ -309,49 +313,44 @@ function AnalysisSection({
 
   return (
     <section className="flex flex-col gap-4 rounded-xl bg-muted p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h2 className="text-label-lg font-bold text-ink">AI 분석</h2>
-          <p
-            className={cn(
-              "text-body-md",
-              status === "FAILED" ? "text-negative" : "text-muted-foreground",
-            )}
-          >
-            {description}
-          </p>
-        </div>
-
-        {canRequest && request ? (
-          <div className="flex shrink-0 flex-col gap-1.5 sm:items-end">
-            <button
-              type="button"
-              onClick={request.onRequest}
-              disabled={request.pending}
-              className="flex h-11 w-full items-center justify-center rounded-xl bg-mint px-5 text-label-lg text-white transition-colors hover:bg-mint-dark disabled:opacity-60 sm:w-auto"
-            >
-              {request.pending ? (
-                <PendingLabel>요청하는 중…</PendingLabel>
-              ) : status === "FAILED" ? (
-                "다시 분석 요청"
-              ) : (
-                "AI 분석 요청"
-              )}
-            </button>
-            {/* 비용은 버튼 바로 아래 한 덩어리로 — 누르기 전에 봐야 하는 정보다 */}
-            <p className="text-label-md text-muted-foreground">
-              {request.remainingFree !== null && request.remainingFree > 0
-                ? `이번 달 무료 ${request.remainingFree}회 남았어요`
-                : `무료 횟수를 다 썼어요 · 1건당 ${request.coinCost} C`}
-            </p>
-            {request.errorMessage ? (
-              <p role="alert" className="text-label-md text-negative">
-                {request.errorMessage}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
+      <div className="flex flex-col gap-1">
+        <h2 className="text-label-lg font-bold text-ink">AI 분석</h2>
+        <p
+          className={cn(
+            "text-body-md",
+            status === "FAILED" ? "text-negative" : "text-muted-foreground",
+          )}
+        >
+          {description}
+        </p>
       </div>
+
+      {/* 버튼은 제목 아래 한 열에 — 오른쪽에 띄우면 긴 설명과 작은 버튼이 저울처럼 어긋나 보였다(2026-09-16) */}
+      {canRequest && request ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <button
+            type="button"
+            onClick={request.onRequest}
+            disabled={request.pending}
+            className="flex h-11 w-full items-center justify-center rounded-xl bg-mint px-6 text-label-lg text-white transition-colors hover:bg-mint-dark disabled:opacity-60 sm:w-auto sm:min-w-40"
+          >
+            {request.pending ? (
+              <PendingLabel>요청하는 중…</PendingLabel>
+            ) : status === "FAILED" ? (
+              "다시 분석 요청"
+            ) : (
+              "AI 분석 요청"
+            )}
+          </button>
+          {/* 사용 횟수는 버튼 옆에 — 누르기 전에 봐야 하는 정보다 */}
+          <p className="text-label-md text-muted-foreground">{usageLabel(request)}</p>
+        </div>
+      ) : null}
+      {request?.errorMessage ? (
+        <p role="alert" className="text-label-md text-negative">
+          {request.errorMessage}
+        </p>
+      ) : null}
 
       {done ? (
         <div className="flex flex-col gap-4 border-t border-line-soft pt-4">
@@ -368,6 +367,24 @@ function AnalysisSection({
       ) : null}
     </section>
   );
+}
+
+/**
+ * "무료 0/5 사용" — 남은 수가 아니라 쓴 수를 보인다. 한도를 모르면 남은 수로 말하고,
+ * 다 썼으면 그때부터 코인이 나간다는 것을 같은 줄에서 알린다.
+ */
+function usageLabel(request: AnalysisRequestPanel): string {
+  const { remainingFree, freeLimit, coinCost } = request;
+  if (remainingFree === null) return `1건당 ${coinCost} C`;
+  if (freeLimit === null) {
+    return remainingFree > 0
+      ? `이번 달 무료 ${remainingFree}회 남았어요`
+      : `무료 횟수를 다 썼어요 · 1건당 ${coinCost} C`;
+  }
+  const used = Math.max(0, freeLimit - remainingFree);
+  return remainingFree > 0
+    ? `이번 달 무료 ${used}/${freeLimit} 사용`
+    : `무료 ${used}/${freeLimit} 사용 · 이제부터 1건당 ${coinCost} C`;
 }
 
 function joinOrNull(points: string[]): string | null {
