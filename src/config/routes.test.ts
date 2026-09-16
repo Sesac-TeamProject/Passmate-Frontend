@@ -3,12 +3,7 @@ import { getRoute, MOBILE_TABS, ROUTES } from "./routes";
 
 describe("MOBILE_TABS", () => {
   it("앱 시안 v6의 하단 4탭과 같은 수·순서다", () => {
-    expect(MOBILE_TABS.map((t) => t.label)).toEqual([
-      "홈",
-      "내가 만든 방",
-      "참여한 방",
-      "마이",
-    ]);
+    expect(MOBILE_TABS.map((t) => t.label)).toEqual(["홈", "내가 만든 방", "참여한 방", "마이"]);
   });
 
   it("모든 탭이 실재하는 라우트를 가리킨다", () => {

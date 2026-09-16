@@ -55,7 +55,11 @@ export function ChargePage({ balance, amount, onAmountChange, pending, error, on
 
       <span className="text-label-lg text-foreground">충전 금액</span>
       {/* PC: 4개 한 줄 · 폰(앱 M-12-4): 2×2 그리드 */}
-      <div className="grid grid-cols-4 gap-2.5 max-md:grid-cols-2" role="group" aria-label="충전 금액">
+      <div
+        className="grid grid-cols-4 gap-2.5 max-md:grid-cols-2"
+        role="group"
+        aria-label="충전 금액"
+      >
         {CHARGE_PRESETS.map((preset) => {
           const selected = preset === amount;
           return (

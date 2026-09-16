@@ -89,4 +89,3 @@ export function RoleSidebar({ nav, user, activePath: forcedActivePath, className
     </aside>
   );
 }
-

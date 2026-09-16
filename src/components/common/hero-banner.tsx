@@ -32,9 +32,7 @@ export function HeroBanner({
       )}
     >
       <div className="flex flex-col gap-1.5">
-        <h1
-          className={cn("text-heading-lg text-mint-ink", hideTitleOnPhone && "max-md:hidden")}
-        >
+        <h1 className={cn("text-heading-lg text-mint-ink", hideTitleOnPhone && "max-md:hidden")}>
           {title}
         </h1>
         <p className="text-label-lg text-mint-ink-secondary">{description}</p>

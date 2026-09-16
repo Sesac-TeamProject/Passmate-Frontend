@@ -58,7 +58,12 @@ export function PopularRooms({ rooms, className }: Props) {
       {/* 폰 폭 — 앱처럼 가로 스크롤 한 줄. 카드 폭을 줄여 한 화면에 여러 장이 살짝 걸치게 둔다 */}
       <div className="hidden w-full gap-4 overflow-x-auto pb-1 max-md:flex">
         {rooms.map((room) => (
-          <RoomCard key={room.roomId} room={room} href={roomHref(room)} className="w-[280px] flex-none" />
+          <RoomCard
+            key={room.roomId}
+            room={room}
+            href={roomHref(room)}
+            className="w-[280px] flex-none"
+          />
         ))}
       </div>
 

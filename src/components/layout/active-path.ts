@@ -4,10 +4,7 @@
  *
  * 사이드바(PC)와 하단 탭바(폰)가 같은 규칙을 써야 해서 부품 밖 순수 함수로 둔다.
  */
-export function findActivePath(
-  pathname: string,
-  patterns: readonly string[],
-): string | undefined {
+export function findActivePath(pathname: string, patterns: readonly string[]): string | undefined {
   const toRegExp = (pattern: string, tail: string) =>
     new RegExp("^" + pattern.replace(/\[[^\]]+\]/g, "[^/]+") + tail);
   const exact = patterns.find((p) => toRegExp(p, "$").test(pathname));
