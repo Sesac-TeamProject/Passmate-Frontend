@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
@@ -19,7 +18,6 @@ import { AppError } from "@/lib/types/app-error";
 
 /** C-02 v3 컨테이너 — 로그아웃 확인 다이얼로그(C-02-11) 상태를 소유한다 */
 export default function Page() {
-  const router = useRouter();
   const [logoutOpen, setLogoutOpen] = useState(false);
   const logout = useLogout();
 
@@ -32,16 +30,10 @@ export default function Page() {
   // 정산 계좌는 화면에 은행 · 마스킹 번호 요약만 필요해 이 컨테이너에서도 함께 조회한다(retry:false — 미등록은 404)
   const account = useSettlementAccount();
 
+  // 로그아웃 뒤 랜딩으로 나가는 것은 `useLogout`이 한다 — 여기서 옮기면 회원 가드가 /login으로 덮어쓴다
   const handleLogout = () => {
     if (logout.isPending) return;
-    logout.mutate(undefined, {
-      onSettled: () => {
-        setLogoutOpen(false);
-        // 로그아웃 뒤에는 서비스 첫 화면으로 — 로그인 창만 뜨면 나간 건지 튕긴 건지 알 수 없다
-        // (시나리오 테스트 "로그아웃 시 리다이렉트", 2026-09-08)
-        router.replace("/");
-      },
-    });
+    logout.mutate(undefined, { onSettled: () => setLogoutOpen(false) });
   };
 
   const isAccountNotRegistered =
