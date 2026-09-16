@@ -98,7 +98,7 @@ export const ROUTES: readonly RouteMeta[] = [
     title: "정산",
     description: "유료 방 참가비 정산 내역·지급 상태·정산 계좌 (Lv.3+ 유료 방 개설자)",
     area: "member",
-    // 앱 M-T4는 탭바가 없지만, 폰용 뒤로가기 줄이 생기는 커밋에서 함께 mobileBare를 켠다 — 먼저 켜면 폰에서 빠져나갈 길이 없다
+    mobileBare: true,
   },
   {
     path: "/me/account",

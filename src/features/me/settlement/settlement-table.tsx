@@ -29,10 +29,24 @@ const COLUMNS = [
 
 type Props = { rows: SettlementRow[] };
 
-/** W-10 결제 · 정산 내역 표 — r20 카드 · 7열 grid · 상태 칩(정산 예정 choice-c / 지급 완료 choice-d) */
+/**
+ * W-10 결제 · 정산 내역 표 — r20 카드 · 7열 grid · 상태 칩(정산 예정 choice-c / 지급 완료 choice-d).
+ *
+ * 7열 grid는 합이 800px을 넘어 390px에서 가로 스크롤이 난다 — 폰 폭(768px 미만)에서는 표를 감추고
+ * 같은 데이터를 받는 `SettlementRowsMobile` 줄 목록을 대신 낸다(앱 M-T4).
+ */
 export function SettlementTable({ rows }: Props) {
   return (
-    <div role="table" className="rounded-[20px] border bg-card px-2 py-1">
+    <>
+      <SettlementTableDesktop rows={rows} />
+      <SettlementRowsMobile rows={rows} />
+    </>
+  );
+}
+
+function SettlementTableDesktop({ rows }: Props) {
+  return (
+    <div role="table" className="rounded-[20px] border bg-card px-2 py-1 max-md:hidden">
       <div role="row" className={cn(GRID_CLASS, "text-label-lg text-muted-foreground")}>
         {COLUMNS.map((column) => (
           <span key={column} role="columnheader">
@@ -85,5 +99,38 @@ export function SettlementTable({ rows }: Props) {
         </div>
       ))}
     </div>
+  );
+}
+
+/**
+ * 폰 폭(768px 미만) 정산 내역 — 앱 M-T4처럼 표 대신 줄 목록. 한 줄에 방 이름 · 날짜 · 금액(정산액) ·
+ * 상태만 싣는다(참가 인원 · 참가비 합계 · 수수료는 표에만 남는다).
+ */
+function SettlementRowsMobile({ rows }: Props) {
+  if (rows.length === 0) {
+    return (
+      <p className="rounded-2xl border bg-card px-[18px] py-10 text-center text-body-md text-muted-foreground md:hidden">
+        아직 정산 내역이 없어요. 유료 방을 열면 참가비 정산이 여기에 쌓여요
+      </p>
+    );
+  }
+
+  return (
+    <ul className="flex flex-col divide-y rounded-2xl border bg-card md:hidden">
+      {rows.map((row) => (
+        <li key={row.id} className="flex items-center gap-3 px-[18px] py-3.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate text-label-lg text-foreground">{row.roomTitle}</span>
+            <span className="text-label-md text-muted-foreground">{row.dateLabel}</span>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-0.5">
+            <span className="text-label-lg text-foreground">{formatWon(row.payout, true)}</span>
+            <span className="text-label-md text-muted-foreground">
+              {SETTLEMENT_STATUS_LABEL[row.status]}
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
