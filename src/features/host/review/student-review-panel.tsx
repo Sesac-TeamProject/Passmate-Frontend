@@ -44,8 +44,8 @@ export function StudentReviewPanel({
   saveError,
 }: Props) {
   return (
-    <div className="flex flex-1 gap-5">
-      <ul className="flex w-[220px] shrink-0 flex-col gap-1.5">
+    <div className="flex flex-1 flex-col gap-5 md:flex-row">
+      <ul className="flex w-[220px] shrink-0 flex-col gap-1.5 max-md:hidden">
         {students.length === 0 ? (
           <li className="rounded-xl border border-dashed px-3.5 py-6 text-center text-body-md text-muted-foreground">
             참여한 학생이 없어요

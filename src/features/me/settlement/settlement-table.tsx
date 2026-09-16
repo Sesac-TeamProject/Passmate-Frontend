@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 const GRID_CLASS =
   "grid grid-cols-[90px_1fr_90px_130px_170px_150px_120px] items-center gap-4 px-4 py-3.5";
 
-const STATUS_CLASS: Record<SettlementStatus, string> = {
+/** 정산 상태 칩 색 — PC 표와 폰 목록(M-T4)이 같은 색을 쓴다 */
+export const STATUS_CLASS: Record<SettlementStatus, string> = {
   scheduled: "bg-choice-c text-choice-c-foreground",
   paid: "bg-choice-d text-choice-d-foreground",
   held: "bg-choice-a text-choice-a-foreground",
