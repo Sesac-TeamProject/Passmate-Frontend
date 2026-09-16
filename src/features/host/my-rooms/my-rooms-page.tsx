@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { CreateRoomFab } from "@/features/home/fab";
 import { ROOM_LIST_ID } from "./adapt";
+import { MyRoomsMobile } from "./my-rooms-mobile";
 import { HubActions, type HubAction } from "./hub-actions";
 import { HubSummary, type HubStat } from "./hub-summary";
 import { ReputationCard } from "./reputation-card";
@@ -18,52 +20,75 @@ type Props = {
   actions: HubAction[];
 };
 
-/** W-09 내가 만든 방 — 허브 (시안 803:8751). 렌더 전용 */
+/**
+ * W-09 내가 만든 방 — 허브 (시안 803:8751). 렌더 전용.
+ *
+ * 폰 폭(768px 미만)은 앱 시안 M-13 — 명성 줄 · 진행 중 / 종료 두 묶음 · FAB · 하단 탭.
+ * 웹의 행동 카드 3장·요약 칸은 폰에서 접는다(같은 정보가 방 묶음 머리글에 이미 있다).
+ */
 export function MyRoomsPage({ rooms, totalStudents, level, levelSubtitle, stats, actions }: Props) {
   return (
-    // 시안 W-09 프레임 바탕은 흰색이다 — 앱 기본 회색(bg-background)이 아니다
-    <main className="min-h-screen bg-card px-[60px] pt-12 pb-10">
-      {/* 시안은 1440에서 본문 1080 — 폭을 묶어 가운데 칸이 늘어나는 걸 막고,
+    <>
+      {/* 시안 W-09 프레임 바탕은 흰색이다 — 앱 기본 회색(bg-background)이 아니다 */}
+      <main className="min-h-screen bg-card px-[60px] pt-12 pb-10 max-md:hidden">
+        {/* 시안은 1440에서 본문 1080 — 폭을 묶어 가운데 칸이 늘어나는 걸 막고,
           남는 공간은 mx-auto로 좌우에 고르게 나눈다(왼쪽으로 붙이면 오른쪽만 크게 빈다) */}
-      <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
-        {/* 시안은 세로 막대를 본문 칸 왼쪽 바깥(x=272)에 걸어 둔다 — 글자는 아래 카드들과 같은 300에서 시작 */}
-        <header className="relative mb-6 flex flex-col gap-1.5">
-          <span aria-hidden className="absolute top-1 -left-7 h-16 w-[3px] bg-ink" />
-          <p className="text-label-lg text-mint-dark">누적 학생 수 : {totalStudents}명</p>
-          <h1 className="text-heading-lg text-ink">방 한 번 열면, 출제부터 리포트까지 끝!</h1>
-        </header>
+        <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
+          {/* 시안은 세로 막대를 본문 칸 왼쪽 바깥(x=272)에 걸어 둔다 — 글자는 아래 카드들과 같은 300에서 시작 */}
+          <header className="relative mb-6 flex flex-col gap-1.5">
+            <span aria-hidden className="absolute top-1 -left-7 h-16 w-[3px] bg-ink" />
+            <p className="text-label-lg text-mint-dark">누적 학생 수 : {totalStudents}명</p>
+            <h1 className="text-heading-lg text-ink">방 한 번 열면, 출제부터 리포트까지 끝!</h1>
+          </header>
 
-        <div className="flex gap-9">
-          {level === null ? null : (
-            <ReputationCard status={level} subtitle={levelSubtitle} detailHref="/host/reputation" />
-          )}
-          <HubSummary stats={stats} links={SUMMARY_LINKS} />
-          <HubActions actions={actions} />
-        </div>
-
-        {/* 행동 카드가 방을 하나로 고를 수 없을 때(2개 이상) 이 섹션으로 내려보낸다 — id 는 adapt 의 ROOM_LIST_ID */}
-        <section id={ROOM_LIST_ID} className="flex scroll-mt-6 flex-col gap-2">
-          <div className="flex items-baseline gap-2.5">
-            <h2 className="text-label-lg text-ink">내 방</h2>
-            <span className="text-label-md text-ink-disabled">{rooms.length}</span>
+          <div className="flex gap-9">
+            {level === null ? null : (
+              <ReputationCard
+                status={level}
+                subtitle={levelSubtitle}
+                detailHref="/host/reputation"
+              />
+            )}
+            <HubSummary stats={stats} links={SUMMARY_LINKS} />
+            <HubActions actions={actions} />
           </div>
 
-          {rooms.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 rounded-[14px] border border-dashed py-16 text-center">
-              <p className="text-body-md text-muted-foreground">아직 만든 방이 없어요</p>
-              <Link
-                href="/host/rooms/new"
-                className="flex h-11 items-center rounded-[14px] bg-mint px-6 text-label-lg text-white transition-colors hover:bg-mint-dark"
-              >
-                새 방 만들기
-              </Link>
+          {/* 행동 카드가 방을 하나로 고를 수 없을 때(2개 이상) 이 섹션으로 내려보낸다 — id 는 adapt 의 ROOM_LIST_ID */}
+          <section id={ROOM_LIST_ID} className="flex scroll-mt-6 flex-col gap-2">
+            <div className="flex items-baseline gap-2.5">
+              <h2 className="text-label-lg text-ink">내 방</h2>
+              <span className="text-label-md text-ink-disabled">{rooms.length}</span>
             </div>
-          ) : (
-            <RoomListCard rooms={rooms} />
-          )}
-        </section>
-      </div>
-    </main>
+
+            {rooms.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 rounded-[14px] border border-dashed py-16 text-center">
+                <p className="text-body-md text-muted-foreground">아직 만든 방이 없어요</p>
+                <Link
+                  href="/host/rooms/new"
+                  className="flex h-11 items-center rounded-[14px] bg-mint px-6 text-label-lg text-white transition-colors hover:bg-mint-dark"
+                >
+                  새 방 만들기
+                </Link>
+              </div>
+            ) : (
+              <RoomListCard rooms={rooms} />
+            )}
+          </section>
+        </div>
+      </main>
+
+      {/* 폰 폭 — 앱 M-13. 하단 탭바는 레이아웃(host/(nav))이 fixed로 그리고 본문 아래를 그 높이만큼
+          띄우므로 최소 높이에서 탭바 높이를 뺀다 — 빼지 않으면 내용이 짧아도 그만큼 스크롤이 생긴다 */}
+      <main className="relative flex min-h-[calc(100dvh-var(--mobile-tab-bar-h))] flex-col bg-card md:hidden">
+        <header className="px-5 pt-14 pb-3">
+          <h1 className="text-heading-lg text-ink">내가 만든 방</h1>
+        </header>
+
+        <MyRoomsMobile rooms={rooms} level={level} levelSubtitle={levelSubtitle} />
+
+        <CreateRoomFab href="/host/rooms/new" />
+      </main>
+    </>
   );
 }
 

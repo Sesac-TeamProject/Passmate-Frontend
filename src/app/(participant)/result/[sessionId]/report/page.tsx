@@ -69,9 +69,6 @@ export default function Page() {
   const subtitle = questionCount > 0 ? `문항 ${questionCount}개` : "";
 
   const wrongCount = rows.filter((row) => row.verdict === "WRONG").length;
-  // 계약에 개념별 정답률이 없다 — 리포트가 주는 취약 주제의 첫 항목으로 대신한다
-  const weakestConcept = report.data.weakTopics[0] ?? null;
-
   const handleShare = () => {
     void navigator.clipboard.writeText(window.location.href);
   };
@@ -89,7 +86,6 @@ export default function Page() {
         myScore={result.data.totalScore}
         rows={rows}
         wrongCount={wrongCount}
-        weakestConcept={weakestConcept}
         // @draft 계약에 없는 값들 — 참가자 수·소요 시간·비교/추이/개념 카드.
         // 지어내지 않고 비워 두면 ReportPage가 해당 자리를 감춘다
         participantCount={null}
@@ -102,9 +98,8 @@ export default function Page() {
         mobileBackHref={`/result/${params.sessionId}`}
         // 내보내기 계약이 없어 브라우저 인쇄로 대신한다 — PDF 저장은 인쇄 대화상자에서 고른다
         onSavePdf={() => window.print()}
-        // @draft 오답 재풀이·복습 방 추천 계약이 없다 — 지금은 공개 방 목록으로 보낸다
+        // @draft 오답 재풀이 계약이 없다 — 지금은 공개 방 목록으로 보낸다
         onRetryWrong={() => router.push("/rooms")}
-        onFindReviewRoom={() => router.push("/rooms")}
         onShare={handleShare}
         onOpenQuestion={(no) => router.push(`/result/${roomId}/report/${no}`)}
         onReport={validRoomId === null ? undefined : () => setReportOpen(true)}

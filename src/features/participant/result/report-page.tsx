@@ -26,8 +26,6 @@ type Props = {
   rows: ReportRow[];
   /** 틀린 문항이 없으면 "다시 풀기" 버튼을 감춘다 */
   wrongCount: number;
-  /** 가장 약한 개념. 없으면 "복습 방 찾기" 버튼을 감춘다 */
-  weakestConcept: string | null;
   onBack: () => void;
   /**
    * 폰 폭 "←"가 갈 곳. PC의 "‹ 참여한 방으로"는 회원 전용 경로라 게스트가 누르면 로그인으로 튕긴다 —
@@ -36,7 +34,6 @@ type Props = {
   mobileBackHref: string;
   onSavePdf: () => void;
   onRetryWrong: () => void;
-  onFindReviewRoom: () => void;
   onShare: () => void;
   /** 문항 행 링크 → 문항 상세. 없으면 링크를 그리지 않는다 */
   onOpenQuestion?: (no: number) => void;
@@ -67,12 +64,10 @@ export function ReportPage({
   concepts,
   rows,
   wrongCount,
-  weakestConcept,
   onBack,
   mobileBackHref,
   onSavePdf,
   onRetryWrong,
-  onFindReviewRoom,
   onShare,
   onOpenQuestion,
   onReport,
@@ -114,9 +109,6 @@ export function ReportPage({
               <NextStep onClick={onRetryWrong} primary>
                 틀린 {wrongCount}문항만 다시 풀기
               </NextStep>
-            )}
-            {weakestConcept !== null && (
-              <NextStep onClick={onFindReviewRoom}>{weakestConcept} 복습 방 찾기</NextStep>
             )}
             <NextStep onClick={onShare}>리포트 공유하기</NextStep>
           </div>
