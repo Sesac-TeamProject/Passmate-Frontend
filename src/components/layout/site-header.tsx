@@ -6,6 +6,15 @@ import { cn } from "@/lib/utils";
 import { PAGE_FRAME } from "@/components/layout/page-frame";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
+type Props = {
+  className?: string;
+  /**
+   * 로고를 눌러 나가게 한다 — 로그인했으면 홈, 아니면 랜딩. 로고가 그 역할을 맡으니 오른쪽 "내 화면으로 →"는 뺀다.
+   * 약관·개인정보 처리방침처럼 흐름 밖에서 읽고 나가는 문서 화면용이다.
+   */
+  logoLink?: boolean;
+};
+
 /**
  * 공통·학생 화면 상단 헤더. 선생님·관리자 화면은 사이드바 레이아웃을 쓰므로 렌더하지 않는다.
  *
@@ -13,13 +22,19 @@ import { useAuthStore } from "@/lib/stores/auth-store";
  * 그때는 홈으로 가는 링크로 바꾼다. 복원 중(`idle`·`restoring`)에는 어느 쪽도 아직 모르므로
  * 자리를 비워 둔다 — 잠깐 "로그인"이 떴다 사라지는 깜빡임을 막는다.
  */
-export function SiteHeader({ className }: { className?: string }) {
+export function SiteHeader({ className, logoLink = false }: Props) {
   const status = useAuthStore((s) => s.status);
 
   return (
     <header className={cn("border-b bg-card", className)}>
       <div className={cn(PAGE_FRAME, "flex h-14 items-center justify-between")}>
-        <BrandLogo />
+        {logoLink ? (
+          <Link href={status === "authenticated" ? "/home" : "/"}>
+            <BrandLogo />
+          </Link>
+        ) : (
+          <BrandLogo />
+        )}
         {status === "unauthenticated" && (
           <Link
             href="/login"
@@ -28,7 +43,7 @@ export function SiteHeader({ className }: { className?: string }) {
             로그인
           </Link>
         )}
-        {status === "authenticated" && (
+        {status === "authenticated" && !logoLink && (
           <Link href="/home" className="text-label-lg text-mint-dark hover:underline">
             내 화면으로 →
           </Link>
