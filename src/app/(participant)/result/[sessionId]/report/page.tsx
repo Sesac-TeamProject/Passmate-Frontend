@@ -11,6 +11,7 @@ import { ReportPage } from "@/features/participant/result/report-page";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
 import { useReport } from "@/lib/queries/use-me";
 import { useMyReport, useMyResult } from "@/lib/queries/use-results";
+import { useAuthStore } from "@/lib/stores/auth-store";
 
 /**
  * P-Web 내 리포트 컨테이너 (시안 787:8834).
@@ -30,12 +31,34 @@ export default function Page() {
   const report = useMyReport(validRoomId);
   const sendReport = useReport();
   const [reportOpen, setReportOpen] = useState(false);
+  const isMember = useAuthStore((s) => s.status) === "authenticated";
 
   if (result.isPending || report.isPending) return <ScreenLoading />;
+  // 폰 폭은 앱 M-06e — "참여한 방에서 보기"는 회원에게만 있는 길이라 게스트에게는 약속하지 않는다
+  const mobileFailure = {
+    screenTitle: "리포트",
+    backHref: `/result/${params.sessionId}`,
+    title: "리포트를 불러오지 못했어요",
+    description: "잠시 후 다시 시도해 주세요.",
+    footnote: isMember ? "이미 저장된 리포트는 마이 › 참여한 방에서 볼 수 있어요" : undefined,
+    homeHref: isMember ? "/home" : "/",
+  };
   if (result.isError)
-    return <ScreenError message={result.error.message} onRetry={() => result.refetch()} />;
+    return (
+      <ScreenError
+        message={result.error.message}
+        onRetry={() => result.refetch()}
+        mobile={mobileFailure}
+      />
+    );
   if (report.isError)
-    return <ScreenError message={report.error.message} onRetry={() => report.refetch()} />;
+    return (
+      <ScreenError
+        message={report.error.message}
+        onRetry={() => report.refetch()}
+        mobile={mobileFailure}
+      />
+    );
 
   const questions = result.data.questions;
   const rows = toReportRows(questions);
@@ -46,9 +69,6 @@ export default function Page() {
   const subtitle = questionCount > 0 ? `문항 ${questionCount}개` : "";
 
   const wrongCount = rows.filter((row) => row.verdict === "WRONG").length;
-  // 계약에 개념별 정답률이 없다 — 리포트가 주는 취약 주제의 첫 항목으로 대신한다
-  const weakestConcept = report.data.weakTopics[0] ?? null;
-
   const handleShare = () => {
     void navigator.clipboard.writeText(window.location.href);
   };
@@ -66,7 +86,6 @@ export default function Page() {
         myScore={result.data.totalScore}
         rows={rows}
         wrongCount={wrongCount}
-        weakestConcept={weakestConcept}
         // @draft 계약에 없는 값들 — 참가자 수·소요 시간·비교/추이/개념 카드.
         // 지어내지 않고 비워 두면 ReportPage가 해당 자리를 감춘다
         participantCount={null}
@@ -75,11 +94,12 @@ export default function Page() {
         trend={[]}
         concepts={[]}
         onBack={() => router.push("/me/joined")}
+        // 폰 폭 ←는 앱 M-06처럼 결과 화면으로 돌아간다 — "참여한 방"은 회원 전용이라 게스트가 로그인으로 튕긴다
+        mobileBackHref={`/result/${params.sessionId}`}
         // 내보내기 계약이 없어 브라우저 인쇄로 대신한다 — PDF 저장은 인쇄 대화상자에서 고른다
         onSavePdf={() => window.print()}
-        // @draft 오답 재풀이·복습 방 추천 계약이 없다 — 지금은 공개 방 목록으로 보낸다
+        // @draft 오답 재풀이 계약이 없다 — 지금은 공개 방 목록으로 보낸다
         onRetryWrong={() => router.push("/rooms")}
-        onFindReviewRoom={() => router.push("/rooms")}
         onShare={handleShare}
         onOpenQuestion={(no) => router.push(`/result/${roomId}/report/${no}`)}
         onReport={validRoomId === null ? undefined : () => setReportOpen(true)}

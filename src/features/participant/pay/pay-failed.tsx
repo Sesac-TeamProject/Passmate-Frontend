@@ -35,6 +35,8 @@ export function PayFailed({
   const joinOnly = kind === "join";
   return (
     <FailureScreen
+      // 폰 폭 상단 줄(앱 M-11e) — 뒤로는 "돌아가기"와 같은 길이다
+      mobileHeader={{ title: "유료 방 결제", onBack: onChangeMethod }}
       title={joinOnly ? "입장이 완료되지 않았어요" : "결제가 완료되지 않았어요"}
       description={
         <>

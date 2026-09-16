@@ -13,11 +13,11 @@ import { useAuthStore } from "@/lib/stores/auth-store";
  * 그때는 홈으로 가는 링크로 바꾼다. 복원 중(`idle`·`restoring`)에는 어느 쪽도 아직 모르므로
  * 자리를 비워 둔다 — 잠깐 "로그인"이 떴다 사라지는 깜빡임을 막는다.
  */
-export function SiteHeader() {
+export function SiteHeader({ className }: { className?: string }) {
   const status = useAuthStore((s) => s.status);
 
   return (
-    <header className="border-b bg-card">
+    <header className={cn("border-b bg-card", className)}>
       <div className={cn(PAGE_FRAME, "flex h-14 items-center justify-between")}>
         <BrandLogo />
         {status === "unauthenticated" && (

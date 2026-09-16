@@ -49,7 +49,8 @@ export function CoinChargeCard({
   const { shortage, needsCharge } = plan;
 
   return (
-    <section className="flex w-[440px] shrink-0 flex-col gap-4 rounded-2xl border bg-card px-[22px] py-5">
+    // 폰 폭은 한 단으로 쌓이므로 440 고정을 풀고 폭을 다 쓴다
+    <section className="flex w-[440px] shrink-0 flex-col gap-4 rounded-2xl border bg-card px-[22px] py-5 max-md:w-full max-md:shrink">
       {error && (
         <p
           role="alert"
