@@ -118,3 +118,13 @@ export type QuestionSetListQuery = {
 
 /** 목록 필터에서 쓰는 상태값. `QuestionSetStatus`와 같다 */
 export type QuestionSetStatusFilter = QuestionSetStatus;
+
+/** POST /materials/extract — 강의자료 파일에서 뽑은 본문. 파일은 서버에 남지 않는다 */
+export type MaterialExtractResponse = {
+  fileName: string;
+  /** 뽑아낸 본문. 5000자 상한을 넘으면 앞에서부터 잘려 있다 */
+  text: string;
+  charCount: number;
+  /** 상한을 넘어 뒷부분을 버렸는지 — 화면이 "잘렸어요"를 알려 준다 */
+  truncated: boolean;
+};

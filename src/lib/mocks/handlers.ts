@@ -58,6 +58,7 @@ import {
   mockSettlementAccount,
 } from "./payments";
 import {
+  mockExtractMaterial,
   mockAddQuestion,
   mockConfirmQuestionSet,
   mockCreateQuestionSet,
@@ -197,6 +198,7 @@ const HANDLERS: Record<string, MockHandler> = {
     mockGenerate(ctx.params.setId, asBody<AiGenerateRequest>(ctx)),
   "POST /question-sets/:setId/questions/generate-from-file": (ctx) =>
     mockGenerateFromFile(ctx.params.setId, asBody<FormData>(ctx)),
+  "POST /materials/extract": (ctx) => mockExtractMaterial(asBody<FormData>(ctx)),
 
   /* ── 결과 · 리포트 · 평가 ─────────────────────────── */
   "GET /rooms/:roomId/results/me": () => mockMyResult(),
