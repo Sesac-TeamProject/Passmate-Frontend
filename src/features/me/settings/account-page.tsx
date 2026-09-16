@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { FormEvent } from "react";
 import { FieldInput, FormField } from "@/components/common/form-field";
+import { MOBILE_PRIMARY_BUTTON, MobileActionBar } from "@/components/common/mobile-action-bar";
 import { StudentAvatar, type AvatarKey } from "@/components/common/student-avatar";
 import { Button } from "@/components/ui/button";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
@@ -80,12 +81,23 @@ export function AccountPage({
           이메일은 로그인 ID라 바꿀 수 없어요. 닉네임은 방 안에서 학생·선생님에게 보여요.
         </p>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end max-md:hidden">
           <Button type="submit" size="xl" disabled={pending}>
             저장하기
           </Button>
         </div>
       </form>
+
+      <MobileActionBar aboveTabBar>
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={pending}
+          className={MOBILE_PRIMARY_BUTTON}
+        >
+          저장하기
+        </button>
+      </MobileActionBar>
     </MeFormPage>
   );
 }

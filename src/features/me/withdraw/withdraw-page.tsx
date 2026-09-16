@@ -1,8 +1,14 @@
 import Link from "next/link";
+import {
+  MOBILE_PRIMARY_BUTTON,
+  MOBILE_SECONDARY_BUTTON,
+  MobileActionBar,
+} from "@/components/common/mobile-action-bar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
 import { formatNumber } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 type Props = {
   /** 보유 코인 — 안내 문구에 표시 */
@@ -69,7 +75,7 @@ export function WithdrawPage({
         </label>
       </div>
 
-      <div className="flex justify-end gap-2.5">
+      <div className="flex justify-end gap-2.5 max-md:hidden">
         <Button
           variant="outline"
           size="xl"
@@ -88,6 +94,23 @@ export function WithdrawPage({
           탈퇴하기
         </Button>
       </div>
+
+      <MobileActionBar aboveTabBar>
+        <button
+          type="button"
+          onClick={onWithdraw}
+          disabled={!confirmed || pending}
+          className={cn(
+            MOBILE_PRIMARY_BUTTON,
+            "bg-foreground text-background hover:bg-foreground/90 focus-visible:ring-foreground",
+          )}
+        >
+          탈퇴하기
+        </button>
+        <Link href="/me" className={MOBILE_SECONDARY_BUTTON}>
+          취소
+        </Link>
+      </MobileActionBar>
     </MeFormPage>
   );
 }

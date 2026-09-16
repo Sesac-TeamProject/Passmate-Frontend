@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { FIELD_INPUT_CLASS, FieldInput, FormField } from "@/components/common/form-field";
+import { MOBILE_PRIMARY_BUTTON, MobileActionBar } from "@/components/common/mobile-action-bar";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -113,12 +114,23 @@ export function SettlementAccountPage({
           정산은 매월 5일, 등록된 계좌로 지급돼요. 예금주는 가입한 이름과 같아야 해요.
         </p>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end max-md:hidden">
           <Button type="submit" size="xl" disabled={pending || !canSubmit}>
             등록하기
           </Button>
         </div>
       </form>
+
+      <MobileActionBar aboveTabBar>
+        <button
+          type="button"
+          onClick={() => canSubmit && onSubmit()}
+          disabled={pending || !canSubmit}
+          className={MOBILE_PRIMARY_BUTTON}
+        >
+          등록하기
+        </button>
+      </MobileActionBar>
     </MeFormPage>
   );
 }
