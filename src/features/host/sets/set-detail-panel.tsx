@@ -15,6 +15,8 @@ type Props = {
   set: QuestionSet;
   /** 문항 미리보기를 아직 읽는 중 — 자리를 스켈레톤으로 잡는다 */
   previewLoading?: boolean;
+  /** "더 보기" — 전체 문항을 팝업으로 연다. 상세가 로드된 뒤에만 미리보기가 있으므로 그때만 보인다 */
+  onShowAll: () => void;
   onClone: () => void;
   cloning?: boolean;
 };
@@ -37,9 +39,13 @@ function metaLine(set: QuestionSet): string {
 }
 
 /** W-08 우측 패널 — 선택한 세트 요약·문항 미리보기·재활용 액션 */
-export function SetDetailPanel({ set, previewLoading = false, onClone, cloning }: Props) {
-  const more = set.questionCount - set.preview.length;
-
+export function SetDetailPanel({
+  set,
+  previewLoading = false,
+  onShowAll,
+  onClone,
+  cloning,
+}: Props) {
   return (
     <aside className="flex w-[360px] shrink-0 flex-col gap-3 bg-card p-6">
       <h2 className="text-heading-md text-ink">{set.title}</h2>
@@ -80,7 +86,14 @@ export function SetDetailPanel({ set, previewLoading = false, onClone, cloning }
               </li>
             ))}
           </ol>
-          {more > 0 && <p className="text-label-md text-muted-foreground">··· {more}문항 더</p>}
+          {/* "··· N문항 더"는 읽기만 하는 문구였다 — 눌러서 전체 문항을 보는 길을 연다 */}
+          <button
+            type="button"
+            onClick={onShowAll}
+            className="self-start text-label-md text-mint-dark hover:underline"
+          >
+            더 보기
+          </button>
         </>
       )}
       <div className="mt-auto flex flex-col gap-3">

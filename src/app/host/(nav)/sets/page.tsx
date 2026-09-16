@@ -11,6 +11,8 @@ import {
   toSetDetail,
 } from "@/features/host/sets/adapt";
 import { SetsPage } from "@/features/host/sets/sets-page";
+import { PreviewDialog } from "@/features/host/editor/preview-dialog";
+import { toEditorQuestions } from "@/features/host/editor/adapt";
 import { SetsSkeleton } from "@/features/host/sets/sets-skeleton";
 import {
   useDeleteQuestionSet,
@@ -28,6 +30,8 @@ export default function Page() {
   const remove = useDeleteQuestionSet();
   // 삭제는 되돌릴 수 없으니 한 번 묻는다
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  // 우측 패널 "더 보기" — 고른 세트의 전체 문항 팝업
+  const [showAllOpen, setShowAllOpen] = useState(false);
 
   // 우측 패널이 보여 줄 세트. 고르기 전에는 첫 세트다
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -68,12 +72,20 @@ export default function Page() {
         selected={selectedWithPreview}
         onSelect={setSelectedId}
         detailLoading={selected !== null && detail.isPending}
+        onShowAll={() => setShowAllOpen(true)}
         onClone={handleClone}
         cloning={duplicate.isPending}
         cloneError={duplicate.isError ? toCloneErrorMessage(duplicate.error) : null}
         onDelete={setPendingDeleteId}
         deletingSetId={remove.isPending ? (remove.variables?.toString() ?? null) : null}
         deleteError={remove.isError ? toDeleteErrorMessage(remove.error) : null}
+      />
+      {/* 에디터의 미리보기 창을 그대로 쓴다 — 세트 검토라는 같은 목적, 같은 생김새 */}
+      <PreviewDialog
+        open={showAllOpen}
+        onOpenChange={setShowAllOpen}
+        title={selected?.title ?? ""}
+        questions={detailMatches ? toEditorQuestions(detail.data.questions) : []}
       />
       <ConfirmDialog
         open={pendingDeleteId !== null}
