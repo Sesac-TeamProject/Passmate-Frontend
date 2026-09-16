@@ -34,7 +34,14 @@ export function MeFormPage({
 }: Props) {
   return (
     // 폰에서 화면 높이를 채워야 아래 버튼 줄(mobileAction)이 바닥에 붙는다 — 탭바 높이를 뺀 만큼이 본문 몫이다
-    <main className="flex flex-col gap-5 px-9 py-7 max-md:min-h-[calc(100dvh-var(--mobile-tab-bar-h))] max-md:gap-3.5 max-md:px-5 max-md:pt-3 max-md:pb-6">
+    <main
+      className={cn(
+        "flex flex-col gap-5 px-9 py-7 max-md:min-h-[calc(100dvh-var(--mobile-tab-bar-h))] max-md:gap-3.5 max-md:px-5 max-md:pt-3",
+        // mobileAction이 있으면 그 바가 세이프에어리어 하단 패딩을 스스로 가져 main이 더 줄 필요가 없다 —
+        // 그런데도 pb-6을 남기면 버튼 줄과 탭바 사이에 빈 띠가 남는다. 버튼 줄이 없는 화면은 기존대로 pb-6을 유지한다.
+        mobileAction ? undefined : "max-md:pb-6",
+      )}
+    >
       <MobileTopBar title={title} backHref={backHref} className="-mx-5 px-5 pb-1" />
       <h1 className="text-heading-lg text-foreground max-md:hidden">마이페이지 › {title}</h1>
       <section
