@@ -7,6 +7,7 @@ import type { LiveQuestion } from "@/features/host/types";
 import { cn } from "@/lib/utils";
 import { ChoiceRow, type ChoiceRowState } from "./choice-row";
 import { LiveRail, LiveRailMini, type SolvingStudent } from "./live-rail";
+import { LiveRemote } from "./live-remote";
 import { ProjectorShell } from "./projector-shell";
 import { QuestionRail } from "./question-rail";
 import { Timer } from "./timer";
@@ -35,6 +36,9 @@ type Props = {
   errorMessage?: string | null;
   /** 타이머를 시안 숫자에서 멈춘다 — 랜딩 목업용 */
   frozen?: boolean;
+  /** 폰 리모컨(M-T2) 머리글에만 쓴다 — PC 는 프로젝터 화면이라 방 정보를 따로 띄우지 않는다 */
+  pin?: string;
+  roomTitle?: string;
 };
 
 const CONTROL = "flex h-13 items-center rounded-2xl text-heading-sm font-bold transition-colors";
@@ -60,6 +64,8 @@ export function LivePage({
   reconnecting = false,
   errorMessage = null,
   frozen = false,
+  pin,
+  roomTitle,
 }: Props) {
   const maxCount = Math.max(...counts, 0);
   // 정답을 공개하기 전이라 "정답"이 아니라 "지금 가장 많이 고른 보기"를 강조한다
@@ -68,12 +74,34 @@ export function LivePage({
   return (
     <>
       {/* 07 보드 "실시간 재연결" — 진행 중인 문항을 가리지 않도록 화면 맨 위 얇은 띠로만 알린다 */}
+      {/* 폰 리모컨은 머리글 알약이 연결 상태를 말하므로 띠는 PC 에만 둔다 */}
       {reconnecting && (
-        <div className="fixed inset-x-0 top-0 z-50">
+        <div className="fixed inset-x-0 top-0 z-50 max-md:hidden">
           <ReconnectingBanner />
         </div>
       )}
+      {/* 폰 폭 — 앱 M-T2 진행 리모컨. "프로젝터는 벽, 폰은 조작" */}
+      <LiveRemote
+        question={q}
+        counts={counts}
+        students={students}
+        isLocked={isLocked}
+        isLastQuestion={isLastQuestion}
+        onNext={onNext}
+        onEndCurrent={onEndCurrent}
+        onEndSession={onEndSession}
+        onToggleLock={onToggleLock}
+        onHint={onHint}
+        onHintError={onHintError}
+        hintUploading={hintUploading}
+        pending={pending}
+        reconnecting={reconnecting}
+        errorMessage={errorMessage}
+        pin={pin}
+        roomTitle={roomTitle}
+      />
       <ProjectorShell
+        className="max-md:hidden"
         exitHref="/host/rooms"
         rail={<LiveRail students={students} submittedCount={q.submitted} />}
         railCollapsed={<LiveRailMini students={students} submittedCount={q.submitted} />}
