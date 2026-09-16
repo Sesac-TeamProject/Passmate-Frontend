@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import {
+  toCommentSaveMessage,
   toEssayAnswers,
   toQuestionInsights,
   toReportStudents,
@@ -16,7 +17,12 @@ import { ExportFailedDialog } from "@/features/host/review/export-failed-dialog"
 import { ReviewPage, type ExportFormat } from "@/features/host/review/review-page";
 import { ReviewSkeleton } from "@/features/host/review/review-skeleton";
 import { exportRoomReport } from "@/lib/api/results";
-import { usePostHostReview, useReviewTargets, useSessionResults } from "@/lib/queries/use-results";
+import {
+  usePostHostReview,
+  usePutQuestionComment,
+  useReviewTargets,
+  useSessionResults,
+} from "@/lib/queries/use-results";
 
 /** 목 모드는 파일을 만들지 못한다(`downloadFile`이 목 계층을 타지 않는다) */
 const EXPORT_UNAVAILABLE_MESSAGE = "백엔드 연동 후 제공돼요";
@@ -49,6 +55,8 @@ export default function Page() {
     participantId === null ? {} : { participantId },
   );
   const saveReview = usePostHostReview(roomId, participantId ?? 0);
+  // 문항 단위 코멘트 — 학생 전체에게 남기는 첨삭. 답안별 첨삭(saveReview)과 별개다
+  const saveComment = usePutQuestionComment(roomId);
 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -87,10 +95,14 @@ export default function Page() {
         rankRows={toRankRows(report.data.participants)}
         selectedQuestionId={selectedQuestionId}
         onSelectQuestion={setSelectedQuestionId}
-        insight={toQuestionInsights().get(selectedQuestionId ?? "") ?? null}
-        // @draft 문항 단위 코멘트 저장 계약이 없다(답안 단위 첨삭만 있다) — 계약이 오면 뮤테이션을 붙이고 true로 연다
-        canSaveComment={false}
-        onSaveComment={() => undefined}
+        insight={toQuestionInsights(report.data).get(selectedQuestionId ?? "") ?? null}
+        canSaveComment={selectedQuestionId !== null}
+        onSaveComment={(text) => {
+          if (selectedQuestionId === null) return;
+          saveComment.mutate({ questionId: Number(selectedQuestionId), comment: text });
+        }}
+        commentSaving={saveComment.isPending}
+        commentError={saveComment.isError ? toCommentSaveMessage(saveComment.error) : null}
         students={toReportStudents(report.data.participants)}
         selectedStudentId={selectedStudentId}
         onSelectStudent={setSelectedStudentId}

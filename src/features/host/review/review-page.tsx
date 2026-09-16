@@ -25,6 +25,8 @@ type Props = {
   insight: QuestionInsight | null;
   canSaveComment: boolean;
   onSaveComment: (text: string) => void;
+  commentSaving?: boolean;
+  commentError?: string | null;
   /** 학생별 탭 — 답안 단위 첨삭 */
   students: Student[];
   selectedStudentId: string | null;
@@ -50,6 +52,8 @@ export function ReviewPage({
   insight,
   canSaveComment,
   onSaveComment,
+  commentSaving,
+  commentError,
   students,
   selectedStudentId,
   onSelectStudent,
@@ -142,6 +146,8 @@ export function ReviewPage({
               insight={insight}
               canSaveComment={canSaveComment}
               onSaveComment={onSaveComment}
+              commentSaving={commentSaving}
+              commentError={commentError}
             />
           ) : tab === "학생별" ? (
             <StudentReviewPanel
