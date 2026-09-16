@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/common/brand-logo";
+import { findActivePath } from "@/components/layout/active-path";
 import { getRoute, matchRoute, SIDEBAR_NAV } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
@@ -90,16 +91,3 @@ export function RoleSidebar({ nav, user, activePath: forcedActivePath }: Props) 
   );
 }
 
-/**
- * 현재 pathname에 해당하는 내비 항목의 path. 정확히 일치하는 항목이 없으면 하위 경로(prefix)로 가장 긴 항목을 고른다
- * — /me/account 는 "마이페이지"(/me), /me/joined 는 자기 항목이 활성. 동적 세그먼트([code] 등)는 아무 값이나 허용.
- */
-function findActivePath(pathname: string, patterns: readonly string[]): string | undefined {
-  const toRegExp = (pattern: string, tail: string) =>
-    new RegExp("^" + pattern.replace(/\[[^\]]+\]/g, "[^/]+") + tail);
-  const exact = patterns.find((p) => toRegExp(p, "$").test(pathname));
-  if (exact) return exact;
-  return patterns
-    .filter((p) => toRegExp(p, "/").test(pathname))
-    .sort((a, b) => b.length - a.length)[0];
-}

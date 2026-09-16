@@ -368,6 +368,19 @@ export const SIDEBAR_NAV: Record<
   ],
 };
 
+/**
+ * 폰 폭(768px 미만) 하단 탭바 4개 — 앱 `navigation/AppTab.kt`와 같은 수·순서·뜻.
+ * 사이드바 `MEMBER_NAV`(5개)와 일부러 다르다: 앱에 "문제 세트" 화면이 없어 탭에서 빠진다
+ * (폰에서 /host/sets 진입점은 선생님 조각에서 방 만들기 안으로 옮긴다).
+ * 아이콘 이름은 부품이 lucide 아이콘으로 옮긴다 — 설정에 컴포넌트를 두지 않는다.
+ */
+export const MOBILE_TABS = [
+  { path: "/home", label: "홈", icon: "home" },
+  { path: "/host/rooms", label: "내가 만든 방", icon: "hosted" },
+  { path: "/me/joined", label: "참여한 방", icon: "joined" },
+  { path: "/me", label: "마이", icon: "me" },
+] as const satisfies readonly { path: string; label: string; icon: string }[];
+
 export function getRoute(path: string): RouteMeta {
   const route = ROUTES.find((r) => r.path === path);
   if (!route) {
