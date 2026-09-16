@@ -3,9 +3,13 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** 제목 크기 — md: 화면 제목(M-06 "리포트" 20) / sm: 상태 화면의 화면 이름(M-05e "최종 결과" 15) */
+/**
+ * 제목 크기 — md: 화면 제목(M-06 "리포트" 20) / base: 문서 제목(M-12-13 "서비스 이용약관" 17) /
+ * sm: 상태 화면의 화면 이름(M-05e "최종 결과" 15)
+ */
 const TITLE_CLASS = {
   md: "text-heading-md",
+  base: "text-heading-sm font-bold",
   sm: "text-label-lg font-bold",
 } as const;
 
@@ -27,7 +31,7 @@ type Props = {
 export function MobileTopBar({ title, backHref, onBack, trailing, size = "md", className }: Props) {
   const arrow = (
     <ArrowLeft
-      className={size === "md" ? "size-6 text-ink" : "size-[22px] text-ink"}
+      className={size === "sm" ? "size-[22px] text-ink" : "size-6 text-ink"}
       strokeWidth={2}
       aria-hidden
     />
