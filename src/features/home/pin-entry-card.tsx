@@ -15,9 +15,10 @@ type Props = {
 /**
  * 홈 PIN 입장 카드 (W-01 v6) — r20 · 내부 폭 360 가운데 · padding [24,40] · gap 12. 시안값 그대로 (높이 512).
  *
- * 폰 폭(max-md)은 좌우 여백을 줄이고, PIN 6칸이 고정 360폭에서 넘치므로 `/join`의 게스트 폼 규격
- * (`variant="guest"`, `src/features/participant/join/pin-input.tsx`가 이미 폰 폭에 맞춰 둔 칸 크기)을
- * 그대로 빌려 쓴다 — 두 벌을 그려 두고 CSS로만 하나를 보인다(같은 값을 두 번 짓지 않는다).
+ * `JoinForm`은 한 벌만 그린다 — 폰 폭(max-md)에서 PIN 6칸·아바타 간격이 넘치던 문제는 `pin-input.tsx`·
+ * `join-form.tsx`의 `home` 분기가 `max-md:`로 게스트 폼 규격(칸 46×56, 아바타 간격 8)을 빌려 쓰도록
+ * 고쳤다. CSS로 폼을 두 벌 두고 하나만 숨기던 예전 방식은 매 입력마다 숨은 폼까지 다시 그리고, 폭이
+ * 브레이크포인트를 넘나들 때 포커스가 끊기는 문제가 있어 걷어냈다.
  */
 export function PinEntryCard({
   values,
@@ -48,23 +49,13 @@ export function PinEntryCard({
         </div>
       )}
 
-      {/* 데스크톱 — 시안 규격(52×64 · 폭 360 고정) */}
       <JoinForm
         variant="home"
         values={values}
         onChange={onChange}
         onSubmit={onSubmit}
         pending={pending}
-        className="w-[360px] max-md:hidden"
-      />
-      {/* 폰 폭 — 게스트 입장과 같은 칸 규격(46×56 → max-md에서 더 좁아짐) */}
-      <JoinForm
-        variant="guest"
-        values={values}
-        onChange={onChange}
-        onSubmit={onSubmit}
-        pending={pending}
-        className="hidden w-full max-md:flex"
+        className="w-[360px] max-md:w-full"
       />
     </section>
   );
