@@ -7,7 +7,7 @@ import { ScreenError } from "@/components/common/screen-error";
 import { AppError } from "@/lib/types/app-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
-import { toLiveQuestion, toScoreView } from "@/features/participant/play/adapt";
+import { toLiveQuestion, toMyRankChip, toScoreView } from "@/features/participant/play/adapt";
 import { WaitingPage } from "@/features/participant/play/waiting-page";
 import { PlayPage } from "@/features/participant/play/play-page";
 import { readMyParticipant } from "@/lib/my-participant";
@@ -19,7 +19,8 @@ import { useSessionStore } from "@/lib/stores/session-store";
 
 const NO_SUBSCRIBE = () => () => {};
 const readMyName = () => readMyParticipant()?.nickname ?? null;
-const readMyNameOnServer = () => null;
+const readMyId = () => readMyParticipant()?.participantId ?? null;
+const readOnServer = () => null;
 
 /** P-Web 학생 풀이 컨테이너. PIN → roomId 조회 → 실시간 세션 연결, 스토어는 selector로만 읽는다. */
 export default function Page() {
@@ -38,6 +39,7 @@ export default function Page() {
   const currentQuestion = useSessionStore((s) => s.currentQuestion);
   const submitted = useSessionStore((s) => s.submitted);
   const reveal = useSessionStore((s) => s.reveal);
+  const ranking = useSessionStore((s) => s.ranking);
   const hints = useSessionStore((s) => s.hints);
   const screenLocked = useSessionStore((s) => s.screenLocked);
   const connection = useSessionStore((s) => s.connection);
@@ -58,7 +60,8 @@ export default function Page() {
   const submitAnswer = useSubmitAnswer(roomId ?? 0);
   // sessionStorage는 서버 렌더에 없다. 렌더 중에 그냥 읽으면 하이드레이션이 어긋나므로
   // 서버 스냅샷을 null로 둔다 — 값은 참여 시점에 한 번 쓰이고 바뀌지 않아 구독은 빈 함수로 충분하다.
-  const myName = useSyncExternalStore(NO_SUBSCRIBE, readMyName, readMyNameOnServer);
+  const myName = useSyncExternalStore(NO_SUBSCRIBE, readMyName, readOnServer);
+  const myParticipantId = useSyncExternalStore(NO_SUBSCRIBE, readMyId, readOnServer);
 
   const [submittedQuestionId, setSubmittedQuestionId] = useState<number | null>(null);
   const [syncedQuestionId, setSyncedQuestionId] = useState<number | null>(
@@ -150,6 +153,8 @@ export default function Page() {
         submitting={submitAnswer.isPending}
         hasSubmitted={submitted || submittedQuestionId === currentQuestion.questionId}
         score={score}
+        // 폰 폭 문항 결과의 "현재 N위 ▲n" — 참가 기록이 없어 내가 누구인지 모르면 칩을 감춘다
+        rankChip={toMyRankChip(ranking, myParticipantId)}
         reveal={currentReveal}
         isLocked={screenLocked}
         hint={latestHint}

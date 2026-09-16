@@ -318,6 +318,8 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
 
   return (
     <PayPage
+      // 폰 폭 머리의 ← — 들어온 곳(입장 화면·공개 방 목록)으로 돌아간다
+      onBack={() => router.back()}
       room={paidRoom}
       balance={balance}
       chargeOptions={CHARGE_OPTIONS}

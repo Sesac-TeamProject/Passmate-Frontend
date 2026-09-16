@@ -13,8 +13,8 @@ const STAND = {
   3: { height: "h-16", cls: "bg-avatar-peach text-avatar-peach-foreground" },
 } as const;
 
-/** 시안이 세우는 순서 — 2등 · 1등 · 3등 (가운데가 1등) */
-const ORDER: PodiumPlace[] = [2, 1, 3];
+/** 시안이 세우는 순서 — 2등 · 1등 · 3등 (가운데가 1등). 폰 폭 시상대(M-05)도 같은 순서를 쓴다 */
+export const PODIUM_ORDER: PodiumPlace[] = [2, 1, 3];
 
 type Props = { entries: PodiumEntry[] };
 
@@ -30,7 +30,7 @@ export function PodiumCard({ entries }: Props) {
         </p>
       ) : (
         <ol className="flex h-[182px] items-end justify-center gap-1">
-          {ORDER.map((place) => {
+          {PODIUM_ORDER.map((place) => {
             const entry = byRank.get(place);
             if (entry === undefined) return null;
 

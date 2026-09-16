@@ -70,10 +70,21 @@ export function QuestionDetailPage({
   analysisRequest = null,
 }: Props) {
   return (
-    // 브랜드 상단바는 (participant) 레이아웃의 SiteHeader가 이미 그린다 — 여기서 또 그리면 두 번 나온다
-    <main className="flex flex-1 flex-col bg-background px-4 sm:px-8 lg:px-20">
+    // 브랜드 상단바는 (participant) 레이아웃의 SiteHeader가 이미 그린다 — 여기서 또 그리면 두 번 나온다.
+    // 폰 폭은 그 상단바가 걷히고 아래 "← 문항 N / M" 줄이 머리를 맡는다
+    <main className="flex flex-1 flex-col bg-background px-4 max-md:min-h-dvh max-md:bg-card max-md:px-5 sm:px-8 lg:px-20">
+      {/* 폰 폭 — 앱 M-06과 같은 "← 제목" 줄 (공용 헤더는 폰 폭에서 걷힌다) */}
+      <div className="flex items-center gap-2.5 pt-10 pb-3.5 md:hidden">
+        <Link href={backHref} aria-label="리포트로 돌아가기" className="-m-1 p-1">
+          <ArrowLeft className="size-6 text-ink" strokeWidth={2} aria-hidden />
+        </Link>
+        <span className="text-heading-md text-ink">
+          문항 {detail.no} / {detail.total}
+        </span>
+      </div>
+
       {/* 시안 620:8221은 1440에서 본문 1200 — 폭을 묶고 남는 공간은 좌우로 나눈다 */}
-      <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between py-6">
+      <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between py-6 max-md:hidden">
         <Link
           href={backHref}
           className="flex items-center gap-2 text-label-lg text-muted-foreground hover:text-ink"

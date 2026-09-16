@@ -1,4 +1,4 @@
-import { useId, type FormEvent } from "react";
+import { useId, type FormEvent, type ReactNode } from "react";
 import { FieldInput, FormField } from "@/components/common/form-field";
 import type { AvatarKey } from "@/components/common/student-avatar";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,10 @@ type Props = {
   /** home: W-01 v6 PIN 입장 카드(gap 12 · 아바타 40 · 닉네임 52) / guest: C-03 게스트 입장 카드(gap 20 · 아바타 36) */
   variant?: PinInputVariant;
   pending?: boolean;
+  /** PIN 칸 바로 아래 한 줄(앱 "PIN 오류 (M-01)"). 없으면 자리를 두지 않는다 */
+  pinMessage?: ReactNode;
+  /** 닉네임 칸 바로 아래(앱 "닉네임 중복 (M-01)" 대체 후보). 없으면 자리를 두지 않는다 */
+  nicknameMessage?: ReactNode;
   className?: string;
 };
 
@@ -30,6 +34,8 @@ export function JoinForm({
   onSubmit,
   variant = "home",
   pending = false,
+  pinMessage = null,
+  nicknameMessage = null,
   className,
 }: Props) {
   const nicknameId = useId();
@@ -52,6 +58,7 @@ export function JoinForm({
         variant={variant}
         disabled={pending}
       />
+      {pinMessage}
 
       <FormField label="닉네임" htmlFor={nicknameId}>
         <FieldInput
@@ -63,10 +70,11 @@ export function JoinForm({
           value={values.nickname}
           onChange={(e) => onChange({ ...values, nickname: e.target.value })}
           disabled={pending}
-          /* 홈 PIN 카드만 시안이 52 — 공통 폼 규격(h48)은 그대로 둔다 */
-          className={variant === "home" ? "h-[52px]" : undefined}
+          /* 홈 PIN 카드와 폰 폭 게스트 입장(앱 M-01)은 시안이 52 — 공통 폼 규격(h48)은 그대로 둔다 */
+          className={variant === "home" ? "h-[52px]" : "max-md:h-[52px] max-md:rounded-[14px]"}
         />
       </FormField>
+      {nicknameMessage}
 
       <div className="flex flex-col gap-2">
         <span className="text-label-lg text-foreground">내 캐릭터</span>
@@ -75,8 +83,13 @@ export function JoinForm({
           onChange={(avatar) => onChange({ ...values, avatar })}
           size={variant === "home" ? 40 : 36}
           disabled={pending}
-          /* 홈은 시안 간격이 가로 18·세로 10, 바깥 3은 선택 링 자리 — 3+44×6+18×5+3 = 360×104 */
-          className={variant === "home" ? "gap-x-[18px] gap-y-2.5 p-[3px]" : undefined}
+          className={
+            variant === "home"
+              ? /* 홈은 시안 간격이 가로 18·세로 10, 바깥 3은 선택 링 자리 — 3+44×6+18×5+3 = 360×104 */
+                "gap-x-[18px] gap-y-2.5 p-[3px]"
+              : /* 폰 폭 카드 안쪽은 306 — 40×6에 간격 16을 두면 320으로 넘친다(앱 M-01은 간격 8) */
+                "max-md:justify-items-start max-md:gap-x-2 max-md:p-0.5"
+          }
         />
         <p className="text-label-md text-muted-foreground">
           대기실·결과 화면에서 이 캐릭터로 보여요 (닉네임과 함께)
