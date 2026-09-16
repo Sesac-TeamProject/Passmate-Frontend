@@ -48,3 +48,26 @@ export function MobileActionBar({ children, aboveTabBar = false, className }: Pr
     </div>
   );
 }
+
+type SubmitBarProps = {
+  onClick: () => void;
+  disabled?: boolean;
+  children: ReactNode;
+};
+
+/**
+ * 폰 폭 하단 "주 버튼 하나" 제출 바 — `MobileActionBar(aboveTabBar, className="-mx-5")` 안에
+ * `MOBILE_PRIMARY_BUTTON` 버튼 하나를 넣는 조합을 계정 정보 · 캐릭터 · 정산 계좌 · 코인 충전 ·
+ * 충전 완료 다섯 화면이 그대로 베껴 썼다. 핸들러·라벨·비활성 조건만 화면마다 다르므로 그 셋만 받는다.
+ * 버튼이 두 개거나(탈퇴 화면) 버튼에 별도 클래스가 얹히는 화면은 여기 맞추지 말고
+ * `MobileActionBar`를 직접 쓴다.
+ */
+export function MobilePrimarySubmitBar({ onClick, disabled, children }: SubmitBarProps) {
+  return (
+    <MobileActionBar aboveTabBar className="-mx-5">
+      <button type="button" onClick={onClick} disabled={disabled} className={MOBILE_PRIMARY_BUTTON}>
+        {children}
+      </button>
+    </MobileActionBar>
+  );
+}

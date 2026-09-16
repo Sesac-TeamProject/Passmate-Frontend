@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { MOBILE_PRIMARY_BUTTON, MobileActionBar } from "@/components/common/mobile-action-bar";
+import { MobilePrimarySubmitBar } from "@/components/common/mobile-action-bar";
 import { Button } from "@/components/ui/button";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
 import { formatKrwInline, formatNumber } from "@/lib/format";
@@ -23,13 +23,7 @@ export function ChargeCompletePage({ amount, payMethod, balanceAfter, onConfirm 
       cardClassName="items-center gap-3 px-7 py-12"
       // 코인 내역에서 들어오는 화면이라 뒤로가기는 마이가 아니라 코인 내역으로 돌아간다
       backHref="/me/coins"
-      mobileAction={
-        <MobileActionBar aboveTabBar className="-mx-5">
-          <button type="button" onClick={onConfirm} className={MOBILE_PRIMARY_BUTTON}>
-            확인
-          </button>
-        </MobileActionBar>
-      }
+      mobileAction={<MobilePrimarySubmitBar onClick={onConfirm}>확인</MobilePrimarySubmitBar>}
     >
       <div className="flex size-[72px] items-center justify-center rounded-full bg-mint">
         <Check className="size-8 text-white" strokeWidth={2} aria-hidden />

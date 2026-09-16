@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { MOBILE_PRIMARY_BUTTON, MobileActionBar } from "@/components/common/mobile-action-bar";
+import { MobilePrimarySubmitBar } from "@/components/common/mobile-action-bar";
 import { PendingLabel } from "@/components/common/pending-label";
 import { CoinBalanceCard } from "@/features/me/coins/coin-balance-card";
 import { CHARGE_PRESETS } from "@/features/me/coins/types";
@@ -37,16 +37,9 @@ export function ChargePage({ balance, amount, onAmountChange, pending, error, on
       // 코인 내역에서 들어오는 화면이라 뒤로가기는 마이가 아니라 코인 내역으로 돌아간다
       backHref="/me/coins"
       mobileAction={
-        <MobileActionBar aboveTabBar className="-mx-5">
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={pending}
-            className={MOBILE_PRIMARY_BUTTON}
-          >
-            {submitLabel}
-          </button>
-        </MobileActionBar>
+        <MobilePrimarySubmitBar onClick={onSubmit} disabled={pending}>
+          {submitLabel}
+        </MobilePrimarySubmitBar>
       }
     >
       {error && (

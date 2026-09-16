@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { FormEvent } from "react";
 import { FieldInput, FormField } from "@/components/common/form-field";
-import { MOBILE_PRIMARY_BUTTON, MobileActionBar } from "@/components/common/mobile-action-bar";
+import { MobilePrimarySubmitBar } from "@/components/common/mobile-action-bar";
 import { StudentAvatar, type AvatarKey } from "@/components/common/student-avatar";
 import { Button } from "@/components/ui/button";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
@@ -38,16 +38,9 @@ export function AccountPage({
     <MeFormPage
       title="계정 정보 변경"
       mobileAction={
-        <MobileActionBar aboveTabBar className="-mx-5">
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={pending}
-            className={MOBILE_PRIMARY_BUTTON}
-          >
-            저장하기
-          </button>
-        </MobileActionBar>
+        <MobilePrimarySubmitBar onClick={onSubmit} disabled={pending}>
+          저장하기
+        </MobilePrimarySubmitBar>
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">

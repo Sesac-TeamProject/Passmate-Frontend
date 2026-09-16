@@ -1,7 +1,7 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
-import { MOBILE_PRIMARY_BUTTON, MobileActionBar } from "@/components/common/mobile-action-bar";
+import { MobilePrimarySubmitBar } from "@/components/common/mobile-action-bar";
 import {
   AVATAR_KEYS,
   AVATAR_LABEL,
@@ -43,16 +43,9 @@ export function CharacterPage({
     <MeFormPage
       title="내 캐릭터 변경"
       mobileAction={
-        <MobileActionBar aboveTabBar className="-mx-5">
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={pending}
-            className={MOBILE_PRIMARY_BUTTON}
-          >
-            저장하기
-          </button>
-        </MobileActionBar>
+        <MobilePrimarySubmitBar onClick={onSubmit} disabled={pending}>
+          저장하기
+        </MobilePrimarySubmitBar>
       }
     >
       {errorMessage && (
