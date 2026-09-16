@@ -27,6 +27,9 @@ const COLUMNS = [
   "상태",
 ];
 
+/** 데스크톱 표 · 폰 목록이 같은 빈 상태 문구를 쓴다 — 한 곳에서만 고친다 */
+const EMPTY_MESSAGE = "아직 정산 내역이 없어요. 유료 방을 열면 참가비 정산이 여기에 쌓여요";
+
 type Props = { rows: SettlementRow[] };
 
 /**
@@ -62,7 +65,7 @@ function SettlementTableDesktop({ rows }: Props) {
             role="cell"
             className="block px-4 py-10 text-center text-body-md text-muted-foreground"
           >
-            아직 정산 내역이 없어요. 유료 방을 열면 참가비 정산이 여기에 쌓여요
+            {EMPTY_MESSAGE}
           </span>
         </div>
       )}
@@ -110,7 +113,7 @@ function SettlementRowsMobile({ rows }: Props) {
   if (rows.length === 0) {
     return (
       <p className="rounded-2xl border bg-card px-[18px] py-10 text-center text-body-md text-muted-foreground md:hidden">
-        아직 정산 내역이 없어요. 유료 방을 열면 참가비 정산이 여기에 쌓여요
+        {EMPTY_MESSAGE}
       </p>
     );
   }

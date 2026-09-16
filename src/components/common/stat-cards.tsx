@@ -10,11 +10,12 @@ export type StatItem = {
 type Props = { stats: StatItem[] };
 
 /**
- * 통계 카드 행 (디자인 W-09·W-10·옛 W-01 공통).
+ * 통계 카드 행 (디자인 W-10 정산 전용 — W-09·옛 W-01은 더 이상 이 컴포넌트를 쓰지 않는다).
  * PC(md 이상) — 44px 이니셜 타일 + label-lg 라벨 + heading-lg 값, r20 카드 3열 그리드. 폰 폭에서 그대로 쓰면
  * 한 칸이 ~110px로 좁아져 라벨이 한 글자씩 세로로 쪼개지고 금액이 잘린다.
  * 폰(max-md) — 앱 M-T4 정산 카드처럼 첫 항목(수익)만 민트 카드로 크게 보여주고, 나머지 항목은 그 아래
  * 한 줄 요약으로 묶는다. 값은 하나도 빼지 않고 다 보여준다 — 자리만 접힌다.
+ * `stats[0]`이 수익(정산 금액)이라고 가정한다 — 호출하는 쪽(SettlementPage)이 그 순서로 넘긴다.
  */
 export function StatCards({ stats }: Props) {
   const [primary, ...secondary] = stats;
