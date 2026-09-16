@@ -194,14 +194,21 @@ export const REPORT_SELECTED_QUESTION_ID = "q3";
 
 /** @draft W-07 우측 상세 패널 목업 (계약 없음) */
 export const REPORT_INSIGHT_MOCK: QuestionInsight = {
+  // 시안 784:8983 의 서술형 예시 — 채점 현황 9 · 6 · 8
   gradingBreakdown: [
-    { label: "핵심 포함", count: 3 },
-    { label: "부분 점수", count: 2 },
-    { label: "핵심 누락", count: 1 },
+    { label: "정답", count: 9, tone: "good" },
+    { label: "부분점수", count: 6, tone: "partial" },
+    { label: "오답", count: 8, tone: "bad" },
   ],
-  strengths: "1차 캐시와 동일성 보장을 짚은 답이 3명",
-  commonMisses: "쓰기 지연 · 변경 감지를 언급한 답이 2명뿐",
-  nextRoomSuggestion: "같은 개념을 객관식으로 한 번 더 확인",
+  unreviewedCount: 0,
+  criteria: {
+    modelAnswer:
+      "같은 트랜잭션 안에서 조회한 엔티티를 식별자 기준으로 보관해 재조회 시 SQL 없이 돌려준다.",
+    analyzedCount: 15,
+    strengths: ["1차 캐시와 동일성 보장을 짚은 답이 9명"],
+    misses: ["쓰기 지연 · 변경 감지를 언급한 답이 6명뿐"],
+  },
+  explanation: null,
   hostComment: null,
 };
 

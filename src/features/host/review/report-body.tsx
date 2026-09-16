@@ -12,6 +12,8 @@ type Props = {
   insight: QuestionInsight | null;
   canSaveComment: boolean;
   onSaveComment: (text: string) => void;
+  commentSaving?: boolean;
+  commentError?: string | null;
 };
 
 /** W-07 문항별 탭 — 정답률 오름차순 표 + 많이 틀린 학생 + 우측 상세 패널 (시안 784:8881·8983) */
@@ -22,6 +24,8 @@ export function ReportBody({
   insight,
   canSaveComment,
   onSaveComment,
+  commentSaving,
+  commentError,
 }: Props) {
   // 시안은 정답률이 낮은 문항부터 세운다 — 선생님이 먼저 봐야 할 순서다
   const sorted = [...report.questions].sort((a, b) => (a.accuracy ?? 0) - (b.accuracy ?? 0));
@@ -109,6 +113,8 @@ export function ReportBody({
           insight={insight}
           canSaveComment={canSaveComment}
           onSaveComment={onSaveComment}
+          commentSaving={commentSaving}
+          commentError={commentError}
         />
       )}
     </div>

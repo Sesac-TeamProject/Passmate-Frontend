@@ -50,8 +50,8 @@ export function toFormValues(question: EditorQuestion): QuestionFormValues {
     answerIndex: question.type === "multiple" && found >= 0 ? found : null,
     answer: question.answer,
     explanation: question.explanation,
-    points: question.points,
-    seconds: question.seconds,
+    points: String(question.points),
+    seconds: String(question.seconds),
   };
 }
 
@@ -75,8 +75,8 @@ export function toQuestionRequest(values: QuestionFormValues): QuestionRequest {
     ...(type === "MCQ" ? { choices } : {}),
     ...(answer ? { answer } : {}),
     ...(explanation ? { explanation } : {}),
-    timeLimitSec: values.seconds,
-    points: values.points,
+    timeLimitSec: Number(values.seconds),
+    points: Number(values.points),
   };
 }
 
@@ -86,8 +86,13 @@ export function toQuestionRequest(values: QuestionFormValues): QuestionRequest {
  */
 export function validateQuestionForm(values: QuestionFormValues): string | null {
   if (values.prompt.trim() === "") return "문항 지문을 입력해 주세요";
-  if (values.seconds < 5 || values.seconds > 600) return "제한 시간은 5~600초 사이여야 해요";
-  if (values.points < 1 || values.points > 1000) return "배점은 1~1000점 사이여야 해요";
+  // 폼은 문자열로 든다 — 빈 칸은 Number("")=0이 되어 아래 범위 검사에 같이 걸린다
+  const seconds = Number(values.seconds);
+  if (!Number.isFinite(seconds) || seconds < 5 || seconds > 600)
+    return "제한 시간은 5~600초 사이여야 해요";
+  const points = Number(values.points);
+  if (!Number.isFinite(points) || points < 1 || points > 1000)
+    return "배점은 1~1000점 사이여야 해요";
 
   if (values.type === "multiple") {
     const choices = values.choices.map((c) => c.trim()).filter((c) => c !== "");

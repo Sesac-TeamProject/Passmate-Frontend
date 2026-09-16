@@ -1,4 +1,5 @@
 import type {
+  MaterialExtractResponse,
   AiGenerateRequest,
   PageResponse,
   QuestionRequest,
@@ -127,4 +128,14 @@ export function generateFromFile(setId: number, file: File): Promise<QuestionRes
     `/question-sets/${setId}/questions/generate-from-file`,
     form,
   );
+}
+
+/**
+ * POST /materials/extract — 강의자료 파일에서 본문만 뽑는다.
+ * PDF·워드(docx)·PPT(pptx)·텍스트. 결과 text 를 `AiGenerateRequest.material` 에 그대로 싣는다.
+ */
+export function extractMaterial(file: File): Promise<MaterialExtractResponse> {
+  const form = new FormData();
+  form.append("file", file);
+  return requestMultipart<MaterialExtractResponse>("/materials/extract", form);
 }

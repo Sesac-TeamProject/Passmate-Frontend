@@ -204,7 +204,8 @@ export function toReportAccuracy(
   const byNo = new Map(
     (results?.questions ?? []).map((q) => [
       q.orderNo,
-      q.correctRate === null ? null : Math.round(q.correctRate),
+      // 실서버는 널 필드를 빼고 보내 서술형은 키 자체가 없다 — `=== null` 만 거르면 NaN 막대가 됐다
+      q.correctRate == null ? null : Math.round(q.correctRate),
     ]),
   );
   return Array.from({ length: questionCount }, (_, i) => byNo.get(i + 1) ?? null);
@@ -219,7 +220,8 @@ export function toHardestQuestion(
   results: SessionResultsResponse | undefined,
 ): HardestQuestion | null {
   const graded = (results?.questions ?? []).filter(
-    (q): q is typeof q & { correctRate: number } => q.correctRate !== null,
+    // 실서버는 널 필드를 빼고 보낸다 — `!== null` 만 쓰면 키 없는 서술형이 통과해 NaN% 최저 문항이 됐다
+    (q): q is typeof q & { correctRate: number } => q.correctRate != null,
   );
   if (graded.length === 0) return null;
 
