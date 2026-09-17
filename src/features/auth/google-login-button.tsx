@@ -68,12 +68,15 @@ export function GoogleLoginButton({ onIdToken }: Props) {
         type="button"
         variant="outline"
         size="xl"
-        className="w-full gap-2 bg-card"
+        className="w-full gap-2 bg-card max-md:h-14 max-md:gap-2.5 max-md:rounded-[14px]"
         disabled={!ready}
         aria-busy={Boolean(GOOGLE_CLIENT_ID) && !ready}
         title={GOOGLE_CLIENT_ID ? undefined : "Google 클라이언트 ID가 설정되지 않았어요"}
       >
-        <GoogleMark />
+        {/* 폰 시안(앱 C-01)은 G 마크를 24px 테두리 원 안에 16px로 넣는다. PC는 contents라 감싸개가 없는 것과 같다 */}
+        <span className="contents max-md:flex max-md:size-6 max-md:items-center max-md:justify-center max-md:rounded-full max-md:border">
+          <GoogleMark className="max-md:size-4" />
+        </span>
         <span className="text-label-lg text-foreground">Google로 계속하기</span>
       </Button>
       {/* 실제 클릭을 받는 투명 GIS 버튼 — 시안 버튼과 같은 자리에 겹친다 */}
