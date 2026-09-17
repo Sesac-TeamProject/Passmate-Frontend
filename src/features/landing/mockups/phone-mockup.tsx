@@ -18,11 +18,18 @@ function formatClock(seconds: number) {
  * 히어로 오른쪽 "stage"(600×700, 시안 1:1) — 민트 원 위에 학생 폰(M-03 풀이) + 플로팅 칩 5개.
  * 학생 앱은 웹 코드에 없어 시안대로 직접 그린다. 문항 데이터는 진행 화면과 같은 LIVE_QUESTION.
  */
-export function PhoneMockup() {
+export function PhoneMockup({ className }: { className?: string }) {
   const q = LIVE_QUESTION;
 
   return (
-    <div aria-hidden className="relative h-[700px] w-[600px] shrink-0 overflow-hidden select-none">
+    <div
+      aria-hidden
+      // break-normal: 랜딩이 좁은 화면에서 거는 어절 단위 줄바꿈이 폰 안 문구 배치까지 바꾸지 않게 되돌린다
+      className={cn(
+        "relative h-[700px] w-[600px] shrink-0 overflow-hidden break-normal select-none",
+        className,
+      )}
+    >
       <span className="absolute top-[60px] left-10 size-[520px] rounded-full bg-mint-bg" />
 
       {/* 폰 본체 316×660 · 화면 296×640 */}
