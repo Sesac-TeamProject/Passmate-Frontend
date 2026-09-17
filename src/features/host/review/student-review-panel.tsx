@@ -24,6 +24,11 @@ type Props = {
   onSave: (answerId: number, draft: ReviewDraft) => void;
   savingAnswerId: number | null;
   saveError: string | null;
+  /**
+   * 폰 배치(M-14)에서 학생 목록 칸을 걷고 답안만 세로로 쌓는다 — 학생은 위 순위 목록에서 고른다.
+   * 화면 폭(`md:`)으로 가르지 않는다 — 랜딩 목업은 폰에서도 PC 화면을 줄여 보여 줘야 해서 폭 조건이면 배치가 깨진다.
+   */
+  stacked?: boolean;
 };
 
 /**
@@ -42,10 +47,11 @@ export function StudentReviewPanel({
   onSave,
   savingAnswerId,
   saveError,
+  stacked = false,
 }: Props) {
   return (
-    <div className="flex flex-1 gap-5">
-      <ul className="flex w-[220px] shrink-0 flex-col gap-1.5">
+    <div className={cn("flex flex-1 gap-5", stacked && "flex-col")}>
+      <ul className={cn("flex w-[220px] shrink-0 flex-col gap-1.5", stacked && "hidden")}>
         {students.length === 0 ? (
           <li className="rounded-xl border border-dashed px-3.5 py-6 text-center text-body-md text-muted-foreground">
             참여한 학생이 없어요

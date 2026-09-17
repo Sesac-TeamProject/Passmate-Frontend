@@ -17,6 +17,8 @@ export function LiveMockup() {
   return (
     <div className="h-full *:min-h-full!">
       <LivePage
+        // 목업은 폭과 상관없이 프로젝터 화면을 보여 준다 — 폰 리모컨이 끼어들지 않게
+        desktopOnly
         question={LIVE_QUESTION}
         counts={LANDING_COUNTS}
         students={LIVE_ROOM.students.map((student, i) => ({

@@ -40,16 +40,17 @@ function PinVisual() {
           </span>
           <span className="ml-auto text-label-md text-white/80">선생님 화면에만</span>
         </div>
-        <div className="mt-[18px] flex gap-4">
+        {/* 폰 폭에서는 칸 폭(48)을 고정하면 여섯 칸이 카드 밖으로 넘친다 — 남는 폭을 나눠 갖는다 */}
+        <div className="mt-[18px] flex gap-4 max-sm:gap-3">
           {[0, 3].map((start) => (
-            <div key={start} className="flex gap-2">
+            <div key={start} className="flex gap-2 max-sm:flex-1 max-sm:gap-1.5">
               {STEP_PIN.slice(start, start + 3).map((digit, index) => {
                 const cursor = start + index === cursorAt;
                 return (
                   <span
                     key={start + index}
                     className={cn(
-                      "flex h-[66px] w-12 items-center justify-center rounded-xl",
+                      "flex h-[66px] w-12 items-center justify-center rounded-xl max-sm:w-auto max-sm:flex-1",
                       digit ? "bg-card text-heading-lg text-mint-dark" : "bg-white/15",
                       cursor && "border-2 border-landing-glow",
                     )}

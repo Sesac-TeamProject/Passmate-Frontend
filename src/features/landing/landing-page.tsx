@@ -31,10 +31,16 @@ const MOCKUPS: Record<MockupKey, ReactNode> = {
   report: <ReportMockup />,
 };
 
-/** L-01 랜딩 (시안 MGeTr, 스픽 스타일 · 실제 화면 중심). 정적 소개 페이지 — 상태 없음, FAQ 아코디언만 클라이언트 */
+/**
+ * L-01 랜딩 (시안 MGeTr, 스픽 스타일 · 실제 화면 중심). 정적 소개 페이지 — 상태 없음, FAQ 아코디언만 클라이언트
+ *
+ * 시안은 1440 웹 한 장뿐이다. 두 단 배치(히어로·기능)는 1280 미만(`max-xl:`), 카드 3장(HOW·후기)은 1024 미만(`max-lg:`)에서 한 줄로 쌓고, 폰 폭(`max-md:`·`max-sm:`)은
+ * 제목 크기·여백을 줄인다. PC 배치는 건드리지 않도록 좁은 화면 규칙은 전부 `max-*:` 쪽에만 둔다.
+ * 좁은 화면에서는 한글이 글자 중간에서 끊기지 않게 어절 단위로 줄을 바꾼다(`break-keep`).
+ */
 export function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-card text-foreground">
+    <div className="flex min-h-screen flex-col bg-card text-foreground max-xl:break-keep">
       <LandingNav />
       <main className="flex flex-col">
         <Hero />
@@ -52,18 +58,18 @@ export function LandingPage() {
 
 function Hero() {
   return (
-    <section className="bg-card py-16">
-      <div className={cn(INNER, "flex items-center gap-10")}>
-        <div className="flex w-[560px] shrink-0 flex-col gap-7">
-          <h1 className="text-display-2xl whitespace-pre-line text-ink">
+    <section className="bg-card py-16 max-md:pt-8 max-md:pb-12">
+      <div className={cn(INNER, "flex items-center gap-10 max-xl:flex-col")}>
+        <div className="flex w-[560px] shrink-0 flex-col gap-7 max-xl:w-full max-xl:max-w-[620px] max-md:gap-5">
+          <h1 className="text-display-2xl whitespace-pre-line text-ink max-md:text-display-md">
             {"혼자 시작한 공부,\n함께하는 합격까지."}
           </h1>
-          <p className="text-body-lg whitespace-pre-line text-muted-foreground">
+          <p className="text-body-lg whitespace-pre-line text-muted-foreground max-md:whitespace-normal">
             {
               "선생님은 PIN 하나로 방을 열고, 학생은 회원가입 없이 들어와요.\n문제는 AI가, 첨삭은 선생님과 AI가 같이. 시험장 그대로."
             }
           </p>
-          <div className="flex gap-3">
+          <div className="flex gap-3 max-sm:flex-col">
             <Link href="/login" className={cn(BUTTON.base, BUTTON.hero, BUTTON.mint)}>
               무료로 방 열기
             </Link>
@@ -83,11 +89,12 @@ function Hero() {
               ))}
             </div>
             <p className="text-body-md text-muted-foreground">
-              새싹 부트캠프 4기 스터디가 먼저 쓰고 있어요
+              새싹 부트캠프 스터디가 먼저 쓰고 있어요
             </p>
           </div>
         </div>
-        <PhoneMockup />
+        {/* 600×700 무대를 통째로 줄인다 — 안의 폰·칩이 절대 좌표라 폭만 줄이면 겹친다 */}
+        <PhoneMockup className="max-sm:[zoom:0.52] sm:max-md:[zoom:0.9]" />
       </div>
     </section>
   );
@@ -96,9 +103,14 @@ function Hero() {
 function Stats() {
   return (
     <section className="bg-ink py-10">
-      <dl className={cn(INNER, "flex items-start justify-between")}>
+      <dl
+        className={cn(
+          INNER,
+          "flex items-start justify-between max-md:grid max-md:grid-cols-2 max-md:gap-x-4 max-md:gap-y-8",
+        )}
+      >
         {STATS.map((stat) => (
-          <div key={stat.value} className="flex flex-col items-center gap-1">
+          <div key={stat.value} className="flex flex-col items-center gap-1 max-md:text-center">
             <dt className="order-2 text-body-md text-ink-disabled">{stat.label}</dt>
             <dd className="order-1 text-display-lg text-mint">{stat.value}</dd>
           </div>
@@ -109,13 +121,16 @@ function Stats() {
 }
 
 /** HOW·후기 섹션은 콘텐츠 폭이 1260이다 (카드 404 × 3 + 간격 24). 히어로·네비는 INNER(1200) */
-const WIDE_INNER = "mx-auto w-full max-w-[1308px] px-6";
+const WIDE_INNER = "mx-auto w-full max-w-[1308px] px-6 max-sm:px-4";
+
+/** 1024 미만에서 카드 3장을 한 줄로 쌓을 때의 폭 — 시안 카드 한 장(404)보다 넓히지 않는다 */
+const STACKED_CARDS = "max-lg:mx-auto max-lg:max-w-[404px] max-lg:flex-col";
 
 function HowItWorks() {
   return (
     <section
       id="how"
-      className="relative scroll-mt-20 overflow-hidden bg-linear-to-b from-landing-green to-landing-green-deep pt-[76px] pb-[60px]"
+      className="relative scroll-mt-20 overflow-hidden bg-linear-to-b from-landing-green to-landing-green-deep pt-[76px] pb-[60px] max-md:pt-14 max-md:pb-12"
     >
       {/* 민트 글로우 — 섹션 위로 넘겨 자른다 (시안 900×900, y −300) */}
       <span
@@ -126,25 +141,27 @@ function HowItWorks() {
         <span className="text-label-md font-bold tracking-[0.2em] text-landing-glow">
           {HOW.kicker}
         </span>
-        <h2 className="mt-4 text-display-xl text-white">{HOW.title}</h2>
-        <p className="mt-3 text-body-lg text-white/80">{HOW.subtitle}</p>
+        <h2 className="mt-4 text-display-xl text-white max-md:text-center max-md:text-display-md">
+          {HOW.title}
+        </h2>
+        <p className="mt-3 text-body-lg text-white/80 max-md:text-center">{HOW.subtitle}</p>
 
-        <ol className="mt-[50px] flex w-full gap-6">
+        <ol className={cn("mt-[50px] flex w-full gap-6 max-lg:gap-12 max-md:mt-10", STACKED_CARDS)}>
           {STEPS.map((step, index) => (
-            <li key={step.no} className="relative flex flex-1 flex-col">
-              {/* 앞 단계에서 넘어오는 화살표 — 열 사이 24 간격 한가운데, 카드 세로 가운데 */}
+            <li key={step.no} className="relative flex flex-1 flex-col max-lg:flex-none">
+              {/* 앞 단계에서 넘어오는 화살표 — 열 사이 24 간격 한가운데, 카드 세로 가운데. 세로로 쌓으면 뺀다 */}
               {index > 0 && (
                 <span
                   aria-hidden
-                  className="absolute top-[198px] -left-[18px] w-3 text-center text-heading-md text-white/80"
+                  className="absolute top-[198px] -left-[18px] w-3 text-center text-heading-md text-white/80 max-lg:hidden"
                 >
                   ›
                 </span>
               )}
               <span className="text-display-2xl text-landing-glow/90">{step.no}</span>
               <div className="mt-3">{STEP_VISUALS[step.visual]}</div>
-              <h3 className="mt-[30px] text-display-sm text-white">{step.title}</h3>
-              <p className="mt-2.5 text-body-lg leading-[1.75] whitespace-pre-line text-white/80">
+              <h3 className="mt-[30px] text-display-sm text-white max-lg:mt-5">{step.title}</h3>
+              <p className="mt-2.5 text-body-lg leading-[1.75] whitespace-pre-line text-white/80 max-md:whitespace-normal">
                 {step.body}
               </p>
             </li>
@@ -156,13 +173,13 @@ function HowItWorks() {
 }
 
 /** 시안 기능 섹션은 콘텐츠 폭이 1280이다 (글 560 + 간격 100 + 카드 620) */
-const FEATURE_INNER = "mx-auto w-full max-w-[1328px] px-6";
+const FEATURE_INNER = "mx-auto w-full max-w-[1328px] px-6 max-sm:px-4";
 
 /** 기능 3종 — 시안은 배경 교대 없이 흰 한 덩어리(1440×1500)에 블록 3개를 80 간격으로 둔다 */
 function Features() {
   return (
-    <section className="bg-card pt-[60px] pb-20">
-      <div className="flex flex-col gap-20">
+    <section className="bg-card pt-[60px] pb-20 max-md:pt-12 max-md:pb-14">
+      <div className="flex flex-col gap-20 max-md:gap-14">
         {FEATURES.map((feature) => (
           <FeatureBlock key={feature.id} feature={feature} />
         ))}
@@ -179,19 +196,27 @@ function FeatureBlock({ feature }: { feature: Feature }) {
           FEATURE_INNER,
           "flex items-center gap-[100px]",
           feature.reverse && "flex-row-reverse",
+          // 좁은 화면은 좌우 교대 없이 글 → 화면 순서로 쌓는다 (max-xl:flex-col이 flex-row-reverse를 이긴다)
+          "max-xl:flex-col max-xl:gap-8",
         )}
       >
-        <div className="flex w-[560px] shrink-0 flex-col">
+        {/* 1280~1327은 글 560 + 간격 100 + 카드 620이 안 들어간다 — 글 단이 줄어들게 shrink-0을 두지 않는다 (1328 이상은 그대로) */}
+        <div className="flex w-[560px] flex-col max-xl:w-full max-xl:max-w-[620px]">
           <span className="text-label-lg font-bold tracking-[0.08em] text-mint-dark">
             {feature.eyebrow}
           </span>
-          <h2 className="mt-2.5 text-display-lg whitespace-pre-line text-ink">{feature.title}</h2>
-          <p className="mt-6 text-body-lg leading-[1.7] whitespace-pre-line text-muted-foreground">
+          <h2 className="mt-2.5 text-display-lg whitespace-pre-line text-ink max-md:text-display-sm">
+            {feature.title}
+          </h2>
+          <p className="mt-6 text-body-lg leading-[1.7] whitespace-pre-line text-muted-foreground max-md:mt-4 max-md:whitespace-normal">
             {feature.body}
           </p>
         </div>
         <ShotCard gradient={feature.gradient}>
-          <ScreenMockup label={feature.mockupLabel}>{MOCKUPS[feature.mockup]}</ScreenMockup>
+          {/* 1440 화면을 508로 줄인 목업을 폰 폭에서 한 번 더 줄인다 (508×320 → 295×186) */}
+          <ScreenMockup label={feature.mockupLabel} className="max-sm:[zoom:0.58]">
+            {MOCKUPS[feature.mockup]}
+          </ScreenMockup>
         </ShotCard>
       </div>
     </div>
@@ -200,14 +225,14 @@ function FeatureBlock({ feature }: { feature: Feature }) {
 
 function Reviews() {
   return (
-    <section className="bg-background pt-16 pb-[90px]">
+    <section className="bg-background pt-16 pb-[90px] max-md:pt-12 max-md:pb-14">
       <div className={cn(WIDE_INNER, "flex flex-col items-center")}>
-        <h2 className="text-display-lg text-ink">먼저 써본 사람들</h2>
-        <ul className="mt-[38px] flex w-full gap-6">
+        <h2 className="text-display-lg text-ink max-md:text-display-sm">먼저 써본 사람들</h2>
+        <ul className={cn("mt-[38px] flex w-full gap-6 max-lg:gap-4 max-md:mt-7", STACKED_CARDS)}>
           {REVIEWS.map((review) => (
             <li
               key={review.name}
-              className="flex h-[280px] flex-1 flex-col rounded-3xl bg-card p-7 shadow-[0_8px_17px] shadow-ink/6"
+              className="flex h-[280px] flex-1 flex-col rounded-3xl bg-card p-7 shadow-[0_8px_17px] shadow-ink/6 max-lg:h-auto max-lg:flex-none max-md:p-6"
             >
               <div className="flex gap-1" aria-label="별점 5점">
                 {Array.from({ length: 5 }, (_, i) => (
@@ -219,10 +244,11 @@ function Reviews() {
                   />
                 ))}
               </div>
-              <blockquote className="mt-6 text-body-lg leading-[1.65] font-medium text-ink">
+              <blockquote className="mt-6 text-body-lg leading-[1.65] font-medium text-ink max-md:mt-4">
                 {review.quote}
               </blockquote>
-              <div className="mt-auto flex items-center gap-2.5">
+              {/* 카드 높이가 고정(280)일 때만 mt-auto가 바닥에 붙인다 — 쌓으면 높이가 내용을 따라가 간격을 직접 둔다 */}
+              <div className="mt-auto flex items-center gap-2.5 max-lg:mt-6">
                 <StudentAvatar avatar={review.avatar} size={36} />
                 <div className="flex flex-col">
                   <span className="text-label-lg font-bold text-ink">{review.name}</span>
@@ -239,11 +265,14 @@ function Reviews() {
 
 function Faq() {
   return (
-    <section id="faq" className="scroll-mt-20 bg-card pt-[60px] pb-[90px]">
+    <section
+      id="faq"
+      className="scroll-mt-20 bg-card pt-[60px] pb-[90px] max-md:pt-12 max-md:pb-14"
+    >
       <div className={cn(INNER, "flex flex-col items-center")}>
         <span className="text-label-md font-bold tracking-[0.22em] text-mint-dark">FAQ</span>
-        <h2 className="mt-2 text-display-lg text-ink">자주 묻는 질문</h2>
-        <div className="mt-12 w-[960px] max-w-full">
+        <h2 className="mt-2 text-display-lg text-ink max-md:text-display-sm">자주 묻는 질문</h2>
+        <div className="mt-12 w-[960px] max-w-full max-md:mt-7">
           <FaqList items={FAQS} />
         </div>
       </div>
@@ -253,13 +282,15 @@ function Faq() {
 
 function Cta() {
   return (
-    <section className="bg-mint py-24">
-      <div className={cn(INNER, "flex flex-col items-center gap-6 text-center")}>
-        <h2 className="text-display-xl text-white">오늘 수업부터 실전처럼</h2>
+    <section className="bg-mint py-24 max-md:py-16">
+      <div className={cn(INNER, "flex flex-col items-center gap-6 text-center max-md:gap-5")}>
+        <h2 className="text-display-xl text-white max-md:text-display-md">
+          오늘 수업부터 실전처럼
+        </h2>
         <p className="text-body-lg text-mint-tint">
           문제 세트 하나면 5분 안에 첫 방이 열려요. 카드 없이, 무료로.
         </p>
-        <div className="flex gap-3">
+        <div className="flex gap-3 max-sm:w-full max-sm:flex-col">
           <Link href="/login" className={cn(BUTTON.base, BUTTON.hero, BUTTON.white)}>
             무료로 방 열기
           </Link>
@@ -277,12 +308,12 @@ const FOOTER_LINK = "text-label-md text-muted-foreground hover:text-ink";
 function LandingFooter() {
   return (
     <footer className="bg-card py-10">
-      <div className={cn(INNER, "flex items-center justify-between")}>
+      <div className={cn(INNER, "flex items-center justify-between max-md:flex-col max-md:gap-4")}>
         <div className="flex items-center gap-2">
           <BrandMark size={24} />
           <span className="text-label-md text-ink-disabled">© 2026 새싹수들 · PassMate</span>
         </div>
-        <nav className="flex gap-5">
+        <nav className="flex gap-5 max-md:flex-wrap max-md:justify-center max-md:gap-x-4 max-md:gap-y-2">
           {FOOTER_LINKS.map(({ label, href }) =>
             href ? (
               <Link key={label} href={href} className={FOOTER_LINK}>

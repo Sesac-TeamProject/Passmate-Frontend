@@ -30,7 +30,9 @@ export function PinEntryCard({
     <section className="flex w-full flex-col items-center gap-3 rounded-[20px] border bg-card px-10 py-6 max-md:px-[18px] max-md:py-4">
       <h2 className="text-center text-heading-lg text-ink">PIN으로 입장</h2>
       <p className="text-center text-body-md text-muted-foreground">
-        선생님이 알려준 6자리 PIN을 입력하면 바로 방에 들어가요
+        선생님이 알려준 6자리 PIN을 입력하면 바로 들어가요.
+        <br />
+        닉네임과 캐릭터를 고르고 문제를 풀어요.
       </p>
 
       {errorMessage && (

@@ -14,6 +14,11 @@ type Props = {
   onSaveComment: (text: string) => void;
   commentSaving?: boolean;
   commentError?: string | null;
+  /**
+   * 폰 배치(M-14)에서 목록 아래 전체 폭으로 펼친다.
+   * 화면 폭(`md:`)으로 가르지 않는다 — 랜딩 목업은 폰에서도 PC 화면을 줄여 보여 줘야 해서 폭 조건이면 배치가 깨진다.
+   */
+  stacked?: boolean;
 };
 
 /** 채점 현황 막대 색 — 시안은 위에서부터 민트 · 앰버 · 핑크, 미제출은 회색 */
@@ -37,6 +42,7 @@ export function QuestionInsightPanel({
   onSaveComment,
   commentSaving = false,
   commentError = null,
+  stacked = false,
 }: Props) {
   const [comment, setComment] = useState(insight?.hostComment ?? "");
 
@@ -52,7 +58,12 @@ export function QuestionInsightPanel({
   const peak = Math.max(...(insight?.gradingBreakdown ?? []).map((row) => row.count), 1);
 
   return (
-    <section className="flex w-[424px] shrink-0 flex-col overflow-hidden rounded-lg border bg-card">
+    <section
+      className={cn(
+        "flex shrink-0 flex-col overflow-hidden rounded-lg border bg-card",
+        stacked ? "w-full" : "w-[424px]",
+      )}
+    >
       <h2 className="flex h-[46px] items-center bg-ink px-[17px] text-label-lg text-white">
         Q{question.index} · {QUESTION_TYPE_LABEL[question.type]} · {headerStat}
       </h2>

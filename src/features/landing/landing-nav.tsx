@@ -74,10 +74,11 @@ export function LandingNav() {
   const active = useActiveSection(headerRef);
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-10 bg-card py-[18px]">
+    <header ref={headerRef} className="sticky top-0 z-10 bg-card py-[18px] max-md:py-3">
       <div className={cn(INNER, "flex items-center justify-between")}>
         <BrandLogo size="lg" />
-        <nav className="flex items-center gap-7">
+        {/* 섹션 메뉴 4개는 1024 미만에서 로고·버튼과 한 줄에 못 들어간다 — 좁은 화면은 스크롤로 내려간다 */}
+        <nav className="flex items-center gap-7 max-lg:hidden">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
@@ -97,11 +98,18 @@ export function LandingNav() {
           ))}
         </nav>
         <div className="flex items-center gap-2.5">
-          <Link href="/login" className={cn(BUTTON.base, BUTTON.nav, BUTTON.outline)}>
+          {/* 폰 폭에서는 로고 옆에 버튼이 하나만 들어간다. 두 버튼 모두 /login 으로 가서 빼도 갈 곳이 줄지 않는다 */}
+          <Link
+            href="/login"
+            className={cn(BUTTON.base, BUTTON.nav, BUTTON.outline, "max-sm:hidden")}
+          >
             로그인
           </Link>
           {/* TODO: 회원가입 라우트 없음 — 로그인으로 보낸다 */}
-          <Link href="/login" className={cn(BUTTON.base, BUTTON.nav, BUTTON.mint)}>
+          <Link
+            href="/login"
+            className={cn(BUTTON.base, BUTTON.nav, BUTTON.mint, "max-md:px-4 max-md:py-2.5")}
+          >
             무료로 방 열기
           </Link>
         </div>

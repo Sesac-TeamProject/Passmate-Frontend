@@ -28,6 +28,8 @@ type Props = {
   exitHref?: string;
   /** 나가기 링크에 쓸 이름. 기본은 호스트 목록 */
   exitLabel?: string;
+  /** 폰 폭에서 이 껍데기를 숨기고 앱 배치를 따로 세울 때 쓴다(`max-md:hidden`) */
+  className?: string;
 };
 
 /**
@@ -54,12 +56,13 @@ export function ProjectorShell({
   railLabel = "패널",
   exitHref,
   exitLabel = "내가 만든 방",
+  className,
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const hasRail = rail !== undefined;
 
   return (
-    <div className="relative flex min-h-screen bg-card">
+    <div className={cn("relative flex min-h-screen bg-card", className)}>
       <div aria-hidden className="absolute inset-x-0 top-0 h-1 bg-mint" />
 
       <div className="flex min-w-0 flex-1 flex-col">
