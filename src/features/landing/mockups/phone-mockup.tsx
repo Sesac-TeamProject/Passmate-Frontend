@@ -17,134 +17,178 @@ function formatClock(seconds: number) {
 /**
  * 히어로 오른쪽 "stage"(600×700, 시안 1:1) — 민트 원 위에 학생 폰(M-03 풀이) + 플로팅 칩 5개.
  * 학생 앱은 웹 코드에 없어 시안대로 직접 그린다. 문항 데이터는 진행 화면과 같은 LIVE_QUESTION.
+ * 폰 랜딩(L-01m)은 같은 폰·칩을 가져가 자기 배치로 놓는다.
  */
-export function PhoneMockup({ className }: { className?: string }) {
+export function PhoneMockup() {
+  return (
+    // break-normal: 태블릿 폭에서 랜딩이 거는 어절 단위 줄바꿈이 폰 안 문구 배치까지 바꾸지 않게 되돌린다
+    <div
+      aria-hidden
+      className="relative h-[700px] w-[600px] shrink-0 overflow-hidden break-normal select-none"
+    >
+      <span className="absolute top-[60px] left-10 size-[520px] rounded-full bg-mint-bg" />
+
+      <StudentPhone className="absolute top-5 left-[142px]" />
+
+      {/* 플로팅 칩 5개 (시안 float/PIN·랭킹·타이머·첨삭·정답률) */}
+      <PinChip className="top-[90px] left-0" />
+      <RankChip className="top-[170px] right-0" />
+      <TimerChip className="top-[320px] left-5" />
+      <AiCommentChip className="top-[490px] left-[380px]" />
+      <AccuracyChip className="top-[540px] left-10" />
+    </div>
+  );
+}
+
+/** 학생 폰 — 본체 316×660 · 화면 296×640. 자리는 `className`으로 받는다 — 안쪽이 절대 배치라 `absolute`·`relative` 중 하나를 꼭 넘긴다 */
+export function StudentPhone({ className }: { className?: string }) {
   const q = LIVE_QUESTION;
 
   return (
     <div
-      aria-hidden
-      // break-normal: 랜딩이 좁은 화면에서 거는 어절 단위 줄바꿈이 폰 안 문구 배치까지 바꾸지 않게 되돌린다
       className={cn(
-        "relative h-[700px] w-[600px] shrink-0 overflow-hidden break-normal select-none",
+        "h-[660px] w-[316px] rounded-[44px] bg-ink shadow-[0_24px_52px] shadow-ink/25",
         className,
       )}
     >
-      <span className="absolute top-[60px] left-10 size-[520px] rounded-full bg-mint-bg" />
-
-      {/* 폰 본체 316×660 · 화면 296×640 */}
-      <div className="absolute top-5 left-[142px] h-[660px] w-[316px] rounded-[44px] bg-ink shadow-[0_24px_52px] shadow-ink/25">
-        <div className="absolute inset-[10px] flex flex-col overflow-hidden rounded-[34px] bg-card pb-[18px]">
-          <div className="flex flex-col gap-[9px] px-[15px] pt-[33px] pb-[46px]">
-            <div className="flex items-center justify-between text-label-lg">
-              <span className="text-ink">
-                Q{q.index} / {q.total} · 객관식
-              </span>
-              <span className="text-muted-foreground">나가기</span>
-            </div>
-            {/* 남은 시간 — 시계 + 남은 초 + 옐로 진행 바 (시안 timer) */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-1.5">
-                <Clock aria-hidden className="size-[14px] text-yellow" strokeWidth={2} />
-                <span className="text-heading-sm font-bold text-ink">
-                  {formatClock(q.remaining)}
-                </span>
-                <span className="ml-auto text-label-md text-muted-foreground">남은 시간</span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-yellow-soft">
-                <span
-                  className="block h-full rounded-full bg-yellow"
-                  style={{ width: `${(q.remaining / q.seconds) * 100}%` }}
-                />
-              </div>
-            </div>
+      <div className="absolute inset-[10px] flex flex-col overflow-hidden rounded-[34px] bg-card pb-[18px]">
+        <div className="flex flex-col gap-[9px] px-[15px] pt-[33px] pb-[46px]">
+          <div className="flex items-center justify-between text-label-lg">
+            <span className="text-ink">
+              Q{q.index} / {q.total} · 객관식
+            </span>
+            <span className="text-muted-foreground">나가기</span>
           </div>
-
-          {/* 문항 카드 — 헤더와 35px 겹친다 */}
-          <div className="-mt-[35px] px-[15px]">
-            <div className="relative flex flex-col gap-2 rounded-[18px] border bg-card px-[15px] pt-[33px] pb-[17px]">
-              <p className="text-center text-heading-sm text-ink">{q.prompt}</p>
-              <span className="h-[76px]" />
-              {q.choices.map((c) => {
-                const active = c.key === "A";
-                return (
-                  <div
-                    key={c.key}
-                    className={cn(
-                      "flex h-[42px] items-center gap-2 rounded-[10px] px-2.5 text-label-lg",
-                      active ? "bg-mint text-white" : "bg-muted text-ink",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "flex size-6 shrink-0 items-center justify-center rounded-[7px] text-label-md",
-                        active ? "bg-card text-mint-dark" : CHOICE_CLASS[c.key].solid,
-                      )}
-                    >
-                      {c.key}
-                    </span>
-                    <span className="flex-1">{c.text}</span>
-                    {active && <Check className="size-4" strokeWidth={2.5} />}
-                  </div>
-                );
-              })}
+          {/* 남은 시간 — 시계 + 남은 초 + 옐로 진행 바 (시안 timer) */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1.5">
+              <Clock aria-hidden className="size-[14px] text-yellow" strokeWidth={2} />
+              <span className="text-heading-sm font-bold text-ink">{formatClock(q.remaining)}</span>
+              <span className="ml-auto text-label-md text-muted-foreground">남은 시간</span>
             </div>
-          </div>
-
-          <div className="flex-1" />
-          <div className="px-[15px]">
-            <span className="flex h-[41px] items-center justify-center rounded-xl bg-mint text-heading-sm text-white">
-              제출하기
-            </span>
-          </div>
-
-          {/* 선생님 음성 힌트 플레이어 — 제출 버튼 위에 떠 있다 */}
-          <div className="absolute top-[528px] left-[15px] flex h-[46px] w-[266px] items-center gap-2 rounded-[14px] border bg-card py-2 pr-3 pl-2.5 shadow-[0_5px_11px] shadow-ink/15">
-            <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-mint">
-              <Mic className="size-3 text-white" strokeWidth={2.5} />
-            </span>
-            <span className="flex flex-col gap-1">
-              <span className="text-label-md text-ink">선생님 음성 힌트</span>
-              <span className="h-1 w-[106px] overflow-hidden rounded-[2px] bg-muted">
-                <span className="block h-full w-3/5 rounded-[2px] bg-mint" />
-              </span>
-            </span>
-            <span className="text-label-md text-muted-foreground tabular-nums">00:03 / 00:05</span>
-            <span className="flex gap-[2px]">
-              <span className="h-[11px] w-[3px] rounded-[1.5px] bg-mint" />
-              <span className="h-[11px] w-[3px] rounded-[1.5px] bg-mint" />
-            </span>
+            <div className="h-1.5 overflow-hidden rounded-full bg-yellow-soft">
+              <span
+                className="block h-full rounded-full bg-yellow"
+                style={{ width: `${(q.remaining / q.seconds) * 100}%` }}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* 플로팅 칩 5개 (시안 float/PIN·랭킹·타이머·첨삭·정답률) */}
-      <div className={cn(CHIP, "top-[90px] left-0 gap-2 px-4 py-3")}>
-        <span className="text-label-md text-muted-foreground">PIN</span>
-        <span className="text-heading-md text-ink">482 913</span>
+        {/* 문항 카드 — 헤더와 35px 겹친다 */}
+        <div className="-mt-[35px] px-[15px]">
+          <div className="relative flex flex-col gap-2 rounded-[18px] border bg-card px-[15px] pt-[33px] pb-[17px]">
+            <p className="text-center text-heading-sm text-ink">{q.prompt}</p>
+            <span className="h-[76px]" />
+            {q.choices.map((c) => {
+              const active = c.key === "A";
+              return (
+                <div
+                  key={c.key}
+                  className={cn(
+                    "flex h-[42px] items-center gap-2 rounded-[10px] px-2.5 text-label-lg",
+                    active ? "bg-mint text-white" : "bg-muted text-ink",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded-[7px] text-label-md",
+                      active ? "bg-card text-mint-dark" : CHOICE_CLASS[c.key].solid,
+                    )}
+                  >
+                    {c.key}
+                  </span>
+                  <span className="flex-1">{c.text}</span>
+                  {active && <Check className="size-4" strokeWidth={2.5} />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex-1" />
+        <div className="px-[15px]">
+          <span className="flex h-[41px] items-center justify-center rounded-xl bg-mint text-heading-sm text-white">
+            제출하기
+          </span>
+        </div>
+
+        {/* 선생님 음성 힌트 플레이어 — 제출 버튼 위에 떠 있다 */}
+        <div className="absolute top-[528px] left-[15px] flex h-[46px] w-[266px] items-center gap-2 rounded-[14px] border bg-card py-2 pr-3 pl-2.5 shadow-[0_5px_11px] shadow-ink/15">
+          <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-mint">
+            <Mic className="size-3 text-white" strokeWidth={2.5} />
+          </span>
+          <span className="flex flex-col gap-1">
+            <span className="text-label-md text-ink">선생님 음성 힌트</span>
+            <span className="h-1 w-[106px] overflow-hidden rounded-[2px] bg-muted">
+              <span className="block h-full w-3/5 rounded-[2px] bg-mint" />
+            </span>
+          </span>
+          <span className="text-label-md text-muted-foreground tabular-nums">00:03 / 00:05</span>
+          <span className="flex gap-[2px]">
+            <span className="h-[11px] w-[3px] rounded-[1.5px] bg-mint" />
+            <span className="h-[11px] w-[3px] rounded-[1.5px] bg-mint" />
+          </span>
+        </div>
       </div>
-      <div className={cn(CHIP, "top-[170px] right-0 gap-2.5 px-3.5 py-3")}>
-        <span className="flex size-7 items-center justify-center rounded-[14px] bg-podium-gold text-label-md text-podium-gold-foreground">
-          1
-        </span>
-        <StudentAvatar avatar="fox" size={28} />
-        <span className="flex flex-col">
-          <span className="text-label-lg text-ink">민지</span>
-          <span className="text-label-md text-muted-foreground">990점 · 정답률 92%</span>
-        </span>
-      </div>
-      <div className={cn(CHIP, "top-[320px] left-5 gap-2 rounded-full px-3.5 py-2.5")}>
-        <Clock className="size-[18px] text-yellow" strokeWidth={2} />
-        <span className="text-label-lg text-ink">00:23 남음</span>
-      </div>
-      <div className="absolute top-[490px] left-[380px] flex flex-col gap-1 rounded-2xl bg-mint px-4 py-3 shadow-[0_10px_21px] shadow-ink/20">
-        <span className="text-label-md text-mint-tint">AI 첨삭</span>
-        <span className="text-label-lg text-white">핵심 단어 2개가 빠졌어요 →</span>
-      </div>
-      <div className={cn(CHIP, "top-[540px] left-10 gap-2 px-3.5 py-2.5")}>
-        <Check className="size-[18px] text-mint" strokeWidth={2} />
-        <span className="text-label-lg text-ink">Q3 정답률 67%</span>
-      </div>
+    </div>
+  );
+}
+
+/* 플로팅 칩 — 자리(top·left·right)는 `className`으로 받는다 */
+
+export function PinChip({ className }: { className?: string }) {
+  return (
+    <div className={cn(CHIP, "gap-2 px-4 py-3", className)}>
+      <span className="text-label-md text-muted-foreground">PIN</span>
+      <span className="text-heading-md text-ink">482 913</span>
+    </div>
+  );
+}
+
+export function RankChip({ className }: { className?: string }) {
+  return (
+    <div className={cn(CHIP, "gap-2.5 px-3.5 py-3", className)}>
+      <span className="flex size-7 items-center justify-center rounded-[14px] bg-podium-gold text-label-md text-podium-gold-foreground">
+        1
+      </span>
+      <StudentAvatar avatar="fox" size={28} />
+      <span className="flex flex-col">
+        <span className="text-label-lg text-ink">민지</span>
+        <span className="text-label-md text-muted-foreground">990점 · 정답률 92%</span>
+      </span>
+    </div>
+  );
+}
+
+export function TimerChip({ className }: { className?: string }) {
+  return (
+    <div className={cn(CHIP, "gap-2 rounded-full px-3.5 py-2.5", className)}>
+      <Clock className="size-[18px] text-yellow" strokeWidth={2} />
+      <span className="text-label-lg text-ink">00:23 남음</span>
+    </div>
+  );
+}
+
+export function AiCommentChip({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "absolute flex flex-col gap-1 rounded-2xl bg-mint px-4 py-3 shadow-[0_10px_21px] shadow-ink/20",
+        className,
+      )}
+    >
+      <span className="text-label-md text-mint-tint">AI 첨삭</span>
+      <span className="text-label-lg text-white">핵심 단어 2개가 빠졌어요 →</span>
+    </div>
+  );
+}
+
+export function AccuracyChip({ className }: { className?: string }) {
+  return (
+    <div className={cn(CHIP, "gap-2 px-3.5 py-2.5", className)}>
+      <Check className="size-[18px] text-mint" strokeWidth={2} />
+      <span className="text-label-lg text-ink">Q3 정답률 67%</span>
     </div>
   );
 }

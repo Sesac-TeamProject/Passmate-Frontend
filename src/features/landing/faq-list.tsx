@@ -16,7 +16,7 @@ export function FaqList({ items }: Props) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-3xl bg-background p-5 max-md:gap-2 max-md:p-2.5">
+    <div className="flex flex-col gap-2.5 rounded-3xl bg-background p-5">
       {items.map((item, index) => {
         const open = index === openIndex;
         const panelId = `faq-panel-${index}`;
@@ -27,7 +27,7 @@ export function FaqList({ items }: Props) {
               aria-expanded={open}
               aria-controls={panelId}
               onClick={() => setOpenIndex(open ? null : index)}
-              className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left outline-none focus-visible:ring-2 focus-visible:ring-mint max-md:gap-3 max-md:px-4 max-md:py-4"
+              className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left outline-none focus-visible:ring-2 focus-visible:ring-mint"
             >
               <span className={cn("text-heading-sm text-ink", open && "font-bold")}>{item.q}</span>
               {open ? (
@@ -39,7 +39,7 @@ export function FaqList({ items }: Props) {
             <div
               id={panelId}
               hidden={!open}
-              className="border-t border-line-soft px-6 pt-[18px] pb-6 max-md:px-4 max-md:pt-3.5 max-md:pb-5"
+              className="border-t border-line-soft px-6 pt-[18px] pb-6"
             >
               <p className="text-body-lg leading-[1.75] text-muted-foreground">{item.a}</p>
             </div>
