@@ -15,7 +15,6 @@ import {
 } from "./mockups/app-mockups";
 import { LIVE_ROOM } from "./mockups/mock-data";
 import { PhoneFrame } from "./mockups/phone-frame";
-import { PinChip } from "./mockups/phone-mockup";
 
 /**
  * L-01m 폰 랜딩 (768 미만) — 스크롤을 내리면서 "아 이런 서비스구나"가 잡히게 짠 서비스 소개 페이지.
@@ -169,7 +168,7 @@ function HeroSection() {
         </div>
       </div>
 
-      {/* 학생 폰(풀이 화면)을 크게 세우고 아랫부분은 섹션 경계에서 자른다. 패시가 옆에서 폰을 들고 있다 */}
+      {/* 학생 폰(풀이 화면)을 크게 세우고 아랫부분은 섹션 경계에서 자른다 */}
       <div className={cn(COLUMN, "relative mt-10 h-[460px]")}>
         <span
           aria-hidden
@@ -180,10 +179,6 @@ function HeroSection() {
             <PlayMockup />
           </PhoneFrame>
         </div>
-        <div aria-hidden className="break-normal select-none">
-          <PinChip className="top-[300px] right-1" />
-        </div>
-        <Mascot variant="phone" className="absolute bottom-4 left-2 h-auto w-[96px]" />
       </div>
     </section>
   );
@@ -397,7 +392,7 @@ function FeatureSection() {
           <li key={slide.title} className="w-[292px] shrink-0 snap-start">
             {/*
               items-start: 기본 stretch면 폰 틀이 판 높이로 눌려 틀만 짧아지고 안쪽 화면이 아래로 삐져나온다.
-              clip-path: 사파리는 zoom 걸린 안쪽을 overflow-hidden + 둥근 모서리로 자르지 못한다 — 모서리째 잘라 준다
+              clip-path: 사파리는 줄인 안쪽을 overflow-hidden + 둥근 모서리로 자르지 못한다 — 모서리째 잘라 준다
             */}
             <div
               className={cn(
