@@ -41,8 +41,9 @@ export function PhoneFrame({
         className,
       )}
     >
+      {/* clip-path: 사파리는 zoom 걸린 안쪽을 overflow-hidden + 둥근 모서리로 자르지 못해 네모 화면이 틀 밖으로 보인다 */}
       <div
-        className="overflow-hidden rounded-[31px] bg-card"
+        className="overflow-hidden rounded-[31px] bg-card [clip-path:inset(0_round_31px)]"
         style={{ width: screenWidth, height: screenHeight }}
       >
         <div

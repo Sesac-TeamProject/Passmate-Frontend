@@ -333,7 +333,7 @@ const SLIDES: Slide[] = [
       <figure
         role="img"
         aria-label="문제 에디터 — AI로 문제 만들기"
-        className="overflow-hidden rounded-t-3xl text-left break-normal shadow-[0_12px_28px] shadow-ink/10"
+        className="overflow-hidden rounded-t-3xl text-left break-normal [clip-path:inset(0_round_24px_24px_0_0)]"
       >
         <div inert className="pointer-events-none w-[340px] [zoom:0.8] select-none">
           <GenerateMockup />
@@ -382,13 +382,21 @@ function FeatureSection() {
           }
         />
       </div>
-      {/* 옆으로 넘기는 카드 — 다음 카드가 살짝 보여 넘길 수 있다는 걸 알린다 */}
-      <ul className="mt-9 flex snap-x snap-mandatory scroll-px-4 [scrollbar-width:none] gap-3 overflow-x-auto px-4 pb-2 [&::-webkit-scrollbar]:hidden">
+      {/*
+        옆으로 넘기는 카드 — 다음 카드가 살짝 보여 넘길 수 있다는 걸 알린다.
+        카드는 모두 왼쪽 16px에 멈춘다. 끝에 빈 칸이 없으면 마지막 카드가 왼쪽까지 못 와 01·02와 줄이 어긋난다 —
+        오른쪽 여백은 padding 대신 빈 칸으로 둔다(사파리는 가로 스크롤 끝 padding을 무시한다).
+      */}
+      <ul className="mt-9 flex snap-x snap-mandatory scroll-pl-4 [scrollbar-width:none] gap-3 overflow-x-auto pb-2 pl-4 [&::-webkit-scrollbar]:hidden">
         {SLIDES.map((slide, index) => (
           <li key={slide.title} className="w-[292px] shrink-0 snap-start">
+            {/*
+              items-start: 기본 stretch면 폰 틀이 판 높이로 눌려 틀만 짧아지고 안쪽 화면이 아래로 삐져나온다.
+              clip-path: 사파리는 zoom 걸린 안쪽을 overflow-hidden + 둥근 모서리로 자르지 못한다 — 모서리째 잘라 준다
+            */}
             <div
               className={cn(
-                "flex justify-center overflow-hidden rounded-[28px] px-3 pt-7",
+                "flex items-start justify-center overflow-hidden rounded-[28px] px-3 pt-7 [clip-path:inset(0_round_28px)]",
                 SHOT_HEIGHT,
                 slide.tone === "mint" ? "bg-mint-bg" : "bg-background",
               )}
@@ -404,6 +412,8 @@ function FeatureSection() {
             </p>
           </li>
         ))}
+        {/* 화면 폭 − 왼쪽 16 − 카드 292 − 간격 12 */}
+        <li aria-hidden className="w-[calc(100vw-320px)] shrink-0" />
       </ul>
     </section>
   );
@@ -425,11 +435,16 @@ function ResultSection() {
           }
           lead={"틀린 문항만 다시 풀고,\n리포트로 저장 · 공유해요."}
         />
-        {/* 폰은 섹션 아래 경계에서 자른다 — 시상대 · 내 순위까지만 보이면 충분하다. 화면을 틀보다 길게 둬야 아래 고정 버튼이 잘린 자리에 삐져나오지 않는다 */}
-        <div className="relative mt-9 flex h-[400px] justify-center">
+        {/*
+          폰은 섹션 아래 경계에서 자른다 — 시상대 · 내 순위까지만 보이면 충분하다. 화면을 틀보다 길게 둬야 아래 고정 버튼이
+          잘린 자리에 삐져나오지 않고, items-start 여야 틀이 400으로 눌리지 않는다.
+          결과 화면 안의 패시(눈 감은 PASS)는 가리고, 눈 뜬 패시(리포트)를 폰 옆에 세운다.
+        */}
+        <div className="relative mt-9 flex h-[400px] items-start justify-center [&_img[src*='passy']]:invisible">
           <PhoneFrame label="학생 폰 — 최종 순위와 내 결과" screenWidth={262} screenHeight={560}>
             <FinalResultMockup />
           </PhoneFrame>
+          <Mascot variant="report" className="visible! absolute top-40 right-1 h-auto w-[84px]" />
         </div>
       </div>
     </section>
