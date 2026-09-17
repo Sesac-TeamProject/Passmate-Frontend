@@ -1,20 +1,14 @@
 "use client";
 
 import { GeneratePanel } from "@/features/host/editor/generate-panel";
-import { MaterialAttach } from "@/features/host/editor/material-attach";
-import { QuestionList } from "@/features/host/editor/question-list";
-import { JoinPage } from "@/features/participant/join/join-page";
 import { PlayPage } from "@/features/participant/play/play-page";
 import { FinalResultPage } from "@/features/participant/result/final-result-page";
 import { QuestionDetailPage } from "@/features/participant/result/question-detail-page";
 import {
   ANSWER_DETAIL_MOCK,
-  EDITOR_MOCK_QUESTIONS,
   FINAL_PODIUM_MOCK,
   FINAL_QUESTION_ROWS_MOCK,
   FINAL_RANK_ROWS_MOCK,
-  JOIN_ROOM_MOCK,
-  JOIN_VALUES_MOCK,
   LIVE_QUESTION,
   LIVE_ROOM,
   PLAY_RANK_MOCK,
@@ -24,7 +18,7 @@ import {
 
 /*
  * 폰 랜딩(L-01m)에 넣는 실제 화면들. 웹 화면 컴포넌트를 목 데이터로 그대로 렌더한다 — 폰 폭(768 미만)에서만
- * 쓰이므로 각 화면은 자기 폰 배치(M-01 · M-03 · M-04 · M-05 · M-06)로 그려진다.
+ * 쓰이므로 각 화면은 자기 폰 배치(M-03 · M-04 · M-05 · M-06)로 그려진다.
  * 목업은 조작할 수 없다(PhoneFrame이 inert) — 콜백은 아무 일도 하지 않는다.
  */
 const noop = () => {};
@@ -32,32 +26,6 @@ const noop = () => {};
 /** 에디터 왼쪽 "AI로 문제 만들기" 패널 (W-03) */
 export function GenerateMockup() {
   return <GeneratePanel onGenerate={noop} onAddManual={noop} />;
-}
-
-/** 에디터 문항 목록 — 수정 · 재생성 · 삭제 (W-03) */
-export function QuestionListMockup() {
-  return (
-    <QuestionList
-      questions={EDITOR_MOCK_QUESTIONS.slice(0, 4)}
-      onEdit={noop}
-      onRegenerate={noop}
-      onDelete={noop}
-      onMove={noop}
-    />
-  );
-}
-
-/** M-01 입장 — PIN · 닉네임 · 캐릭터 */
-export function JoinMockup() {
-  return (
-    <JoinPage
-      values={JOIN_VALUES_MOCK}
-      onChange={noop}
-      onSubmit={noop}
-      room={JOIN_ROOM_MOCK}
-      nickname={{ available: true, suggestions: [] }}
-    />
-  );
 }
 
 /** M-03 풀이 — 타이머가 도는 객관식 문항 */
@@ -106,9 +74,4 @@ export function FinalResultMockup() {
       onSignUp={noop}
     />
   );
-}
-
-/** 에디터 "강의자료 첨부" 칸 (W-03) */
-export function MaterialAttachMockup() {
-  return <MaterialAttach onMaterialChange={noop} />;
 }

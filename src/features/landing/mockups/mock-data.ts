@@ -10,8 +10,6 @@ import type {
   SessionReport,
   Student,
 } from "@/features/host/types";
-import type { JoinValues } from "@/features/participant/join/join-form";
-import type { RoomPreview } from "@/features/participant/join/adapt";
 import type { RankChip, ScoreView } from "@/features/participant/play/adapt";
 import type { PodiumEntry as ResultPodiumEntry } from "@/features/participant/result/podium-card";
 import type { QuestionDetail } from "@/features/participant/result/question-detail-page";
@@ -381,22 +379,8 @@ export const STEP_RANKING: readonly { name: string; score: string; avatar: Avata
 
 /* ── 폰 랜딩(L-01m) — 학생 폰 화면 스냅숏. 방·학생·문항은 위 LIVE_ROOM · LIVE_QUESTION · 리포트 목업과 같은 이야기다 ── */
 
-/** "나"는 민지(여우) — 입장 화면에서 고른 캐릭터가 결과 화면 3위 줄로 이어진다 */
+/** "나"는 민지(여우) — 결과 화면 3위 줄 */
 const ME = LIVE_ROOM.students[4];
-
-/** M-01 입장 — PIN을 다 친 뒤 방 미리보기가 뜬 상태 */
-export const JOIN_VALUES_MOCK: JoinValues = {
-  pin: LIVE_ROOM.pin,
-  nickname: ME.name,
-  avatar: ME.avatar,
-};
-export const JOIN_ROOM_MOCK: RoomPreview = {
-  title: LIVE_ROOM.title,
-  topic: "Spring",
-  guestAllowed: true,
-  fee: null,
-  capacity: "6/30명",
-};
 
 /** M-04 문항 결과 — 정답을 맞히고 점수 카드 · 현재 순위가 뜬 상태 */
 export const PLAY_REVEAL_MOCK: Pick<

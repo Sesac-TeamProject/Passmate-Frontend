@@ -1,15 +1,4 @@
-import {
-  ArrowRight,
-  Check,
-  DoorOpen,
-  FileText,
-  MessageSquareText,
-  Sparkles,
-  SquarePlus,
-  Timer,
-  Trophy,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, DoorOpen, SquarePlus, Timer, Trophy, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BrandMark } from "@/components/common/brand-logo";
@@ -21,22 +10,19 @@ import {
   AnswerFeedbackMockup,
   FinalResultMockup,
   GenerateMockup,
-  JoinMockup,
-  MaterialAttachMockup,
   PlayMockup,
   PlayResultMockup,
-  QuestionListMockup,
 } from "./mockups/app-mockups";
-import { LIVE_ROOM, REPORT_ESSAY_ANSWERS_MOCK, STEP_GENERATED } from "./mockups/mock-data";
+import { LIVE_ROOM } from "./mockups/mock-data";
 import { PhoneFrame } from "./mockups/phone-frame";
 import { PinChip } from "./mockups/phone-mockup";
-import { STEP_VISUALS } from "./mockups/step-visuals";
 
 /**
  * L-01m 폰 랜딩 (768 미만) — 스크롤을 내리면서 "아 이런 서비스구나"가 잡히게 짠 서비스 소개 페이지.
  * 스픽 이벤트 랜딩의 정보 흐름(작은 라벨 → 두 줄 제목 → 큰 화면 → 짧은 설명, 섹션마다 바탕 바꾸기)만 참고했다.
  *
- * 흐름: 첫 화면 → 문제 제기 → 소개 → 핵심 기능 6 → 사용 흐름 → AI가 하는 일 → 결과 화면 → 마지막 CTA
+ * 흐름: 첫 화면 → 문제 제기 → 사용 흐름 → 핵심 기능(옆으로 넘기기 3장) → 결과 화면 → 마지막 CTA
+ * 겹치는 이야기는 한 번만 한다 — 페이지가 길면 끝까지 안 내려간다.
  *
  * 화면은 전부 실제 컴포넌트를 목 데이터로 렌더한 것이다(mockups/app-mockups.tsx) — 그림을 따로 그리지 않는다.
  * 문구는 웹 랜딩·실제 화면에 이미 있는 문장을 옮겨 쓴다. 새 기능을 약속하는 문장은 넣지 않는다.
@@ -49,10 +35,8 @@ export function LandingMobile() {
       <main className="flex flex-col">
         <HeroSection />
         <ProblemSection />
-        <IntroSection />
-        <FeatureSection />
         <FlowSection />
-        <AiSection />
+        <FeatureSection />
         <ResultSection />
         <CtaSection />
       </main>
@@ -176,7 +160,7 @@ function HeroSection() {
       </div>
 
       {/* 학생 폰(풀이 화면)을 크게 세우고 아랫부분은 섹션 경계에서 자른다. 패시가 옆에서 폰을 들고 있다 */}
-      <div className={cn(COLUMN, "relative mt-10 h-[500px]")}>
+      <div className={cn(COLUMN, "relative mt-10 h-[460px]")}>
         <span
           aria-hidden
           className="absolute top-24 left-1/2 size-[340px] -translate-x-1/2 rounded-full bg-mint-tint"
@@ -187,9 +171,9 @@ function HeroSection() {
           </PhoneFrame>
         </div>
         <div aria-hidden className="break-normal select-none">
-          <PinChip className="top-[330px] right-1" />
+          <PinChip className="top-[300px] right-1" />
         </div>
-        <Mascot variant="phone" className="absolute bottom-6 left-2 h-auto w-[104px]" />
+        <Mascot variant="phone" className="absolute bottom-4 left-2 h-auto w-[96px]" />
       </div>
     </section>
   );
@@ -238,238 +222,12 @@ function ProblemSection() {
             );
           })}
         </ul>
-        <div className="mt-8 flex items-center justify-center gap-2">
-          <Mascot variant="sleep" className="h-auto w-[60px]" />
-          <p className="text-body-md font-medium text-muted-foreground">같이 풀면 달라져요</p>
-        </div>
       </div>
     </section>
   );
 }
 
-/* ── 3. 패스메이트 소개 ────────────────────────────────────── */
-
-function RoleCard({ role, text, children }: { role: string; text: string; children: ReactNode }) {
-  return (
-    <div className="w-full rounded-[28px] border border-white/15 bg-white/10 p-3">
-      <div className="flex items-center gap-2.5 px-2 pt-2 pb-3.5">
-        <span className="shrink-0 rounded-full bg-card px-3 py-1 text-label-md font-bold text-mint-dark">
-          {role}
-        </span>
-        <p className="text-body-md font-medium text-white">{text}</p>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function IntroSection() {
-  return (
-    <section className="relative overflow-hidden bg-linear-to-b from-landing-green to-landing-green-deep px-4 pt-16 pb-14">
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 size-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,var(--landing-glow)_0%,transparent_70%)] opacity-20"
-      />
-      <div className={cn(COLUMN, "relative")}>
-        <SectionHead
-          dark
-          kicker="패스메이트는"
-          title={
-            <>
-              {"같이 풀면\n공부가 "}
-              <Em dark>더 쉬워져요</Em>
-            </>
-          }
-          lead={"선생님은 문제를 만들고,\n참여자는 PIN으로 바로 들어와요."}
-        />
-        <div className="mt-9 flex flex-col items-center">
-          <RoleCard role="선생님" text="문제 세트를 고르면 PIN이 나와요">
-            {STEP_VISUALS.pin}
-          </RoleCard>
-          {/* 두 역할을 잇는 PIN — 선생님이 알려 주고 참여자가 친다 */}
-          <div aria-hidden className="flex flex-col items-center">
-            <span className="h-5 border-l-2 border-dashed border-white/40" />
-            <span className="rounded-full bg-landing-glow px-4 py-2 text-heading-sm font-bold text-landing-green-deep">
-              PIN {LIVE_ROOM.pin.slice(0, 3)} {LIVE_ROOM.pin.slice(3)}
-            </span>
-            <span className="h-5 border-l-2 border-dashed border-white/40" />
-          </div>
-          <RoleCard role="참여자" text="PIN과 닉네임만 치면 들어와요">
-            {STEP_VISUALS.live}
-          </RoleCard>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ── 4. 핵심 기능 ──────────────────────────────────────────── */
-
-type FeatureShot = {
-  title: string;
-  text: string;
-  /** 화면 판 바탕 — 기능마다 번갈아 바꿔 한 덩어리로 보이지 않게 한다 */
-  tone: "mint" | "gray";
-  shot: ReactNode;
-};
-
-/** 폰 화면 하나를 판 위에 세우고 아랫부분은 판 경계에서 자른다 */
-function PhoneShot({
-  label,
-  children,
-  scrollY,
-}: {
-  label: string;
-  children: ReactNode;
-  scrollY?: number;
-}) {
-  return (
-    <div className="h-[380px]">
-      <PhoneFrame label={label} screenWidth={250} screenHeight={470} scrollY={scrollY}>
-        {children}
-      </PhoneFrame>
-    </div>
-  );
-}
-
-/** 웹 화면 조각(에디터 패널 · 문항 목록)을 흰 카드째 줄여 세운다 */
-function WebShot({
-  label,
-  width,
-  zoom,
-  height,
-  children,
-}: {
-  label: string;
-  width: number;
-  zoom: number;
-  height: number;
-  children: ReactNode;
-}) {
-  return (
-    <figure
-      role="img"
-      aria-label={label}
-      className="overflow-hidden rounded-t-3xl text-left break-normal shadow-[0_12px_28px] shadow-ink/10"
-      style={{ height }}
-    >
-      <div inert className="pointer-events-none select-none" style={{ zoom, width }}>
-        {children}
-      </div>
-    </figure>
-  );
-}
-
-const FEATURES: FeatureShot[] = [
-  {
-    title: "AI 문제 출제",
-    text: "주제와 난이도만 정하면\n객관식·서술형이 채워져요.",
-    tone: "mint",
-    shot: (
-      <WebShot label="문제 에디터 — AI로 문제 만들기" width={340} zoom={0.9} height={330}>
-        <GenerateMockup />
-      </WebShot>
-    ),
-  },
-  {
-    title: "PIN · QR로 빠른 입장",
-    text: "회원가입 없이 PIN 6자리나 QR로\n들어와요.",
-    tone: "gray",
-    shot: (
-      <PhoneShot label="학생 폰 — PIN · 닉네임 · 캐릭터를 고르는 입장 화면">
-        <JoinMockup />
-      </PhoneShot>
-    ),
-  },
-  {
-    title: "실시간 동시 풀이",
-    text: "타이머가 돌고,\n다 같이 같은 문제를 풀어요.",
-    tone: "mint",
-    shot: (
-      <PhoneShot label="학생 폰 — 타이머가 도는 문항 풀이 화면">
-        <PlayMockup />
-      </PhoneShot>
-    ),
-  },
-  {
-    title: "순위 확인",
-    text: "문항이 끝날 때마다\n정답률과 랭킹이 바로 떠요.",
-    tone: "gray",
-    shot: (
-      <PhoneShot label="학생 폰 — 문항 결과와 현재 순위">
-        <PlayResultMockup />
-      </PhoneShot>
-    ),
-  },
-  {
-    title: "AI 오답 · 서술형 피드백",
-    text: "모범답안과 견줘 잘한 점·놓친 점·\n다시 볼 것을 알려 줘요.",
-    tone: "mint",
-    shot: (
-      <PhoneShot label="학생 폰 — 서술형 답안의 AI 분석" scrollY={330}>
-        <AnswerFeedbackMockup />
-      </PhoneShot>
-    ),
-  },
-  {
-    title: "선생님 문제 수정 · 재출제",
-    text: "마음에 안 드는 문항은\n바로 고치거나 다시 뽑아요.",
-    tone: "gray",
-    shot: (
-      <WebShot
-        label="문제 에디터 — 문항마다 수정 · 재생성 · 삭제"
-        width={520}
-        zoom={0.62}
-        height={240}
-      >
-        <div className="bg-background p-4">
-          <QuestionListMockup />
-        </div>
-      </WebShot>
-    ),
-  },
-];
-
-function FeatureSection() {
-  return (
-    <section className="px-4 pt-16 pb-6">
-      <div className={COLUMN}>
-        <SectionHead
-          kicker="핵심 기능"
-          title={
-            <>
-              {"만들고, 들어오고,\n"}
-              <Em>같이 푸는</Em> 화면
-            </>
-          }
-        />
-        <ol className="mt-10 flex flex-col gap-12">
-          {FEATURES.map((feature, index) => (
-            <li key={feature.title} className="flex flex-col items-center text-center">
-              <span className="text-label-lg font-bold text-mint">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h3 className="mt-1 text-heading-lg text-ink">{feature.title}</h3>
-              <p className="mt-2 text-body-md leading-[1.6] whitespace-pre-line text-muted-foreground">
-                {feature.text}
-              </p>
-              <div
-                className={cn(
-                  "mt-5 flex w-full justify-center overflow-hidden rounded-[32px] px-5 pt-8",
-                  feature.tone === "mint" ? "bg-mint-bg" : "bg-background",
-                )}
-              >
-                {feature.shot}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
-/* ── 5. 사용 흐름 ──────────────────────────────────────────── */
+/* ── 3. 사용 흐름 ──────────────────────────────────────────── */
 
 type FlowStep = { icon: LucideIcon; title: string; text: string; extra: ReactNode };
 
@@ -477,7 +235,7 @@ const FLOW: FlowStep[] = [
   {
     icon: SquarePlus,
     title: "방 만들기",
-    text: STEPS[0].body.replace("\n", " "),
+    text: "문제 세트를 고르면 PIN 6자리가 바로 나와요.",
     extra: (
       <span className="rounded-full bg-white/10 px-3 py-1.5 text-label-lg font-bold text-landing-glow">
         PIN {LIVE_ROOM.pin.slice(0, 3)} {LIVE_ROOM.pin.slice(3)}
@@ -505,22 +263,13 @@ const FLOW: FlowStep[] = [
     icon: Timer,
     title: "함께 문제 풀기",
     text: STEPS[2].body.replace("\n", " "),
-    extra: (
-      <span className="rounded-full bg-white/10 px-3 py-1.5 text-label-lg font-bold text-white">
-        00:23 남음
-      </span>
-    ),
+    extra: null,
   },
   {
     icon: Trophy,
     title: "결과 확인",
     text: "문항별 정답률과 서술형 AI 첨삭이 정리돼요.",
-    extra: (
-      <span className="flex items-center gap-2 rounded-full bg-white/10 py-1 pr-3.5 pl-1">
-        <StudentAvatar avatar={LIVE_ROOM.students[0].avatar} size={26} />
-        <span className="text-label-lg font-bold text-white">1위 준영 · 1,240점</span>
-      </span>
-    ),
+    extra: null,
   },
 ];
 
@@ -530,7 +279,7 @@ function FlowSection() {
       <div className={COLUMN}>
         <SectionHead
           dark
-          kicker="사용 흐름"
+          kicker="이렇게 써요"
           title={
             <>
               {"방 만들기부터\n"}
@@ -553,12 +302,12 @@ function FlowSection() {
                 )}
               </div>
               <div
-                className={cn("flex flex-col items-start pt-1", index < FLOW.length - 1 && "pb-9")}
+                className={cn("flex flex-col items-start pt-1", index < FLOW.length - 1 && "pb-7")}
               >
                 <span className="text-label-md font-bold text-landing-glow">STEP {index + 1}</span>
                 <h3 className="mt-0.5 text-heading-md text-white">{title}</h3>
                 <p className="mt-1.5 text-body-md leading-[1.6] text-white/70">{text}</p>
-                <div className="mt-3">{extra}</div>
+                {extra && <div className="mt-3">{extra}</div>}
               </div>
             </li>
           ))}
@@ -568,133 +317,103 @@ function FlowSection() {
   );
 }
 
-/* ── 6. AI가 하는 일 ───────────────────────────────────────── */
+/* ── 4. 핵심 기능 — 옆으로 넘기는 카드 3장 ──────────────────── */
 
-function AiCard({
-  icon: Icon,
-  title,
-  text,
-  children,
-}: {
-  icon: LucideIcon;
-  title: string;
-  text: string;
-  children: ReactNode;
-}) {
+/** 카드 한 장의 화면 판 높이 — 폰 · 에디터 조각은 아래 경계에서 잘린다 */
+const SHOT_HEIGHT = "h-[380px]";
+
+type Slide = { title: string; text: string; tone: "mint" | "gray"; shot: ReactNode };
+
+const SLIDES: Slide[] = [
+  {
+    title: "AI 문제 출제",
+    text: "주제와 난이도만 정하면 객관식·서술형이 채워져요.",
+    tone: "mint",
+    shot: (
+      <figure
+        role="img"
+        aria-label="문제 에디터 — AI로 문제 만들기"
+        className="overflow-hidden rounded-t-3xl text-left break-normal shadow-[0_12px_28px] shadow-ink/10"
+      >
+        <div inert className="pointer-events-none w-[340px] [zoom:0.8] select-none">
+          <GenerateMockup />
+        </div>
+      </figure>
+    ),
+  },
+  {
+    title: "문항마다 바로 순위",
+    text: "문항이 끝날 때마다 정답률과 랭킹이 바로 떠요.",
+    tone: "gray",
+    shot: (
+      <PhoneFrame label="학생 폰 — 문항 결과와 현재 순위" screenWidth={240} screenHeight={460}>
+        <PlayResultMockup />
+      </PhoneFrame>
+    ),
+  },
+  {
+    title: "서술형 AI 피드백",
+    text: "모범답안과 견줘 잘한 점·놓친 점을 짚어 줘요.",
+    tone: "mint",
+    shot: (
+      <PhoneFrame
+        label="학생 폰 — 서술형 답안의 AI 분석"
+        screenWidth={240}
+        screenHeight={460}
+        scrollY={330}
+      >
+        <AnswerFeedbackMockup />
+      </PhoneFrame>
+    ),
+  },
+];
+
+function FeatureSection() {
   return (
-    <div className="rounded-[28px] border bg-card p-5">
-      <div className="flex items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-mint-bg text-mint-dark">
-          <Icon aria-hidden className="size-5" strokeWidth={2} />
-        </span>
-        <h3 className="text-heading-md text-ink">{title}</h3>
-      </div>
-      <p className="mt-2.5 text-body-md leading-[1.6] text-muted-foreground">{text}</p>
-      <div className="mt-4">{children}</div>
-    </div>
-  );
-}
-
-/** 서술형 피드백 칩 — 답안 목업의 AI 판정(핵심 포함 · 부족 · 제안) 그대로 */
-const FINDING_TONE = {
-  good: "bg-mint-bg text-mint-dark",
-  lack: "bg-negative-bg text-negative-soft-foreground",
-  tip: "bg-yellow-soft text-choice-c-foreground",
-} as const;
-
-function AiSection() {
-  const essay = REPORT_ESSAY_ANSWERS_MOCK[0];
-
-  return (
-    <section className="bg-background px-4 pt-16 pb-14">
-      <div className={COLUMN}>
+    <section className="pt-16 pb-14">
+      <div className={cn(COLUMN, "px-4")}>
         <SectionHead
-          kicker="AI가 하는 일"
+          kicker="핵심 기능"
           title={
             <>
-              {"AI는 "}
-              <Em>이 세 군데</Em>
-              {"에서\n일해요"}
+              {"만들고, 풀고,\n"}
+              <Em>바로 확인</Em>해요
             </>
           }
         />
-        <div className="mt-9 flex flex-col gap-3.5">
-          <AiCard
-            icon={Sparkles}
-            title="문제 출제"
-            text="주제·난이도·유형별 문항 수를 정하면 문항을 만들어요."
-          >
-            <div className="flex flex-col gap-2 rounded-2xl bg-background p-3">
-              {STEP_GENERATED.map((item) => (
-                <div
-                  key={item.prompt}
-                  className={cn(
-                    "flex h-10 items-center gap-2 rounded-xl bg-card px-2.5",
-                    item.pending && "opacity-50",
-                  )}
-                >
-                  <span className="shrink-0 rounded-full bg-mint-bg px-2 py-0.5 text-label-md font-bold text-mint-dark">
-                    {item.type}
-                  </span>
-                  <span className="truncate text-label-lg text-ink">{item.prompt}</span>
-                </div>
-              ))}
-            </div>
-          </AiCard>
-
-          <AiCard
-            icon={FileText}
-            title="강의자료 기반 문제 생성"
-            text="PDF·PPT 강의자료를 올리면 그 범위 안에서 출제해요."
-          >
-            <div inert className="pointer-events-none break-normal select-none">
-              <MaterialAttachMockup />
-            </div>
-          </AiCard>
-
-          <AiCard
-            icon={MessageSquareText}
-            title="서술형 답변 피드백"
-            text="서술형 답을 모범답안과 견줘 빠진 부분을 짚어 줘요."
-          >
-            <div className="flex flex-col gap-2 rounded-2xl bg-background p-3">
-              <p className="line-clamp-2 text-label-lg text-ink">{essay.text}</p>
-              <div className="flex flex-col items-start gap-1.5">
-                {essay.findings.map((finding) => (
-                  <span
-                    key={finding.text}
-                    className={cn(
-                      "rounded-lg px-2.5 py-1 text-label-md font-bold",
-                      FINDING_TONE[finding.tone],
-                    )}
-                  >
-                    {finding.text}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <p className="mt-2.5 text-label-md text-muted-foreground">
-              AI 분석은 참고 의견이에요. 점수는 선생님 첨삭으로만 바뀌어요.
-            </p>
-          </AiCard>
-        </div>
       </div>
+      {/* 옆으로 넘기는 카드 — 다음 카드가 살짝 보여 넘길 수 있다는 걸 알린다 */}
+      <ul className="mt-9 flex snap-x snap-mandatory scroll-px-4 [scrollbar-width:none] gap-3 overflow-x-auto px-4 pb-2 [&::-webkit-scrollbar]:hidden">
+        {SLIDES.map((slide, index) => (
+          <li key={slide.title} className="w-[292px] shrink-0 snap-start">
+            <div
+              className={cn(
+                "flex justify-center overflow-hidden rounded-[28px] px-3 pt-7",
+                SHOT_HEIGHT,
+                slide.tone === "mint" ? "bg-mint-bg" : "bg-background",
+              )}
+            >
+              {slide.shot}
+            </div>
+            <p className="mt-4 px-1 text-label-lg font-bold text-mint">
+              {String(index + 1).padStart(2, "0")}
+            </p>
+            <h3 className="mt-0.5 px-1 text-heading-md text-ink">{slide.title}</h3>
+            <p className="mt-1 px-1 text-body-md leading-[1.6] text-muted-foreground">
+              {slide.text}
+            </p>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
 
-/* ── 7. 결과 화면 ──────────────────────────────────────────── */
-
-const RESULT_CHECKS = [
-  "최종 순위와 내 점수",
-  "문항별 정답 · 오답",
-  "틀린 문항만 다시 풀기",
-  "리포트 저장 · 공유",
-];
+/* ── 5. 결과 화면 ──────────────────────────────────────────── */
 
 function ResultSection() {
   return (
-    <section className="overflow-hidden bg-mint-bg px-4 pt-16 pb-14">
+    <section className="overflow-hidden bg-mint-bg px-4 pt-16">
       <div className={COLUMN}>
         <SectionHead
           kicker="다 풀고 나면"
@@ -704,30 +423,20 @@ function ResultSection() {
               <Em>바로</Em> 나와요
             </>
           }
+          lead={"틀린 문항만 다시 풀고,\n리포트로 저장 · 공유해요."}
         />
-        <div className="relative mt-9 flex justify-center">
-          <PhoneFrame label="학생 폰 — 최종 순위와 내 결과" screenWidth={262} screenHeight={500}>
+        {/* 폰은 섹션 아래 경계에서 자른다 — 시상대 · 내 순위까지만 보이면 충분하다. 화면을 틀보다 길게 둬야 아래 고정 버튼이 잘린 자리에 삐져나오지 않는다 */}
+        <div className="relative mt-9 flex h-[400px] justify-center">
+          <PhoneFrame label="학생 폰 — 최종 순위와 내 결과" screenWidth={262} screenHeight={560}>
             <FinalResultMockup />
           </PhoneFrame>
-          <Mascot variant="pass" className="absolute right-0 bottom-8 h-auto w-[92px]" />
         </div>
-        <ul className="mt-8 grid grid-cols-2 gap-2.5">
-          {RESULT_CHECKS.map((item) => (
-            <li
-              key={item}
-              className="flex items-center gap-2 rounded-2xl bg-card px-3.5 py-3.5 text-label-lg font-bold text-ink"
-            >
-              <Check aria-hidden className="size-4 shrink-0 text-mint" strokeWidth={3} />
-              {item}
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );
 }
 
-/* ── 8. 마지막 CTA ─────────────────────────────────────────── */
+/* ── 6. 마지막 CTA ─────────────────────────────────────────── */
 
 function CtaSection() {
   return (
