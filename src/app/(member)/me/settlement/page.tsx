@@ -34,7 +34,7 @@ export default function Page() {
   const isAccountNotRegistered =
     account.isError && AppError.isAppError(account.error) && account.error.kind === "NotFound";
 
-  // 탭바가 없는 화면(mobileBare)이라 로딩·오류에도 스스로 "← 정산" 줄을 그려야 폰에서 빠져나갈 길이 생긴다
+  // 성공 화면(SettlementMobile)의 "← 정산" 머리글을 로딩·오류에서도 이어 준다 — 불러오는 동안에도 마이로 돌아갈 수 있게
   const mobileFailure = { screenTitle: "정산", backHref: "/me", homeHref: "/home" };
 
   if (earnings.isPending || account.isPending)
