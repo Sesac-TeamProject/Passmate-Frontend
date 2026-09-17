@@ -193,3 +193,11 @@ export function toTimerProgress(remainingSeconds: number, limitSeconds: number):
   if (limitSeconds <= 0) return 0;
   return Math.min(1, Math.max(0, remainingSeconds / limitSeconds));
 }
+
+/**
+ * 방을 벗어날 때(스스로 나가기 · 끝난 방) 보낼 곳. 게스트에게 `/home`은 로그인이 필요한 주소라
+ * 로그인 화면으로 튕기므로 랜딩으로 보낸다.
+ */
+export function exitPathFor(isMember: boolean): string {
+  return isMember ? "/home" : "/";
+}

@@ -21,6 +21,8 @@ type Props = {
   hint?: VoiceHintEntry | null;
   /** 제출 실패 문구(이미 제출·화면 잠김 등). 카드 아래 한 줄로 알린다 */
   errorMessage?: string | null;
+  /** 머리 오른쪽 "나가기". 확인 창은 컨테이너가 띄운다 */
+  onLeave?: () => void;
 };
 
 /**
@@ -38,6 +40,7 @@ export function PlayPage({
   isLocked = false,
   hint = null,
   errorMessage = null,
+  onLeave,
 }: Props) {
   return (
     <main className="flex min-h-screen flex-col items-center px-4 pt-9 pb-10 max-md:min-h-dvh max-md:bg-card max-md:px-5 max-md:pt-11 max-md:pb-0">
@@ -50,6 +53,7 @@ export function PlayPage({
           score={score}
           rankChip={rankChip}
           reveal={reveal}
+          onLeave={onLeave}
           banner={
             hint && (
               <HintBanner key={hint.hintId} clipUrl={hint.audioUrl} durationMs={hint.durationMs} />
