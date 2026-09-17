@@ -251,7 +251,7 @@ function ProblemSection() {
 
 function RoleCard({ role, text, children }: { role: string; text: string; children: ReactNode }) {
   return (
-    <div className="rounded-[28px] border border-white/15 bg-white/10 p-3">
+    <div className="w-full rounded-[28px] border border-white/15 bg-white/10 p-3">
       <div className="flex items-center gap-2.5 px-2 pt-2 pb-3.5">
         <span className="shrink-0 rounded-full bg-card px-3 py-1 text-label-md font-bold text-mint-dark">
           {role}
