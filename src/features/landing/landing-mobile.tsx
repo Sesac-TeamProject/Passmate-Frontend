@@ -60,6 +60,12 @@ const PILL = {
     "inline-flex h-14 items-center justify-center rounded-full border border-white/40 px-6 text-heading-sm font-bold text-white",
 } as const;
 
+/**
+ * 큰 제목 굵기 — Pretendard ExtraBold(800). 시안(Figma)은 Noto Sans KR Bold라 Pretendard Bold(700)로는 한 단계
+ * 얇아 보인다(layout.tsx `--font-pretendard-heavy` 참고). font-family 를 임의 속성으로 적어 cn 이 굵기 클래스와 섞지 않게 한다.
+ */
+const HEAVY = "[font-family:var(--font-pretendard-heavy)] font-extrabold";
+
 /** 제목 속 강조 단어 */
 function Em({ children, dark }: { children: ReactNode; dark?: boolean }) {
   return <span className={dark ? "text-landing-glow" : "text-mint"}>{children}</span>;
@@ -88,7 +94,11 @@ function SectionHead({
         {kicker}
       </span>
       <h2
-        className={cn("mt-4 text-display-sm whitespace-pre-line", dark ? "text-white" : "text-ink")}
+        className={cn(
+          "mt-4 text-display-sm whitespace-pre-line",
+          HEAVY,
+          dark ? "text-white" : "text-ink",
+        )}
       >
         {title}
       </h2>
@@ -142,7 +152,7 @@ function HeroSection() {
         <span className="rounded-full bg-mint-bg px-3.5 py-1.5 text-label-md font-bold text-mint-dark">
           자격증 · 면접 · 전공 시험
         </span>
-        <h1 className="mt-4 text-display-md whitespace-pre-line text-ink">
+        <h1 className={cn("mt-4 text-display-md whitespace-pre-line text-ink", HEAVY)}>
           {"혼자 시작한 공부,\n"}
           <Em>함께하는 합격</Em>까지.
         </h1>
@@ -305,7 +315,7 @@ function FlowSection() {
                 className={cn("flex flex-col items-start pt-1", index < FLOW.length - 1 && "pb-7")}
               >
                 <span className="text-label-md font-bold text-landing-glow">STEP {index + 1}</span>
-                <h3 className="mt-0.5 text-heading-md text-white">{title}</h3>
+                <h3 className={cn("mt-0.5 text-heading-md text-white", HEAVY)}>{title}</h3>
                 <p className="mt-1.5 text-body-md leading-[1.6] text-white/70">{text}</p>
                 {extra && <div className="mt-3">{extra}</div>}
               </div>
@@ -329,16 +339,11 @@ const SLIDES: Slide[] = [
     title: "AI 문제 출제",
     text: "주제와 난이도만 정하면 객관식·서술형이 채워져요.",
     tone: "mint",
+    // 세 장 모두 폰 틀로 맞춘다 — 에디터 패널도 폰 화면 안에 담는다
     shot: (
-      <figure
-        role="img"
-        aria-label="문제 에디터 — AI로 문제 만들기"
-        className="overflow-hidden rounded-t-3xl text-left break-normal [clip-path:inset(0_round_24px_24px_0_0)]"
-      >
-        <div inert className="pointer-events-none w-[340px] [zoom:0.8] select-none">
-          <GenerateMockup />
-        </div>
-      </figure>
+      <PhoneFrame label="문제 에디터 — AI로 문제 만들기" screenWidth={240} screenHeight={460}>
+        <GenerateMockup />
+      </PhoneFrame>
     ),
   },
   {
@@ -360,7 +365,7 @@ const SLIDES: Slide[] = [
         label="학생 폰 — 서술형 답안의 AI 분석"
         screenWidth={240}
         screenHeight={460}
-        scrollY={330}
+        scrollY={85}
       >
         <AnswerFeedbackMockup />
       </PhoneFrame>
@@ -406,7 +411,7 @@ function FeatureSection() {
             <p className="mt-4 px-1 text-label-lg font-bold text-mint">
               {String(index + 1).padStart(2, "0")}
             </p>
-            <h3 className="mt-0.5 px-1 text-heading-md text-ink">{slide.title}</h3>
+            <h3 className={cn("mt-0.5 px-1 text-heading-md text-ink", HEAVY)}>{slide.title}</h3>
             <p className="mt-1 px-1 text-body-md leading-[1.6] text-muted-foreground">
               {slide.text}
             </p>
@@ -436,15 +441,14 @@ function ResultSection() {
           lead={"틀린 문항만 다시 풀고,\n리포트로 저장 · 공유해요."}
         />
         {/*
-          폰은 섹션 아래 경계에서 자른다 — 시상대 · 내 순위까지만 보이면 충분하다. 화면을 틀보다 길게 둬야 아래 고정 버튼이
-          잘린 자리에 삐져나오지 않고, items-start 여야 틀이 400으로 눌리지 않는다.
-          결과 화면 안의 패시(눈 감은 PASS)는 가리고, 눈 뜬 패시(리포트)를 폰 옆에 세운다.
+          폰은 섹션 아래 경계에서 자른다 — 시상대 · 내 결과 카드 바로 아래(330)에서 끊어 카드 중간이 잘리지 않게 한다.
+          화면을 틀보다 길게 둬야 아래 고정 버튼이 잘린 자리에 삐져나오지 않고, items-start 여야 틀이 눌리지 않는다.
+          결과 화면 안의 패시(눈 감은 PASS)는 가린다 — 시상대 캐릭터와 겹쳐 어수선하다.
         */}
-        <div className="relative mt-9 flex h-[400px] items-start justify-center [&_img[src*='passy']]:invisible">
+        <div className="relative mt-9 flex h-[330px] items-start justify-center [&_img[src*='passy']]:invisible">
           <PhoneFrame label="학생 폰 — 최종 순위와 내 결과" screenWidth={262} screenHeight={560}>
             <FinalResultMockup />
           </PhoneFrame>
-          <Mascot variant="report" className="visible! absolute top-40 right-1 h-auto w-[84px]" />
         </div>
       </div>
     </section>
@@ -466,7 +470,7 @@ function CtaSection() {
           variant="default"
           className="absolute -top-16 left-1/2 h-auto w-[104px] -translate-x-1/2"
         />
-        <h2 className="text-display-sm whitespace-pre-line text-white">
+        <h2 className={cn("text-display-sm whitespace-pre-line text-white", HEAVY)}>
           {"지금 바로\n문제를 만들어보세요"}
         </h2>
         <p className="mt-3 text-body-lg leading-[1.6] whitespace-pre-line text-white/80">

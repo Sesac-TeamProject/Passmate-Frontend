@@ -23,9 +23,13 @@ import {
  */
 const noop = () => {};
 
-/** 에디터 왼쪽 "AI로 문제 만들기" 패널 (W-03) */
+/** 에디터 왼쪽 "AI로 문제 만들기" 패널 (W-03) — 폰 틀(390) 안에 담으므로 회색 바탕 가운데에 세운다 */
 export function GenerateMockup() {
-  return <GeneratePanel onGenerate={noop} onAddManual={noop} />;
+  return (
+    <div className="flex min-h-full justify-center bg-background px-6 pt-12">
+      <GeneratePanel onGenerate={noop} onAddManual={noop} />
+    </div>
+  );
 }
 
 /** M-03 풀이 — 타이머가 도는 객관식 문항 */

@@ -36,6 +36,19 @@ const pretendard = localFont({
   display: "swap",
 });
 
+/**
+ * 폰 랜딩(L-01m) 큰 제목 전용 ExtraBold(800). 시안은 Figma에 Pretendard가 없어 Noto Sans KR Bold로 그려졌고,
+ * Pretendard Bold(700)는 그보다 한 단계 얇아 보인다 — 굵기가 가장 가까운 800을 제목에만 쓴다.
+ * 랜딩 제목에서만 쓰여 모든 화면이 미리 받지 않게 preload를 끈다(쓰는 화면에서만 내려받는다).
+ */
+const pretendardHeavy = localFont({
+  src: "../../node_modules/pretendard/dist/web/static/woff2/Pretendard-ExtraBold.woff2",
+  weight: "800",
+  variable: "--font-pretendard-heavy",
+  display: "swap",
+  preload: false,
+});
+
 export const metadata: Metadata = {
   title: "PassMate",
   description: "AI 기반 실전형 교육·문제풀이 플랫폼",
@@ -43,7 +56,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={`h-full antialiased ${pretendard.variable}`}>
+    <html
+      lang="ko"
+      className={`h-full antialiased ${pretendard.variable} ${pretendardHeavy.variable}`}
+    >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <QueryProvider>
           <SessionBootstrap />
