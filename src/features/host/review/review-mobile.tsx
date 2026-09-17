@@ -228,6 +228,7 @@ export function ReviewMobile({
                 onSaveComment={onSaveComment}
                 commentSaving={commentSaving}
                 commentError={commentError}
+                stacked
               />
             )}
           </>
@@ -251,6 +252,7 @@ export function ReviewMobile({
                 onSave={onSaveReview}
                 savingAnswerId={savingAnswerId}
                 saveError={reviewError}
+                stacked
               />
             )}
           </StudentTab>
