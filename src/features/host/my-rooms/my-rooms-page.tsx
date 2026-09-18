@@ -18,6 +18,8 @@ type Props = {
   levelSubtitle: string;
   stats: HubStat[];
   actions: HubAction[];
+  /** 폰 FAB — 화면을 옮기지 않고 그 위에 새 방 만들기 시트를 연다 (M-13a) */
+  onCreateRoom: () => void;
 };
 
 /**
@@ -26,7 +28,15 @@ type Props = {
  * 폰 폭(768px 미만)은 앱 시안 M-13 — 명성 줄 · 진행 중 / 종료 두 묶음 · FAB · 하단 탭.
  * 웹의 행동 카드 3장·요약 칸은 폰에서 접는다(같은 정보가 방 묶음 머리글에 이미 있다).
  */
-export function MyRoomsPage({ rooms, totalStudents, level, levelSubtitle, stats, actions }: Props) {
+export function MyRoomsPage({
+  rooms,
+  totalStudents,
+  level,
+  levelSubtitle,
+  stats,
+  actions,
+  onCreateRoom,
+}: Props) {
   return (
     <>
       {/* 시안 W-09 프레임 바탕은 흰색이다 — 앱 기본 회색(bg-background)이 아니다 */}
@@ -86,7 +96,9 @@ export function MyRoomsPage({ rooms, totalStudents, level, levelSubtitle, stats,
 
         <MyRoomsMobile rooms={rooms} level={level} levelSubtitle={levelSubtitle} />
 
-        <CreateRoomFab href="/host/rooms/new" />
+        {/* PC 의 "새 방 만들기"(위 빈 상태 · 행동 카드)는 그대로 /host/rooms/new 로 간다 —
+            이 FAB 은 폰 전용 영역 안이라 시트는 폰에서만 열린다 */}
+        <CreateRoomFab onClick={onCreateRoom} />
       </main>
     </>
   );
