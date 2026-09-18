@@ -2,22 +2,28 @@
 
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
+import { toAvatarKey } from "@/components/common/student-avatar";
 import {
   toAchievedLabel,
   toEarnedBadges,
   toLevelCriteria,
   toNextTitle,
+  toProfileStatsLine,
 } from "@/features/host/reputation/adapt";
 import { ReputationPage } from "@/features/host/reputation/reputation-page";
-import { useBadges, useGrade } from "@/lib/queries/use-me";
+import { useBadges, useCumulativeReport, useGrade, useMe } from "@/lib/queries/use-me";
 
 /** 유지 조건 안내 — 계약에 문구가 없어 화면 상수로 둔다 (시안 813:8880) */
 const MAINTAIN_NOTE = "별점 4.0과 월 4회 활동은 Lv.4·5의 유지 조건이에요";
+/** 폰(M-09 349:9804)이 레벨 카드 맨 아래 항상 두는 줄 — 마찬가지로 계약에 없는 화면 문구 */
+const MOBILE_MAINTAIN_NOTE = "Lv.3 달성 후 하락 없음 · Lv.4~5만 30일 활동 유지 조건";
 
-/** W-14 명성 · 뱃지 상세 컨테이너 — 등급과 뱃지를 읽어 화면 뷰 타입으로 바꾼다 */
+/** W-14 · M-09 명성 · 뱃지 상세 컨테이너 — 등급과 뱃지를 읽어 화면 뷰 타입으로 바꾼다 */
 export default function Page() {
   const grade = useGrade();
   const badges = useBadges();
+  const me = useMe();
+  const report = useCumulativeReport();
 
   if (grade.isPending) return <ScreenLoading />;
   if (grade.isError)
@@ -30,6 +36,7 @@ export default function Page() {
   return (
     <ReputationPage
       currentLevel={level}
+      currentTitle={grade.data.levelName}
       // 서버는 0~1로 준다 — 화면은 %로 그린다
       progress={Math.round((grade.data.nextLevelProgress ?? 0) * 100)}
       achievedLabel={toAchievedLabel(grade.data)}
@@ -38,7 +45,22 @@ export default function Page() {
       criteria={toLevelCriteria(grade.data)}
       // 뱃지 조회가 실패해도 레벨 사다리는 보여준다 — 컬렉션만 전부 잠김으로 접힌다
       note={level >= 3 ? MAINTAIN_NOTE : null}
+      mobileNote={MOBILE_MAINTAIN_NOTE}
       earnedBadges={toEarnedBadges(badges.data?.badges)}
+      // 내 정보·누적 리포트는 등급과 별개라 늦게 오거나 실패할 수 있다 — 없으면 카드만 빠진다
+      profile={
+        me.data
+          ? {
+              nickname: me.data.nickname,
+              avatar: toAvatarKey(me.data.defaultAvatarId),
+              statsLine: toProfileStatsLine(
+                me.data.stats.joinedRoomCount,
+                report.data?.averageAccuracy,
+                grade.data.roomsHosted,
+              ),
+            }
+          : null
+      }
     />
   );
 }
