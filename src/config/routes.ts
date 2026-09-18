@@ -303,6 +303,7 @@ export const ROUTES: readonly RouteMeta[] = [
     description:
       "종료된 방의 통계·문항별 결과, 서술형 AI 분석 확인·코멘트 (내가 만든 방 › 상세 보기)",
     area: "host",
+    nav: "/host/rooms",
   },
   // 관리자
   {
