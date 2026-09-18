@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { LevelEmblem } from "@/features/me/level-emblem";
 import { cn } from "@/lib/utils";
 import type { LevelStatus, MyRoom } from "./types";
@@ -8,6 +9,8 @@ type Props = {
   level: LevelStatus | null;
   /** "방 운영 12회 · 별점 4.3 · 학생 98명" */
   levelSubtitle: string;
+  /** 빈 상태 CTA — FAB 과 같은 새 방 만들기 시트를 연다 (M-13a) */
+  onCreateRoom: () => void;
 };
 
 /**
@@ -17,7 +20,7 @@ type Props = {
  * 방을 **진행 중 / 종료** 두 묶음으로 나눠 머리글에 개수를 적는다. 새 방 만들기는 목록에 섞지 않고
  * 오른쪽 아래 FAB으로 뺀다 — 목록이 길어져도 자리가 고정된다.
  */
-export function MyRoomsMobile({ rooms, level, levelSubtitle }: Props) {
+export function MyRoomsMobile({ rooms, level, levelSubtitle, onCreateRoom }: Props) {
   const live = rooms.filter((r) => r.status === "live");
   const ended = rooms.filter((r) => r.status === "ended");
 
@@ -48,11 +51,36 @@ export function MyRoomsMobile({ rooms, level, levelSubtitle }: Props) {
       <RoomGroup tone="live" rooms={live} />
       <RoomGroup tone="ended" rooms={ended} />
 
-      {rooms.length === 0 && (
-        <p className="rounded-2xl border border-dashed px-4 py-14 text-center text-label-lg text-muted-foreground">
-          아직 만든 방이 없어요
-        </p>
-      )}
+      {rooms.length === 0 && <EmptyRooms onCreateRoom={onCreateRoom} />}
+    </div>
+  );
+}
+
+/**
+ * 빈 상태 (시안 671:8606). 아이콘 · 제목 · 버튼까지만 쓴다 —
+ * 시안의 설명 2줄("문제 세트 하나만 있으면…")은 웹에 없는 문구라 넣지 않는다(2026-09-18 결정).
+ * 버튼 문구도 PC 빈 상태와 같은 "새 방 만들기"다.
+ *
+ * 누르면 FAB 과 같은 시트를 연다 — 빈 화면에서 FAB 하나만 떠 있으면 "어디를 눌러야 하나"가
+ * 화면 구석에만 있다.
+ */
+function EmptyRooms({ onCreateRoom }: { onCreateRoom: () => void }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-6 pb-10 text-center">
+      <span
+        aria-hidden
+        className="flex size-16 items-center justify-center rounded-full bg-muted text-mint"
+      >
+        <Plus size={28} strokeWidth={2} />
+      </span>
+      <p className="text-label-lg text-ink">아직 만든 방이 없어요</p>
+      <button
+        type="button"
+        onClick={onCreateRoom}
+        className="flex h-13 w-50 items-center justify-center rounded-2xl bg-mint text-label-lg text-white transition-colors hover:bg-mint-dark"
+      >
+        새 방 만들기
+      </button>
     </div>
   );
 }

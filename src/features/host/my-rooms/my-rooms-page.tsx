@@ -94,7 +94,12 @@ export function MyRoomsPage({
           <h1 className="text-heading-lg text-ink">내가 만든 방</h1>
         </header>
 
-        <MyRoomsMobile rooms={rooms} level={level} levelSubtitle={levelSubtitle} />
+        <MyRoomsMobile
+          rooms={rooms}
+          level={level}
+          levelSubtitle={levelSubtitle}
+          onCreateRoom={onCreateRoom}
+        />
 
         {/* PC 의 "새 방 만들기"(위 빈 상태 · 행동 카드)는 그대로 /host/rooms/new 로 간다 —
             이 FAB 은 폰 전용 영역 안이라 시트는 폰에서만 열린다 */}
