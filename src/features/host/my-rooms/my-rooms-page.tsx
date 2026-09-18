@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MobileTabBar } from "@/components/common/mobile-tab-bar";
 import { CreateRoomFab } from "@/features/home/fab";
 import { ROOM_LIST_ID } from "./adapt";
 import { MyRoomsMobile } from "./my-rooms-mobile";
@@ -19,6 +18,8 @@ type Props = {
   levelSubtitle: string;
   stats: HubStat[];
   actions: HubAction[];
+  /** 폰 FAB — 화면을 옮기지 않고 그 위에 새 방 만들기 시트를 연다 (M-13a) */
+  onCreateRoom: () => void;
 };
 
 /**
@@ -27,7 +28,15 @@ type Props = {
  * 폰 폭(768px 미만)은 앱 시안 M-13 — 명성 줄 · 진행 중 / 종료 두 묶음 · FAB · 하단 탭.
  * 웹의 행동 카드 3장·요약 칸은 폰에서 접는다(같은 정보가 방 묶음 머리글에 이미 있다).
  */
-export function MyRoomsPage({ rooms, totalStudents, level, levelSubtitle, stats, actions }: Props) {
+export function MyRoomsPage({
+  rooms,
+  totalStudents,
+  level,
+  levelSubtitle,
+  stats,
+  actions,
+  onCreateRoom,
+}: Props) {
   return (
     <>
       {/* 시안 W-09 프레임 바탕은 흰색이다 — 앱 기본 회색(bg-background)이 아니다 */}
@@ -78,16 +87,23 @@ export function MyRoomsPage({ rooms, totalStudents, level, levelSubtitle, stats,
         </div>
       </main>
 
-      {/* 폰 폭 — 앱 M-13 */}
-      <main className="relative flex min-h-dvh flex-col bg-card md:hidden">
+      {/* 폰 폭 — 앱 M-13. 하단 탭바는 레이아웃(host/(nav))이 fixed로 그리고 본문 아래를 그 높이만큼
+          띄우므로 최소 높이에서 탭바 높이를 뺀다 — 빼지 않으면 내용이 짧아도 그만큼 스크롤이 생긴다 */}
+      <main className="relative flex min-h-[calc(100dvh-var(--mobile-tab-bar-h))] flex-col bg-card md:hidden">
         <header className="px-5 pt-14 pb-3">
           <h1 className="text-heading-lg text-ink">내가 만든 방</h1>
         </header>
 
-        <MyRoomsMobile rooms={rooms} level={level} levelSubtitle={levelSubtitle} />
+        <MyRoomsMobile
+          rooms={rooms}
+          level={level}
+          levelSubtitle={levelSubtitle}
+          onCreateRoom={onCreateRoom}
+        />
 
-        <CreateRoomFab href="/host/rooms/new" className="bottom-[89px]" />
-        <MobileTabBar />
+        {/* PC 의 "새 방 만들기"(위 빈 상태 · 행동 카드)는 그대로 /host/rooms/new 로 간다 —
+            이 FAB 은 폰 전용 영역 안이라 시트는 폰에서만 열린다 */}
+        <CreateRoomFab onClick={onCreateRoom} />
       </main>
     </>
   );

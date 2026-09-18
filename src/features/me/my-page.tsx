@@ -1,5 +1,7 @@
-import { Bell, Coins, User, Wallet } from "lucide-react";
+import { Bell, User, Wallet } from "lucide-react";
 import Link from "next/link";
+import { CoinIcon } from "@/components/common/coin-icon";
+import { MobileTopBar } from "@/components/common/mobile-top-bar";
 import { AVATAR_LABEL } from "@/components/common/student-avatar";
 import type { CoinSummary, Profile, SettlementSummary } from "@/features/me/types";
 import { NOTIFICATION_SUMMARY } from "@/features/me/types";
@@ -44,14 +46,16 @@ export function MyPage({
     : "";
 
   return (
-    <main className="flex flex-col gap-5 px-9 py-7">
-      <h1 className="text-heading-lg text-ink">내 정보 관리</h1>
+    <main className="flex flex-col gap-5 px-9 py-7 max-md:gap-3.5 max-md:px-5 max-md:pt-3 max-md:pb-6">
+      {/* 앱 M-12는 탭 루트라 뒤로 화살표가 없다 — 제목만 둔다 */}
+      <MobileTopBar title="마이" className="-mx-5 px-5 pb-1" />
+      <h1 className="text-heading-lg text-ink max-md:hidden">내 정보 관리</h1>
 
       <ProfileCard profile={profile} joinedRooms={joinedRooms} hostedRooms={hostedRooms} />
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-2 gap-5 max-md:grid-cols-1 max-md:gap-3.5">
         {/* 좌열 */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 max-md:gap-3.5">
           <SettingsCard
             title={
               <>
@@ -90,7 +94,7 @@ export function MyPage({
           <SettingsCard
             title={
               <>
-                <Coins aria-hidden className={TITLE_ICON_CLASS} strokeWidth={2} />
+                <CoinIcon className={TITLE_ICON_CLASS} />
                 코인 · 결제
               </>
             }
@@ -102,7 +106,7 @@ export function MyPage({
                   aria-hidden
                   className="flex size-9 shrink-0 items-center justify-center rounded-full bg-mint-bg"
                 >
-                  <Coins className="size-[22px] text-mint" strokeWidth={2} />
+                  <CoinIcon className="text-mint" />
                 </span>
               }
               title="보유 코인"
@@ -140,7 +144,7 @@ export function MyPage({
         </div>
 
         {/* 우열 */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 max-md:gap-3.5">
           <SettingsCard
             title={
               <>

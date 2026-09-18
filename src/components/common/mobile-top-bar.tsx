@@ -48,7 +48,7 @@ export function MobileTopBar({ title, backHref, onBack, trailing, size = "md", c
           {arrow}
         </button>
       ) : null}
-      <span className={cn("min-w-0 flex-1 truncate text-ink", TITLE_CLASS[size])}>{title}</span>
+      <h1 className={cn("min-w-0 flex-1 truncate text-ink", TITLE_CLASS[size])}>{title}</h1>
       {trailing}
     </div>
   );

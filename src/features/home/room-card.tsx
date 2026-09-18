@@ -1,18 +1,26 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
 import { StatusChip } from "@/components/common/status-chip";
+import { cn } from "@/lib/utils";
 import type { PopularRoom } from "./types";
 
 type Props = {
   room: PopularRoom;
   /** 입장 링크 — 무료는 PIN 입장, 유료는 결제 화면 */
   href: string;
+  /** 카드 폭 규칙 덮어쓰기 — 기본은 데스크톱 3분할(flex-1), 폰 가로 스크롤 캐러셀은 고정 폭을 넘긴다 */
+  className?: string;
 };
 
 /** 인기 방 카드 (W-01 v6 캐러셀) — 주제·유형 칩 · 제목 · 선생님 Lv · 참여 수 · 입장 */
-export function RoomCard({ room, href }: Props) {
+export function RoomCard({ room, href, className }: Props) {
   return (
-    <article className="flex min-w-0 flex-1 flex-col gap-3 rounded-2xl border bg-card px-5 py-[18px]">
+    <article
+      className={cn(
+        "flex min-w-0 flex-1 flex-col gap-3 rounded-2xl border bg-card px-5 py-[18px]",
+        className,
+      )}
+    >
       <div className="flex items-center justify-between gap-2">
         {/* 서버가 주제를 안 주는 방이 있다 — 빈 칩(작은 민트 알약)만 남으므로 아예 그리지 않는다 */}
         {room.topic === "" ? <span /> : <StatusChip tone="topic">{room.topic}</StatusChip>}

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { MobileTabBar } from "@/components/common/mobile-tab-bar";
 import { PendingLabel } from "@/components/common/pending-label";
 import type { FinalRankRow } from "@/features/host/live/rank-columns";
 import type { EssayAnswer, QuestionInsight, SessionReport, Student } from "@/features/host/types";
@@ -103,7 +102,8 @@ export function ReviewMobile({
   const openQuestion = report.questions.find((q) => q.id === openQuestionId) ?? null;
 
   return (
-    <main className="flex min-h-dvh flex-col bg-card md:hidden">
+    // 하단 탭바는 레이아웃(host/(nav))이 fixed로 그리고 본문 아래를 그 높이만큼 띄운다 — 최소 높이에서 빼야 헛스크롤이 없다
+    <main className="flex min-h-[calc(100dvh-var(--mobile-tab-bar-h))] flex-col bg-card md:hidden">
       <header className="flex items-center gap-3 px-5 pt-14 pb-4">
         <Link href="/host/rooms" aria-label="내가 만든 방으로" className="text-ink">
           <ArrowLeft size={24} strokeWidth={2} aria-hidden />
@@ -258,8 +258,6 @@ export function ReviewMobile({
           </StudentTab>
         )}
       </div>
-
-      <MobileTabBar activeHref="/host/rooms" />
     </main>
   );
 }

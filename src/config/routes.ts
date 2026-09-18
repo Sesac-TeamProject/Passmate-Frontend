@@ -17,8 +17,9 @@ export type RouteMeta = {
   /** 사이드바에서 활성으로 표시할 내비 항목의 path. 자기 경로가 내비에 없는 화면만 지정 (예: /pay/[roomId] → /home) */
   nav?: string;
   /**
-   * 폰 폭(768px 미만)에서 회원 사이드바를 감추는 화면. 앱 시안이 사이드바 없는 한 화면으로 그린 곳만 켠다
-   * (예: /pay/[roomId] = 앱 M-11). PC는 그대로 사이드바가 선다.
+   * 폰 폭(768px 미만)에서 회원 셸(하단 탭바)을 그리지 않는 화면. 앱 시안이 탭바 없이 한 화면으로
+   * 그린 곳만 켠다 (예: /pay/[roomId] = 앱 M-11). PC는 그대로 사이드바가 선다.
+   * 켜는 화면은 반드시 자체 뒤로가기 줄(MobileTopBar)을 둔다 — 아니면 폰에서 빠져나갈 길이 없다.
    */
   mobileBare?: boolean;
 };
@@ -112,8 +113,6 @@ export const ROUTES: readonly RouteMeta[] = [
     title: "정산",
     description: "유료 방 참가비 정산 내역·지급 상태·정산 계좌 (Lv.3+ 유료 방 개설자)",
     area: "member",
-    // 앱 M-T4 — 폰은 하단 탭이 사이드바 자리를 대신한다
-    mobileBare: true,
   },
   {
     path: "/me/account",
@@ -231,8 +230,6 @@ export const ROUTES: readonly RouteMeta[] = [
     title: "내가 만든 방",
     description: "허브 — 헤드라인·명성 카드·운영 실적·행동 카드 3장·내 방 목록",
     area: "host",
-    // 앱 M-13 — 폰은 하단 탭이 사이드바 자리를 대신한다
-    mobileBare: true,
   },
   {
     path: "/host/reputation",
@@ -306,8 +303,7 @@ export const ROUTES: readonly RouteMeta[] = [
     description:
       "종료된 방의 통계·문항별 결과, 서술형 AI 분석 확인·코멘트 (내가 만든 방 › 상세 보기)",
     area: "host",
-    // 앱 M-14 — 폰은 하단 탭이 사이드바 자리를 대신한다
-    mobileBare: true,
+    nav: "/host/rooms",
   },
   // 관리자
   {
@@ -388,6 +384,19 @@ export const SIDEBAR_NAV: Record<
     { path: "/admin/branded" },
   ],
 };
+
+/**
+ * 폰 폭(768px 미만) 하단 탭바 4개 — 앱 `navigation/AppTab.kt`와 같은 수·순서·뜻.
+ * 사이드바 `MEMBER_NAV`(5개)와 일부러 다르다: 앱에 "문제 세트" 화면이 없어 탭에서 빠진다
+ * (폰에서 /host/sets 진입점은 선생님 조각에서 방 만들기 안으로 옮긴다).
+ * 아이콘 이름은 부품이 lucide 아이콘으로 옮긴다 — 설정에 컴포넌트를 두지 않는다.
+ */
+export const MOBILE_TABS = [
+  { path: "/home", label: "홈", icon: "home" },
+  { path: "/host/rooms", label: "내가 만든 방", icon: "hosted" },
+  { path: "/me/joined", label: "참여한 방", icon: "joined" },
+  { path: "/me", label: "마이", icon: "me" },
+] as const satisfies readonly { path: string; label: string; icon: string }[];
 
 export function getRoute(path: string): RouteMeta {
   const route = ROUTES.find((r) => r.path === path);

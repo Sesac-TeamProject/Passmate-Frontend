@@ -100,7 +100,9 @@ export function EditorPage({
         </p>
       ) : null}
 
-      <main className="flex flex-1 gap-6 px-8 py-6">
+      {/* 폰은 2단을 한 줄로 쌓는다 — 340px 생성 패널이 자리를 고정해 화면이 가로로 438px 까지
+          넘쳤다. 순서는 생성 조건 → 문항 목록이다(앱 시안 M-15 → M-15a 와 같은 차례). */}
+      <main className="flex flex-1 gap-6 px-8 py-6 max-md:flex-col max-md:gap-4 max-md:px-5 max-md:py-4">
         <GeneratePanel
           onGenerate={onGenerate}
           onAddManual={onAddManual}

@@ -47,7 +47,7 @@ export function SetDetailPanel({
   cloning,
 }: Props) {
   return (
-    <aside className="flex w-[360px] shrink-0 flex-col gap-3 bg-card p-6">
+    <aside className="flex w-[360px] shrink-0 flex-col gap-3 bg-card p-6 max-md:w-full max-md:px-5 max-md:py-6">
       <h2 className="text-heading-md text-ink">{set.title}</h2>
       {set.composition.length > 0 && (
         <div className="flex gap-1.5">

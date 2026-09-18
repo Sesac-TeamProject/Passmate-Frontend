@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { MobileTabBar } from "@/components/common/mobile-tab-bar";
 import type { StatItem } from "@/components/common/stat-cards";
 import { StatusChip } from "@/components/common/status-chip";
 import { formatWon } from "@/lib/format";
@@ -49,7 +48,8 @@ export function SettlementMobile({
     .join(" · ");
 
   return (
-    <main className="flex min-h-dvh flex-col bg-card md:hidden">
+    // 하단 탭바는 레이아웃((member))이 fixed로 그리고 본문 아래를 그 높이만큼 띄운다 — 최소 높이에서 빼야 헛스크롤이 없다
+    <main className="flex min-h-[calc(100dvh-var(--mobile-tab-bar-h))] flex-col bg-card md:hidden">
       <header className="flex items-center gap-3 px-5 pt-14 pb-3">
         <Link href="/me" aria-label="마이페이지로" className="text-ink">
           <ArrowLeft size={24} strokeWidth={2} aria-hidden />
@@ -146,8 +146,6 @@ export function SettlementMobile({
           </span>
         </Link>
       </div>
-
-      <MobileTabBar activeHref="/me" />
     </main>
   );
 }

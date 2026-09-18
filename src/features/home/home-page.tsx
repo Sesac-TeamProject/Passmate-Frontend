@@ -23,12 +23,14 @@ type Props = {
 
 /**
  * W-01 v6 홈 — 배너 · PIN 입장 · 인기 방 · + 새 방(FAB). 렌더 전용.
- * 최근 참여한 방·내가 만든 방 요약 카드는 사용자 결정(2026-08-27)으로 홈에서 뺐다 — 사이드바 "참여한 방"·"내가 만든 방"에서 본다.
+ * 최근 참여한 방·내가 만든 방 요약 카드는 사용자 결정(2026-08-27)으로 홈에서 뺐다 — PC는 사이드바, 폰은 하단
+ * 탭바의 "참여한 방"·"내가 만든 방"에서 본다.
+ * 폰 폭(max-md)은 앱 홈 탭(RoomListScreen.kt)을 따른다 — 상단 바 없이 배너부터 시작, 좌우 여백 20dp.
  */
 export function HomePage({ name, popularRooms, join, onCreateRoom }: Props) {
   return (
     // 시안 W-01: 좌우 96 · 위 28 · 섹션 사이 24 (아래는 잘린 프레임이라 위와 맞춘다)
-    <main className="flex flex-col gap-6 px-24 py-7">
+    <main className="flex flex-col gap-6 px-24 py-7 max-md:gap-3.5 max-md:px-5 max-md:pt-3 max-md:pb-6">
       <HeroBanner
         title={`안녕하세요, ${name} 님!`}
         description="오늘도 스터디원들과 실전처럼 연습해 보세요"

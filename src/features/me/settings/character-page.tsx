@@ -1,6 +1,7 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
+import { MobilePrimarySubmitBar } from "@/components/common/mobile-action-bar";
 import {
   AVATAR_KEYS,
   AVATAR_LABEL,
@@ -39,7 +40,14 @@ export function CharacterPage({
   };
 
   return (
-    <MeFormPage title="내 캐릭터 변경">
+    <MeFormPage
+      title="내 캐릭터 변경"
+      mobileAction={
+        <MobilePrimarySubmitBar onClick={onSubmit} disabled={pending}>
+          저장하기
+        </MobilePrimarySubmitBar>
+      }
+    >
       {errorMessage && (
         <p
           role="alert"
@@ -55,7 +63,7 @@ export function CharacterPage({
       <div
         role="radiogroup"
         aria-label="프로필 캐릭터"
-        className="grid grid-cols-6 gap-3"
+        className="grid grid-cols-6 gap-3 max-md:grid-cols-4"
         onKeyDown={handleKeyDown}
       >
         {AVATAR_KEYS.map((key) => {
@@ -84,7 +92,13 @@ export function CharacterPage({
 
       <div className="flex items-center justify-between">
         <span className="text-label-md text-mint-dark">선택: {AVATAR_LABEL[selected]}</span>
-        <Button type="button" size="xl" onClick={onSubmit} disabled={pending}>
+        <Button
+          type="button"
+          size="xl"
+          onClick={onSubmit}
+          disabled={pending}
+          className="max-md:hidden"
+        >
           저장하기
         </Button>
       </div>

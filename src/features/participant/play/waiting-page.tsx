@@ -2,6 +2,7 @@ import { Mascot } from "@/components/common/mascot";
 import { StudentAvatar } from "@/components/common/student-avatar";
 import type { Student } from "@/features/host/types";
 import { formatPin } from "@/lib/format";
+import { LeaveRoomButton } from "./leave-room-button";
 
 /** 아바타 스택에 늘어놓는 최대 인원 — 넘치면 "+N" 원으로 접는다 (시안 4명 + "+1") */
 const STACK_LIMIT = 4;
@@ -15,13 +16,25 @@ type Props = {
   students: Student[];
   /** 회원으로 들어왔는가 — 기록이 계정에 남는다는 약속은 회원에게만 한다 */
   isMember?: boolean;
+  /** 제목 줄 오른쪽 "나가기" — 앱과 같이 확인 없이 바로 나간다. 없으면 버튼을 그리지 않는다 */
+  onLeave?: () => void;
+  /** 나가기 요청 중 — 버튼을 잠근다 */
+  leaving?: boolean;
 };
 
 /**
  * M-02 대기실 (앱 시안 → 데스크톱 웹 이식).
  * 학생이 입장한 뒤 선생님이 시작할 때까지 머무는 화면.
  */
-export function WaitingPage({ roomTitle, pin, myName, students, isMember }: Props) {
+export function WaitingPage({
+  roomTitle,
+  pin,
+  myName,
+  students,
+  isMember,
+  onLeave,
+  leaving = false,
+}: Props) {
   const shown = students.slice(0, STACK_LIMIT);
   const overflow = students.length - shown.length;
 
@@ -32,9 +45,12 @@ export function WaitingPage({ roomTitle, pin, myName, students, isMember }: Prop
       // 폰 폭은 앱 M-02처럼 흰 바탕 — 제목 줄은 카드(좌우 20)보다 4 더 들여 24에 선다
       className="flex min-h-screen flex-col items-center px-5 pt-16 pb-10 max-md:min-h-dvh max-md:bg-card"
     >
-      <div className="flex w-full max-w-sm flex-col gap-1.5 max-md:max-w-none max-md:px-1">
-        <h1 className="text-heading-md">{roomTitle}</h1>
-        <p className="text-label-lg text-mint-dark">PIN {formatPin(pin)}</p>
+      <div className="flex w-full max-w-sm items-start justify-between gap-3 max-md:max-w-none max-md:px-1">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <h1 className="text-heading-md">{roomTitle}</h1>
+          <p className="text-label-lg text-mint-dark">PIN {formatPin(pin)}</p>
+        </div>
+        {onLeave && <LeaveRoomButton onClick={onLeave} disabled={leaving} />}
       </div>
 
       <div className="mt-16 flex w-full max-w-sm flex-col items-center gap-4 rounded-3xl border bg-card px-6 py-8">

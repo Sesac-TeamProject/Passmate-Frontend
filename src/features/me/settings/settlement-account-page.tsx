@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { FIELD_INPUT_CLASS, FieldInput, FormField } from "@/components/common/form-field";
+import { MobilePrimarySubmitBar } from "@/components/common/mobile-action-bar";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -46,7 +47,17 @@ export function SettlementAccountPage({
   };
 
   return (
-    <MeFormPage title="정산 계좌 등록">
+    <MeFormPage
+      title="정산 계좌 등록"
+      mobileAction={
+        <MobilePrimarySubmitBar
+          onClick={() => canSubmit && onSubmit()}
+          disabled={pending || !canSubmit}
+        >
+          등록하기
+        </MobilePrimarySubmitBar>
+      }
+    >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {errorMessage && (
           <p
@@ -113,7 +124,7 @@ export function SettlementAccountPage({
           정산은 매월 5일, 등록된 계좌로 지급돼요. 예금주는 가입한 이름과 같아야 해요.
         </p>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end max-md:hidden">
           <Button type="submit" size="xl" disabled={pending || !canSubmit}>
             등록하기
           </Button>
