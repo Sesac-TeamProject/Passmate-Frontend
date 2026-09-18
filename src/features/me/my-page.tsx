@@ -1,6 +1,6 @@
-import { Bell, Coins, User, Wallet } from "lucide-react";
-import Image from "next/image";
+import { Bell, User, Wallet } from "lucide-react";
 import Link from "next/link";
+import { CoinIcon } from "@/components/common/coin-icon";
 import { MobileTopBar } from "@/components/common/mobile-top-bar";
 import { AVATAR_LABEL } from "@/components/common/student-avatar";
 import type { CoinSummary, Profile, SettlementSummary } from "@/features/me/types";
@@ -94,7 +94,7 @@ export function MyPage({
           <SettingsCard
             title={
               <>
-                <Coins aria-hidden className={TITLE_ICON_CLASS} strokeWidth={2} />
+                <CoinIcon className={TITLE_ICON_CLASS} />
                 코인 · 결제
               </>
             }
@@ -106,16 +106,7 @@ export function MyPage({
                   aria-hidden
                   className="flex size-9 shrink-0 items-center justify-center rounded-full bg-mint-bg"
                 >
-                  {/* 시안 전용 아이콘(icon/coin 403:10267) — lucide Coins(동전 두 장)와 모양이 다르다.
-                      Next 이미지 최적화기는 SVG를 기본 차단한다 — 우리 자산이라 그대로 내보낸다 */}
-                  <Image
-                    src="/icons/coin.svg"
-                    alt=""
-                    width={22}
-                    height={22}
-                    unoptimized
-                    className="size-[22px]"
-                  />
+                  <CoinIcon className="text-mint" />
                 </span>
               }
               title="보유 코인"
