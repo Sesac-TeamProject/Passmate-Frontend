@@ -42,14 +42,14 @@ export function ScreenMockup({ label, children, className }: Props) {
 /**
  * 시안 `shot` — 화면 목업을 감싸는 그라데이션 카드(620×400). 오른쪽 위에 흰 블롭이 하나 뜬다.
  * `gradient`는 시안 3장이 서로 다른 초록을 써서 기능마다 다르게 받는다.
- * 1280 미만은 폭을 화면에 맞추고(최대 620), 폰 폭은 줄어든 목업에 맞춰 높이도 줄인다.
+ * 태블릿 폭(1280 미만)은 폭을 화면에 맞춘다(최대 620).
  */
 export function ShotCard({ gradient, children }: { gradient: string; children: ReactNode }) {
   return (
     <div
       className={cn(
         "relative flex h-[400px] w-[620px] shrink-0 items-center justify-center overflow-hidden rounded-[28px] bg-linear-to-b",
-        "max-xl:w-full max-xl:max-w-[620px] max-sm:h-[240px] max-sm:rounded-3xl",
+        "max-xl:w-full max-xl:max-w-[620px]",
         gradient,
       )}
     >

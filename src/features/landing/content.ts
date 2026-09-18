@@ -9,6 +9,23 @@ export const NAV_LINKS = [
   { href: "#faq", label: "FAQ" },
 ] as const;
 
+/**
+ * 히어로 문구. 폰(L-01m)도 같은 문장을 쓴다 — 웹은 줄바꿈 문자 자리에서 줄을 바꾸고, 폰은 폭에 맞춰 흘린다.
+ */
+export const HERO = {
+  title: "혼자 시작한 공부,\n함께하는 합격까지.",
+  body: "선생님은 PIN 하나로 방을 열고, 학생은 회원가입 없이 들어와요.\n문제는 AI가, 첨삭은 선생님과 AI가 같이. 시험장 그대로.",
+  proof: "새싹 부트캠프 스터디가 먼저 쓰고 있어요",
+} as const;
+
+/** 맨 아래 CTA. `mobileBody`는 폰(L-01m) 줄바꿈 */
+export const CTA = {
+  title: "오늘 수업부터 실전처럼",
+  body: "문제 세트 하나면 5분 안에 첫 방이 열려요. 카드 없이, 무료로.",
+  /** "카드 없이"(신용카드)는 폰에서 바로 위 기능 카드로 읽혀 뺐다. "무료 방은 코인 없이"는 STATS 문구 그대로 */
+  mobileBody: "문제 세트 하나면 5분 안에 첫 방이 열려요.\n무료 방은 코인 없이 바로.",
+} as const;
+
 /** 히어로 하단 "먼저 쓰고 있어요" 아바타 4개(시안 순서: 호랑이·여우·토끼·강아지) */
 export const PROOF_AVATARS: readonly AvatarKey[] = ["tiger", "fox", "rabbit", "dog"];
 
