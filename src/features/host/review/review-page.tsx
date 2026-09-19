@@ -127,41 +127,6 @@ export function ReviewPage({
             <p className="text-label-md text-muted-foreground">{meta}</p>
           </div>
 
-          {/* 탭·내보내기 버튼은 조작 도구다 — 인쇄물(PDF)에는 내용만 남긴다 */}
-          <div className="flex items-center justify-between print:hidden">
-            <div role="tablist" className="flex gap-2">
-              {TABS.map((name) => (
-                <button
-                  key={name}
-                  role="tab"
-                  type="button"
-                  aria-selected={tab === name}
-                  onClick={() => setTab(name)}
-                  className={cn(
-                    "h-[34px] rounded-lg px-4 text-label-lg transition-colors",
-                    tab === name ? "bg-ink text-white" : "text-muted-foreground hover:bg-muted",
-                  )}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex gap-2">
-              {(["CSV", "PDF"] as const).map((format) => (
-                <button
-                  key={format}
-                  type="button"
-                  onClick={() => onExport(format)}
-                  disabled={exporting}
-                  className="h-[34px] w-16 rounded-lg border bg-card text-label-md text-ink transition-colors hover:bg-muted disabled:opacity-60"
-                >
-                  {exporting ? <PendingLabel>…</PendingLabel> : format}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <ReportStats
             stats={report.stats}
             lowest={
@@ -170,6 +135,45 @@ export function ReviewPage({
                 : { label: `Q${lowest.index}`, accuracyPercent: lowest.accuracy ?? 0 }
             }
           />
+
+          {/* 탭·내보내기 버튼은 조작 도구다 — 인쇄물(PDF)에는 내용만 남긴다 */}
+          <div className="flex items-center justify-between border-b print:hidden">
+            {/* 밑줄 탭 — 채운 버튼은 이 화면에서 가장 진한 덩어리가 돼 요약보다 먼저 읽힌다 */}
+            <div role="tablist" className="flex gap-1">
+              {TABS.map((name) => (
+                <button
+                  key={name}
+                  role="tab"
+                  type="button"
+                  aria-selected={tab === name}
+                  onClick={() => setTab(name)}
+                  className={cn(
+                    "relative h-9 px-3 text-label-lg transition-colors",
+                    tab === name ? "text-ink" : "text-muted-foreground hover:text-ink",
+                  )}
+                >
+                  {name}
+                  {tab === name && (
+                    <span aria-hidden className="absolute inset-x-0 -bottom-px h-0.5 bg-mint" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2 pb-2">
+              {(["CSV", "PDF"] as const).map((format) => (
+                <button
+                  key={format}
+                  type="button"
+                  onClick={() => onExport(format)}
+                  disabled={exporting}
+                  className="h-8 w-16 rounded-md border bg-card text-label-md text-muted-foreground transition-colors hover:bg-muted hover:text-ink disabled:opacity-60"
+                >
+                  {exporting ? <PendingLabel>…</PendingLabel> : format}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* 화면은 탭이라 한 번에 하나만 보인다 — 인쇄에서는 이 조작 뷰를 감추고 아래 문서를 쓴다 */}
           <div className="flex flex-1 flex-col print:hidden">
@@ -187,6 +191,8 @@ export function ReviewPage({
             ) : tab === "학생별" ? (
               <StudentReviewPanel
                 students={students}
+                rows={rankRows}
+                questionTotal={report.stats.questions}
                 selectedStudentId={selectedStudentId}
                 onSelectStudent={onSelectStudent}
                 answers={studentAnswers}

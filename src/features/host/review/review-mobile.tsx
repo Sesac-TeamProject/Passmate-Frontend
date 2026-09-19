@@ -244,6 +244,8 @@ export function ReviewMobile({
             {openStudentId !== null && (
               <StudentReviewPanel
                 students={students}
+                rows={rankRows}
+                questionTotal={report.stats.questions}
                 selectedStudentId={selectedStudentId}
                 onSelectStudent={onSelectStudent}
                 answers={studentAnswers}
