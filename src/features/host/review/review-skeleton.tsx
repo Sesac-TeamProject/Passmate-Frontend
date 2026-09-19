@@ -1,12 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import {
-  Skeleton,
-  SkeletonCard,
-  SkeletonScreen,
-  SkeletonStatRow,
-  SkeletonText,
-} from "@/components/common/skeleton";
+import { Skeleton, SkeletonScreen, SkeletonText } from "@/components/common/skeleton";
 
 /**
  * W-07 방 리포트 — 스켈레톤 (design.pen "07 · 로딩 · 스켈레톤" 프레임 n8LEHE).
@@ -30,31 +24,62 @@ export function ReviewSkeleton() {
       </header>
 
       <SkeletonScreen label="리포트를 불러오는 중">
-        <div className="flex min-h-screen flex-col gap-4 px-8 py-[26px] max-md:hidden">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-5 w-64" />
-            <Skeleton soft className="h-9 w-28 rounded-xl" />
+        {/* 자리가 같아야 데이터가 오는 순간 튀지 않는다 — 제목·요약 띠·밑줄 탭·좌 목록/우 상세 */}
+        <div className="mx-auto flex min-h-screen w-full max-w-[1136px] flex-col gap-3 px-8 pt-6 pb-7 max-md:hidden">
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-6 w-64" />
+              <Skeleton soft className="h-4 w-72" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton soft className="h-8 w-16 rounded-md" />
+              <Skeleton soft className="h-8 w-16 rounded-md" />
+            </div>
           </div>
 
-          <SkeletonStatRow count={4} />
+          {/* 요약 띠 — 평균 정답률 한 칸만 크고 나머지 다섯은 작다 */}
+          <div className="flex items-start border-b pb-4">
+            <div className="flex w-56 shrink-0 flex-col gap-2 pr-6">
+              <Skeleton soft className="h-3 w-20" />
+              <Skeleton className="h-8 w-24" />
+              <Skeleton soft className="h-1.5 w-50 rounded-full" />
+            </div>
+            {Array.from({ length: 5 }, (_, i) => (
+              <div
+                key={i}
+                className="flex min-w-0 flex-1 flex-col gap-2 border-l border-line-soft py-1 pl-5"
+              >
+                <Skeleton soft className="h-3 w-[60%]" />
+                <Skeleton className="h-5 w-[75%]" />
+              </div>
+            ))}
+          </div>
 
-          <div className="flex flex-1 gap-4">
-            <div className="flex min-w-0 flex-[3] flex-col gap-2">
-              {Array.from({ length: 5 }, (_, i) => (
-                <div key={i} className="flex items-center gap-4 rounded-2xl bg-card px-5 py-4">
-                  <Skeleton soft className="size-8 shrink-0 rounded-full" />
+          <div className="flex gap-4 border-b pb-2.5">
+            <Skeleton className="h-5 w-10" />
+            <Skeleton soft className="h-5 w-14" />
+            <Skeleton soft className="h-5 w-14" />
+          </div>
+
+          <div className="flex flex-1 gap-6 pt-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-4">
+              {Array.from({ length: 8 }, (_, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton soft className="h-4 w-8 shrink-0" />
+                  <Skeleton soft className="h-5 w-11 shrink-0 rounded" />
                   <Skeleton className="h-4 min-w-0 flex-1" />
-                  <Skeleton soft className="h-3 w-20 shrink-0" />
+                  <Skeleton soft className="h-1.5 w-20 shrink-0 rounded-full" />
+                  <Skeleton className="h-4 w-10 shrink-0" />
                 </div>
               ))}
             </div>
 
-            <SkeletonCard className="flex-[2] gap-4">
+            <div className="flex w-[424px] shrink-0 flex-col gap-4 border-l pl-6">
               <Skeleton className="h-4 w-32" />
               <SkeletonText lines={4} soft />
               <SkeletonText lines={3} soft />
               <Skeleton className="mt-auto h-10 w-full rounded-xl" />
-            </SkeletonCard>
+            </div>
           </div>
         </div>
 
