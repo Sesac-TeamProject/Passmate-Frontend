@@ -26,7 +26,7 @@ for (var p = el.parentElement; p && p !== de; p = p.parentElement) {
 }
 ```
 
-## 결과 — 33 / 43 깨끗 · 7 깨짐 · 3 미측정
+## 결과 — 34 / 43 깨끗 · 6 깨짐(전부 admin) · 3 미측정
 
 ### ✅ 깨끗 (scrollWidth 390 · 넘친 요소 0)
 
@@ -35,9 +35,9 @@ for (var p = el.parentElement; p && p !== de; p = p.parentElement) {
 | public (5)      | `/` · `/terms` · `/privacy` · `/hosts/[userId]` · `/rooms`                                                                                                                                                       |
 | member (13)     | `/home` · `/me` · `/me/joined` · `/settlement` · `/account` · `/settlement-account` · `/character` · `/coins` · `/coins/charge` · `/coins/charge/complete` · `/payment-methods` · `/notifications` · `/withdraw` |
 | participant (5) | `/join` · `/play/[code]` · `/result/[id]` · `/result/[id]/report` · `/result/[id]/report/[no]`                                                                                                                   |
-| host (10)       | `/host/rooms` · `/reputation` · `/sets` · `/rooms/new` · `/editor` · `/sessions/[id]/review` · `/rooms/[code]/lobby` · `live` · `result` · `final`                                                               |
+| host (11)       | `/host/rooms` · `/reputation` · `/sets` · `/rooms/new` · `/editor` · `/sessions/[id]/review` · `/rooms/[code]/lobby` · `live` · `result` · `final` · `timing`                                                    |
 
-### ❌ 남은 것 — admin 6경로 · 시간 설정 1경로
+### ❌ 남은 것 — admin 6경로
 
 | 경로               | scrollWidth | 넘친 요소 |
 | ------------------ | ----------- | --------- |
@@ -47,16 +47,6 @@ for (var p = el.parentElement; p && p !== de; p = p.parentElement) {
 | `/admin/reports`   | 528         | 9         |
 | `/admin/users`     | 427         | 1         |
 | `/admin/rooms`     | 427         | 1         |
-
-| 경로                        | scrollWidth | 넘친 요소 |
-| --------------------------- | ----------- | --------- |
-| `/host/rooms/[code]/timing` | 602         | 6         |
-
-`timing` 은 목이 데이터를 안 줘서 2026-09-19 1차에서는 못 쟀다. 실서버(8080) + 개발용 로그인으로
-방장(`key=host2`, 방 81 `야구 퀴즈` PIN 643493)으로 들어가 다시 쟀다.
-원인은 "모든 문항 한 번에" 줄이다 — 프리셋 5개(`w-21` = 84px)가 `ml-auto` 로 한 줄에 서고
-뒤에 `일괄 적용`(`w-41` = 164px)이 붙어 84×5 + 간격 + 164 ≈ 632px 가 된다
-(`timing-page.tsx:99`).
 
 **보류 결정(2026-09-19)** — 피그마 `02 · 웹 — 관리자` 섹션에 1440 만 있고 폰 시안이 없다.
 숫자로도 1440 전용 마크업 그대로임이 확인됐다. 시안이 생기면 이 표부터 다시 잰다.
@@ -71,14 +61,20 @@ for (var p = el.parentElement; p && p !== de; p = p.parentElement) {
 
 실서버 모드(8080)로 띄우면 잴 수 있다. 목 모드의 한계라 화면 결함이라는 뜻은 아니다.
 
+`/host/rooms/[code]/timing` 도 같은 이유로 1차에서는 못 쟀다. 실서버 + 개발용 로그인으로 쟀다 —
+`/login` 의 개발용 로그인 칸에 방 주인의 key 를 넣는다(방 81 `야구 퀴즈` 는 `host2`).
+`key` 는 계정 이메일의 `@` 앞부분이다(`host2@dev.passmate.local`). 방에 문제 세트가 연결돼 있어야
+화면이 뜬다 — 없으면 "연결된 문제 세트를 찾지 못했어요" 로 떨어진다.
+
 ## 고친 내역 (2026-09-19)
 
-| 경로                                  | 전  | 후  | 원인                                                         |
-| ------------------------------------- | --- | --- | ------------------------------------------------------------ |
-| `/result/[id]/report` 신고 다이얼로그 | 494 | 333 | `w-[520px]` 가 shadcn 기본 `max-w-[calc(100%-2rem)]` 를 덮음 |
-| `/host/rooms/[code]/lobby`            | 550 | 390 | 방 코드 밑줄 `w-[430px]` · 3단계·지표 줄 가로 배치           |
-| `/host/rooms/[code]/result`           | 574 | 390 | 헤더 문항 레일(8칸) · 본문 2단                               |
-| `/host/rooms/[code]/final`            | 558 | 390 | 문항 레일 · 시상대 `w-[168px]`×3 · 순위 2열 · 버튼 176px×2   |
+| 경로                                  | 전  | 후  | 원인                                                                                 |
+| ------------------------------------- | --- | --- | ------------------------------------------------------------------------------------ |
+| `/result/[id]/report` 신고 다이얼로그 | 494 | 333 | `w-[520px]` 가 shadcn 기본 `max-w-[calc(100%-2rem)]` 를 덮음                         |
+| `/host/rooms/[code]/lobby`            | 550 | 390 | 방 코드 밑줄 `w-[430px]` · 3단계·지표 줄 가로 배치                                   |
+| `/host/rooms/[code]/result`           | 574 | 390 | 헤더 문항 레일(8칸) · 본문 2단                                                       |
+| `/host/rooms/[code]/final`            | 558 | 390 | 문항 레일 · 시상대 `w-[168px]`×3 · 순위 2열 · 버튼 176px×2                           |
+| `/host/rooms/[code]/timing`           | 602 | 390 | 프리셋 5개(84px)+`일괄 적용`(164px)이 고정폭이라 글자 블록이 한 글자 폭까지 짜부라짐 |
 
 공통 원인은 프로젝터 셸(`projector-shell.tsx`)의 좌우 여백 80 + 레일 300px 고정 = 폰 최소 460px.
 
