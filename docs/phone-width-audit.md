@@ -26,7 +26,7 @@ for (var p = el.parentElement; p && p !== de; p = p.parentElement) {
 }
 ```
 
-## 결과 — 33 / 43 깨끗
+## 결과 — 33 / 43 깨끗 · 7 깨짐 · 3 미측정
 
 ### ✅ 깨끗 (scrollWidth 390 · 넘친 요소 0)
 
@@ -37,7 +37,7 @@ for (var p = el.parentElement; p && p !== de; p = p.parentElement) {
 | participant (5) | `/join` · `/play/[code]` · `/result/[id]` · `/result/[id]/report` · `/result/[id]/report/[no]`                                                                                                                   |
 | host (10)       | `/host/rooms` · `/reputation` · `/sets` · `/rooms/new` · `/editor` · `/sessions/[id]/review` · `/rooms/[code]/lobby` · `live` · `result` · `final`                                                               |
 
-### ❌ 남은 것 — admin 6경로
+### ❌ 남은 것 — admin 6경로 · 시간 설정 1경로
 
 | 경로               | scrollWidth | 넘친 요소 |
 | ------------------ | ----------- | --------- |
@@ -48,17 +48,26 @@ for (var p = el.parentElement; p && p !== de; p = p.parentElement) {
 | `/admin/users`     | 427         | 1         |
 | `/admin/rooms`     | 427         | 1         |
 
+| 경로                        | scrollWidth | 넘친 요소 |
+| --------------------------- | ----------- | --------- |
+| `/host/rooms/[code]/timing` | 602         | 6         |
+
+`timing` 은 목이 데이터를 안 줘서 2026-09-19 1차에서는 못 쟀다. 실서버(8080) + 개발용 로그인으로
+방장(`key=host2`, 방 81 `야구 퀴즈` PIN 643493)으로 들어가 다시 쟀다.
+원인은 "모든 문항 한 번에" 줄이다 — 프리셋 5개(`w-21` = 84px)가 `ml-auto` 로 한 줄에 서고
+뒤에 `일괄 적용`(`w-41` = 164px)이 붙어 84×5 + 간격 + 164 ≈ 632px 가 된다
+(`timing-page.tsx:99`).
+
 **보류 결정(2026-09-19)** — 피그마 `02 · 웹 — 관리자` 섹션에 1440 만 있고 폰 시안이 없다.
 숫자로도 1440 전용 마크업 그대로임이 확인됐다. 시안이 생기면 이 표부터 다시 잰다.
 
-### ⬜ 목 모드로는 못 잰 4경로
+### ⬜ 목 모드로는 못 잰 3경로
 
-| 경로                        | 왜                                         | 코드의 폰 분기        |
-| --------------------------- | ------------------------------------------ | --------------------- |
-| `/login`                    | 목 자동 로그인이 `/home` 으로 보낸다       | `login-page.tsx` 13곳 |
-| `/auth/callback`            | 같음                                       | —                     |
-| `/pay/[roomId]`             | 목에 맞는 방이 없어 "없는 방이에요"        | `pay-page.tsx` 6곳    |
-| `/host/rooms/[code]/timing` | 9초까지 "불러오는 중…" — 목이 답을 안 준다 | —                     |
+| 경로             | 왜                                   | 코드의 폰 분기        |
+| ---------------- | ------------------------------------ | --------------------- |
+| `/login`         | 목 자동 로그인이 `/home` 으로 보낸다 | `login-page.tsx` 13곳 |
+| `/auth/callback` | 같음                                 | —                     |
+| `/pay/[roomId]`  | 목에 맞는 방이 없어 "없는 방이에요"  | `pay-page.tsx` 6곳    |
 
 실서버 모드(8080)로 띄우면 잴 수 있다. 목 모드의 한계라 화면 결함이라는 뜻은 아니다.
 

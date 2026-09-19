@@ -69,7 +69,7 @@ export function TimingPage({
   const totalSec = rows.reduce((sum, r) => sum + r.timeLimitSec, 0);
 
   return (
-    <main className="flex flex-col gap-4 px-9 py-10">
+    <main className="flex flex-col gap-4 px-9 py-10 max-md:gap-3.5 max-md:px-5 max-md:py-6">
       <header className="flex flex-col gap-1">
         <Link
           href={backHref}
@@ -91,12 +91,18 @@ export function TimingPage({
         </p>
       )}
 
-      <section className="mt-2 flex items-center gap-6 rounded-[20px] border bg-card p-6">
+      {/*
+        폰 폭: 오른쪽 두 덩어리가 고정폭(프리셋 84×5 · 일괄 적용 164)이라 줄어들 수 있는 건
+        왼쪽 글자 블록뿐인데, 한글은 글자 사이 어디서나 끊겨 한 글자 폭까지 짜부라졌다 —
+        제목이 "모/든/문/항/한/번/에" 세로로 쏟아지고 일괄 적용은 12px 조각이 돼 못 눌렀다
+        (실측 602px, 2026-09-19). 폰에서는 세로로 쌓는다.
+      */}
+      <section className="mt-2 flex items-center gap-6 rounded-[20px] border bg-card p-6 max-md:mt-1 max-md:flex-col max-md:items-stretch max-md:gap-4 max-md:p-5">
         <div className="flex flex-col gap-1.5">
           <h2 className="text-heading-sm font-bold">모든 문항 한 번에</h2>
           <p className="text-body-md text-muted-foreground">개별로 바꾼 문항은 그대로 둡니다</p>
         </div>
-        <ul className="ml-auto flex items-center gap-3">
+        <ul className="ml-auto flex items-center gap-3 max-md:ml-0 max-md:flex-wrap max-md:gap-2">
           {TIME_PRESETS.map((sec) => (
             <li key={sec}>
               <button
@@ -120,14 +126,15 @@ export function TimingPage({
           type="button"
           onClick={onApplyPreset}
           disabled={readOnly || preset === null}
-          className="h-11 w-41 rounded-xl bg-mint text-label-lg font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
+          className="h-11 w-41 rounded-xl bg-mint text-label-lg font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60 max-md:w-full"
         >
           일괄 적용
         </button>
       </section>
 
-      <section className="rounded-[20px] border bg-card p-6">
-        <div className="flex items-center border-b pb-3.5 text-label-md font-bold tracking-[0.08em] text-ink-disabled">
+      <section className="rounded-[20px] border bg-card p-6 max-md:p-4">
+        {/* 폰은 행이 줄바꿈으로 접혀 열 위치가 어긋난다 — 머리글 대신 각 칸에 이름을 붙인다 */}
+        <div className="flex items-center border-b pb-3.5 text-label-md font-bold tracking-[0.08em] text-ink-disabled max-md:hidden">
           <span className="flex-1">문항</span>
           <span className="w-24">유형</span>
           <span className="w-[190px]">제한 시간</span>
@@ -143,18 +150,19 @@ export function TimingPage({
           {rows.map((row) => (
             <li
               key={row.questionId}
-              className="flex items-center border-b border-line-soft py-4 last:border-b-0"
+              className="flex items-center border-b border-line-soft py-4 last:border-b-0 max-md:flex-wrap max-md:gap-x-4 max-md:gap-y-2.5"
             >
-              <span className="flex min-w-0 flex-1 items-center gap-5">
+              <span className="flex min-w-0 flex-1 items-center gap-5 max-md:w-full max-md:flex-none">
                 <span className="w-6 shrink-0 text-label-lg font-bold text-ink-disabled">
                   {String(row.no).padStart(2, "0")}
                 </span>
                 <span className="min-w-0 truncate text-heading-sm">{row.body}</span>
               </span>
-              <span className="w-24">
+              <span className="w-24 max-md:w-auto">
                 <QuestionTypeChip type={row.type} />
               </span>
-              <span className="w-[190px]">
+              <span className="w-[190px] max-md:flex max-md:w-auto max-md:items-center max-md:gap-2">
+                <span className="text-label-md text-ink-disabled md:hidden">제한 시간</span>
                 <Stepper
                   value={row.timeLimitSec}
                   onChange={(next) => onChangeTime(row.questionId, next)}
@@ -170,7 +178,8 @@ export function TimingPage({
                 호스트가 "바로 마감"으로 닫으면 자동으로 넘어가지 않는다(리모컨을 잡은 상황) —
                 시간 만료로 마감된 경우에만 서버가 다음 문항을 연다. 마지막 문항은 자동 종료하지 않는다.
               */}
-              <span className="w-24">
+              <span className="w-24 max-md:flex max-md:w-auto max-md:items-center max-md:gap-2">
+                <span className="text-label-md text-ink-disabled md:hidden">자동 넘김</span>
                 <Switch
                   checked={row.autoAdvance}
                   onCheckedChange={(checked) => onChangeAutoAdvance(row.questionId, checked)}
@@ -183,7 +192,7 @@ export function TimingPage({
         </ul>
       </section>
 
-      <section className="flex items-center gap-4 rounded-[20px] border bg-card px-6 py-4">
+      <section className="flex items-center gap-4 rounded-[20px] border bg-card px-6 py-4 max-md:flex-wrap max-md:gap-y-3 max-md:px-5">
         <Clock aria-hidden className="size-5 shrink-0 text-muted-foreground" />
         <div className="flex flex-col">
           <span className="text-body-md text-muted-foreground">예상 진행 시간</span>
@@ -191,7 +200,9 @@ export function TimingPage({
             {rows.length}문항 · {formatEstimate(totalSec)}
           </span>
         </div>
-        <p className="ml-10 text-body-md text-muted-foreground">서술형은 기본 90초로 잡혀 있어요</p>
+        <p className="ml-10 text-body-md text-muted-foreground max-md:ml-0 max-md:w-full">
+          서술형은 기본 90초로 잡혀 있어요
+        </p>
         {errorMessage && (
           <p role="alert" className="ml-auto text-body-md text-negative">
             {errorMessage}
@@ -202,7 +213,7 @@ export function TimingPage({
           onClick={onSave}
           disabled={saving || readOnly}
           className={cn(
-            "h-11 w-41 rounded-xl bg-mint text-label-lg font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60",
+            "h-11 w-41 rounded-xl bg-mint text-label-lg font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60 max-md:ml-0 max-md:w-full",
             errorMessage ? "ml-6" : "ml-auto",
           )}
         >
