@@ -17,7 +17,9 @@ type Props = {
 export function QuestionRail({ current, total, completed = false, tone = "mint" }: Props) {
   return (
     <ol
-      className="flex items-center gap-3.5"
+      // 폰 폭: 8~40문항이 한 줄로 서면 헤더가 화면 밖으로 밀린다(실측 /result 574px · /final 558px).
+      // 줄바꿈으로 접는다 — 가로 스크롤 레일로 두면 뒤쪽 문항이 있는지 알 길이 없다.
+      className="flex items-center gap-3.5 max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1.5"
       aria-label={completed ? `전체 ${total}문항` : `${total}문항 중 ${current}번째`}
     >
       {Array.from({ length: total }, (_, i) => {

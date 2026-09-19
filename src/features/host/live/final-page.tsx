@@ -60,7 +60,7 @@ export function FinalPage({
           <p className="text-body-md text-muted-foreground">
             학생 화면에는 자기 순위와 리포트가 열려요
           </p>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-5 max-md:flex-col max-md:items-stretch max-md:gap-2.5">
             {/*
               순위 내보내기는 아직 계약이 없다(DESIGN_GAPS D-8). 눌러도 아무 일도 없던 버튼이라
               준비 중임을 밝히고 잠근다 — 방 리포트 화면의 CSV 내보내기는 그대로 쓸 수 있다
@@ -71,14 +71,14 @@ export function FinalPage({
               onClick={onExport}
               disabled
               title="순위 내보내기는 준비 중이에요. 방 리포트에서 CSV로 받을 수 있어요"
-              className="h-13 w-44 rounded-2xl border-[1.5px] text-heading-sm font-bold transition-colors hover:bg-muted disabled:opacity-60"
+              className="h-13 w-44 rounded-2xl border-[1.5px] text-heading-sm font-bold transition-colors hover:bg-muted disabled:opacity-60 max-md:w-full"
             >
               {exporting ? <PendingLabel>내보내는 중…</PendingLabel> : "순위 내보내기 (준비 중)"}
             </button>
             <button
               type="button"
               onClick={onOpenReport}
-              className="h-13 w-44 rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark"
+              className="h-13 w-44 rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark max-md:w-full"
             >
               방 리포트 보기
             </button>
@@ -86,7 +86,7 @@ export function FinalPage({
         </>
       }
     >
-      <div className="mt-8 flex items-baseline justify-between">
+      <div className="mt-8 flex items-baseline justify-between max-md:mt-5 max-md:flex-col max-md:items-start max-md:gap-1">
         <h1 className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
           최종 순위
         </h1>
@@ -96,7 +96,7 @@ export function FinalPage({
       </div>
 
       {podium.length > 0 && (
-        <div className="mt-10">
+        <div className="mt-10 max-md:mt-6">
           <Podium entries={podium} questionTotal={questionTotal} />
         </div>
       )}

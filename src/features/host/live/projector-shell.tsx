@@ -62,11 +62,11 @@ export function ProjectorShell({
   const hasRail = rail !== undefined;
 
   return (
-    <div className={cn("relative flex min-h-screen bg-card", className)}>
+    <div className={cn("relative flex min-h-screen bg-card max-md:flex-col", className)}>
       <div aria-hidden className="absolute inset-x-0 top-0 h-1 bg-mint" />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-20 shrink-0 items-center gap-6 border-b px-20">
+        <header className="flex h-20 shrink-0 items-center gap-6 border-b px-20 max-md:h-auto max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-2 max-md:px-5 max-md:py-3">
           {exitHref && (
             <Link
               href={exitHref}
@@ -76,13 +76,15 @@ export function ProjectorShell({
               {exitLabel}
             </Link>
           )}
-          <div className="flex w-full max-w-[1080px] items-center justify-between">{top}</div>
+          <div className="flex w-full max-w-[1080px] items-center justify-between max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-2">
+            {top}
+          </div>
         </header>
 
-        <div className="flex flex-1 flex-col px-20">
+        <div className="flex flex-1 flex-col px-20 max-md:px-5">
           <div className="flex w-full max-w-[1080px] flex-1 flex-col">
             <main className="flex flex-1 flex-col">{children}</main>
-            <footer className="flex items-center justify-between border-t pt-4 pb-8">
+            <footer className="flex items-center justify-between border-t pt-4 pb-8 max-md:flex-col max-md:items-stretch max-md:gap-3 max-md:pb-6">
               {bottom}
             </footer>
           </div>
@@ -92,7 +94,7 @@ export function ProjectorShell({
       {hasRail && (
         <aside
           className={cn(
-            "relative shrink-0 border-l bg-surface-subtle",
+            "relative shrink-0 border-l bg-surface-subtle max-md:w-full max-md:border-t max-md:border-l-0",
             collapsed ? "w-[72px]" : "w-[300px]",
           )}
         >
@@ -101,11 +103,12 @@ export function ProjectorShell({
             onClick={() => setCollapsed((v) => !v)}
             aria-expanded={!collapsed}
             aria-label={collapsed ? `${railLabel} 펼치기` : `${railLabel} 접기`}
-            className="absolute top-1/2 left-0 z-10 flex h-[72px] w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[14px] border bg-card text-muted-foreground shadow-md transition-colors hover:text-foreground"
+            className="absolute top-1/2 left-0 z-10 flex h-[72px] w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[14px] border bg-card text-muted-foreground shadow-md transition-colors hover:text-foreground max-md:hidden"
           >
             {collapsed ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
           </button>
           {/* 문항이 많으면 막대가 화면 밖으로 넘친다 — 레일 안에서 스크롤한다 */}
+          {/* 폰은 레일이 본문 아래로 내려온다 — 접기 버튼을 감췄으므로 접힘으로 들어갈 길이 없다 */}
           <div className="h-full overflow-y-auto">{collapsed ? railCollapsed : rail}</div>
         </aside>
       )}

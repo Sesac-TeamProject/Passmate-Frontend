@@ -20,6 +20,8 @@ type Props = {
  * P-Web 신고 다이얼로그 (design.pen 프레임 Ozq4i).
  * 게스트도 익명으로 낼 수 있다(POST /reports). 사유를 고르지 않으면 보낼 수 없다 —
  * 운영팀이 분류 없는 신고를 받으면 처리할 수 없다.
+ *
+ * 앱 시안에는 신고 화면이 없다 — 폰은 웹 시안을 그대로 두고 폭·여백만 화면에 맞춘다.
  */
 export function ReportDialog({ open, onOpenChange, onSubmit, pending, errorMessage }: Props) {
   const [reason, setReason] = useState<ReportType | null>(null);
@@ -29,7 +31,9 @@ export function ReportDialog({ open, onOpenChange, onSubmit, pending, errorMessa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="flex w-[520px] max-w-[520px] flex-col gap-2 rounded-[20px] bg-card p-8 sm:max-w-[520px]"
+        // 520px 그대로면 390px 화면에서 좌우가 52px씩 잘리고 사유 라디오 점이 화면 밖으로 나간다
+        // (실측 2026-09-19). 폰은 본문과 같은 좌우 20 여백을 남기고 폭을 채운다 — ConfirmDialog와 같은 규칙.
+        className="flex w-[520px] max-w-[520px] flex-col gap-2 rounded-[20px] bg-card p-8 max-md:w-full max-md:max-w-[calc(100%-2.5rem)] max-md:p-6 sm:max-w-[520px]"
       >
         <DialogTitle className="text-heading-lg text-ink">이 방을 신고할게요</DialogTitle>
         <DialogDescription className="text-body-lg text-muted-foreground">
@@ -84,7 +88,7 @@ export function ReportDialog({ open, onOpenChange, onSubmit, pending, errorMessa
           <Button
             size="xl"
             variant="outline"
-            className="w-[140px]"
+            className="w-[140px] max-md:w-auto max-md:flex-1"
             onClick={() => onOpenChange(false)}
           >
             취소

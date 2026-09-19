@@ -284,6 +284,11 @@ export function useJoinRoom(roomId: number | null) {
  * "N명 참여 중"을 들고 있는 캐시 전부 — 홈 인기 방·탐색 목록·PIN 미리보기.
  * 입장 뒤에도 30초(staleTime) 동안 옛 인원이 남아 목록은 2명, 입장 화면은 0명으로 어긋나 보였다
  * (시나리오 테스트 "세션 버그", 2026-09-08).
+ *
+ * **인원이 줄어드는 쪽에도 똑같이 걸어야 한다.** 처음에 입장 계열에만 걸어 두었더니 나가기·내보내기
+ * 뒤에 반대로 어긋났다: 나간 직후 `/join` 이 "1명 참여 중"인데 서버는 0 이었다. 대기실(`/play`)이
+ * 같은 `roomByPin` 캐시를 1 로 갱신해 두고, 나가기가 그걸 그대로 남겼기 때문이다
+ * (실서버 재현, 2026-09-19).
  */
 function invalidateRoomCounts(queryClient: ReturnType<typeof useQueryClient>): void {
   queryClient.invalidateQueries({ queryKey: ["rooms", "public"] });
@@ -350,6 +355,7 @@ export function useLeaveRoom(roomId: number | null) {
       // 이관용 기록(guestRecord)은 남긴다 — 나간 뒤에도 7일 안에 가입하면 옮길 수 있다
       clearGuestToken();
       queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
+      invalidateRoomCounts(queryClient);
     },
   });
 }
@@ -363,6 +369,7 @@ export function useKickParticipant() {
       kickParticipant(roomId, participantId),
     onSuccess: (_data, { roomId }) => {
       queryClient.invalidateQueries({ queryKey: qk.participants(roomId) });
+      invalidateRoomCounts(queryClient);
     },
   });
 }
