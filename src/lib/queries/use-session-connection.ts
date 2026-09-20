@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { getParticipants } from "@/lib/api/rooms";
 import { getSessionSnapshot, getVoiceHints } from "@/lib/api/sessions";
-import { IS_MOCK } from "@/lib/env";
 import { connectRoomStream } from "@/lib/stomp";
 import { useSessionStore } from "@/lib/stores/session-store";
 import { qk } from "./keys";
@@ -40,14 +39,13 @@ export function useSessionConnection(roomId: number | null, { isHost }: { isHost
         // 명단은 부가 정보 — 실패해도 스냅샷 복구 자체는 유지한다
       }
 
-      // 음성 힌트는 백엔드에 없다(실서버 404) — 목 모드에서만 복구한다
-      if (IS_MOCK) {
-        try {
-          const { hints } = await getVoiceHints(roomId);
-          store.setHints(hints ?? []);
-        } catch {
-          // 힌트도 부가 정보 — 실패는 무시한다
-        }
+      // 음성 힌트 목록 — 재접속 전에 나온 힌트를 되찾는다. 예전에는 "백엔드에 없다"고 목 모드에만
+      // 열어 뒀는데 그 주석이 낡았다(서버에 있고 200). 게이트를 닫아 두면 복구 경로를 아무도 못 탄다
+      try {
+        const { hints } = await getVoiceHints(roomId);
+        store.setHints(hints ?? []);
+      } catch {
+        // 힌트도 부가 정보 — 실패는 무시한다
       }
     };
 
