@@ -151,7 +151,12 @@ export default function Page() {
 
     // 제출 수는 서버가 학생에게 알려주지 않는다(호스트 토픽 전용) — 내 순위는 랭킹에서 찾는다
     const question = toLiveQuestion(currentQuestion, 0);
-    const latestHint = hints.length > 0 ? hints[hints.length - 1] : null;
+    // 힌트는 **지금 열린 문항의 것**만 — 재접속 복구 목록에는 지난 문항의 힌트도 섞여 오고,
+    // 그걸 띄우면 학생은 이전 문제의 힌트를 지금 문제 것으로 듣는다
+    const questionHints = hints.filter(
+      (hint) => hint.sessionQuestionId === currentQuestion.sessionQuestionId,
+    );
+    const latestHint = questionHints.length > 0 ? questionHints[questionHints.length - 1] : null;
     // 마감 결과는 **지금 열려 있는 문항의 것**일 때만 — 늦게 온 이전 문항 마감은 리듀서가 버리지만 한 번 더 지킨다
     const currentReveal =
       reveal && reveal.sessionQuestionId === currentQuestion.sessionQuestionId ? reveal : null;
