@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
+import { BetaNotice } from "@/components/common/beta-notice";
 import { MobilePrimarySubmitBar } from "@/components/common/mobile-action-bar";
 import { PendingLabel } from "@/components/common/pending-label";
 import { CoinBalanceCard } from "@/features/me/coins/coin-balance-card";
 import { CHARGE_PRESETS } from "@/features/me/coins/types";
 import { MeFormPage } from "@/features/me/settings/me-form-page";
+import { BETA_PAYMENT_LOCKED } from "@/config/beta";
 import { formatKrwInline } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +39,7 @@ export function ChargePage({ balance, amount, onAmountChange, pending, error, on
       // 코인 내역에서 들어오는 화면이라 뒤로가기는 마이가 아니라 코인 내역으로 돌아간다
       backHref="/me/coins"
       mobileAction={
-        <MobilePrimarySubmitBar onClick={onSubmit} disabled={pending}>
+        <MobilePrimarySubmitBar onClick={onSubmit} disabled={pending || BETA_PAYMENT_LOCKED}>
           {submitLabel}
         </MobilePrimarySubmitBar>
       }
@@ -81,12 +83,25 @@ export function ChargePage({ balance, amount, onAmountChange, pending, error, on
         })}
       </div>
 
+      {BETA_PAYMENT_LOCKED && (
+        <BetaNotice title="현재는 베타 버전입니다.">
+          결제 기능은 정식 출시 후 이용할 수 있습니다.
+          <br />
+          지금은 코인 충전을 이용할 수 없습니다.
+        </BetaNotice>
+      )}
+
       <p className="text-label-md text-muted-foreground">
         1 C = ₩1 · 결제 수단은 결제창에서 골라요 · 포트원(PortOne) 안전 결제 · 충전 후 7일 내 미사용
         시 환불 가능
       </p>
 
-      <Button size="xl" className="w-full max-md:hidden" onClick={onSubmit} disabled={pending}>
+      <Button
+        size="xl"
+        className="w-full max-md:hidden"
+        onClick={onSubmit}
+        disabled={pending || BETA_PAYMENT_LOCKED}
+      >
         {submitLabel}
       </Button>
     </MeFormPage>

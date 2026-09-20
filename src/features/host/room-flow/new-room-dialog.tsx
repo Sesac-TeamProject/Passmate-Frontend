@@ -2,6 +2,7 @@
 
 import { useId, useState, type ChangeEvent, type FormEvent } from "react";
 import { X } from "lucide-react";
+import { BetaNotice } from "@/components/common/beta-notice";
 import { FIELD_INPUT_CLASS, FieldInput } from "@/components/common/form-field";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BETA_PAYMENT_LOCKED } from "@/config/beta";
 import type { RoomCreateRequest } from "@/lib/types/dto";
 import { cn } from "@/lib/utils";
 import {
@@ -73,7 +75,7 @@ export function NewRoomDialog({
   const hasSets = sets.length > 0;
   // 서버가 등급을 못 준 경우(조회 실패)는 잠그지 않는다 — 없는 Lv.1을 지어내는 대신
   // 서버의 403 HOST_LEVEL_REQUIRED가 판정하게 둔다.
-  const paidLocked = level !== null && level < PAID_ROOM_MIN_LEVEL;
+  const paidLocked = BETA_PAYMENT_LOCKED || (level !== null && level < PAID_ROOM_MIN_LEVEL);
   const isPaid = roomType === "paid";
 
   const handleFeeChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -166,8 +168,17 @@ export function NewRoomDialog({
               value={roomType}
               onChange={setRoomType}
               paidLocked={paidLocked}
-              paidLabel={`유료 (Lv.${PAID_ROOM_MIN_LEVEL}부터)`}
+              paidLabel={
+                BETA_PAYMENT_LOCKED ? "유료 · 준비 중" : `유료 (Lv.${PAID_ROOM_MIN_LEVEL}부터)`
+              }
             />
+            {BETA_PAYMENT_LOCKED && (
+              <BetaNotice title="현재는 베타 버전입니다.">
+                유료 방은 아직 준비 중입니다.
+                <br />
+                현재는 무료 방만 만들 수 있습니다.
+              </BetaNotice>
+            )}
           </div>
 
           {isPaid && (

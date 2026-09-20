@@ -135,6 +135,7 @@ export function EditorPage({
             questions={questions}
             busyQuestionId={busyQuestionId}
             readOnly={readOnly}
+            regenerateLocked={aiQuota?.remainingCount === 0}
             onEdit={onEdit}
             onRegenerate={onRegenerate}
             onDelete={onDelete}
