@@ -7,6 +7,7 @@ import { ScreenLoading } from "@/components/common/screen-loading";
 import { toMeErrorMessage } from "@/features/me/adapt";
 import { ChargePage } from "@/features/me/coins/charge-page";
 import { DEFAULT_CHARGE_AMOUNT } from "@/features/me/coins/types";
+import { BETA_PAYMENT_LOCKED } from "@/config/beta";
 import { payMethodFromWire, requestPayment } from "@/lib/portone";
 import { useCoinBalance, useConfirmCharge, useCreateCharge } from "@/lib/queries/use-payments";
 
@@ -22,6 +23,8 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
+    // 버튼이 잠겨 있어도 한 번 더 막는다 — 베타 동안은 결제 요청 자체가 나가면 안 된다
+    if (BETA_PAYMENT_LOCKED) return;
     setPending(true);
     setError(null);
     try {

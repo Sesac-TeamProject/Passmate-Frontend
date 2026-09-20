@@ -11,6 +11,8 @@ type Props = {
   onMove: (question: EditorQuestion, direction: "up" | "down") => void;
   /** 확정된 세트는 문항을 고칠 수 없다(서버가 409로 막는다) */
   readOnly?: boolean;
+  /** AI 한도 소진 — 재생성도 생성과 같은 한도를 쓴다(FR-076) */
+  regenerateLocked?: boolean;
 };
 
 const ACTION =
@@ -30,6 +32,7 @@ export function QuestionList({
   onDelete,
   onMove,
   readOnly,
+  regenerateLocked,
 }: Props) {
   const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
 
@@ -100,9 +103,13 @@ export function QuestionList({
                   <button
                     type="button"
                     className={ACTION}
-                    disabled={busyQuestionId != null}
+                    disabled={busyQuestionId != null || regenerateLocked}
                     onClick={() => onRegenerate(q)}
-                    title="AI 무료 생성 횟수를 하나 씁니다"
+                    title={
+                      regenerateLocked
+                        ? "베타 기간 AI 문제 생성 횟수를 모두 사용했습니다"
+                        : "AI 문제 생성 횟수를 하나 씁니다"
+                    }
                   >
                     {busyQuestionId === q.id ? "재생성 중…" : "재생성"}
                   </button>

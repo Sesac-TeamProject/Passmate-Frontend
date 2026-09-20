@@ -10,6 +10,7 @@ import type { PaymentReceipt } from "@/features/participant/pay/payment-complete
 import { PayFailed } from "@/features/participant/pay/pay-failed";
 import { PayPage, type PayFormValues, type PayStep } from "@/features/participant/pay/pay-page";
 import { CHARGE_OPTIONS } from "@/features/participant/pay/types";
+import { BETA_PAYMENT_LOCKED } from "@/config/beta";
 import { isErrorCode, toInsufficientCoins } from "@/features/participant/pay/payment-errors";
 import {
   clearPendingPayment,
@@ -150,6 +151,8 @@ export default function Page({ params }: { params: Promise<{ roomId: string }> }
     CHARGE_OPTIONS[CHARGE_OPTIONS.length - 1];
 
   const handleSubmit = async () => {
+    // 버튼이 잠겨 있어도 한 번 더 막는다 — 베타 동안은 결제·차감 요청 자체가 나가면 안 된다
+    if (BETA_PAYMENT_LOCKED) return;
     if (!values.agreed || step === "paying" || roomId === null) return;
     setStep("paying");
     setError(null);

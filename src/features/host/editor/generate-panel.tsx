@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { BetaNotice } from "@/components/common/beta-notice";
 import { PendingLabel } from "@/components/common/pending-label";
 import { Stepper } from "@/components/common/stepper";
 import type { QuestionType } from "@/features/host/types";
@@ -68,7 +69,11 @@ export function GeneratePanel({
 
   const total = COUNT_TYPES.reduce((sum, t) => sum + counts[t], 0);
   const tooMany = total > MAX_GENERATE_COUNT;
-  const canSubmit = !generating && !disabled && total > 0 && !tooMany && topic.trim() !== "";
+  // 한도를 다 쓰면 서버가 429로 거절한다 — 눌러 보고 나서야 아는 대신 버튼부터 잠근다.
+  // 아직 못 읽었으면(undefined) 잠그지 않는다: 없는 0을 지어내지 않고 서버 판정에 맡긴다
+  const quotaExhausted = quota?.remainingCount === 0;
+  const canSubmit =
+    !generating && !disabled && !quotaExhausted && total > 0 && !tooMany && topic.trim() !== "";
 
   function updateCount(type: QuestionType, value: number) {
     setCounts((c) => ({ ...c, [type]: Math.max(0, Math.min(MAX_GENERATE_COUNT, value)) }));
@@ -172,6 +177,30 @@ export function GeneratePanel({
         </div>
       </fieldset>
 
+      {/*
+        베타 안내 (Figma "13 · 베타 운영" W-03β). 예전 "AI 생성 비용" 박스가 패널 맨 아래에 있어
+        생성 버튼을 누른 뒤에야 보였다 — 버튼 바로 위로 올렸다.
+
+        한도·잔여는 `GET /users/me/ai-quota`가 준다 — 5회를 화면 상수로 복제하지 않는다.
+        생성·재생성이 한도를 공유하고(FR-076), 실패한 호출은 세지 않는다.
+        한도를 넘기면 서버는 코인을 차감하지 않고 429 AI_FREE_LIMIT_EXCEEDED로 거절한다
+        (`AiQuestionService.verifyFreeLimit`, 2026-09-04 확인) — 그래서 "이후 코인 차감"은 적지 않는다.
+      */}
+      {quota === undefined ? (
+        <BetaNotice title="AI 문제 생성 횟수 제한">
+          베타 기간에는 AI 문제 생성 횟수가 제한됩니다.
+        </BetaNotice>
+      ) : quotaExhausted ? (
+        <BetaNotice title={`AI 문제 생성 ${quota.freeLimit}회를 모두 사용함`}>
+          베타 기간에는 AI 문제 생성을 1인 {quota.freeLimit}회까지 이용할 수 있습니다. 필요한 문항은
+          직접 추가할 수 있습니다.
+        </BetaNotice>
+      ) : (
+        <BetaNotice title={`AI 문제 생성 ${quota.remainingCount}회 남음`}>
+          베타 기간에는 AI 문제 생성을 1인 {quota.freeLimit}회까지 이용할 수 있습니다.
+        </BetaNotice>
+      )}
+
       <button
         type="submit"
         disabled={!canSubmit}
@@ -190,29 +219,6 @@ export function GeneratePanel({
       ) : (
         <p className="text-label-md text-muted-foreground">약 30초 걸려요</p>
       )}
-
-      {/*
-        시안 W-03의 "AI 생성 비용" 박스. 시안 문구는 "이후 코인 차감"이지만 **서버는 차감하지
-        않는다** — 무료 한도를 넘기면 429 AI_FREE_LIMIT_EXCEEDED로 거절한다
-        (`AiQuestionService.verifyFreeLimit`, 2026-09-04 확인). 없는 결제를 적으면 거짓말이 되므로
-        소진 뒤 실제로 남는 길(직접 추가)을 적는다. 코인 차감이 붙으면 이 문구를 시안대로 되돌린다.
-
-        남은 횟수는 `GET /users/me/ai-quota`가 준다 — 한도를 화면 상수로 복제하지 않는다.
-        아직 못 읽었으면 숫자를 지어내지 않고 한도 안내만 남긴다.
-        생성·재생성이 한도를 공유하고(FR-076), 실패한 호출은 세지 않는다.
-
-        PDF 업로드(`generate-from-file`)는 백엔드에 없다 — 위 텍스트 붙여넣기가 그 자리를 대신한다.
-      */}
-      <p className="flex flex-col gap-0.5 rounded-xl bg-mint-tint px-3.5 py-2.5">
-        <span className="text-label-lg text-mint-dark">AI 생성 비용</span>
-        <span className="text-label-md text-mint-dark">
-          {quota === undefined
-            ? "무료 횟수를 다 쓰면 직접 문항 추가로 이어 갈 수 있어요"
-            : quota.remainingCount === 0
-              ? `무료 ${quota.freeLimit}회를 다 썼어요 · 직접 문항 추가로 이어 갈 수 있어요`
-              : `AI 생성 ${quota.remainingCount}회 남음 · 무료 ${quota.freeLimit}회 중 ${quota.usedCount}회 사용`}
-        </span>
-      </p>
 
       <button
         type="button"

@@ -14,7 +14,9 @@ import {
 import { ReputationRow } from "./reputation-row";
 import { RoomTypeTabs, type RoomType } from "./room-type-tabs";
 import { SettlementPreview } from "./settlement-preview";
+import { BetaNotice } from "@/components/common/beta-notice";
 import { PendingLabel } from "@/components/common/pending-label";
+import { BETA_PAYMENT_LOCKED } from "@/config/beta";
 import {
   Select,
   SelectContent,
@@ -68,7 +70,10 @@ export function NewRoomForm({
   const [pickedSetId, setSetId] = useState(initialValues?.setId || preferredSetId || "");
   // 세트 목록이 늦게 와도 첫 확정 세트를 골라 둔다 — 고른 것이 없으면 만들기가 잠겨 있었다
   const setId = pickedSetId || sets[0]?.id || "";
-  const [roomType, setRoomType] = useState<RoomType>(initialValues?.roomType ?? "free");
+  // 베타 동안은 유료를 고를 수 없다 — 잠그기 전에 남은 초안이 "유료"여도 무료로 연다
+  const [roomType, setRoomType] = useState<RoomType>(
+    BETA_PAYMENT_LOCKED ? "free" : (initialValues?.roomType ?? "free"),
+  );
   const [fee, setFee] = useState(initialValues?.fee ?? DEFAULT_ENTRY_FEE);
 
   /**
@@ -89,7 +94,7 @@ export function NewRoomForm({
 
   // 서버가 등급을 못 준 경우(조회 실패)는 잠그지 않는다 — 없는 Lv.1을 지어내는 대신
   // 서버의 403 HOST_LEVEL_REQUIRED가 판정하게 둔다.
-  const paidLocked = level !== null && level < PAID_ROOM_MIN_LEVEL;
+  const paidLocked = BETA_PAYMENT_LOCKED || (level !== null && level < PAID_ROOM_MIN_LEVEL);
   const isPaid = roomType === "paid";
 
   function handleFeeChange(e: ChangeEvent<HTMLInputElement>) {
@@ -177,7 +182,19 @@ export function NewRoomForm({
 
       <div className="flex flex-col gap-2">
         <span className="text-label-lg text-muted-foreground">방 유형</span>
-        <RoomTypeTabs value={roomType} onChange={setRoomType} paidLocked={paidLocked} />
+        <RoomTypeTabs
+          value={roomType}
+          onChange={setRoomType}
+          paidLocked={paidLocked}
+          paidLabel={BETA_PAYMENT_LOCKED ? "유료 · 준비 중" : undefined}
+        />
+        {BETA_PAYMENT_LOCKED && (
+          <BetaNotice title="현재는 베타 버전입니다.">
+            유료 방은 아직 준비 중입니다.
+            <br />
+            현재는 무료 방만 만들 수 있습니다.
+          </BetaNotice>
+        )}
       </div>
 
       {isPaid && (
