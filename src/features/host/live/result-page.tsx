@@ -109,14 +109,14 @@ export function ResultPage({
             type="button"
             onClick={isLastQuestion ? onEndSession : onNext}
             disabled={pending}
-            className="h-13 w-44 rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
+            className="h-13 w-44 rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60 max-md:w-full"
           >
             {isLastQuestion ? "세션 종료" : "다음 문항"}
           </button>
         </>
       }
     >
-      <div className="mt-8 flex items-start justify-between">
+      <div className="mt-8 flex items-start justify-between max-md:mt-5 max-md:flex-col max-md:gap-5">
         <div className="flex min-w-0 flex-col gap-3.5">
           <span className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
             {isEssay ? "모범 답안" : "정답"}
@@ -141,7 +141,7 @@ export function ResultPage({
           서술형은 채점이 AI 분석·첨삭으로 나중에 붙는다 — 마감 시점의 correctRate는 늘 0이라
           "정답률 0%"는 없는 사실이 된다. 그 자리를 비우고 어디서 확인하는지 알려 준다.
         */}
-        <div className="flex shrink-0 flex-col items-end gap-3.5">
+        <div className="flex shrink-0 flex-col items-end gap-3.5 max-md:items-start">
           <span className="text-label-md font-bold tracking-[0.2em] text-muted-foreground">
             {isEssay ? "채점" : "정답률"}
           </span>

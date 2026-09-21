@@ -1,8 +1,10 @@
+import { BetaNotice } from "@/components/common/beta-notice";
 import { KeyValueRow } from "@/components/common/key-value-row";
 import { StatusChip } from "@/components/common/status-chip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PendingLabel } from "@/components/common/pending-label";
+import { BETA_PAYMENT_LOCKED } from "@/config/beta";
 import { cn } from "@/lib/utils";
 import { toPayPlan } from "./adapt";
 import { formatCoin, formatWon } from "./format";
@@ -135,10 +137,16 @@ export function CoinChargeCard({
         결제 진행 및 환불 정책에 동의합니다
       </label>
 
+      {BETA_PAYMENT_LOCKED && (
+        <BetaNotice title="현재는 베타 버전입니다.">
+          정식 출시 전까지 유료 방을 이용할 수 없습니다.
+        </BetaNotice>
+      )}
+
       <Button
         size="xl"
         className="h-[52px] w-full rounded-[14px]"
-        disabled={!agreed || paying}
+        disabled={!agreed || paying || BETA_PAYMENT_LOCKED}
         onClick={onSubmit}
       >
         {paying ? (

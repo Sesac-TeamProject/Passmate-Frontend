@@ -36,20 +36,28 @@ export function BadgeCollection({ earned }: Props) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-heading-sm text-ink">뱃지 컬렉션</h2>
-        <span className="text-label-md text-ink-disabled">
+        {/* 앱(M-09)은 "내 뱃지", 웹(W-14)은 "뱃지 컬렉션" — 시안 문구를 서로 옮기지 않는다 */}
+        <h2 className="text-heading-sm text-ink max-md:hidden">뱃지 컬렉션</h2>
+        <h2 className="hidden text-heading-sm text-ink max-md:block">내 뱃지</h2>
+        <span className="text-label-md text-ink-disabled max-md:text-label-lg max-md:text-mint-dark">
           {earned.size} / {ORDER.length}
         </span>
       </div>
 
-      {/* 시안 810:8800 — 위 23 · 아래 15, 목록과 안내문 사이 16 */}
-      <div className="flex flex-col gap-4 rounded-2xl border bg-card px-6 pt-[23px] pb-[15px]">
-        <ul className="flex justify-between">
+      {/* 시안 810:8800 — 위 23 · 아래 15, 목록과 안내문 사이 16 / 폰(349:9808)은 사방 14 */}
+      <div className="flex flex-col gap-4 rounded-2xl border bg-card px-6 pt-[23px] pb-[15px] max-md:gap-0 max-md:rounded-[20px] max-md:p-3.5">
+        {/*
+         * 폰은 한 줄에 4개(시안 349:9809). 고정폭 74 + wrap 으로 하면 스크롤바가 폭을 15px 먹는
+         * 순간 3개로 접힌다 — 열 수를 직접 못 박는 그리드로 둬서 폭에 상관없이 4개를 지킨다.
+         */}
+        <ul className="flex justify-between max-md:grid max-md:grid-cols-4 max-md:gap-x-2 max-md:gap-y-3">
           {ORDER.map((type) => (
             <BadgeItem key={type} type={type} earned={earned.has(type)} />
           ))}
         </ul>
-        <p className="text-label-md text-ink-disabled">뱃지는 프로필과 방 목록 카드에 표시돼요</p>
+        <p className="text-label-md text-ink-disabled max-md:hidden">
+          뱃지는 프로필과 방 목록 카드에 표시돼요
+        </p>
       </div>
     </section>
   );
@@ -59,25 +67,33 @@ function BadgeItem({ type, earned }: { type: BadgeType; earned: boolean }) {
   const { label, art } = BADGE[type];
 
   return (
-    <li className="flex w-27 flex-col items-center gap-2.5">
-      <span className={cn("block size-16", !earned && "opacity-28")}>
+    <li className="flex w-27 flex-col items-center gap-2.5 max-md:w-auto max-md:gap-[5px]">
+      <span className={cn("block size-16 max-md:size-11", !earned && "opacity-28")}>
         {"src" in art ? (
-          <Image src={art.src} alt="" width={64} height={64} unoptimized className="size-16" />
+          <Image
+            src={art.src}
+            alt=""
+            width={64}
+            height={64}
+            unoptimized
+            className="size-16 max-md:size-11"
+          />
         ) : (
-          <span className="flex size-16 items-center justify-center rounded-2xl border-2 border-mint-line bg-mint-bg text-heading-md text-mint-dark">
+          <span className="flex size-16 items-center justify-center rounded-2xl border-2 border-mint-line bg-mint-bg text-heading-md text-mint-dark max-md:size-11 max-md:rounded-[16px] max-md:text-heading-sm max-md:font-bold">
             {art.glyph}
           </span>
         )}
       </span>
       <span
         className={cn(
-          "text-center text-label-md",
-          earned ? "text-muted-foreground" : "text-ink-disabled",
+          "text-center text-label-md max-md:text-label-lg",
+          earned ? "text-muted-foreground max-md:text-ink" : "text-ink-disabled",
         )}
       >
         {label}
       </span>
-      {!earned && <span className="text-label-md text-ink-disabled">잠김</span>}
+      {/* 앱 시안은 흐린 아트와 회색 라벨로 잠김을 보여 준다 — 글자를 겹쳐 쓰지 않는다 */}
+      {!earned && <span className="text-label-md text-ink-disabled max-md:hidden">잠김</span>}
     </li>
   );
 }

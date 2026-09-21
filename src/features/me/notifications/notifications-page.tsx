@@ -27,6 +27,7 @@ export function NotificationsPage({ settings, onToggle, pending = false, errorMe
         {settings.map((setting) => (
           <SettingsRow
             key={setting.key}
+            className="max-md:px-4 max-md:py-3.5"
             title={setting.title}
             description={setting.description}
             action={

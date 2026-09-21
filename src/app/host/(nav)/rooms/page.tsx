@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ScreenError } from "@/components/common/screen-error";
 import {
   toHubActions,
@@ -10,6 +11,7 @@ import {
 } from "@/features/host/my-rooms/adapt";
 import { MyRoomsPage } from "@/features/host/my-rooms/my-rooms-page";
 import { MyRoomsSkeleton } from "@/features/host/my-rooms/my-rooms-skeleton";
+import { NewRoomSheetLoader } from "@/features/host/room-flow/new-room-sheet-loader";
 import { useEarnings } from "@/lib/queries/use-payments";
 import { useHostedRooms } from "@/lib/queries/use-rooms";
 
@@ -21,6 +23,9 @@ import { useHostedRooms } from "@/lib/queries/use-rooms";
 export default function Page() {
   const hostedRooms = useHostedRooms();
   const earnings = useEarnings();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // 한 번 열고 나면 마운트한 채 둔다 — 닫기 애니메이션이 끝까지 돌고, 다시 열 때 조회가 이미 끝나 있다
+  const [sheetMounted, setSheetMounted] = useState(false);
 
   if (hostedRooms.isPending) return <MyRoomsSkeleton />;
   if (hostedRooms.isError)
@@ -33,13 +38,20 @@ export default function Page() {
   const rooms = toMyRooms(hostedRooms.data);
 
   return (
-    <MyRoomsPage
-      rooms={rooms}
-      totalStudents={reputation.totalStudentCount}
-      level={toLevelStatus(reputation)}
-      levelSubtitle={toLevelSubtitle(reputation)}
-      stats={toHubStats(reputation, earnings.data?.thisMonthNet)}
-      actions={toHubActions(rooms)}
-    />
+    <>
+      <MyRoomsPage
+        rooms={rooms}
+        totalStudents={reputation.totalStudentCount}
+        level={toLevelStatus(reputation)}
+        levelSubtitle={toLevelSubtitle(reputation)}
+        stats={toHubStats(reputation, earnings.data?.thisMonthNet)}
+        actions={toHubActions(rooms)}
+        onCreateRoom={() => {
+          setSheetMounted(true);
+          setSheetOpen(true);
+        }}
+      />
+      {sheetMounted && <NewRoomSheetLoader open={sheetOpen} onOpenChange={setSheetOpen} />}
+    </>
   );
 }

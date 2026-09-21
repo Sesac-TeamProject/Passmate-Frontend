@@ -173,7 +173,7 @@ export function LobbyPage({
               type="button"
               onClick={onStart}
               disabled={starting || Boolean(setLink)}
-              className="h-13 w-[180px] rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60"
+              className="h-13 w-[180px] rounded-2xl bg-mint text-heading-sm font-bold text-white transition-colors hover:bg-mint-dark disabled:opacity-60 max-md:w-full"
             >
               {starting ? <PendingLabel>시작하는 중…</PendingLabel> : "시험 시작"}
             </button>
@@ -181,10 +181,13 @@ export function LobbyPage({
         </>
       }
     >
-      <section className="mt-7 flex flex-col rounded-3xl bg-mint-bg p-10">
+      <section className="mt-7 flex flex-col rounded-3xl bg-mint-bg p-10 max-md:mt-5 max-md:p-5">
         <span className="text-label-md font-bold tracking-[0.2em] text-mint-dark">방 코드</span>
         <strong className="mt-1 text-display-2xl">{prettyPin}</strong>
-        <span aria-hidden className="mt-5 h-[3px] w-[430px] rounded-sm bg-mint-dark" />
+        <span
+          aria-hidden
+          className="mt-5 h-[3px] w-[430px] rounded-sm bg-mint-dark max-md:w-full"
+        />
         <p className="mt-5 text-body-lg text-mint-dark">
           {host ? `${host} 에 접속해 ` : ""}코드를 입력하면 바로 들어옵니다
         </p>
@@ -200,10 +203,11 @@ export function LobbyPage({
       </section>
 
       {/* 구분선을 형제 항목으로 두어 ol의 gap이 양쪽에 똑같이 걸리게 한다 */}
-      <ol className="mt-8 flex items-center gap-7">
+      <ol className="mt-8 flex items-center gap-7 max-md:flex-col max-md:items-start max-md:gap-3">
         {steps.map((step, i) => (
           <Fragment key={step}>
-            {i > 0 && <li aria-hidden className="h-[30px] w-px bg-line-soft" />}
+            {/* 세로로 쌓이는 폰에서는 세로 구분선이 뜻을 잃는다 */}
+            {i > 0 && <li aria-hidden className="h-[30px] w-px bg-line-soft max-md:hidden" />}
             <li className="flex items-center gap-3.5">
               <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-mint text-label-lg font-bold text-white">
                 {i + 1}
@@ -216,10 +220,10 @@ export function LobbyPage({
 
       <div className="mt-8 border-t" />
 
-      <ul className="mt-8 flex h-24 items-center rounded-[18px] bg-surface-subtle px-8">
+      <ul className="mt-8 flex h-24 items-center rounded-[18px] bg-surface-subtle px-8 max-md:h-auto max-md:flex-col max-md:items-stretch max-md:gap-3 max-md:px-5 max-md:py-4">
         {meta.map((m, i) => (
           <li key={m.label} className="flex flex-1 items-center">
-            {i > 0 && <span aria-hidden className="mr-10 h-11 w-px bg-border" />}
+            {i > 0 && <span aria-hidden className="mr-10 h-11 w-px bg-border max-md:hidden" />}
             <span className="flex flex-col gap-0.5">
               <span className={m.accent ? "text-display-sm text-mint" : "text-display-sm"}>
                 {m.value}

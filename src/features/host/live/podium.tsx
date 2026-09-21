@@ -56,7 +56,7 @@ function Step({
   const step = STEP[place];
 
   return (
-    <div className="flex w-[168px] flex-col items-center">
+    <div className="flex w-[168px] flex-col items-center max-md:w-[100px]">
       <StudentAvatar
         avatar={entry.student.avatar}
         size={step.avatar}
@@ -74,7 +74,7 @@ function Step({
           <span className="mt-auto pb-5 text-display-lg">{place}</span>
         </div>
       </div>
-      <span className="mt-5 truncate text-heading-lg">{entry.student.name}</span>
+      <span className="mt-5 max-w-full truncate text-heading-lg">{entry.student.name}</span>
       <span className="mt-1.5 text-body-md text-muted-foreground">
         {entry.score}점
         {entry.correctCount !== null && `  ·  정답 ${entry.correctCount} / ${questionTotal}`}
@@ -89,8 +89,10 @@ function Step({
  */
 export function Podium({ entries, questionTotal }: Props) {
   const [first, second, third] = entries;
+  // 폰 폭: 168px 세 칸이면 시상대가 화면 밖으로 나간다(실측 /final 558px) —
+  // 칸과 간격을 줄여 세 칸을 유지한다. 순위를 빼지 않는다.
   return (
-    <div className="flex items-end justify-center gap-6">
+    <div className="flex items-end justify-center gap-6 max-md:gap-2">
       {second && <Step entry={second} place={2} questionTotal={questionTotal} />}
       {first && <Step entry={first} place={1} questionTotal={questionTotal} />}
       {third && <Step entry={third} place={3} questionTotal={questionTotal} />}

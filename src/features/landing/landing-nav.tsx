@@ -77,7 +77,8 @@ export function LandingNav() {
     <header ref={headerRef} className="sticky top-0 z-10 bg-card py-[18px]">
       <div className={cn(INNER, "flex items-center justify-between")}>
         <BrandLogo size="lg" />
-        <nav className="flex items-center gap-7">
+        {/* 섹션 메뉴 4개는 1024 미만에서 로고·버튼과 한 줄에 못 들어간다 — 좁은 화면은 스크롤로 내려간다 */}
+        <nav className="flex items-center gap-7 max-lg:hidden">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}

@@ -4,6 +4,7 @@ import type {
   QuestionStartedPayload,
   RankingEntry,
   SessionSnapshotResponse,
+  VoiceHintEntry,
 } from "@/lib/types/dto";
 import type { ServerEvent } from "@/lib/types/events";
 import {
@@ -180,6 +181,52 @@ describe("세션 리듀서 — 서버 이벤트 7종", () => {
  * 서버가 아직 발행하지 않는 두 이벤트(백엔드 질문 B-1). 발행이 들어오는 순간
  * 대기실 폴링을 끄고 그대로 쓸 수 있어야 해서 핸들러를 남겨 둔다.
  */
+describe("세션 리듀서 — 음성 힌트", () => {
+  const HINT: VoiceHintEntry = {
+    hintId: 7,
+    sessionQuestionId: 100,
+    questionId: 2,
+    orderNo: 1,
+    audioUrl: "https://storage.example/rooms/1/hints/a.webm?sig=1",
+    durationMs: 4200,
+    publishedAt: "2026-09-02T02:13:05",
+  };
+
+  it("HINT_PUBLISHED 는 힌트를 뒤에 쌓는다 — 배너는 마지막 것을 재생한다", () => {
+    const next = reduce(initialSessionState, event("HINT_PUBLISHED", HINT));
+    expect(next.hints).toEqual([HINT]);
+  });
+
+  it("같은 힌트가 두 번 와도 한 번만 쌓는다 — 재접속 직후 복구 목록과 프레임이 겹친다", () => {
+    const next = reduce(
+      initialSessionState,
+      event("HINT_PUBLISHED", HINT),
+      event("HINT_PUBLISHED", { ...HINT, audioUrl: "https://storage.example/re-signed" }),
+    );
+    expect(next.hints).toHaveLength(1);
+  });
+
+  it("지난 문항의 힌트는 다음 문항이 열려도 남는다 — 다시 듣기용", () => {
+    const next = reduce(
+      initialSessionState,
+      event("HINT_PUBLISHED", HINT),
+      event("QUESTION_STARTED", { ...QUESTION, sessionQuestionId: 101, orderNo: 2 }),
+      event("HINT_PUBLISHED", { ...HINT, hintId: 8, sessionQuestionId: 101, orderNo: 2 }),
+    );
+    expect(next.hints.map((h) => h.hintId)).toEqual([7, 8]);
+  });
+
+  it("SESSION_STARTED 는 힌트도 비운다", () => {
+    const dirty = { ...initialSessionState, hints: [HINT] };
+    expect(reduce(dirty, event("SESSION_STARTED")).hints).toEqual([]);
+  });
+
+  it("모양이 깨진 페이로드는 버린다", () => {
+    expect(reduce(initialSessionState, event("HINT_PUBLISHED", { nope: true })).hints).toEqual([]);
+    expect(reduce(initialSessionState, event("HINT_PUBLISHED", undefined)).hints).toEqual([]);
+  });
+});
+
 describe("세션 리듀서 — 참가자 이벤트(서버 미발행)", () => {
   const participant = {
     id: 11,

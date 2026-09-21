@@ -2,16 +2,22 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { ReconnectingBanner } from "@/components/common/reconnecting-banner";
 import { ScreenError } from "@/components/common/screen-error";
 import { AppError } from "@/lib/types/app-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
 import { toStudents } from "@/features/host/live/adapt";
-import { toLiveQuestion, toMyRankChip, toScoreView } from "@/features/participant/play/adapt";
+import {
+  exitPathFor,
+  toLiveQuestion,
+  toMyRankChip,
+  toScoreView,
+} from "@/features/participant/play/adapt";
 import { WaitingPage } from "@/features/participant/play/waiting-page";
 import { PlayPage } from "@/features/participant/play/play-page";
-import { readMyParticipant } from "@/lib/my-participant";
-import { useParticipants, useRoomByPin } from "@/lib/queries/use-rooms";
+import { clearMyParticipant, readMyParticipant } from "@/lib/my-participant";
+import { useLeaveRoom, useParticipants, useRoomByPin } from "@/lib/queries/use-rooms";
 import { toSubmitAnswerMessage, useSubmitAnswer } from "@/lib/queries/use-session-control";
 import { useSessionConnection } from "@/lib/queries/use-session-connection";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -93,8 +99,27 @@ export default function Page() {
     AppError.isAppError(room.error) &&
     (room.error.status === 410 || room.error.kind === "NotFound");
   useEffect(() => {
-    if (roomGone) router.replace(isMember ? "/home" : "/");
+    if (roomGone) router.replace(exitPathFor(isMember));
   }, [roomGone, isMember, router]);
+
+  const leave = useLeaveRoom(roomId);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+
+  /**
+   * 방에서 나간다(앱 M-02 · M-03 "나가기"). **요청이 실패해도 화면은 나간다** — 앱과 같다.
+   * 나가려는 사람을 오프라인 오류로 방에 붙잡아 둘 이유가 없다. 게스트 Bearer는 성공했을 때만
+   * 훅이 지우므로, 실패했으면 같은 탭에서 다시 들어올 여지가 남는다.
+   * 실시간 연결은 화면을 벗어나며 useSessionConnection 정리가 끊는다.
+   */
+  const exitRoom = () => {
+    if (leave.isPending) return;
+    leave.mutate(undefined, {
+      onSettled: () => {
+        clearMyParticipant();
+        router.replace(exitPathFor(isMember));
+      },
+    });
+  };
 
   if (room.isPending) return <ScreenLoading />;
   // 메인으로 보내는 중에는 오류 화면 대신 로딩만 — "없거나 끝난 방" 문구가 깜빡이지 않게
@@ -114,6 +139,9 @@ export default function Page() {
           myName={myName}
           students={toStudents(participants)}
           isMember={isMember}
+          // 시작 전이라 잃을 답안이 없다 — 앱처럼 확인 없이 바로 나간다
+          onLeave={exitRoom}
+          leaving={leave.isPending}
         />
       );
     }
@@ -123,7 +151,12 @@ export default function Page() {
 
     // 제출 수는 서버가 학생에게 알려주지 않는다(호스트 토픽 전용) — 내 순위는 랭킹에서 찾는다
     const question = toLiveQuestion(currentQuestion, 0);
-    const latestHint = hints.length > 0 ? hints[hints.length - 1] : null;
+    // 힌트는 **지금 열린 문항의 것**만 — 재접속 복구 목록에는 지난 문항의 힌트도 섞여 오고,
+    // 그걸 띄우면 학생은 이전 문제의 힌트를 지금 문제 것으로 듣는다
+    const questionHints = hints.filter(
+      (hint) => hint.sessionQuestionId === currentQuestion.sessionQuestionId,
+    );
+    const latestHint = questionHints.length > 0 ? questionHints[questionHints.length - 1] : null;
     // 마감 결과는 **지금 열려 있는 문항의 것**일 때만 — 늦게 온 이전 문항 마감은 리듀서가 버리지만 한 번 더 지킨다
     const currentReveal =
       reveal && reveal.sessionQuestionId === currentQuestion.sessionQuestionId ? reveal : null;
@@ -159,6 +192,7 @@ export default function Page() {
         isLocked={screenLocked}
         hint={latestHint}
         errorMessage={submitAnswer.isError ? toSubmitAnswerMessage(submitAnswer.error) : null}
+        onLeave={() => setConfirmLeave(true)}
       />
     );
   };
@@ -176,6 +210,16 @@ export default function Page() {
         </div>
       )}
       {stage()}
+      {/* 진행 중 나가기 확인 — 문구는 앱 M-03(PlayScreen)과 같다 */}
+      <ConfirmDialog
+        open={confirmLeave}
+        onOpenChange={setConfirmLeave}
+        title="방을 나갈까요?"
+        description="진행 중인 세션에서 나가면 남은 문항을 풀 수 없어요."
+        confirmLabel="나가기"
+        pending={leave.isPending}
+        onConfirm={exitRoom}
+      />
     </>
   );
 }

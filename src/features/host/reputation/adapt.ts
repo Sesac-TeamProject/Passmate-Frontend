@@ -23,7 +23,53 @@ export function toLevelCriteria(grade: GradeResponse | undefined): LevelCriterio
     current: requirement.current,
     target: requirement.target,
     unit: unitOf(requirement.type),
+    met: requirement.met,
   }));
+}
+
+/**
+ * 별점만 소수 한 자리 — 시안 M-09가 "4점"이 아니라 "4.0"으로 적는다 (349:9798).
+ * 나머지 조건은 정수라 그대로 둔다("40회"를 "40.0회"로 적지 않는다).
+ */
+function formatAmount(value: number, unit: string): string {
+  return unit === "점" ? value.toFixed(1) : String(value);
+}
+
+/**
+ * 시안 M-09 조건 행 왼쪽 — "방 운영 20회 이상" · "총 학생 150명 이상" (349:9795·9801).
+ * 별점만 단위를 떼고 "평균 별점 4.0 이상"이라 쓴다 — 시안이 그렇고, "4.0점 이상"은
+ * 라벨("평균 별점")과 겹쳐 읽힌다 (349:9798).
+ */
+export function toCriterionGoal(criterion: LevelCriterion): string {
+  const target = formatAmount(criterion.target, criterion.unit);
+  const suffix = criterion.unit === "점" ? "" : criterion.unit;
+  return `${criterion.label} ${target}${suffix} 이상`;
+}
+
+/**
+ * 시안 M-09 조건 행 오른쪽 — 달성은 "✓ 4.7", 미달은 "24 / 40" (349:9796·9799).
+ * 단위는 왼쪽 문구가 이미 달고 있어 여기서는 숫자만 적는다.
+ */
+export function toCriterionProgress(criterion: LevelCriterion): string {
+  const current = formatAmount(criterion.current, criterion.unit);
+  if (criterion.met) return `✓ ${current}`;
+  return `${current} / ${formatAmount(criterion.target, criterion.unit)}`;
+}
+
+/**
+ * 시안 M-09 프로필 카드 한 줄 — "참여 18회 · 평균 정답률 72% · 방 운영 12회" (349:9781).
+ * 정답률은 등급과 다른 API(GET /users/me/report)라 늦게 오거나 실패할 수 있다 —
+ * 없으면 그 자리만 빼고 잇는다(0%로 채우면 "정답률 0%"라는 거짓말이 된다).
+ */
+export function toProfileStatsLine(
+  joinedRooms: number,
+  averageAccuracy: number | undefined,
+  roomsHosted: number,
+): string {
+  const parts = [`참여 ${joinedRooms}회`];
+  if (averageAccuracy !== undefined) parts.push(`평균 정답률 ${Math.round(averageAccuracy)}%`);
+  parts.push(`방 운영 ${roomsHosted}회`);
+  return parts.join(" · ");
 }
 
 /** "2026-08-10 Lv.3 달성 · 한 번 달성하면 내려가지 않아요" — 달성일이 없으면 규칙만 적는다 */

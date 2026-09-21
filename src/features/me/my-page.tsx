@@ -1,5 +1,7 @@
-import { Coins } from "lucide-react";
+import { Bell, User, Wallet } from "lucide-react";
 import Link from "next/link";
+import { CoinIcon } from "@/components/common/coin-icon";
+import { MobileTopBar } from "@/components/common/mobile-top-bar";
 import { AVATAR_LABEL } from "@/components/common/student-avatar";
 import type { CoinSummary, Profile, SettlementSummary } from "@/features/me/types";
 import { NOTIFICATION_SUMMARY } from "@/features/me/types";
@@ -10,6 +12,8 @@ import { formatNumber, formatWon } from "@/lib/format";
 
 const ROW_CLASS = "px-0 py-3.5";
 const LINK_CLASS = "shrink-0 text-label-md text-mint-dark";
+/** 카드 제목 앞 아이콘 — 네 카드 모두 같은 크기 · 색 */
+const TITLE_ICON_CLASS = "size-[18px] text-mint";
 
 type Props = {
   profile: Profile;
@@ -23,7 +27,7 @@ type Props = {
   onLogout: () => void;
 };
 
-/** C-02 v3 마이페이지 — 내 정보 관리 (계정 · 코인 · 정산 계좌). 방과 기록은 사이드바의 내가 만든 방 · 참여한 방 */
+/** C-02 v3 마이페이지 — 내 정보 관리 (계정 · 코인 · 정산 계좌) */
 export function MyPage({
   profile,
   joinedRooms,
@@ -42,20 +46,24 @@ export function MyPage({
     : "";
 
   return (
-    <main className="flex flex-col gap-5 px-9 py-7">
-      <div className="flex items-center justify-between">
-        <h1 className="text-heading-lg text-ink">내 정보 관리</h1>
-        <p className="text-label-md text-muted-foreground">
-          계정 · 코인 · 정산 계좌를 관리해요. 방과 기록은 왼쪽 메뉴의 내가 만든 방 · 참여한 방에서
-        </p>
-      </div>
+    <main className="flex flex-col gap-5 px-9 py-7 max-md:gap-3.5 max-md:px-5 max-md:pt-3 max-md:pb-6">
+      {/* 앱 M-12는 탭 루트라 뒤로 화살표가 없다 — 제목만 둔다 */}
+      <MobileTopBar title="마이" className="-mx-5 px-5 pb-1" />
+      <h1 className="text-heading-lg text-ink max-md:hidden">내 정보 관리</h1>
 
       <ProfileCard profile={profile} joinedRooms={joinedRooms} hostedRooms={hostedRooms} />
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-2 gap-5 max-md:grid-cols-1 max-md:gap-3.5">
         {/* 좌열 */}
-        <div className="flex flex-col gap-5">
-          <SettingsCard title="계정">
+        <div className="flex flex-col gap-5 max-md:gap-3.5">
+          <SettingsCard
+            title={
+              <>
+                <User aria-hidden className={TITLE_ICON_CLASS} strokeWidth={2} />
+                계정
+              </>
+            }
+          >
             <SettingsRow
               className={ROW_CLASS}
               title="닉네임"
@@ -86,7 +94,7 @@ export function MyPage({
           <SettingsCard
             title={
               <>
-                <Coins aria-hidden className="size-[18px] text-mint" strokeWidth={2} />
+                <CoinIcon className={TITLE_ICON_CLASS} />
                 코인 · 결제
               </>
             }
@@ -98,7 +106,7 @@ export function MyPage({
                   aria-hidden
                   className="flex size-9 shrink-0 items-center justify-center rounded-full bg-mint-bg"
                 >
-                  <Coins className="size-[22px] text-mint" strokeWidth={2} />
+                  <CoinIcon className="text-mint" />
                 </span>
               }
               title="보유 코인"
@@ -136,9 +144,14 @@ export function MyPage({
         </div>
 
         {/* 우열 */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 max-md:gap-3.5">
           <SettingsCard
-            title="정산 (내가 만든 방 수익)"
+            title={
+              <>
+                <Wallet aria-hidden className={TITLE_ICON_CLASS} strokeWidth={2} />
+                정산 (내가 만든 방 수익)
+              </>
+            }
             aside={
               <span className="text-label-md text-muted-foreground">
                 Lv.{settlementSummary.paidRoomLevel}부터 유료 방 개설 가능
@@ -185,7 +198,14 @@ export function MyPage({
             />
           </SettingsCard>
 
-          <SettingsCard title="알림 · 기타">
+          <SettingsCard
+            title={
+              <>
+                <Bell aria-hidden className={TITLE_ICON_CLASS} strokeWidth={2} />
+                알림 · 기타
+              </>
+            }
+          >
             <SettingsRow
               className={ROW_CLASS}
               title="알림"

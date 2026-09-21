@@ -85,8 +85,9 @@ export function JoinForm({
           disabled={pending}
           className={
             variant === "home"
-              ? /* 홈은 시안 간격이 가로 18·세로 10, 바깥 3은 선택 링 자리 — 3+44×6+18×5+3 = 360×104 */
-                "gap-x-[18px] gap-y-2.5 p-[3px]"
+              ? /* 데스크톱은 시안 간격이 가로 18·세로 10, 바깥 3은 선택 링 자리 — 3+44×6+18×5+3 = 360×104
+                   폰 폭은 게스트 카드의 간격(가로 8·바깥 2)을 그대로 빌린다 — 44×6+8×5+2×2 = 308, 홈 카드 안쪽(316)에 들어간다 */
+                "gap-x-[18px] gap-y-2.5 p-[3px] max-md:justify-items-start max-md:gap-x-2 max-md:p-0.5"
               : /* 폰 폭 카드 안쪽은 306 — 40×6에 간격 16을 두면 320으로 넘친다(앱 M-01은 간격 8) */
                 "max-md:justify-items-start max-md:gap-x-2 max-md:p-0.5"
           }

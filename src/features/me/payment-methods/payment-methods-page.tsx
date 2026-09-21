@@ -28,6 +28,7 @@ export function PaymentMethodsPage({ items, onSetDefault, pending = false, error
         {items.map((item) => (
           <SettingsRow
             key={item.id}
+            className="max-md:px-4 max-md:py-3.5"
             title={
               <span className="flex items-center gap-1.5">
                 {item.name}

@@ -15,7 +15,7 @@ import { ProjectorDisconnected } from "@/features/host/live/projector-disconnect
 import { useDisconnectedTooLong } from "@/features/host/live/use-disconnected-too-long";
 // 문항 → 뷰 타입 변환은 학생 화면과 같은 함수를 쓴다(중복 정의 금지)
 import { choicesOf, toLiveQuestion } from "@/features/participant/play/adapt";
-import { useHostRoomId } from "@/lib/queries/use-rooms";
+import { useHostRoomId, useRoomByPin } from "@/lib/queries/use-rooms";
 import {
   useEndCurrentQuestion,
   useEndSession,
@@ -39,6 +39,8 @@ export default function Page() {
   const router = useRouter();
 
   const room = useHostRoomId(pin);
+  // 폰 리모컨 머리글의 방 제목 — useHostRoomId 가 이미 같은 키로 부르므로 캐시를 함께 쓴다
+  const roomSummary = useRoomByPin(pin);
   const roomId = room.roomId;
 
   const phase = useSessionStore((s) => s.phase);
@@ -130,6 +132,8 @@ export default function Page() {
       pending={pending}
       reconnecting={disconnected}
       errorMessage={errorMessage}
+      pin={pin}
+      roomTitle={roomSummary.data?.title}
     />
   );
 }

@@ -4,6 +4,8 @@ export type LevelCriterion = {
   target: number;
   /** 값 뒤에 붙는 단위. 예: "회", "명" */
   unit: string;
+  /** 이미 채운 조건인지 — 폰(M-09)은 달성/미달로 색을 가른다 */
+  met: boolean;
 };
 
 type Props = {

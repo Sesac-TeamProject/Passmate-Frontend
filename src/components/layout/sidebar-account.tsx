@@ -17,5 +17,5 @@ export function SidebarAccount({ nav }: { nav: "member" | "host" }) {
         tone: "peach",
       }
     : FALLBACK;
-  return <RoleSidebar nav={nav} user={user} />;
+  return <RoleSidebar nav={nav} user={user} className="max-md:hidden" />;
 }

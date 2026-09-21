@@ -1,93 +1,49 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { ScreenError } from "@/components/common/screen-error";
 import { ScreenLoading } from "@/components/common/screen-loading";
-import {
-  isFormLevelCreateError,
-  toCreateRoomErrorMessage,
-  toQuestionSetOptions,
-  toNewRoomInitialValues,
-  toRoomSummary,
-} from "@/features/host/room-flow/adapt";
+import { toRoomSummary } from "@/features/host/room-flow/adapt";
 import { NewRoomFailed } from "@/features/host/room-flow/new-room-failed";
 import { NewRoomPage } from "@/features/host/room-flow/new-room-page";
-import { clearNewRoomDraft, useNewRoomDraft } from "@/lib/new-room-draft";
-import { useGrade } from "@/lib/queries/use-me";
-import { useQuestionSets } from "@/lib/queries/use-question-sets";
-import { useCreateRoom } from "@/lib/queries/use-rooms";
-import type { RoomCreateRequest } from "@/lib/types/dto";
+import { useNewRoomFlow } from "@/features/host/room-flow/use-new-room-flow";
 
-/** PIN 없이 만들어진 방은 대기실로 갈 수 없다 — 목록에서 다시 찾도록 안내한다 */
-const PIN_MISSING_MESSAGE =
-  "방은 만들어졌지만 PIN을 받지 못했어요. 내가 만든 방에서 확인해 주세요.";
-
-/** W-02 방 만들기 컨테이너 — 확정 세트 목록·명성 등급을 읽고 POST /rooms 후 대기실로 보낸다. */
+/**
+ * W-02 방 만들기 컨테이너 — 전체 화면 진입(PC 의 "새 방 만들기" · 에디터 복귀 `?set=` · 문제 세트 화면).
+ * 내가 만든 방에서 폰으로 누른 경우는 이 화면으로 오지 않는다 — 그 화면 위에 시트로 뜬다(M-13a).
+ */
 function NewRoomContainer() {
-  const router = useRouter();
   // 에디터가 세트를 확정하고 `?set=`으로 돌려보낸다 — 그 세트를 골라 둔다
   const preferredSetId = useSearchParams().get("set") ?? undefined;
-  // 에디터로 나갔다 온 사이에 적어 둔 값. 서버 렌더에는 없어 하이드레이션 뒤에 들어온다
-  const draft = useNewRoomDraft();
-  const sets = useQuestionSets({ status: "CONFIRMED" });
-  const grade = useGrade();
-  const create = useCreateRoom();
-  const [pinMissing, setPinMissing] = useState(false);
-  // W-02e가 "입력한 설정은 그대로 남아 있어요"라고 약속하므로 보낸 값을 들고 있는다
-  const [lastBody, setLastBody] = useState<RoomCreateRequest | null>(null);
+  const flow = useNewRoomFlow();
 
-  const handleSubmit = (body: RoomCreateRequest) => {
-    setPinMissing(false);
-    setLastBody(body);
-    create.mutate(body, {
-      onSuccess: (res) => {
-        // 방이 만들어졌으면 임시 보관값은 할 일을 다했다
-        clearNewRoomDraft();
-        if (res.pin) router.push(`/host/rooms/${res.pin}/lobby`);
-        else setPinMissing(true);
-      },
-    });
-  };
-
-  if (sets.isPending || grade.isPending) return <ScreenLoading />;
-  if (sets.isError)
-    return <ScreenError message={sets.error.message} onRetry={() => sets.refetch()} />;
-
-  const options = toQuestionSetOptions(sets.data.content);
+  if (flow.loading) return <ScreenLoading />;
+  if (flow.setsError)
+    return <ScreenError message={flow.setsError.message} onRetry={flow.setsError.retry} />;
 
   // 서버·네트워크 때문에 깨진 실패만 전체 화면으로 알린다 (04 보드 A/B 규칙)
-  if (create.isError && lastBody && !isFormLevelCreateError(create.error))
+  if (flow.hardFailure)
     return (
       <NewRoomFailed
-        summary={toRoomSummary(lastBody, options)}
-        onRetry={() => handleSubmit(lastBody)}
-        onBack={() => create.reset()}
-        retrying={create.isPending}
+        summary={toRoomSummary(flow.hardFailure.body, flow.sets)}
+        onRetry={flow.hardFailure.retry}
+        onBack={flow.hardFailure.dismiss}
+        retrying={flow.pending}
       />
     );
 
-  // 등급 조회가 실패해도 방 만들기는 막지 않는다. 없는 Lv.1을 지어내지 않고 null로 넘겨,
-  // 유료 옵션을 잠그는 대신 서버의 403 HOST_LEVEL_REQUIRED가 판정하게 둔다.
-  const level = grade.data?.level ?? null;
-  const errorMessage = pinMissing
-    ? PIN_MISSING_MESSAGE
-    : create.isError
-      ? toCreateRoomErrorMessage(create.error)
-      : null;
-
   return (
     <NewRoomPage
-      sets={options}
-      level={level}
-      onSubmit={handleSubmit}
-      pending={create.isPending}
-      errorMessage={errorMessage}
-      // 만들기 실패 후 되돌아온 값이 임시 보관값보다 최신이다
-      initialValues={lastBody ? toNewRoomInitialValues(lastBody) : (draft ?? undefined)}
+      sets={flow.sets}
+      level={flow.level}
+      onSubmit={flow.submit}
+      pending={flow.pending}
+      errorMessage={flow.errorMessage}
+      initialValues={flow.initialValues}
       preferredSetId={preferredSetId}
       // 폼은 처음 그릴 때만 값을 읽는다 — 보관값이 들어오면 키를 바꿔 그 값으로 다시 세운다
-      key={draft === null ? "empty" : "restored"}
+      key={flow.formKey}
     />
   );
 }

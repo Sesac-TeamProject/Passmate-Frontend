@@ -1,7 +1,8 @@
 import { DoorOpen, Target, Trophy } from "lucide-react";
+import { MobileTopBar } from "@/components/common/mobile-top-bar";
 import type { LearningRecord } from "@/features/me/types";
 import { ActiveSessionCard } from "./active-session-card";
-import { RecordStatCard } from "./record-stat-card";
+import { JoinedSummaryCard, RecordStatCard } from "./record-stat-card";
 import { SessionRow } from "./session-row";
 import type { ActiveSession } from "./types";
 
@@ -27,12 +28,14 @@ export function JoinedPage({
   accuracyChangeLabel = null,
 }: Props) {
   return (
-    <main className="flex flex-col gap-5 px-9 py-7">
-      <h1 className="text-heading-lg text-ink">참여한 방 — 참여 기록</h1>
+    <main className="flex flex-col gap-5 px-9 py-7 max-md:gap-3.5 max-md:px-5 max-md:pt-3 max-md:pb-6">
+      {/* 앱 M-08은 탭 루트라 뒤로가기 화살표가 없다 */}
+      <MobileTopBar title="참여한 방" className="-mx-5 px-5 pb-1" />
+      <h1 className="text-heading-lg text-ink max-md:hidden">참여한 방 — 참여 기록</h1>
 
       {activeSession && <ActiveSessionCard session={activeSession} />}
 
-      <section className="grid grid-cols-3 gap-3.5">
+      <section className="grid grid-cols-3 gap-3.5 max-md:hidden">
         <RecordStatCard
           icon={DoorOpen}
           tone="mint"
@@ -53,9 +56,17 @@ export function JoinedPage({
         />
       </section>
 
+      {/* 폰 폭 — 앱 M-08 SummaryCard(정답률 링 + 참여 횟수·평균 순위 + 추이). PC의 3칸 통계를 대신한다 */}
+      <JoinedSummaryCard
+        accuracyPercent={learning.stats.accuracy}
+        sessions={learning.stats.sessions}
+        averageRank={learning.stats.averageRank}
+        trendLabel={accuracyChangeLabel}
+      />
+
       {/* 약한 주제가 없으면 라벨만 덩그러니 남는다 — 줄 자체를 감춘다 */}
       {learning.weakTopics.length > 0 && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 max-md:flex-wrap max-md:gap-2.5">
           <span className="text-label-lg text-muted-foreground">보완할 주제</span>
           {learning.weakTopics.slice(0, 2).map((topic) => (
             <span

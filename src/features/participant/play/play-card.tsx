@@ -18,6 +18,7 @@ import {
   type RevealView,
   type ScoreView,
 } from "./adapt";
+import { LeaveRoomButton } from "./leave-room-button";
 
 type Props = {
   question: LiveQuestion;
@@ -33,6 +34,8 @@ type Props = {
   /** 이 문항이 마감됐을 때 서버가 준 정답·해설·응답 분포. 다음 문항이 열리면 null로 돌아간다 */
   reveal?: Pick<QuestionEndedPayload, "answer" | "explanation" | "distribution"> | null;
   banner?: ReactNode;
+  /** 머리 오른쪽 "나가기"(앱 M-03 · M-04). 없으면(랜딩 목업 등) 그리지 않는다 */
+  onLeave?: () => void;
 };
 
 /** 마감 결과 한 줄 — 내 답이 어땠는지 먼저 말한다 */
@@ -74,6 +77,7 @@ export function PlayCard({
   rankChip = null,
   reveal = null,
   banner,
+  onLeave,
 }: Props) {
   // 고른 보기는 **순번**으로 기억한다 — 표시용 A·B·C·D 글자는 보기가 넷을 넘으면
   // 중복되므로(`CHOICE_KEYS[i] ?? "D"`) 글자로 되찾으면 다른 보기가 잡힌다(QA_BACKLOG F-5).
@@ -129,16 +133,22 @@ export function PlayCard({
         <span className="text-label-lg text-muted-foreground">
           Q{q.index} / {q.total} · {QUESTION_TYPE_LABEL[q.type]}
         </span>
-        <span className="rounded-full bg-yellow px-3 py-[5px] text-label-lg text-ink tabular-nums">
-          {result ? "마감" : mmss(remaining)}
+        <span className="flex items-center gap-4">
+          <span className="rounded-full bg-yellow px-3 py-[5px] text-label-lg text-ink tabular-nums">
+            {result ? "마감" : mmss(remaining)}
+          </span>
+          {onLeave && <LeaveRoomButton onClick={onLeave} />}
         </span>
       </div>
 
-      {/* 폰 폭 머리 — 앱 M-03 "Q2 / 8 · 객관식 + 타이머 막대" / M-04 "Q2 / 8 · 결과" */}
+      {/* 폰 폭 머리 — 앱 M-03 "Q2 / 8 · 객관식 + 타이머 막대 · 나가기" / M-04 "Q2 / 8 · 결과 · 나가기" */}
       <div className="flex flex-col gap-3 md:hidden">
-        <span className="text-label-lg text-ink">
-          Q{q.index} / {q.total} · {showMobileResult ? "결과" : QUESTION_TYPE_LABEL[q.type]}
-        </span>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-label-lg text-ink">
+            Q{q.index} / {q.total} · {showMobileResult ? "결과" : QUESTION_TYPE_LABEL[q.type]}
+          </span>
+          {onLeave && <LeaveRoomButton onClick={onLeave} />}
+        </div>
         {showMobileResult ? (
           <div className="h-px bg-border" />
         ) : (

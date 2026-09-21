@@ -10,6 +10,12 @@ import type {
   SessionReport,
   Student,
 } from "@/features/host/types";
+import type { RankChip, ScoreView } from "@/features/participant/play/adapt";
+import type { PodiumEntry as ResultPodiumEntry } from "@/features/participant/result/podium-card";
+import type { QuestionDetail } from "@/features/participant/result/question-detail-page";
+import type { RankRow } from "@/features/participant/result/ranking-table";
+import type { ReportRow } from "@/features/participant/result/report-question-table";
+import type { QuestionEndedPayload } from "@/lib/types/dto";
 
 /** 로그인한 회원 시안 스냅숏 — W-07 방 리포트 목업 사이드바 전용 */
 export const ACCOUNT: SidebarUser = {
@@ -370,3 +376,84 @@ export const STEP_RANKING: readonly { name: string; score: string; avatar: Avata
   { name: "채원", score: "950점", avatar: "bear" },
   { name: "승현", score: "880점", avatar: "dog" },
 ];
+
+/* ── 폰 랜딩(L-01m) — 학생 폰 화면 스냅숏. 방·학생·문항은 위 LIVE_ROOM · LIVE_QUESTION · 리포트 목업과 같은 이야기다 ── */
+
+/** "나"는 민지(여우) — 결과 화면 3위 줄 */
+const ME = LIVE_ROOM.students[4];
+
+/** M-04 문항 결과 — 정답을 맞히고 점수 카드 · 현재 순위가 뜬 상태 */
+export const PLAY_REVEAL_MOCK: Pick<
+  QuestionEndedPayload,
+  "answer" | "explanation" | "distribution"
+> = {
+  answer: "REQUIRED",
+  explanation: "진행 중인 트랜잭션이 있으면 참여하고, 없으면 새로 만든다.",
+  distribution: { REQUIRED: 4, REQUIRES_NEW: 1, SUPPORTS: 1, NESTED: 0 },
+};
+export const PLAY_SCORE_MOCK: ScoreView = {
+  verdict: "correct",
+  score: 147,
+  baseScore: 100,
+  speedBonus: 47,
+};
+export const PLAY_RANK_MOCK: RankChip = { rank: 3, change: 1 };
+
+/** M-05 최종 결과 — 1~6위. 점수·맞힌 수는 리포트 목업의 학생별 순위와 같다 */
+const FINAL_SCORES = [
+  { student: LIVE_ROOM.students[0], score: 1240, correct: 7 },
+  { student: LIVE_ROOM.students[1], score: 1100, correct: 6 },
+  { student: ME, score: 980, correct: 6 },
+  { student: LIVE_ROOM.students[2], score: 870, correct: 5 },
+  { student: LIVE_ROOM.students[3], score: 760, correct: 4 },
+  { student: LIVE_ROOM.students[5], score: 640, correct: 4 },
+];
+export const FINAL_PODIUM_MOCK: ResultPodiumEntry[] = FINAL_SCORES.slice(0, 3).map((row, i) => ({
+  rank: (i + 1) as 1 | 2 | 3,
+  student: row.student,
+  score: row.score,
+}));
+export const FINAL_RANK_ROWS_MOCK: RankRow[] = FINAL_SCORES.map((row, i) => ({
+  rank: i + 1,
+  participantId: i + 1,
+  name: row.student.name,
+  score: row.score,
+  correctCount: row.correct,
+  isMe: row.student.id === ME.id,
+}));
+export const FINAL_QUESTION_ROWS_MOCK: ReportRow[] = SESSION_REPORT_MOCK.questions.map((q) => ({
+  questionId: q.index,
+  no: q.index,
+  kind: q.type === "essay" ? "ESSAY" : q.type === "ox" ? "OX" : "MULTIPLE",
+  concept: "",
+  title: q.title,
+  myAnswer: "",
+  // 민지 6/8 — 4번(AOP)·7번(지연 로딩)을 틀렸다
+  verdict: q.index === 4 || q.index === 7 ? "WRONG" : "CORRECT",
+  classAccuracyPercent: q.accuracy ?? null,
+  elapsedSeconds: null,
+}));
+
+/** M-06 문항 상세 — 서술형 답안에 AI 분석이 끝난 상태. 내용은 위 서술형 답안 목업의 판정과 같다 */
+export const ANSWER_DETAIL_MOCK: QuestionDetail = {
+  no: 3,
+  total: 8,
+  title: "JPA 영속성 컨텍스트의 역할을 설명하세요.",
+  typeLabel: "서술형",
+  scoreLabel: "70/100점",
+  isCorrect: false,
+  verdictLabel: "부분",
+  // 폰 한 화면에 제목 · 내 답 · 모범답안 · AI 분석이 다 들어오게 짧게 둔다(긴 답은 문단 서체로 바뀌고, 조금만 길어도 한 줄에서 말줄임된다)
+  myAnswer: "1차 캐시로 동일성을 보장",
+  correctAnswer: "1차 캐시 · 변경 감지",
+  explanation: null,
+  analysis: {
+    status: "DONE",
+    keyPoints: ["1차 캐시 · 동일성 보장"],
+    missingPoints: ["변경 감지"],
+    suggestions: ["flush 시점 예시 추가"],
+    summary: "핵심은 잡았고, 변경 감지가 빠졌어요.",
+  },
+  teacherComment: null,
+  distribution: [],
+};

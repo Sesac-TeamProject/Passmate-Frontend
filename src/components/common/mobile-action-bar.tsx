@@ -18,15 +18,21 @@ export const MOBILE_STATE_BUTTON = "h-[52px] rounded-[14px]";
 
 type Props = {
   children: ReactNode;
+  /**
+   * 하단 탭바가 서는 화면(회원 셸 안)에서 true. 탭바 높이만큼 위로 올려 버튼이 탭 뒤로 들어가지 않게 한다.
+   * 탭바가 없는 화면(학생 흐름·mobileBare)은 기본값 그대로 바닥에 붙는다.
+   */
+  aboveTabBar?: boolean;
   className?: string;
 };
 
 /**
  * 모바일(768px 미만) 아래 버튼 바 — 앱 시안 M-03 제출 · M-05 결과 버튼 · 상태 화면 버튼.
  *
- * `fixed`가 아니라 `sticky bottom-0 + mt-auto`다. 부모가 `min-h-dvh flex-col`이면 내용이 짧을 때는
- * 화면 맨 아래에 붙고, 길 때는 스크롤을 따라 바닥에 머문다 — 맨 아래까지 내리면 바가 제자리로
- * 돌아와 본문 끝을 가리지 않으므로 빈 자리(spacer)가 필요 없다. 홈 표시줄이 있는 폰은 그만큼 더 띄운다.
+ * `fixed`가 아니라 `sticky + mt-auto`다(바닥 값은 `aboveTabBar`에 따라 `bottom-0` 또는 하단 탭바
+ * 높이만큼 — 아래 참고). 부모가 `min-h-dvh flex-col`이면 내용이 짧을 때는 화면 맨 아래에 붙고,
+ * 길 때는 스크롤을 따라 바닥에 머문다 — 맨 아래까지 내리면 바가 제자리로 돌아와 본문 끝을 가리지
+ * 않으므로 빈 자리(spacer)가 필요 없다. 홈 표시줄이 있는 폰은 그만큼 더 띄운다.
  *
  * 다만 **내려가는 도중에는 본문 위를 덮는다.** 바탕이 본문과 같은 흰색이고 경계가 없으면
  * 덮인 카드가 "잘린 것"처럼 보인다(운영 확인, 2026-09-16: 최종 결과 화면 맨 위에서 문항 카드의
@@ -34,15 +40,39 @@ type Props = {
  *
  * PC는 버튼이 본문 안 제자리에 있으므로 **md 이상에서는 그리지 않는다.**
  */
-export function MobileActionBar({ children, className }: Props) {
+export function MobileActionBar({ children, aboveTabBar = false, className }: Props) {
   return (
     <div
       className={cn(
-        "sticky bottom-0 z-30 mt-auto flex flex-col gap-2.5 border-t border-line-soft bg-card px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:hidden",
+        "sticky z-30 mt-auto flex flex-col gap-2.5 border-t border-line-soft bg-card px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:hidden",
+        aboveTabBar ? "bottom-[var(--mobile-tab-bar-h)] pb-3" : "bottom-0",
         className,
       )}
     >
       {children}
     </div>
+  );
+}
+
+type SubmitBarProps = {
+  onClick: () => void;
+  disabled?: boolean;
+  children: ReactNode;
+};
+
+/**
+ * 폰 폭 하단 "주 버튼 하나" 제출 바 — `MobileActionBar(aboveTabBar, className="-mx-5")` 안에
+ * `MOBILE_PRIMARY_BUTTON` 버튼 하나를 넣는 조합을 계정 정보 · 캐릭터 · 정산 계좌 · 코인 충전 ·
+ * 충전 완료 다섯 화면이 그대로 베껴 썼다. 핸들러·라벨·비활성 조건만 화면마다 다르므로 그 셋만 받는다.
+ * 버튼이 두 개거나(탈퇴 화면) 버튼에 별도 클래스가 얹히는 화면은 여기 맞추지 말고
+ * `MobileActionBar`를 직접 쓴다.
+ */
+export function MobilePrimarySubmitBar({ onClick, disabled, children }: SubmitBarProps) {
+  return (
+    <MobileActionBar aboveTabBar className="-mx-5">
+      <button type="button" onClick={onClick} disabled={disabled} className={MOBILE_PRIMARY_BUTTON}>
+        {children}
+      </button>
+    </MobileActionBar>
   );
 }

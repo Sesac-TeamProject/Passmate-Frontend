@@ -24,7 +24,13 @@ type Props = {
   deleteError?: string | null;
 };
 
-/** W-08 문제 세트 관리 — 목록 + 우측 상세 패널(세트 재활용) */
+/**
+ * W-08 문제 세트 관리 — 목록 + 우측 상세 패널(세트 재활용).
+ *
+ * 폰은 2단을 한 줄로 쌓는다 — 360px 패널이 자리를 고정해 본문이 128px 로 눌리고 화면이
+ * 가로로 488px 까지 넘쳤다. 순서는 목록 → 상세다(무엇을 골랐는지가 위에 남는다).
+ * 앱 시안에는 이 목록 화면이 없어 배치만 좁은 폭에 맞추고, 내용·문구는 웹 그대로 둔다.
+ */
 export function SetsPage({
   sets,
   selected,
@@ -39,8 +45,8 @@ export function SetsPage({
   deleteError = null,
 }: Props) {
   return (
-    <div className="flex min-h-screen">
-      <main className="flex flex-1 flex-col gap-[18px] py-7 pr-6 pl-8">
+    <div className="flex min-h-screen max-md:flex-col">
+      <main className="flex flex-1 flex-col gap-[18px] py-7 pr-6 pl-8 max-md:px-5 max-md:pt-14 max-md:pb-5">
         <div className="flex items-center justify-between">
           <h1 className="text-heading-lg text-ink">문제 세트</h1>
           <Link
@@ -61,7 +67,7 @@ export function SetsPage({
             아직 만든 문제 세트가 없어요
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-[18px]">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-[18px] max-md:grid-cols-1">
             {sets.map((s) => (
               <SetCard
                 key={s.id}

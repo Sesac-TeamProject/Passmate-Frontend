@@ -14,6 +14,11 @@ type Props = {
   onSaveComment: (text: string) => void;
   commentSaving?: boolean;
   commentError?: string | null;
+  /**
+   * 폰 배치(M-14)에서 목록 아래 전체 폭으로 펼친다.
+   * 화면 폭(`md:`)으로 가르지 않는다 — 랜딩 목업은 폰에서도 PC 화면을 줄여 보여 줘야 해서 폭 조건이면 배치가 깨진다.
+   */
+  stacked?: boolean;
 };
 
 /** 채점 현황 막대 색 — 시안은 위에서부터 민트 · 앰버 · 핑크, 미제출은 회색 */
@@ -37,6 +42,7 @@ export function QuestionInsightPanel({
   onSaveComment,
   commentSaving = false,
   commentError = null,
+  stacked = false,
 }: Props) {
   const [comment, setComment] = useState(insight?.hostComment ?? "");
 
@@ -52,12 +58,30 @@ export function QuestionInsightPanel({
   const peak = Math.max(...(insight?.gradingBreakdown ?? []).map((row) => row.count), 1);
 
   return (
-    <section className="flex w-[424px] shrink-0 flex-col overflow-hidden rounded-lg border bg-card">
-      <h2 className="flex h-[46px] items-center bg-ink px-[17px] text-label-lg text-white">
-        Q{question.index} · {QUESTION_TYPE_LABEL[question.type]} · {headerStat}
-      </h2>
+    <section
+      className={cn(
+        "flex shrink-0 flex-col overflow-hidden",
+        // 폰(M-14)은 목록 아래 카드로 얹히고, PC는 목록 오른쪽에 세로선으로만 나뉜다
+        stacked ? "w-full rounded-lg border bg-card" : "w-[424px] border-l pl-6",
+      )}
+    >
+      {stacked ? (
+        <h2 className="flex h-[46px] items-center bg-ink px-[17px] text-label-lg text-white">
+          Q{question.index} · {QUESTION_TYPE_LABEL[question.type]} · {headerStat}
+        </h2>
+      ) : (
+        <h2 className="flex items-center gap-2.5 pb-3">
+          <span className="inline-flex h-[22px] items-center rounded bg-ink px-2 text-label-md text-white">
+            Q{question.index}
+          </span>
+          <span className="text-label-md text-muted-foreground">
+            {QUESTION_TYPE_LABEL[question.type]}
+          </span>
+          <span className="ml-auto text-label-lg text-ink">{headerStat}</span>
+        </h2>
+      )}
 
-      <div className="flex flex-1 flex-col gap-4 px-[17px] py-4">
+      <div className={cn("flex flex-1 flex-col gap-4", stacked && "px-[17px] py-4")}>
         <p className="text-label-lg leading-relaxed text-ink">
           {question.prompt ?? question.title}
         </p>
@@ -127,7 +151,7 @@ export function QuestionInsightPanel({
           <textarea
             value={comment}
             onChange={(event) => setComment(event.target.value)}
-            placeholder="학생 전체에게 남길 첨삭을 적어 주세요"
+            placeholder="학생 전체에게 보일 코멘트"
             className="h-21 w-full resize-none rounded-lg bg-muted p-3 text-label-md text-foreground outline-none placeholder:text-ink-disabled focus-visible:ring-2 focus-visible:ring-mint"
           />
           <button

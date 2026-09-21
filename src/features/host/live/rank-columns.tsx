@@ -29,8 +29,11 @@ export function RankColumns({
 }) {
   const [left, right] = splitColumns(rows);
 
+  // 폰 폭: 2열이면 한 칸이 155px로 좁아져 행이 넘친다 — 한 줄로 쌓는다.
+  // 왼쪽 칼럼이 앞 순위라 쌓아도 순위 차례는 그대로다.
+  // 이 컴포넌트는 W-07 개요 탭도 쓰므로 그 화면 폰 배치도 함께 바뀐다.
   return (
-    <div className="flex gap-10">
+    <div className="flex gap-10 max-md:flex-col max-md:gap-0">
       {[left, right].map((column, i) => (
         <ol key={i} className="flex flex-1 flex-col">
           {column.map((row) => (

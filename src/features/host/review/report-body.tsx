@@ -1,6 +1,7 @@
 import type { QuestionInsight, ReportQuestion, SessionReport } from "@/features/host/types";
 import { QUESTION_TYPE_LABEL } from "@/features/host/editor/question-type-chip";
 import { cn } from "@/lib/utils";
+import { accuracyFill, accuracyText } from "./accuracy-tone";
 import { QuestionInsightPanel } from "./question-insight-panel";
 
 type Props = {
@@ -16,7 +17,12 @@ type Props = {
   commentError?: string | null;
 };
 
-/** W-07 문항별 탭 — 정답률 오름차순 표 + 많이 틀린 학생 + 우측 상세 패널 (시안 784:8881·8983) */
+/**
+ * W-07 문항별 탭 — 정답률 오름차순 목록 + 우측 상세 패널.
+ *
+ * "많이 틀린 학생"은 학생별 탭의 비교 표로 옮겼다. 같은 줄 세우기를 두 탭에서 반복하면
+ * 어느 쪽이 본체인지 흐려지고, 학생을 눌러 첨삭까지 가는 길은 학생별 탭에만 있다.
+ */
 export function ReportBody({
   report,
   selectedQuestionId,
@@ -32,31 +38,31 @@ export function ReportBody({
   const selected = sorted.find((q) => q.id === selectedQuestionId) ?? sorted[0] ?? null;
 
   return (
-    <div className="flex flex-1 gap-3">
-      <div className="flex min-w-0 flex-1 flex-col rounded-lg border bg-card">
+    <div className="flex flex-1 gap-6 pt-4">
+      <div className="flex min-w-0 flex-1 flex-col">
         <table className="w-full table-fixed border-collapse">
           <colgroup>
-            <col className="w-[68px]" />
-            <col className="w-[68px]" />
+            <col className="w-14" />
+            <col className="w-14" />
             <col className="w-auto" />
-            <col className="w-28" />
-            <col className="w-24" />
+            <col className="w-36" />
+            <col className="w-16" />
           </colgroup>
           <thead>
             <tr className="border-b text-label-md text-muted-foreground">
-              <th scope="col" className="h-9 pl-[18px] text-left font-normal">
+              <th scope="col" className="h-8 text-left font-normal">
                 문항
               </th>
-              <th scope="col" className="h-9 text-left font-normal">
+              <th scope="col" className="h-8 text-left font-normal">
                 유형
               </th>
-              <th scope="col" className="h-9 text-left font-normal">
+              <th scope="col" className="h-8 text-left font-normal">
                 문제
               </th>
-              <th scope="col" className="h-9 text-left font-normal">
+              <th scope="col" className="h-8 text-left font-normal">
                 정답률 ▾
               </th>
-              <th scope="col" className="h-9 pr-[18px] text-left font-normal">
+              <th scope="col" className="h-8 text-right font-normal">
                 오답
               </th>
             </tr>
@@ -72,38 +78,10 @@ export function ReportBody({
             ))}
           </tbody>
         </table>
-
-        {report.strugglers.length > 0 && (
-          <section className="flex flex-col gap-2.5 border-t px-[18px] py-3.5">
-            <h2 className="text-label-lg text-ink">많이 틀린 학생</h2>
-            <ul className="flex flex-col">
-              {report.strugglers.map((student) => (
-                <li
-                  key={student.id}
-                  className="flex items-center gap-4 border-b border-line-soft py-2.5 last:border-b-0"
-                >
-                  <span className="w-40 shrink-0 truncate text-label-lg text-ink">
-                    {student.name}
-                  </span>
-                  <span className="flex-1 text-label-md text-muted-foreground">
-                    {student.correctCount === null
-                      ? "미제출"
-                      : `정답 ${student.correctCount}/${student.questionCount}`}
-                  </span>
-                  <span className="w-16 shrink-0 text-right text-label-lg text-ink">
-                    {student.correctCount === null
-                      ? "—"
-                      : `${Math.round((student.correctCount / Math.max(1, student.questionCount)) * 100)}%`}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
       </div>
 
       {selected === null ? (
-        <div className="flex w-[424px] shrink-0 items-center justify-center rounded-lg border border-dashed text-body-md text-muted-foreground">
+        <div className="flex w-[424px] shrink-0 items-center justify-center border-l pl-6 text-body-md text-muted-foreground">
           문항이 없어요
         </div>
       ) : (
@@ -121,7 +99,7 @@ export function ReportBody({
   );
 }
 
-/** 표 한 줄. 고른 줄은 연민트 바탕 + 왼쪽 3px 민트 막대 (시안 784:8889·8890) */
+/** 목록 한 줄. 고른 줄은 연민트 바탕 + 왼쪽 3px 민트 막대 */
 function QuestionRow({
   question,
   selected,
@@ -132,19 +110,18 @@ function QuestionRow({
   onSelect: () => void;
 }) {
   const accuracy = question.accuracy ?? 0;
-  const fill = accuracy >= 70 ? "bg-mint" : accuracy >= 50 ? "bg-choice-c" : "bg-choice-a";
 
   return (
     <tr
       onClick={onSelect}
       aria-selected={selected}
       className={cn(
-        "relative cursor-pointer border-b border-line-soft last:border-b-0",
+        "relative cursor-pointer border-b border-line-soft",
         selected ? "bg-mint-bg" : "hover:bg-muted",
       )}
     >
-      <td className="h-11 pl-[18px] text-label-lg text-ink">
-        {selected && <span aria-hidden className="absolute top-0 left-0 h-11 w-[3px] bg-mint" />}
+      <td className="h-13 text-label-lg text-ink">
+        {selected && <span aria-hidden className="absolute top-0 -left-3 h-13 w-[3px] bg-mint" />}
         {/* 줄 전체가 눌리지만 키보드로도 고를 수 있게 문항 번호를 버튼으로 둔다 — 줄 클릭과 겹치지 않게 전파를 막는다 */}
         <button
           type="button"
@@ -163,19 +140,21 @@ function QuestionRow({
           {QUESTION_TYPE_LABEL[question.type]}
         </span>
       </td>
-      <td className="max-w-0 truncate pr-4 text-label-lg text-ink">{question.title}</td>
+      <td className="max-w-0 truncate pr-6 text-label-lg text-ink">{question.title}</td>
       <td>
-        <span className="flex items-center gap-2">
-          <span className="h-1.5 w-14 overflow-hidden rounded-full bg-line-soft">
+        <span className="flex items-center gap-2.5">
+          <span className="h-1.5 w-20 overflow-hidden rounded-full bg-line-soft">
             <span
-              className={cn("block h-full rounded-full", fill)}
+              className={cn("block h-full rounded-full", accuracyFill(accuracy))}
               style={{ width: `${accuracy}%` }}
             />
           </span>
-          <span className="text-label-lg text-ink">{question.accuracy ?? "—"}%</span>
+          <span className={cn("text-label-lg", accuracyText(accuracy))}>
+            {question.accuracy ?? "—"}%
+          </span>
         </span>
       </td>
-      <td className="pr-[18px] text-label-lg text-muted-foreground">
+      <td className="text-right text-label-lg text-muted-foreground">
         {question.wrongCount === undefined ? "—" : `${question.wrongCount}명`}
       </td>
     </tr>

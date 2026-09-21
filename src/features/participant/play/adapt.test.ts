@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AnswerResponse, QuestionStartedPayload, RankingEntry } from "@/lib/types/dto";
 import {
+  exitPathFor,
   toDistributionRows,
   toLiveQuestion,
   toMyRankChip,
@@ -231,5 +232,12 @@ describe("toTimerProgress", () => {
     expect(toTimerProgress(-3, 30)).toBe(0);
     expect(toTimerProgress(45, 30)).toBe(1);
     expect(toTimerProgress(10, 0)).toBe(0);
+  });
+});
+
+describe("exitPathFor", () => {
+  it("회원은 홈으로, 게스트는 랜딩으로 나간다 — 게스트에게 /home은 로그인 화면으로 튕기는 주소다", () => {
+    expect(exitPathFor(true)).toBe("/home");
+    expect(exitPathFor(false)).toBe("/");
   });
 });
