@@ -79,7 +79,7 @@ function withCarriedRankChange(prev: RankingEntry[], next: RankingEntry[]): Rank
 /**
  * 이벤트 하나를 상태에 반영한다.
  *
- * 서버가 실제로 발행하는 것은 7종이다(`PARTICIPANT_*`는 발행 코드가 없다 — 백엔드 질문 B-1).
+ * 서버가 실제로 발행하는 것은 8종이다(`PARTICIPANT_*`는 발행 코드가 없다 — 백엔드 질문 B-1).
  * 그 둘도 핸들러는 남겨 둔다: 서버가 발행을 넣는 순간 대기실 폴링을 끄고 바로 쓸 수 있다.
  */
 export function reduceSessionEvent(state: SessionState, event: ServerEvent): SessionState {
@@ -95,6 +95,7 @@ export function reduceSessionEvent(state: SessionState, event: ServerEvent): Ses
         submission: null,
         ranking: [],
         finalRanking: [],
+        hints: [],
       };
 
     case "QUESTION_STARTED":
@@ -128,6 +129,16 @@ export function reduceSessionEvent(state: SessionState, event: ServerEvent): Ses
 
     case "SCREEN_LOCKED":
       return { ...state, screenLocked: event.payload.locked };
+
+    case "HINT_PUBLISHED": {
+      const hint = event.payload;
+      // 페이로드는 있는 그대로 넘어온다 — 모양이 깨진 프레임은 여기서 거른다
+      if (!hint || typeof hint.hintId !== "number") return state;
+      // 재접속 직후에는 복구 목록과 실시간 프레임이 겹친다 — 같은 힌트는 한 번만 쌓는다
+      if (state.hints.some((known) => known.hintId === hint.hintId)) return state;
+      // 지난 문항의 힌트도 남긴다 — 화면은 지금 문항 것만 고르고, 나머지는 다시 듣기용이다
+      return { ...state, hints: [...state.hints, hint] };
+    }
 
     case "SESSION_ENDED": {
       const finalRanking = withCarriedRankChange(state.ranking, asRanking(event.payload));

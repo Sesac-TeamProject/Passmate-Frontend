@@ -5,6 +5,7 @@ import type {
   RankingEntry,
   ScreenLockPayload,
   SubmissionStatusPayload,
+  VoiceHintEntry,
 } from "./dto";
 
 /**
@@ -35,7 +36,7 @@ type Envelope<T extends string, P> = {
 };
 
 /**
- * 서버가 정의한 이벤트 **9종**(`SessionEventType.kt`).
+ * 서버가 정의한 이벤트 **10종**(`SessionEventType.kt`).
  * 뒤 두 개(`PARTICIPANT_*`)는 enum에만 있고 **발행하는 코드가 없다** — 대기실은 폴링으로 대신한다
  * (`research.md` R-7, 백엔드 질문 B-1). 타입은 남겨 두어 서버가 발행을 넣으면 바로 받는다.
  */
@@ -50,6 +51,11 @@ export type ServerEvent =
   /** 호스트 토픽(/topic/rooms/{id}/host)에만 온다 */
   | Envelope<"SUBMISSION_UPDATED", SubmissionStatusPayload>
   | Envelope<"SCREEN_LOCKED", ScreenLockPayload>
+  /**
+   * 호스트가 PTT 로 올린 음성 힌트 — 방 전체에 온다. 학생 화면이 받아 곧바로 재생한다.
+   * 예전 판은 이 타입을 몰라 프레임을 통째로 버렸다 — 서버·버튼·배너가 다 있는데 소리가 안 나던 원인
+   */
+  | Envelope<"HINT_PUBLISHED", VoiceHintEntry>
   /** 최종 랭킹이 함께 온다 */
   | Envelope<"SESSION_ENDED", RankingEntry[]>
   /** @draft 서버가 아직 발행하지 않는다 */
@@ -66,6 +72,7 @@ export const SERVER_EVENT_TYPES: readonly ServerEventType[] = [
   "RANKING_UPDATED",
   "SUBMISSION_UPDATED",
   "SCREEN_LOCKED",
+  "HINT_PUBLISHED",
   "SESSION_ENDED",
   "PARTICIPANT_JOINED",
   "PARTICIPANT_LEFT",

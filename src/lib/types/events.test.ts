@@ -55,8 +55,24 @@ describe("parseServerEvent", () => {
     ).toBeNull();
   });
 
+  it("HINT_PUBLISHED 는 힌트 페이로드를 그대로 넘긴다 — 예전 판은 모르는 타입이라 버렸다", () => {
+    const hint = {
+      hintId: 7,
+      sessionQuestionId: 10,
+      questionId: 2,
+      orderNo: 1,
+      audioUrl: "https://storage.example/rooms/1/hints/a.webm?sig=1",
+      durationMs: 4200,
+      publishedAt: "2026-09-02T02:13:05",
+    };
+    const parsed = parseServerEvent({ ...FRAME, type: "HINT_PUBLISHED", payload: hint });
+
+    expect(parsed?.type).toBe("HINT_PUBLISHED");
+    expect(parsed?.payload).toEqual(hint);
+  });
+
   it("모르는 type·객체가 아닌 값은 폐기한다", () => {
-    expect(parseServerEvent({ ...FRAME, type: "HINT_PUBLISHED" })).toBeNull();
+    expect(parseServerEvent({ ...FRAME, type: "REPORT_READY" })).toBeNull();
     expect(parseServerEvent({ ...FRAME, type: "ANSWER_SUBMITTED" })).toBeNull();
     expect(parseServerEvent(null)).toBeNull();
     expect(parseServerEvent("frame")).toBeNull();
@@ -73,9 +89,10 @@ describe("parseServerEvent", () => {
 });
 
 describe("SERVER_EVENT_TYPES", () => {
-  it("서버 SessionEventType 9종과 같다", () => {
+  it("서버 SessionEventType 10종과 같다", () => {
     expect([...SERVER_EVENT_TYPES].sort()).toEqual(
       [
+        "HINT_PUBLISHED",
         "PARTICIPANT_JOINED",
         "PARTICIPANT_LEFT",
         "QUESTION_ENDED",
@@ -90,11 +107,10 @@ describe("SERVER_EVENT_TYPES", () => {
   });
 
   it("서버에 없는 프런트 전용 이벤트를 들고 있지 않다", () => {
-    // 예전 판이 기대하던 10종 — 서버 enum에 없어 영영 오지 않는다
+    // 예전 판이 기대하던 것 중 서버 enum에 없는 9종 — 영영 오지 않는다 (HINT_PUBLISHED 는 서버에 있다)
     for (const absent of [
       "ANSWER_SUBMITTED",
       "SCORE_UPDATED",
-      "HINT_PUBLISHED",
       "REPORT_READY",
       "ROOM_CANCELLED",
       "FEEDBACK_READY",
