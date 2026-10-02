@@ -72,6 +72,22 @@ export const ROUTES: readonly RouteMeta[] = [
     area: "public",
   },
   {
+    path: "/account/delete",
+    sample: "/account/delete",
+    title: "계정 삭제 요청",
+    description:
+      "Google Play Console 계정 삭제 링크. 삭제·보관 항목 안내 뒤 회원 탈퇴(/me/withdraw)로 보낸다. 로그인 없이 열린다",
+    area: "public",
+  },
+  {
+    path: "/account/delete-data",
+    sample: "/account/delete-data",
+    title: "데이터 삭제 요청",
+    description:
+      "Google Play Console 데이터 삭제 링크. 계정은 두고 일부 데이터만 — 접수 API가 없어 메일로 받는다. 로그인 없이 열린다",
+    area: "public",
+  },
+  {
     path: "/hosts/[userId]",
     sample: "/hosts/42",
     title: "선생님 프로필",
