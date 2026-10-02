@@ -7,5 +7,5 @@ export const LEGAL_OPERATOR = "새싹수들";
  */
 export const PRIVACY_OFFICER = "홍희표";
 
-/** 보호책임자 연락처. 시안 값 그대로다 — 우리 도메인(passmate.kr)과 달라 메일함이 실제로 있는지 확인이 필요하다 */
-export const PRIVACY_CONTACT_EMAIL = "privacy@passmate.app";
+/** 보호책임자 연락처. 2026-10-02 사용자 결정 — 보호책임자가 실제로 받는 메일함(앱 시안 M-12-14와 같다) */
+export const PRIVACY_CONTACT_EMAIL = "hong227@naver.com";
